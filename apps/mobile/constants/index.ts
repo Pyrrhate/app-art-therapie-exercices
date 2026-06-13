@@ -15,3 +15,17 @@ export const TECHNIQUES: {
 export const STORAGE_KEYS = {
   sessions: "@art_therapie/sessions",
 } as const;
+
+export function getTechniqueLabel(id: string): string {
+  return TECHNIQUES.find((t) => t.id === id)?.label ?? id;
+}
+
+export function formatSessionDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

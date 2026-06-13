@@ -16,6 +16,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="exercise" />
         <Stack.Screen name="reflection" />
+        <Stack.Screen name="sessions" options={{ presentation: "modal" }} />
         <Stack.Screen name="settings" options={{ presentation: "modal" }} />
       </Stack>
     </>

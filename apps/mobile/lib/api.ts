@@ -1,14 +1,11 @@
-import Constants from "expo-constants";
+import { getApiUrl } from "./config";
 import type {
   ArtisticTechnique,
   ExerciseResponse,
   ReflectionResponse,
 } from "./types";
 
-const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ??
-  Constants.expoConfig?.extra?.apiUrl ??
-  "http://localhost:3000";
+const API_URL = getApiUrl();
 
 class ApiError extends Error {
   constructor(
@@ -26,21 +23,42 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_URL.replace(/\/$/, "")}${path}`;
+  const method = (options.method ?? "GET").toUpperCase();
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> | undefined),
+  };
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  // Content-Type sur GET déclenche un preflight CORS inutile
+  if (method !== "GET" && method !== "HEAD" && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
 
-  const data = await response.json();
+  let response: Response;
+  try {
+    response = await fetch(url, { ...options, method, headers });
+  } catch {
+    throw new ApiError(
+      "Impossible de joindre le serveur. Vérifiez l'URL API et votre connexion.",
+      "NETWORK_ERROR"
+    );
+  }
+
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    throw new ApiError(
+      "Réponse serveur invalide.",
+      "INVALID_RESPONSE",
+      response.status
+    );
+  }
 
   if (!response.ok) {
+    const body = data as { error?: string; code?: string };
     throw new ApiError(
-      data.error ?? "Une erreur est survenue.",
-      data.code,
+      body.error ?? "Une erreur est survenue.",
+      body.code,
       response.status
     );
   }
@@ -71,13 +89,18 @@ export async function analyzeArtwork(
   });
 }
 
-export async function checkHealth(): Promise<boolean> {
+export async function checkHealth(): Promise<{
+  ok: boolean;
+  provider?: string;
+}> {
   try {
-    const result = await request<{ status: string }>("/api/health");
-    return result.status === "ok";
+    const result = await request<{ status: string; provider?: string }>(
+      "/api/health"
+    );
+    return { ok: result.status === "ok", provider: result.provider };
   } catch {
-    return false;
+    return { ok: false };
   }
 }
 
-export { ApiError };
+export { ApiError, getApiUrl };

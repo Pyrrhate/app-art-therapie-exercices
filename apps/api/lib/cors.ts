@@ -1,16 +1,33 @@
 import { NextResponse } from "next/server";
 import type { ApiErrorBody } from "./types";
 
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "http://localhost:8081")
+const ALLOWED_ORIGINS = (
+  process.env.ALLOWED_ORIGINS ??
+  "http://localhost:8081,http://localhost:8082,http://localhost:19006"
+)
   .split(",")
-  .map((o) => o.trim());
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+function isLocalDevOrigin(origin: string): boolean {
+  return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
+}
+
+function resolveAllowedOrigin(origin: string | null): string {
+  if (!origin) {
+    return ALLOWED_ORIGINS[0] ?? "*";
+  }
+
+  if (ALLOWED_ORIGINS.includes(origin) || isLocalDevOrigin(origin)) {
+    return origin;
+  }
+
+  return ALLOWED_ORIGINS[0] ?? origin;
+}
 
 export function corsHeaders(origin: string | null): HeadersInit {
-  const allowed =
-    origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-
   return {
-    "Access-Control-Allow-Origin": allowed ?? "*",
+    "Access-Control-Allow-Origin": resolveAllowedOrigin(origin),
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };

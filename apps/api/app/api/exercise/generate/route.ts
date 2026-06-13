@@ -35,18 +35,32 @@ export async function POST(request: Request) {
     );
   }
 
+  let body: unknown;
   try {
-    const body = await request.json();
-    const parsed = bodySchema.safeParse(body);
+    body = await request.json();
+  } catch {
+    return errorResponse(
+      request,
+      {
+        error:
+          "Corps JSON invalide ou absent. Envoyez { impulse, technique }.",
+        code: "VALIDATION_ERROR",
+      },
+      400
+    );
+  }
 
-    if (!parsed.success) {
-      return errorResponse(
-        request,
-        { error: "Données invalides.", code: "VALIDATION_ERROR" },
-        400
-      );
-    }
+  const parsed = bodySchema.safeParse(body);
 
+  if (!parsed.success) {
+    return errorResponse(
+      request,
+      { error: "Données invalides.", code: "VALIDATION_ERROR" },
+      400
+    );
+  }
+
+  try {
     const provider = getAIProvider();
     const result = await provider.generateExercise(parsed.data);
 
@@ -55,7 +69,8 @@ export async function POST(request: Request) {
         "X-RateLimit-Remaining": String(rateLimit.remaining),
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("[exercise/generate]", error);
     return errorResponse(
       request,
       { error: "Erreur interne.", code: "INTERNAL_ERROR" },

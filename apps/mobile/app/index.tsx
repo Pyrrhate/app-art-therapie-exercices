@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   Text,
   TextInput,
@@ -12,26 +11,31 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { TECHNIQUES } from "@/constants";
 import { generateExercise } from "@/lib/api";
+import { showAlert } from "@/lib/alert";
 import { useRitualStore } from "@/lib/store";
 
 export default function ImpulseScreen() {
   const { impulse, technique, setImpulse, setTechnique, setExercise } =
     useRitualStore();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleContinue() {
     if (!impulse.trim() || !technique) return;
 
     setLoading(true);
+    setError(null);
     try {
       const result = await generateExercise(impulse.trim(), technique);
       setExercise(result.exercise, result.durationMinutes);
       router.push("/exercise");
-    } catch (error) {
-      Alert.alert(
-        "Connexion indisponible",
-        "Impossible de contacter le serveur. Vérifiez votre connexion ou réessayez."
-      );
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Impossible de contacter le serveur. Vérifiez votre connexion ou réessayez.";
+      setError(message);
+      showAlert("Connexion indisponible", message);
     } finally {
       setLoading(false);
     }
@@ -63,6 +67,11 @@ export default function ImpulseScreen() {
       />
 
       <View className="mt-auto pt-8 gap-4">
+        {error && (
+          <Text className="text-red-500 text-sm text-center leading-5 px-2">
+            {error}
+          </Text>
+        )}
         <PrimaryButton
           label={loading ? "Préparation..." : "Commencer le rituel"}
           onPress={handleContinue}

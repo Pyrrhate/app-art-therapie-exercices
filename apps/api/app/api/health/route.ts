@@ -1,4 +1,8 @@
-import { jsonResponse } from "@/lib/cors";
+import { jsonResponse, handleOptions } from "@/lib/cors";
+
+export async function OPTIONS(request: Request) {
+  return handleOptions(request);
+}
 
 export async function GET(request: Request) {
   return jsonResponse(

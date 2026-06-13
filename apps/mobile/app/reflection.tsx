@@ -34,6 +34,27 @@ export default function ReflectionScreen() {
   const [loadingReflection, setLoadingReflection] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  async function handlePickFromGallery() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission requise",
+        "Autorisez l'accès à la galerie pour choisir une photo de votre création."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      quality: 0.7,
+      mediaTypes: ["images"],
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+      setSaved(false);
+    }
+  }
+
   async function handleTakePhoto() {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
@@ -129,6 +150,11 @@ export default function ReflectionScreen() {
             label="Photographier mon œuvre"
             onPress={handleTakePhoto}
             variant="secondary"
+          />
+          <PrimaryButton
+            label="Choisir depuis la galerie"
+            onPress={handlePickFromGallery}
+            variant="ghost"
           />
           <PrimaryButton
             label={

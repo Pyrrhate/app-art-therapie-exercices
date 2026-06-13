@@ -8,10 +8,12 @@
     "apps/api"
   ],
   "scripts": {
+    "postinstall": "node scripts/patch-nativewind-babel.cjs",
     "mobile": "npm run start --workspace=apps/mobile",
     "mobile:android": "npm run android --workspace=apps/mobile",
     "mobile:ios": "npm run ios --workspace=apps/mobile",
     "mobile:web": "npm run web --workspace=apps/mobile",
+    "mobile:web:clear": "npm run web:clear --workspace=apps/mobile",
     "api": "npm run dev --workspace=apps/api",
     "api:build": "npm run build --workspace=apps/api",
     "dev": "concurrently \"npm run api\" \"npm run mobile\"",
@@ -22,6 +24,28 @@
     "concurrently": "^9.1.2"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.0.0 <=22.x"
+  },
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "nativewind": "4.1.23",
+    "react-native-css-interop": "0.1.22",
+    "expo": "~52.0.47",
+    "@expo/metro-config": "~0.19.12",
+    "metro": "0.81.5",
+    "metro-cache": "0.81.5",
+    "metro-config": "0.81.5",
+    "metro-core": "0.81.5",
+    "metro-file-map": "0.81.5",
+    "metro-resolver": "0.81.5",
+    "metro-runtime": "0.81.5",
+    "metro-source-map": "0.81.5",
+    "metro-transform-worker": "0.81.5",
+    "metro-babel-transformer": "0.81.5",
+    "metro-cache-key": "0.81.5",
+    "metro-minify-terser": "0.81.5",
+    "metro-symbolicate": "0.81.5",
+    "metro-transform-plugins": "0.81.5"
   }
 }

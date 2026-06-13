@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { Audio } from "expo-av";
+import * as Haptics from "expo-haptics";
 
 interface GentleTimerProps {
   durationMinutes: number;
@@ -25,9 +26,10 @@ export function GentleTimer({
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - progress);
+  const isComplete = elapsed >= totalSeconds;
 
   useEffect(() => {
-    if (!running) return;
+    if (!running || isComplete) return;
 
     const interval = setInterval(() => {
       setElapsed((prev) => {
@@ -35,7 +37,7 @@ export function GentleTimer({
         if (next >= totalSeconds && !completedRef.current) {
           completedRef.current = true;
           setRunning(false);
-          playBell();
+          playCompletionCue();
           onComplete?.();
         }
         return next;
@@ -43,15 +45,25 @@ export function GentleTimer({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [running, totalSeconds, onComplete]);
+  }, [running, totalSeconds, onComplete, isComplete]);
 
-  async function playBell() {
+  async function playCompletionCue() {
     try {
-      // Son doux généré via un asset futur ; pour le MVP, vibration silencieuse
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+      await Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Success
+      );
+      setTimeout(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }, 400);
     } catch {
-      // Ignorer si l'audio n'est pas disponible
+      // Ignorer si haptique/audio indisponible
     }
+  }
+
+  function togglePause() {
+    if (isComplete) return;
+    setRunning((r) => !r);
   }
 
   return (
@@ -69,7 +81,7 @@ export function GentleTimer({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#6B8F71"
+          stroke={isComplete ? "#A8856A" : "#6B8F71"}
           strokeWidth={stroke}
           fill="none"
           strokeDasharray={circumference}
@@ -79,6 +91,23 @@ export function GentleTimer({
           origin={`${size / 2}, ${size / 2}`}
         />
       </Svg>
+
+      {!isComplete && (
+        <Pressable
+          onPress={togglePause}
+          className="mt-4 px-5 py-2 rounded-full bg-sand-100 border border-sand-200"
+        >
+          <Text className="text-sand-600 text-sm">
+            {running ? "Pause" : "Reprendre"}
+          </Text>
+        </Pressable>
+      )}
+
+      {isComplete && (
+        <Text className="text-sage-500 text-sm mt-4">
+          Moment terminé — prenez le temps de respirer
+        </Text>
+      )}
     </View>
   );
 }

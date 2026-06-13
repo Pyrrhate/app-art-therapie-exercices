@@ -12,11 +12,21 @@ import {
   parseJsonFromText,
 } from "./prompts";
 
-const HF_API = "https://api-inference.huggingface.co/models";
+const HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions";
+const HF_INFERENCE_URL = "https://router.huggingface.co/hf-inference/models";
 
-interface HFTextResponse {
-  generated_text?: string;
+interface ChatCompletionResponse {
   choices?: Array<{ message?: { content?: string } }>;
+  error?: string;
+}
+
+interface HFInferenceResponse {
+  generated_text?: string;
+}
+
+function logHfError(context: string, status: number, body: string): void {
+  if (process.env.NODE_ENV === "production") return;
+  console.warn(`[HF ${context}] ${status}: ${body.slice(0, 300)}`);
 }
 
 export class HuggingFaceProvider implements AIProvider {
@@ -27,7 +37,7 @@ export class HuggingFaceProvider implements AIProvider {
   constructor() {
     this.token = process.env.HF_TOKEN ?? "";
     this.textModel =
-      process.env.HF_TEXT_MODEL ?? "meta-llama/Meta-Llama-3-8B-Instruct";
+      process.env.HF_TEXT_MODEL ?? "meta-llama/Llama-3.1-8B-Instruct";
     this.visionModel =
       process.env.HF_VISION_MODEL ?? "llava-hf/llava-1.5-7b-hf";
   }
@@ -58,7 +68,8 @@ export class HuggingFaceProvider implements AIProvider {
         durationMinutes: 15,
         source: "ai",
       };
-    } catch {
+    } catch (error) {
+      console.warn("[HF generateExercise]", error);
       return getFallbackExercise(input);
     }
   }
@@ -91,32 +102,43 @@ export class HuggingFaceProvider implements AIProvider {
         openQuestions: fallback.openQuestions,
         source: "ai",
       };
-    } catch {
+    } catch (error) {
+      console.warn("[HF analyzeArtwork]", error);
       const fallback = getFallbackReflection();
       return { ...fallback, source: "fallback" };
     }
   }
 
   private async callTextModel(prompt: string): Promise<string> {
-    const response = await fetch(`${HF_API}/${this.textModel}`, {
+    const response = await fetch(HF_CHAT_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        inputs: prompt,
-        parameters: { max_new_tokens: 512, return_full_text: false },
+        model: this.textModel,
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 512,
+        temperature: 0.7,
       }),
     });
 
+    const rawBody = await response.text();
+
     if (!response.ok) {
-      throw new Error(`HF text error: ${response.status}`);
+      logHfError("chat", response.status, rawBody);
+      throw new Error(`HF chat error: ${response.status}`);
     }
 
-    const data = (await response.json()) as HFTextResponse | HFTextResponse[];
-    const item = Array.isArray(data) ? data[0] : data;
-    return item?.generated_text ?? item?.choices?.[0]?.message?.content ?? "";
+    const data = JSON.parse(rawBody) as ChatCompletionResponse;
+    const content = data.choices?.[0]?.message?.content?.trim();
+
+    if (!content) {
+      throw new Error("HF chat: réponse vide");
+    }
+
+    return content;
   }
 
   private async callVisionModel(
@@ -125,7 +147,7 @@ export class HuggingFaceProvider implements AIProvider {
   ): Promise<string> {
     const imageData = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-    const response = await fetch(`${HF_API}/${this.visionModel}`, {
+    const response = await fetch(`${HF_INFERENCE_URL}/${this.visionModel}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.token}`,
@@ -140,12 +162,24 @@ export class HuggingFaceProvider implements AIProvider {
       }),
     });
 
+    const rawBody = await response.text();
+
     if (!response.ok) {
+      logHfError("vision", response.status, rawBody);
       throw new Error(`HF vision error: ${response.status}`);
     }
 
-    const data = (await response.json()) as HFTextResponse | HFTextResponse[];
+    const data = JSON.parse(rawBody) as
+      | HFInferenceResponse
+      | HFInferenceResponse[];
+
     const item = Array.isArray(data) ? data[0] : data;
-    return item?.generated_text ?? "";
+    const text = item?.generated_text?.trim();
+
+    if (!text) {
+      throw new Error("HF vision: réponse vide");
+    }
+
+    return text;
   }
 }
