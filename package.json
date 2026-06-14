@@ -14,6 +14,7 @@
     "mobile:ios": "npm run ios --workspace=apps/mobile",
     "mobile:web": "npm run web --workspace=apps/mobile",
     "mobile:web:clear": "npm run web:clear --workspace=apps/mobile",
+    "mobile:web:export": "npm run build:web --workspace=apps/mobile",
     "api": "npm run dev --workspace=apps/api",
     "api:build": "npm run build --workspace=apps/api",
     "dev": "concurrently \"npm run api\" \"npm run mobile\"",

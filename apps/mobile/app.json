@@ -41,6 +41,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "https://pastek-art.eu"
     }
   }
 }
