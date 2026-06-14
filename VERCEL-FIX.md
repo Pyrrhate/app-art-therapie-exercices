@@ -45,7 +45,7 @@ Cliquez **Save**, puis **Deployments → Redeploy**.
 HF_TOKEN=hf_...
 AI_PROVIDER=huggingface
 HF_TEXT_MODEL=meta-llama/Llama-3.1-8B-Instruct
-HF_VISION_MODEL=Qwen/Qwen2.5-VL-7B-Instruct:fastest
+HF_VISION_MODEL=zai-org/GLM-4.5V:novita
 ALLOWED_ORIGINS=http://localhost:8081,http://localhost:8082,http://localhost:19006,https://pastek-art.eu,https://www.pastek-art.eu
 ```
 

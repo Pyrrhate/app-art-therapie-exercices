@@ -23,11 +23,11 @@ export function getFallbackReflection(): {
 } {
   return {
     reflection:
-      "Merci d'avoir pris ce temps pour créer. Votre œuvre est une trace unique de ce moment — une invitation à explorer ce qui s'est manifesté, sans chercher à l'interpréter.",
+      "Merci d'avoir pris ce temps pour créer. Votre œuvre porte la trace de ce moment — quelque chose de vivant s'y est déposé, même si cela vous surprend. Il n'y a rien à corriger ni à comprendre tout de suite : laissez-vous simplement être touché·e par ce que vous avez fait.",
     openQuestions: [
-      "Quelle couleur ou forme vous a le plus attiré·e pendant l'exercice ?",
-      "Y a-t-il une partie de l'œuvre qui vous surprend aujourd'hui ?",
-      "Si cette création pouvait parler, que dirait-elle doucement ?",
+      "Qu'est-ce qui vous a le plus apaisé ou stimulé pendant ce rituel ?",
+      "Y a-t-il un détail de votre création qui vous parle aujourd'hui, doucement ?",
+      "Si vous pouviez remercier une partie de vous-même pour ce geste, laquelle serait-ce ?",
     ],
   };
 }

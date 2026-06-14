@@ -103,6 +103,7 @@ export async function checkHealth(): Promise<{
   aiConfigured?: boolean;
   textModel?: string;
   visionModel?: string;
+  reflectionPipeline?: string;
   aiHint?: string;
 }> {
   try {
@@ -112,6 +113,7 @@ export async function checkHealth(): Promise<{
       aiConfigured?: boolean;
       textModel?: string;
       visionModel?: string;
+      reflectionPipeline?: string;
       aiHint?: string;
     }>("/api/health");
     return {
@@ -120,6 +122,7 @@ export async function checkHealth(): Promise<{
       aiConfigured: result.aiConfigured,
       textModel: result.textModel,
       visionModel: result.visionModel,
+      reflectionPipeline: result.reflectionPipeline,
       aiHint: result.aiHint,
     };
   } catch {

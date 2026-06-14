@@ -20,7 +20,7 @@ Dans Vercel → Settings → Environment Variables :
 | `HF_TOKEN` | Votre token HF (permission Inference Providers) |
 | `AI_PROVIDER` | `huggingface` |
 | `HF_TEXT_MODEL` | `meta-llama/Llama-3.1-8B-Instruct` |
-| `HF_VISION_MODEL` | `llava-hf/llava-1.5-7b-hf` |
+| `HF_VISION_MODEL` | `zai-org/GLM-4.5V:novita` (éviter Qwen/llava — non routables) |
 | `ALLOWED_ORIGINS` | `*` pour le MVP, ou vos URLs Expo |
 
 ## 4. Déployer

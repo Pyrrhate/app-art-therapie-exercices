@@ -8,14 +8,18 @@ import type {
 } from "../types";
 import {
   buildExercisePrompt,
-  buildReflectionPrompt,
+  buildVisionObservationPrompt,
+  buildWarmReflectionPrompt,
+  buildWarmReflectionRetryPrompt,
+  looksLikeColdDescription,
   parseExerciseFromAi,
   parseReflectionFromAi,
 } from "./prompts";
 
 const HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions";
-const HF_INFERENCE_URL = "https://router.huggingface.co/hf-inference/models";
 const VISION_FETCH_TIMEOUT_MS = 90_000;
+/** Limite prudente pour data URL dans le corps JSON chat (évite 400/413 côté routeur). */
+const VISION_MAX_DATA_URL_CHARS = 520_000;
 
 /**
  * Modèles recommandés (Vercel → variables d'environnement) :
@@ -23,26 +27,31 @@ const VISION_FETCH_TIMEOUT_MS = 90_000;
  * HF_TEXT_MODEL — génération d'exercices (chat, JSON)
  *   Ex. meta-llama/Llama-3.1-8B-Instruct
  *
- * HF_VISION_MODEL — analyse photo (chat multimodal)
- *   Ex. Qwen/Qwen2.5-VL-7B-Instruct:fastest
- *   Alternative : llava-hf/llava-1.5-7b-hf (sans suffixe :fastest)
+ * HF_VISION_MODEL — analyse photo (chat multimodal via Inference Providers)
+ *   Recommandé : zai-org/GLM-4.5V:novita
+ *   Alternative : CohereLabs/aya-vision-32b:cohere
+ *   Éviter : Qwen/Qwen2.5-VL-7B-Instruct:fastest, llava-hf/* (sans provider live sur le routeur HF)
  *
  * HF_TOKEN — obligatoire en prod ; sans token → mode secours côté API.
  */
-const DEFAULT_VISION_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct:fastest";
+const DEFAULT_VISION_MODEL = "zai-org/GLM-4.5V:novita";
 const VISION_MODEL_FALLBACKS = [
-  "Qwen/Qwen2.5-VL-7B-Instruct:fastest",
-  "Qwen/Qwen2.5-VL-7B-Instruct",
-  "llava-hf/llava-1.5-7b-hf",
+  "zai-org/GLM-4.5V:novita",
+  "zai-org/GLM-4.5V:zai-org",
+  "zai-org/GLM-4.5V",
+  "CohereLabs/aya-vision-32b:cohere",
 ];
+
+const WARM_REFLECTION_SYSTEM =
+  "Tu es un·e art-thérapeute francophone. Tu écris avec chaleur et vouvoiement. Tu ne fais jamais de description technique d'œuvre d'art (pas de listes de couleurs, formes ou textures).";
+
+/** Modèles Hub sans provider Inference live — le routeur renvoie HTTP 400. */
+const DEPRECATED_VISION_MODEL_RE =
+  /(?:Qwen\/Qwen2(?:\.5)?-VL|llava-hf\/llava|meta-llama\/Llama-3\.2-11B-Vision)/i;
 
 interface ChatCompletionResponse {
   choices?: Array<{ message?: { content?: string } }>;
   error?: string;
-}
-
-interface HFInferenceResponse {
-  generated_text?: string;
 }
 
 function toDataImageUrl(imageBase64: string): string {
@@ -52,18 +61,90 @@ function toDataImageUrl(imageBase64: string): string {
   return `data:image/jpeg;base64,${imageBase64.replace(/^data:image\/\w+;base64,/, "")}`;
 }
 
-function stripDataUrl(imageBase64: string): string {
-  return imageBase64.replace(/^data:image\/\w+;base64,/, "");
+function logHfError(context: string, status: number, body: string): void {
+  console.warn(`[HF ${context}] ${status}: ${body.slice(0, 600)}`);
 }
 
-function logHfError(context: string, status: number, body: string): void {
-  console.warn(`[HF ${context}] ${status}: ${body.slice(0, 400)}`);
+function extractHfErrorMessage(rawBody: string): string {
+  const trimmed = rawBody.trim();
+  if (!trimmed) return "";
+
+  try {
+    const data = JSON.parse(trimmed) as {
+      error?: string | { message?: string; code?: string };
+      message?: string;
+    };
+    const err = data.error;
+    if (typeof err === "string") return err;
+    if (err && typeof err === "object") {
+      return err.message ?? err.code ?? JSON.stringify(err);
+    }
+    if (typeof data.message === "string") return data.message;
+  } catch {
+    /* corps non JSON */
+  }
+
+  return trimmed.replace(/\s+/g, " ");
+}
+
+function formatHfHttpError(status: number, rawBody: string, maxLen = 280): string {
+  const detail = extractHfErrorMessage(rawBody).slice(0, maxLen);
+  return detail ? `HTTP ${status}: ${detail}` : `HTTP ${status}`;
+}
+
+function expandVisionModel(model: string): string[] {
+  const trimmed = model.trim();
+  if (!trimmed) return [];
+
+  const withoutPolicy = trimmed.replace(/:(fastest|cheapest|preferred)$/, "");
+  if (DEPRECATED_VISION_MODEL_RE.test(withoutPolicy)) {
+    console.warn(
+      `[HF vision] modèle non routable ignoré (${trimmed}) — utilisez zai-org/GLM-4.5V:novita`
+    );
+    return [];
+  }
+
+  const variants = new Set<string>();
+
+  if (/:(fastest|cheapest|preferred)$/.test(trimmed)) {
+    return [];
+  }
+
+  variants.add(trimmed);
+
+  if (!trimmed.includes(":")) {
+    if (withoutPolicy.startsWith("zai-org/GLM-4.5V")) {
+      variants.add(`${withoutPolicy}:novita`);
+      variants.add(`${withoutPolicy}:zai-org`);
+    } else if (withoutPolicy.startsWith("CohereLabs/aya-vision")) {
+      variants.add(`${withoutPolicy}:cohere`);
+    }
+  }
+
+  return [...variants];
+}
+
+function ensureVouvoiementQuestion(question: string): string {
+  return question
+    .replace(/\bas-tu\b/gi, "avez-vous")
+    .replace(/\bt'as\b/gi, "vous avez")
+    .replace(/\bt'es\b/gi, "vous êtes")
+    .replace(/\btu\b/gi, "vous")
+    .replace(/\bton\b/gi, "votre")
+    .replace(/\bta\b/gi, "votre")
+    .replace(/\btes\b/gi, "vos");
 }
 
 function visionModelCandidates(configured?: string): string[] {
-  const models = [
+  const configuredModels = [
     configured?.trim(),
     process.env.HF_VISION_MODEL?.trim(),
+  ]
+    .filter((m): m is string => Boolean(m))
+    .flatMap(expandVisionModel);
+
+  const models = [
+    ...configuredModels,
     DEFAULT_VISION_MODEL,
     ...VISION_MODEL_FALLBACKS,
   ].filter((m): m is string => Boolean(m));
@@ -137,21 +218,54 @@ export class HuggingFaceProvider implements AIProvider {
     }
 
     try {
-      const prompt = buildReflectionPrompt(input.impulse, input.technique);
-      const raw = await this.callVisionModel(input.imageBase64, prompt);
-      const parsed = parseReflectionFromAi(raw);
+      const visualNotes = await this.callVisionModel(
+        input.imageBase64,
+        buildVisionObservationPrompt()
+      );
+      let warmRaw = await this.callTextModel(
+        buildWarmReflectionPrompt(
+          visualNotes,
+          input.impulse,
+          input.technique
+        ),
+        { temperature: 0.85, maxTokens: 640, systemPrompt: WARM_REFLECTION_SYSTEM }
+      );
+      let parsed = parseReflectionFromAi(warmRaw);
 
-      if (parsed) {
+      if (
+        parsed?.reflection &&
+        looksLikeColdDescription(parsed.reflection)
+      ) {
+        console.warn("[HF analyzeArtwork] ton trop descriptif — nouvelle tentative");
+        warmRaw = await this.callTextModel(
+          buildWarmReflectionRetryPrompt(
+            parsed.reflection,
+            input.impulse,
+            input.technique
+          ),
+          { temperature: 0.75, maxTokens: 640, systemPrompt: WARM_REFLECTION_SYSTEM }
+        );
+        parsed = parseReflectionFromAi(warmRaw);
+      }
+
+      if (parsed?.reflection && !looksLikeColdDescription(parsed.reflection)) {
         return {
           reflection: parsed.reflection,
-          openQuestions: parsed.openQuestions,
+          openQuestions: parsed.openQuestions.map(ensureVouvoiementQuestion),
           source: "ai",
         };
       }
 
+      if (parsed?.reflection && looksLikeColdDescription(parsed.reflection)) {
+        console.warn(
+          "[HF analyzeArtwork] toujours descriptif après retry — mode secours"
+        );
+        throw new Error("Réponse trop descriptive après reformulation");
+      }
+
       console.warn(
         "[HF analyzeArtwork] réponse non exploitable:",
-        raw.slice(0, 300)
+        warmRaw.slice(0, 300)
       );
       throw new Error("Réponse IA illisible — reformulation impossible");
     } catch (error) {
@@ -162,12 +276,25 @@ export class HuggingFaceProvider implements AIProvider {
       return {
         ...fallback,
         source: "fallback",
-        analysisNote: note.slice(0, 200),
+        analysisNote: note.slice(0, 400),
       };
     }
   }
 
-  private async callTextModel(prompt: string): Promise<string> {
+  private async callTextModel(
+    prompt: string,
+    options?: {
+      temperature?: number;
+      maxTokens?: number;
+      systemPrompt?: string;
+    }
+  ): Promise<string> {
+    const messages: Array<{ role: string; content: string }> = [];
+    if (options?.systemPrompt) {
+      messages.push({ role: "system", content: options.systemPrompt });
+    }
+    messages.push({ role: "user", content: prompt });
+
     const response = await fetch(HF_CHAT_URL, {
       method: "POST",
       headers: {
@@ -176,9 +303,9 @@ export class HuggingFaceProvider implements AIProvider {
       },
       body: JSON.stringify({
         model: this.textModel,
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 512,
-        temperature: 0.7,
+        messages,
+        max_tokens: options?.maxTokens ?? 512,
+        temperature: options?.temperature ?? 0.7,
       }),
       signal: AbortSignal.timeout(60_000),
     });
@@ -187,7 +314,7 @@ export class HuggingFaceProvider implements AIProvider {
 
     if (!response.ok) {
       logHfError("chat", response.status, rawBody);
-      throw new Error(`HF chat error: ${response.status}`);
+      throw new Error(formatHfHttpError(response.status, rawBody));
     }
 
     const data = JSON.parse(rawBody) as ChatCompletionResponse;
@@ -218,16 +345,6 @@ export class HuggingFaceProvider implements AIProvider {
       }
     }
 
-    try {
-      const legacyModel =
-        this.visionModels.find((m) => m.includes("llava")) ??
-        "llava-hf/llava-1.5-7b-hf";
-      return await this.callVisionInference(imageBase64, prompt, legacyModel);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      errors.push(`inference: ${msg}`);
-    }
-
     throw new Error(`HF vision: tous les modèles ont échoué — ${errors.join(" | ")}`);
   }
 
@@ -237,6 +354,11 @@ export class HuggingFaceProvider implements AIProvider {
     model: string
   ): Promise<string> {
     const imageUrl = toDataImageUrl(imageBase64);
+    if (imageUrl.length > VISION_MAX_DATA_URL_CHARS) {
+      throw new Error(
+        `image trop volumineuse pour l'API chat (${Math.round(imageUrl.length / 1024)} Ko data URL)`
+      );
+    }
 
     const response = await fetch(HF_CHAT_URL, {
       method: "POST",
@@ -250,16 +372,16 @@ export class HuggingFaceProvider implements AIProvider {
           {
             role: "user",
             content: [
-              { type: "text", text: prompt },
               {
                 type: "image_url",
-                image_url: { url: imageUrl, detail: "auto" },
+                image_url: { url: imageUrl },
               },
+              { type: "text", text: prompt },
             ],
           },
         ],
         max_tokens: 768,
-        temperature: 0.6,
+        temperature: 0.72,
       }),
       signal: AbortSignal.timeout(VISION_FETCH_TIMEOUT_MS),
     });
@@ -268,7 +390,7 @@ export class HuggingFaceProvider implements AIProvider {
 
     if (!response.ok) {
       logHfError(`vision-chat:${model}`, response.status, rawBody);
-      throw new Error(`HTTP ${response.status}`);
+      throw new Error(formatHfHttpError(response.status, rawBody));
     }
 
     const data = JSON.parse(rawBody) as ChatCompletionResponse;
@@ -279,49 +401,5 @@ export class HuggingFaceProvider implements AIProvider {
     }
 
     return content;
-  }
-
-  private async callVisionInference(
-    imageBase64: string,
-    prompt: string,
-    model: string
-  ): Promise<string> {
-    const imageData = stripDataUrl(imageBase64);
-
-    const response = await fetch(`${HF_INFERENCE_URL}/${model}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        inputs: {
-          image: imageData,
-          text: prompt,
-        },
-        parameters: { max_new_tokens: 512 },
-      }),
-      signal: AbortSignal.timeout(VISION_FETCH_TIMEOUT_MS),
-    });
-
-    const rawBody = await response.text();
-
-    if (!response.ok) {
-      logHfError(`vision-inference:${model}`, response.status, rawBody);
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const data = JSON.parse(rawBody) as
-      | HFInferenceResponse
-      | HFInferenceResponse[];
-
-    const item = Array.isArray(data) ? data[0] : data;
-    const text = item?.generated_text?.trim();
-
-    if (!text) {
-      throw new Error("réponse vide");
-    }
-
-    return text;
   }
 }

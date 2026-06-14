@@ -20,26 +20,104 @@ Consignes :
 {"exercise":"texte de l'exercice ici","durationMinutes":${durationMinutes}}`;
 }
 
-export function buildReflectionPrompt(
+export function buildVisionObservationPrompt(): string {
+  return `Observe cette œuvre. Réponds UNIQUEMENT en JSON valide, sans markdown :
+{"ambiance":"une phrase sur l'atmosphère générale","energie":"mouvement ou calme en une phrase","matiere":"texture ou geste visible en une phrase max"}
+
+Pas d'adresse à l'auteur·rice. Pas de liste de couleurs. Français.`;
+}
+
+export function looksLikeColdDescription(text: string): boolean {
+  const t = text.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
+  const coldPhrases = [
+    "l'oeuvre presente",
+    "dominent",
+    "contrastant avec",
+    "teintes profondes",
+    "la texture parait",
+    "les formes sont",
+    "traces de pinceau",
+    "le rythme est",
+    "nuances de",
+    "parsèment le fond",
+    "parsement le fond",
+  ];
+  let hits = 0;
+  for (const phrase of coldPhrases) {
+    if (t.includes(phrase)) hits++;
+  }
+  return hits >= 2 || t.includes("l'oeuvre presente");
+}
+
+export function buildWarmReflectionPrompt(
+  visualNotes: string,
   impulse?: string,
   technique?: ArtisticTechnique
 ): string {
   const context = [
-    impulse ? `Impulsion initiale : "${impulse}"` : null,
+    impulse ? `Impulsion initiale : « ${impulse} »` : null,
+    technique ? `Technique utilisée : ${TECHNIQUE_LABELS[technique]}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return `Tu es un·e art-thérapeute chaleureux·se. Voici des indices visuels très courts (NE PAS les recopier ni les lister) :
+
+${visualNotes.trim()}
+
+${context ? `${context}\n` : ""}
+Écris un miroir créatif pour la personne qui a créé l'œuvre.
+
+Règles OBLIGATOIRES :
+- Vouvoiement (« vous », « votre ») partout
+- Commencez par accueillir le geste créatif (« Vous avez… », « Merci d'avoir… »)
+- Maximum 2 détails visuels, intégrés dans une phrase poétique — JAMAIS de catalogue
+- INTERDIT : « L'œuvre présente », « dominent », « contrastant », « teintes », « texture paraît », « formes sont expressives »
+- Pas de diagnostic psychologique
+- 2 ou 3 questions ouvertes sur le ressenti (vouvoiement)
+
+Exemple :
+{"reflection":"Vous avez offert un moment à quelque chose en vous. Votre création respire une tension douce entre ombre et lumière — comme si une part de vous osait se montrer sans tout dire.","openQuestions":["Qu'avez-vous ressenti dans le corps pendant ce geste ?","Y a-t-il un détail qui vous surprend aujourd'hui ?"]}
+
+JSON uniquement :
+{"reflection":"…","openQuestions":["…","…"]}`;
+}
+
+export function buildWarmReflectionRetryPrompt(
+  failedReflection: string,
+  impulse?: string,
+  technique?: ArtisticTechnique
+): string {
+  const context = [
+    impulse ? `Impulsion : « ${impulse} »` : null,
     technique ? `Technique : ${TECHNIQUE_LABELS[technique]}` : null,
   ]
     .filter(Boolean)
     .join("\n");
 
-  return `Tu es un miroir créatif empathique en art-thérapie. L'utilisateur·rice partage une photo de son œuvre.
+  return `La réponse ci-dessous est trop descriptive et froide — REFUSEZ ce style :
 
-${context}
+"""
+${failedReflection.slice(0, 500)}
+"""
 
-En français uniquement :
-1) Rédige un paragraphe (80 à 120 mots) décrivant ce que tu vois : couleurs, formes, textures, rythme. Sans diagnostic ni interprétation psychologique.
-2) Puis ajoute une section « Questions » avec 2 ou 3 questions ouvertes et douces (une par ligne, préfixées par « - »).
+${context ? `${context}\n` : ""}
+Réécrivez en art-thérapie chaleureuse : accueil du geste, ton humain, vouvoiement, zéro inventaire technique.
 
-Ne réponds pas en JSON. Pas de titre « REFLEXION ».`;
+JSON uniquement :
+{"reflection":"90-110 mots, chaleureux","openQuestions":["2 questions au vous"]}`;
+}
+
+/** @deprecated Utiliser buildVisionObservationPrompt + buildWarmReflectionPrompt */
+export function buildReflectionPrompt(
+  impulse?: string,
+  technique?: ArtisticTechnique
+): string {
+  return buildWarmReflectionPrompt(
+    "(observez l'image directement)",
+    impulse,
+    technique
+  );
 }
 
 function normalizeRawAiResponse(raw: string): string {

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const textModel =
     process.env.HF_TEXT_MODEL ?? "meta-llama/Llama-3.1-8B-Instruct";
   const visionModel =
-    process.env.HF_VISION_MODEL ?? "Qwen/Qwen2.5-VL-7B-Instruct:fastest";
+    process.env.HF_VISION_MODEL ?? "zai-org/GLM-4.5V:novita";
 
   return jsonResponse(
     {
@@ -18,6 +18,7 @@ export async function GET(request: Request) {
       aiConfigured: hasToken,
       textModel,
       visionModel,
+      reflectionPipeline: "warm-v2",
       aiHint: hasToken
         ? undefined
         : "Configurez HF_TOKEN sur Vercel pour activer l'IA (sinon mode secours).",

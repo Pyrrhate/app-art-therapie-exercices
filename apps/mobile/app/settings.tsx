@@ -15,6 +15,9 @@ export default function SettingsScreen() {
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
   const [textModel, setTextModel] = useState<string | null>(null);
   const [visionModel, setVisionModel] = useState<string | null>(null);
+  const [reflectionPipeline, setReflectionPipeline] = useState<string | null>(
+    null
+  );
   const [aiHint, setAiHint] = useState<string | null>(null);
   const [timerSound, setTimerSoundState] = useState<TimerSoundId>("gong");
   const apiUrl = getApiUrl();
@@ -27,6 +30,7 @@ export default function SettingsScreen() {
         aiConfigured: ai,
         textModel: tm,
         visionModel: vm,
+        reflectionPipeline: rp,
         aiHint: hint,
       }) => {
         setApiOk(ok);
@@ -34,6 +38,7 @@ export default function SettingsScreen() {
         setAiConfigured(ai ?? null);
         setTextModel(tm ?? null);
         setVisionModel(vm ?? null);
+        setReflectionPipeline(rp ?? null);
         setAiHint(hint ?? null);
       }
     );
@@ -140,9 +145,11 @@ export default function SettingsScreen() {
             <Text className="text-sand-400 text-xs mt-2 leading-5">
               Texte : {textModel ?? "—"}
               {"\n"}Vision : {visionModel ?? "—"}
+              {reflectionPipeline
+                ? `\nRéflexion : ${reflectionPipeline}`
+                : ""}
               {"\n"}
-              Recommandé : Qwen/Qwen2.5-VL-7B-Instruct:fastest pour l'analyse
-              photo.
+              Recommandé : zai-org/GLM-4.5V:novita pour l'analyse photo.
             </Text>
           )}
           {!apiOk && apiOk !== null && (
