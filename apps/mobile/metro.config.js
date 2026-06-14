@@ -1,17 +1,19 @@
 const path = require("path");
 const Module = require("module");
+const { resolve } = require("metro-resolver");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "../..");
 const mobileNodeModules = path.resolve(projectRoot, "node_modules");
 const workspaceNodeModules = path.resolve(workspaceRoot, "node_modules");
+const moduleSearchPaths = [mobileNodeModules, workspaceNodeModules];
 
-/** NativeWind/css-interop résout react-native au chargement — avant tout require nativewind. */
+/** NativeWind/css-interop charge react-native au chargement du config. */
 const originalNodeModulePaths = Module._nodeModulePaths;
 Module._nodeModulePaths = function (from) {
   const paths = originalNodeModulePaths.call(this, from);
-  for (const dir of [mobileNodeModules, workspaceNodeModules]) {
+  for (const dir of moduleSearchPaths) {
     if (!paths.includes(dir)) {
       paths.unshift(dir);
     }
@@ -19,9 +21,17 @@ Module._nodeModulePaths = function (from) {
   return paths;
 };
 
-require.resolve("react-native/package.json", {
-  paths: [mobileNodeModules, workspaceNodeModules],
-});
+function packageRoot(name) {
+  return path.dirname(
+    require.resolve(`${name}/package.json`, { paths: moduleSearchPaths })
+  );
+}
+
+const reactRoot = packageRoot("react");
+const reactDomRoot = packageRoot("react-dom");
+const reactNativeRoot = packageRoot("react-native");
+
+require.resolve("react-native/package.json", { paths: moduleSearchPaths });
 
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
@@ -33,14 +43,38 @@ const apiProxyTarget = (
 const config = getDefaultConfig(projectRoot);
 
 config.watchFolders = [workspaceRoot];
-config.resolver.nodeModulesPaths = [
-  mobileNodeModules,
-  workspaceNodeModules,
-];
+config.resolver.disableHierarchicalLookup = true;
+config.resolver.nodeModulesPaths = moduleSearchPaths;
 config.resolver.extraNodeModules = {
-  react: path.join(mobileNodeModules, "react"),
-  "react-dom": path.join(mobileNodeModules, "react-dom"),
-  "react-native": path.join(mobileNodeModules, "react-native"),
+  react: reactRoot,
+  "react-dom": reactDomRoot,
+  "react-native": reactNativeRoot,
+  "react-native-web": packageRoot("react-native-web"),
+};
+
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === "react") {
+    return { type: "sourceFile", filePath: path.join(reactRoot, "index.js") };
+  }
+  if (moduleName === "react-dom") {
+    return {
+      type: "sourceFile",
+      filePath: path.join(reactDomRoot, "index.js"),
+    };
+  }
+  if (moduleName.startsWith("react/")) {
+    return {
+      type: "sourceFile",
+      filePath: require.resolve(moduleName, { paths: [reactRoot] }),
+    };
+  }
+  if (moduleName.startsWith("react-dom/")) {
+    return {
+      type: "sourceFile",
+      filePath: require.resolve(moduleName, { paths: [reactDomRoot] }),
+    };
+  }
+  return resolve(context, moduleName, platform);
 };
 
 const apiProxy = createProxyMiddleware({

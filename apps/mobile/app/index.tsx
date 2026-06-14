@@ -77,9 +77,11 @@ export default function ImpulseScreen() {
           onPress={handleContinue}
           disabled={!canContinue || loading}
         />
-        {loading && (
-          <ActivityIndicator color="#6B8F71" className="mt-2" />
-        )}
+          {loading && (
+            <View className="mt-2 items-center">
+              <ActivityIndicator color="#6B8F71" />
+            </View>
+          )}
         <Pressable onPress={() => router.push("/settings")} className="py-2">
           <Text className="text-sand-400 text-sm text-center">Paramètres</Text>
         </Pressable>

@@ -3,7 +3,12 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { enableScreens } from "react-native-screens";
 import { WebErrorBoundary } from "@/components/WebErrorBoundary";
+
+if (Platform.OS === "web") {
+  enableScreens(false);
+}
 
 export default function RootLayout() {
   return (

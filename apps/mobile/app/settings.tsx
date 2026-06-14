@@ -82,11 +82,8 @@ export default function SettingsScreen() {
           )}
           {!apiOk && apiOk !== null && (
             <Text className="text-sand-400 text-xs mt-3 leading-5">
-              Web local : relancez avec{" "}
-              <Text className="font-mono">npm run mobile:web:clear</Text> après{" "}
-              <Text className="font-mono">npm install</Text>. Sur téléphone :
-              utilisez l'IP locale du PC dans{" "}
-              <Text className="font-mono">EXPO_PUBLIC_API_URL</Text>.
+              Web local : relancez avec npm run mobile:web:clear après npm install.
+              Sur téléphone : utilisez l'IP locale du PC dans EXPO_PUBLIC_API_URL.
             </Text>
           )}
         </View>
