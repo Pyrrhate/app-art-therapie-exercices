@@ -21,9 +21,15 @@ export interface ExerciseResponse {
 }
 
 export interface ReflectionRequest {
-  imageBase64: string;
+  /** Image base64 — optionnelle si writtenText fourni (technique écriture). */
+  imageBase64?: string;
   impulse?: string;
   technique?: ArtisticTechnique;
+  /** Consigne d'exercice suivie par l'utilisateur·rice. */
+  exercise?: string;
+  durationMinutes?: number;
+  /** Texte saisi ou issu de l'OCR (écriture). */
+  writtenText?: string;
 }
 
 export interface ReflectionResponse {
@@ -31,6 +37,8 @@ export interface ReflectionResponse {
   openQuestions: string[];
   source: "ai" | "fallback";
   analysisNote?: string;
+  /** Exercice de suite suggéré selon le vécu du rituel. */
+  followUpExercise?: string;
 }
 
 export interface AIProvider {

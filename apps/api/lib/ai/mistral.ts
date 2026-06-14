@@ -20,7 +20,7 @@ export class MistralProvider implements AIProvider {
 
   async analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse> {
     console.warn("[MistralProvider] Non implémenté — fallback utilisé");
-    const fallback = getFallbackReflection();
+    const fallback = getFallbackReflection(input);
     return { ...fallback, source: "fallback" };
   }
 }

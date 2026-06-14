@@ -8,8 +8,14 @@ interface RitualStore extends RitualState {
   setTechnique: (technique: ArtisticTechnique) => void;
   setDurationMinutes: (durationMinutes: RitualDuration) => void;
   setExercise: (exercise: string, durationMinutes?: number) => void;
-  setPhotoUri: (uri: string) => void;
-  setReflection: (reflection: string, openQuestions: string[]) => void;
+  setPhotoUri: (uri: string | null) => void;
+  setWrittenText: (writtenText: string) => void;
+  setReflection: (
+    reflection: string,
+    openQuestions: string[],
+    followUpExercise?: string | null
+  ) => void;
+  startFollowUpExercise: () => void;
   reset: () => void;
 }
 
@@ -21,6 +27,8 @@ const initialState: RitualState = {
   photoUri: null,
   reflection: null,
   openQuestions: [],
+  followUpExercise: null,
+  writtenText: "",
 };
 
 export const useRitualStore = create<RitualStore>((set, get) => ({
@@ -34,10 +42,26 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       durationMinutes: durationMinutes ?? get().durationMinutes,
     }),
   setPhotoUri: (photoUri) => set({ photoUri }),
-  setReflection: (reflection, openQuestions) =>
+  setWrittenText: (writtenText) => set({ writtenText }),
+  setReflection: (reflection, openQuestions, followUpExercise) =>
     set({
       reflection: sanitizeAiDisplayText(reflection),
       openQuestions: sanitizeQuestions(openQuestions),
+      followUpExercise: followUpExercise
+        ? sanitizeAiDisplayText(followUpExercise)
+        : null,
     }),
+  startFollowUpExercise: () => {
+    const follow = get().followUpExercise;
+    if (!follow) return;
+    set({
+      exercise: sanitizeAiDisplayText(follow),
+      reflection: null,
+      openQuestions: [],
+      followUpExercise: null,
+      photoUri: null,
+      writtenText: "",
+    });
+  },
   reset: () => set(initialState),
 }));

@@ -20,11 +20,95 @@ Consignes :
 {"exercise":"texte de l'exercice ici","durationMinutes":${durationMinutes}}`;
 }
 
-export function buildVisionObservationPrompt(): string {
-  return `Observe cette œuvre. Réponds UNIQUEMENT en JSON valide, sans markdown :
-{"ambiance":"une phrase sur l'atmosphère générale","energie":"mouvement ou calme en une phrase","matiere":"texture ou geste visible en une phrase max"}
+export function buildVisionObservationPrompt(isWriting = false): string {
+  const writingField = isWriting
+    ? ',"texte_manuscrit":"transcription approximative ou vide"'
+    : "";
+  return `Observe cette création artistique. Réponds UNIQUEMENT en JSON valide :
+{"couleurs":"teintes dominantes et contrastes","formes":"formes et composition","traits":"geste, ligne, matière","ambiance":"atmosphère générale","emotions_visibles":"qualités affectives suggérées (sans diagnostic)","matiere":"textures ou medium perçu"${writingField}}
 
-Pas d'adresse à l'auteur·rice. Pas de liste de couleurs. Français.`;
+Notes factuelles internes — pas d'adresse à l'auteur·rice. Français.`;
+}
+
+export function buildHandwritingOcrPrompt(): string {
+  return `Transcris fidèlement le texte manuscrit visible dans cette image, en français si possible.
+Retourne UNIQUEMENT le texte transcrit, sans commentaire ni guillemets.
+Si aucun texte lisible : retournez une chaîne vide.`;
+}
+
+export interface ReflectionPromptContext {
+  visualNotes?: string;
+  impulse?: string;
+  technique?: ArtisticTechnique;
+  exercise?: string;
+  writtenText?: string;
+  durationMinutes?: number;
+}
+
+function formatReflectionContext(ctx: ReflectionPromptContext): string {
+  const lines = [
+    ctx.impulse ? `Impulsion initiale : « ${ctx.impulse} »` : null,
+    ctx.technique ? `Technique : ${TECHNIQUE_LABELS[ctx.technique]}` : null,
+    ctx.durationMinutes
+      ? `Durée du rituel : ${ctx.durationMinutes} minutes`
+      : null,
+    ctx.exercise
+      ? `Exercice proposé (intitulé à prendre en compte) :\n« ${ctx.exercise.slice(0, 1200)} »`
+      : null,
+    ctx.writtenText
+      ? `Texte de l'utilisateur·rice (saisi ou transcrit) :\n« ${ctx.writtenText.slice(0, 4000)} »`
+      : null,
+    ctx.visualNotes
+      ? `Observations visuelles (usage interne — ne pas recopier en liste) :\n${ctx.visualNotes.trim()}`
+      : null,
+  ].filter(Boolean);
+  return lines.join("\n\n");
+}
+
+export function buildWarmReflectionPrompt(ctx: ReflectionPromptContext): string {
+  const contextBlock = formatReflectionContext(ctx);
+
+  return `Tu es un·e art-thérapeute chaleureux·se et profond·e, jamais clinicien·ne.
+
+${contextBlock}
+
+Rédigez un miroir créatif en français, vouvoiement (« vous »).
+
+Structure OBLIGATOIRE — reflection = exactement 3 ou 4 paragraphes séparés par \\n\\n :
+1) Accueil du geste créatif et lien discret avec l'impulsion et/ou l'exercice suivi
+2) Couleurs, formes, traits, matière — tissés dans un ton chaleureux (pas de catalogue froid)
+3) Ambiance et émotions visibles — accueillies avec bienveillance, sans diagnostic ni interprétation psychologique
+4) Encouragement sincère : ce qui est précieux dans ce qui a émergé
+
+Si un texte écrit est fourni, accueillez aussi les mots et leur rythme.
+
+Interdit : « L'œuvre présente », jargon d'expert, jugement sur la qualité artistique.
+
+Ajoutez followUpExercise : une courte consigne d'exercice de suite (2-3 phrases) adaptée au vécu, pour approfondir ou apaiser — ton invitant.
+
+2 ou 3 openQuestions sur le ressenti et le processus.
+
+JSON uniquement :
+{"reflection":"paragraphe1\\n\\nparagraphe2\\n\\nparagraphe3\\n\\nparagraphe4","openQuestions":["…","…"],"followUpExercise":"…"}`;
+}
+
+export function buildWarmReflectionRetryPrompt(
+  failedReflection: string,
+  ctx: ReflectionPromptContext
+): string {
+  const contextBlock = formatReflectionContext(ctx);
+  return `La réponse ci-dessous est trop courte, froide ou inadéquate :
+
+"""
+${failedReflection.slice(0, 800)}
+"""
+
+${contextBlock}
+
+Réécrivez : 3-4 paragraphes chaleureux (\\n\\n), vouvoiement, profondeur bienveillante sur couleurs/émotions/formes, plus followUpExercise.
+
+JSON uniquement :
+{"reflection":"…","openQuestions":["…"],"followUpExercise":"…"}`;
 }
 
 export function looksLikeColdDescription(text: string): boolean {
@@ -46,66 +130,12 @@ export function looksLikeColdDescription(text: string): boolean {
   for (const phrase of coldPhrases) {
     if (t.includes(phrase)) hits++;
   }
-  return hits >= 2 || t.includes("l'oeuvre presente");
+  return hits >= 3 || t.includes("l'oeuvre presente");
 }
 
-export function buildWarmReflectionPrompt(
-  visualNotes: string,
-  impulse?: string,
-  technique?: ArtisticTechnique
-): string {
-  const context = [
-    impulse ? `Impulsion initiale : « ${impulse} »` : null,
-    technique ? `Technique utilisée : ${TECHNIQUE_LABELS[technique]}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  return `Tu es un·e art-thérapeute chaleureux·se. Voici des indices visuels très courts (NE PAS les recopier ni les lister) :
-
-${visualNotes.trim()}
-
-${context ? `${context}\n` : ""}
-Écris un miroir créatif pour la personne qui a créé l'œuvre.
-
-Règles OBLIGATOIRES :
-- Vouvoiement (« vous », « votre ») partout
-- Commencez par accueillir le geste créatif (« Vous avez… », « Merci d'avoir… »)
-- Maximum 2 détails visuels, intégrés dans une phrase poétique — JAMAIS de catalogue
-- INTERDIT : « L'œuvre présente », « dominent », « contrastant », « teintes », « texture paraît », « formes sont expressives »
-- Pas de diagnostic psychologique
-- 2 ou 3 questions ouvertes sur le ressenti (vouvoiement)
-
-Exemple :
-{"reflection":"Vous avez offert un moment à quelque chose en vous. Votre création respire une tension douce entre ombre et lumière — comme si une part de vous osait se montrer sans tout dire.","openQuestions":["Qu'avez-vous ressenti dans le corps pendant ce geste ?","Y a-t-il un détail qui vous surprend aujourd'hui ?"]}
-
-JSON uniquement :
-{"reflection":"…","openQuestions":["…","…"]}`;
-}
-
-export function buildWarmReflectionRetryPrompt(
-  failedReflection: string,
-  impulse?: string,
-  technique?: ArtisticTechnique
-): string {
-  const context = [
-    impulse ? `Impulsion : « ${impulse} »` : null,
-    technique ? `Technique : ${TECHNIQUE_LABELS[technique]}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  return `La réponse ci-dessous est trop descriptive et froide — REFUSEZ ce style :
-
-"""
-${failedReflection.slice(0, 500)}
-"""
-
-${context ? `${context}\n` : ""}
-Réécrivez en art-thérapie chaleureuse : accueil du geste, ton humain, vouvoiement, zéro inventaire technique.
-
-JSON uniquement :
-{"reflection":"90-110 mots, chaleureux","openQuestions":["2 questions au vous"]}`;
+export function looksLikeTooBriefReflection(text: string): boolean {
+  const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim().length > 0);
+  return text.length < 280 || paragraphs.length < 2;
 }
 
 /** @deprecated Utiliser buildVisionObservationPrompt + buildWarmReflectionPrompt */
@@ -113,11 +143,11 @@ export function buildReflectionPrompt(
   impulse?: string,
   technique?: ArtisticTechnique
 ): string {
-  return buildWarmReflectionPrompt(
-    "(observez l'image directement)",
+  return buildWarmReflectionPrompt({
+    visualNotes: "(observez l'image directement)",
     impulse,
-    technique
-  );
+    technique,
+  });
 }
 
 function normalizeRawAiResponse(raw: string): string {
@@ -308,12 +338,29 @@ function parseReflectionFromProse(raw: string): {
 export function parseReflectionFromAi(raw: string): {
   reflection: string;
   openQuestions: string[];
+  followUpExercise?: string;
 } | null {
   const normalized = normalizeRawAiResponse(raw);
   const parsed = parseJsonFromText<{
     reflection?: unknown;
     openQuestions?: unknown;
+    followUpExercise?: unknown;
   }>(normalized);
+
+  function pack(
+    reflection: string,
+    openQuestions: string[],
+    followUpExercise?: string
+  ) {
+    const follow = followUpExercise
+      ? cleanAiText(followUpExercise)
+      : undefined;
+    return {
+      reflection,
+      openQuestions,
+      ...(follow && follow.length > 10 ? { followUpExercise: follow } : {}),
+    };
+  }
 
   if (parsed && typeof parsed.reflection === "string") {
     const reflection = cleanAiText(parsed.reflection);
@@ -324,7 +371,11 @@ export function parseReflectionFromAi(raw: string): {
             .map((q) => cleanAiText(q))
             .filter((q) => q && !looksLikeJsonArtifact(q))
         : [];
-      return { reflection, openQuestions };
+      const followUp =
+        typeof parsed.followUpExercise === "string"
+          ? parsed.followUpExercise
+          : undefined;
+      return pack(reflection, openQuestions, followUp);
     }
   }
 
@@ -335,7 +386,8 @@ export function parseReflectionFromAi(raw: string): {
       const openQuestions = extractJsonStringArray(normalized, "openQuestions")
         .map((q) => cleanAiText(q))
         .filter((q) => q && !looksLikeJsonArtifact(q));
-      return { reflection, openQuestions };
+      const followUp = extractJsonStringField(normalized, "followUpExercise");
+      return pack(reflection, openQuestions, followUp ?? undefined);
     }
   }
 

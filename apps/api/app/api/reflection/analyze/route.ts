@@ -12,16 +12,29 @@ import { checkRateLimit, getClientId } from "@/lib/rate-limit";
 /** ~3 Mo en base64 — compatible limite corps Vercel (~4,5 Mo). */
 const MAX_IMAGE_BASE64_CHARS = 4 * 1024 * 1024;
 
-const bodySchema = z.object({
-  imageBase64: z
-    .string()
-    .min(100)
-    .max(MAX_IMAGE_BASE64_CHARS, {
-      message: "Image trop lourde (maximum 3 Mo environ).",
-    }),
-  impulse: z.string().max(200).optional(),
-  technique: artisticTechniqueSchema.optional(),
-});
+const bodySchema = z
+  .object({
+    imageBase64: z
+      .string()
+      .min(100)
+      .max(MAX_IMAGE_BASE64_CHARS, {
+        message: "Image trop lourde (maximum 3 Mo environ).",
+      })
+      .optional(),
+    writtenText: z.string().min(1).max(8000).optional(),
+    exercise: z.string().max(3000).optional(),
+    impulse: z.string().max(200).optional(),
+    technique: artisticTechniqueSchema.optional(),
+    durationMinutes: z
+      .union([z.literal(15), z.literal(30), z.literal(45)])
+      .optional(),
+  })
+  .refine(
+    (data) =>
+      (data.imageBase64 && data.imageBase64.length >= 100) ||
+      (data.writtenText && data.writtenText.trim().length >= 10),
+    { message: "Fournissez une photo ou au moins 10 caractères de texte." }
+  );
 
 export async function OPTIONS(request: Request) {
   return handleOptions(request);
@@ -52,7 +65,8 @@ export async function POST(request: Request) {
         {
           error: tooLarge
             ? "Photo trop lourde (maximum 3 Mo). Choisissez une image plus légère ou reprenez la photo."
-            : "Image ou contexte invalide.",
+            : parsed.error.issues[0]?.message ??
+              "Image, texte ou contexte invalide.",
           code: tooLarge ? "IMAGE_TOO_LARGE" : "VALIDATION_ERROR",
         },
         400
@@ -78,7 +92,10 @@ export async function POST(request: Request) {
 
 export async function GET() {
   return new Response(
-    JSON.stringify({ message: "Utilisez POST avec { imageBase64, impulse?, technique? }" }),
+    JSON.stringify({
+      message:
+        "Utilisez POST avec { imageBase64?, writtenText?, exercise?, impulse?, technique?, durationMinutes? }",
+    }),
     {
       status: 405,
       headers: { "Content-Type": "application/json", ...corsHeaders(null) },

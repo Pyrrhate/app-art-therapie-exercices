@@ -8,12 +8,15 @@ import type {
 } from "../types";
 import {
   buildExercisePrompt,
+  buildHandwritingOcrPrompt,
   buildVisionObservationPrompt,
   buildWarmReflectionPrompt,
   buildWarmReflectionRetryPrompt,
   looksLikeColdDescription,
+  looksLikeTooBriefReflection,
   parseExerciseFromAi,
   parseReflectionFromAi,
+  type ReflectionPromptContext,
 } from "./prompts";
 
 const HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions";
@@ -43,7 +46,7 @@ const VISION_MODEL_FALLBACKS = [
 ];
 
 const WARM_REFLECTION_SYSTEM =
-  "Tu es un·e art-thérapeute francophone. Tu écris avec chaleur et vouvoiement. Tu ne fais jamais de description technique d'œuvre d'art (pas de listes de couleurs, formes ou textures).";
+  "Tu es un·e art-thérapeute francophone. Vouvoiement, ton chaleureux et profond. Tu rédiges 3 à 4 paragraphes qui accueillent couleurs, formes, émotions et geste créatif sans jargon clinique ni catalogue froid.";
 
 /** Modèles Hub sans provider Inference live — le routeur renvoie HTTP 400. */
 const DEPRECATED_VISION_MODEL_RE =
@@ -209,7 +212,7 @@ export class HuggingFaceProvider implements AIProvider {
   async analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse> {
     if (!this.token) {
       console.warn("[HF analyzeArtwork] HF_TOKEN manquant");
-      const fallback = getFallbackReflection();
+      const fallback = getFallbackReflection(input);
       return {
         ...fallback,
         source: "fallback",
@@ -217,49 +220,77 @@ export class HuggingFaceProvider implements AIProvider {
       };
     }
 
+    const isWriting = input.technique === "writing";
+    let writtenText = input.writtenText?.trim() ?? "";
+
     try {
-      const visualNotes = await this.callVisionModel(
-        input.imageBase64,
-        buildVisionObservationPrompt()
-      );
+      let visualNotes: string | undefined;
+
+      if (input.imageBase64) {
+        visualNotes = await this.callVisionModel(
+          input.imageBase64,
+          buildVisionObservationPrompt(isWriting)
+        );
+
+        if (isWriting && writtenText.length < 20) {
+          try {
+            const ocr = await this.callVisionModel(
+              input.imageBase64,
+              buildHandwritingOcrPrompt()
+            );
+            const transcribed = ocr.trim();
+            if (transcribed.length > 5) {
+              writtenText = transcribed;
+            }
+          } catch {
+            /* OCR optionnel */
+          }
+        }
+      }
+
+      const promptCtx: ReflectionPromptContext = {
+        visualNotes,
+        impulse: input.impulse,
+        technique: input.technique,
+        exercise: input.exercise,
+        writtenText: writtenText || undefined,
+        durationMinutes: input.durationMinutes,
+      };
+
       let warmRaw = await this.callTextModel(
-        buildWarmReflectionPrompt(
-          visualNotes,
-          input.impulse,
-          input.technique
-        ),
-        { temperature: 0.85, maxTokens: 640, systemPrompt: WARM_REFLECTION_SYSTEM }
+        buildWarmReflectionPrompt(promptCtx),
+        { temperature: 0.82, maxTokens: 1800, systemPrompt: WARM_REFLECTION_SYSTEM }
       );
       let parsed = parseReflectionFromAi(warmRaw);
 
-      if (
+      const needsRetry =
         parsed?.reflection &&
-        looksLikeColdDescription(parsed.reflection)
-      ) {
-        console.warn("[HF analyzeArtwork] ton trop descriptif — nouvelle tentative");
+        (looksLikeColdDescription(parsed.reflection) ||
+          looksLikeTooBriefReflection(parsed.reflection));
+
+      if (needsRetry && parsed?.reflection) {
+        console.warn("[HF analyzeArtwork] reformulation (ton ou longueur)");
         warmRaw = await this.callTextModel(
-          buildWarmReflectionRetryPrompt(
-            parsed.reflection,
-            input.impulse,
-            input.technique
-          ),
-          { temperature: 0.75, maxTokens: 640, systemPrompt: WARM_REFLECTION_SYSTEM }
+          buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
+          { temperature: 0.78, maxTokens: 1800, systemPrompt: WARM_REFLECTION_SYSTEM }
         );
         parsed = parseReflectionFromAi(warmRaw);
       }
 
-      if (parsed?.reflection && !looksLikeColdDescription(parsed.reflection)) {
+      if (
+        parsed?.reflection &&
+        !looksLikeColdDescription(parsed.reflection) &&
+        !looksLikeTooBriefReflection(parsed.reflection)
+      ) {
         return {
           reflection: parsed.reflection,
           openQuestions: parsed.openQuestions.map(ensureVouvoiementQuestion),
+          followUpExercise: parsed.followUpExercise,
           source: "ai",
         };
       }
 
       if (parsed?.reflection && looksLikeColdDescription(parsed.reflection)) {
-        console.warn(
-          "[HF analyzeArtwork] toujours descriptif après retry — mode secours"
-        );
         throw new Error("Réponse trop descriptive après reformulation");
       }
 
@@ -272,7 +303,7 @@ export class HuggingFaceProvider implements AIProvider {
       const note =
         error instanceof Error ? error.message : "Erreur vision inconnue";
       console.warn("[HF analyzeArtwork]", error);
-      const fallback = getFallbackReflection();
+      const fallback = getFallbackReflection(input);
       return {
         ...fallback,
         source: "fallback",

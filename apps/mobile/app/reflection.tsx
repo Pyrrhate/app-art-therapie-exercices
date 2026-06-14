@@ -5,6 +5,7 @@ import {
   Platform,
   Pressable,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -36,6 +37,7 @@ import {
 import { saveSession } from "@/lib/storage";
 import { useRitualStore } from "@/lib/store";
 import type { SavedSession } from "@/lib/types";
+import { getTechniqueLabel } from "@/constants";
 
 const DEFAULT_PROCESS_TIMEOUT_MS = 45_000;
 
@@ -85,10 +87,16 @@ export default function ReflectionScreen() {
     photoUri,
     reflection,
     openQuestions,
+    followUpExercise,
+    writtenText,
     setPhotoUri,
+    setWrittenText,
     setReflection,
+    startFollowUpExercise,
     reset,
   } = ritual;
+
+  const isWriting = technique === "writing";
 
   const abortRef = useRef<AbortController | null>(null);
   const workGenRef = useRef(0);
@@ -304,7 +312,18 @@ export default function ReflectionScreen() {
   }
 
   async function handleRequestReflection() {
-    if (!photoUri || preparingPhoto) return;
+    const hasText = writtenText.trim().length >= 10;
+    if ((!photoUri && !hasText) || preparingPhoto) {
+      if (!hasText && !photoUri) {
+        setNotice({
+          type: "error",
+          message: isWriting
+            ? "Collez votre texte ou photographiez votre écriture manuscrite."
+            : "Ajoutez une photo de votre création.",
+        });
+      }
+      return;
+    }
 
     const { signal, generation } = startWork();
     setLoadingReflection(true);
@@ -312,36 +331,48 @@ export default function ReflectionScreen() {
     setNotice({
       type: "info",
       message:
-        "Analyse de votre œuvre en cours… Comptez 15 à 45 secondes. Vous pouvez annuler ci-dessous.",
+        "Analyse en cours… Comptez 30 à 60 secondes pour une réflexion approfondie. Vous pouvez annuler ci-dessous.",
     });
     try {
-      const rawDataUrl = await withTimeout(
-        resolvePhotoDataUrl(),
-        DEFAULT_PROCESS_TIMEOUT_MS,
-        () => finishWork()
-      );
-      if (isStale(generation)) return;
+      let imageBase64: string | undefined;
 
-      const imageBase64 = await withTimeout(
-        prepareImageForAnalysis(rawDataUrl, signal),
-        DEFAULT_PROCESS_TIMEOUT_MS,
-        () => finishWork()
-      );
-      if (isStale(generation)) return;
+      if (photoUri) {
+        const rawDataUrl = await withTimeout(
+          resolvePhotoDataUrl(),
+          DEFAULT_PROCESS_TIMEOUT_MS,
+          () => finishWork()
+        );
+        if (isStale(generation)) return;
 
-      setPhotoDataUrl(imageBase64);
-      setPhotoSizeLabel(formatImageSize(getImageByteSize(imageBase64)));
+        imageBase64 = await withTimeout(
+          prepareImageForAnalysis(rawDataUrl, signal),
+          DEFAULT_PROCESS_TIMEOUT_MS,
+          () => finishWork()
+        );
+        if (isStale(generation)) return;
+
+        setPhotoDataUrl(imageBase64);
+        setPhotoSizeLabel(formatImageSize(getImageByteSize(imageBase64)));
+      }
 
       const result = await withTimeout(
-        analyzeArtwork(imageBase64, {
+        analyzeArtwork({
+          imageBase64,
           impulse,
           technique: technique ?? undefined,
+          exercise,
+          durationMinutes,
+          writtenText: hasText ? writtenText.trim() : undefined,
         }),
-        90_000
+        120_000
       );
       if (isStale(generation)) return;
 
-      setReflection(result.reflection, result.openQuestions);
+      setReflection(
+        result.reflection,
+        result.openQuestions,
+        result.followUpExercise ?? null
+      );
       setReflectionSource(result.source);
 
       if (result.source === "fallback") {
@@ -448,6 +479,8 @@ export default function ReflectionScreen() {
       photoUri: storedPhotoUri,
       reflection: reflection ?? undefined,
       openQuestions: openQuestions.length ? openQuestions : undefined,
+      writtenText: writtenText.trim() || undefined,
+      followUpExercise: followUpExercise ?? undefined,
       createdAt: new Date().toISOString(),
     };
 
@@ -482,6 +515,15 @@ export default function ReflectionScreen() {
     });
   }
 
+  function handleStartFollowUp() {
+    startFollowUpExercise();
+    router.push("/exercise");
+  }
+
+  const reflectionParagraphs =
+    reflection?.split(/\n\s*\n/).filter((p) => p.trim()) ?? [];
+  const canAnalyze =
+    Boolean(photoUri) || writtenText.trim().length >= 10;
   const previewUri = photoDataUrl ?? photoUri;
   const busy = preparingPhoto || loadingReflection;
   busyRef.current = busy;
@@ -503,6 +545,66 @@ export default function ReflectionScreen() {
           message={notice.message}
           onDismiss={() => setNotice(null)}
         />
+      )}
+
+      {(impulse || exercise || technique) && (
+        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-4 mb-4">
+          {technique && (
+            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
+              {getTechniqueLabel(technique)}
+              {durationMinutes ? ` · ${durationMinutes} min` : ""}
+            </Text>
+          )}
+          {impulse ? (
+            <Text className="text-sand-700 text-sm font-medium mb-2">
+              {impulse}
+            </Text>
+          ) : null}
+          {exercise ? (
+            <Text className="text-sand-600 text-sm leading-6">{exercise}</Text>
+          ) : null}
+        </View>
+      )}
+
+      {isWriting && (
+        <View className="mb-6">
+          <Text className="text-sand-700 text-base font-medium mb-2">
+            Votre texte
+          </Text>
+          <Text className="text-sand-500 text-sm leading-6 mb-3">
+            Collez ici ce que vous avez écrit, ou photographiez votre écriture
+            manuscrite ci-dessous — l&apos;IA tentera de la lire.
+          </Text>
+          <TextInput
+            className="bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base min-h-[140px] mb-2"
+            multiline
+            textAlignVertical="top"
+            placeholder="Collez ou saisissez votre texte…"
+            placeholderTextColor="#A89F91"
+            value={writtenText}
+            onChangeText={(text) => {
+              setWrittenText(text);
+              setSaved(false);
+            }}
+            editable={!busy}
+          />
+          <Text className="text-sand-400 text-xs">
+            {writtenText.trim().length >= 10
+              ? "Texte prêt pour l'analyse."
+              : "Minimum 10 caractères, ou ajoutez une photo manuscrite."}
+          </Text>
+        </View>
+      )}
+
+      {!isWriting && (
+        <Text className="text-sand-700 text-base font-medium mb-2">
+          Votre création
+        </Text>
+      )}
+      {isWriting && (
+        <Text className="text-sand-700 text-base font-medium mb-2">
+          Photo (optionnelle)
+        </Text>
       )}
 
       {busy && (
@@ -541,8 +643,12 @@ export default function ReflectionScreen() {
               {Platform.OS === "web"
                 ? dragOver
                   ? "Relâchez pour ajouter la photo"
-                  : "Glissez une photo ici\n(Bureau, Téléchargements…)"
-                : "Aucune photo pour l'instant"}
+                  : isWriting
+                    ? "Glissez une photo de votre écriture manuscrite\n(Bureau, Téléchargements…)"
+                    : "Glissez une photo ici\n(Bureau, Téléchargements…)"
+                : isWriting
+                  ? "Photographiez votre écriture manuscrite (optionnel)"
+                  : "Aucune photo pour l'instant"}
             </Text>
           </View>
         )}
@@ -557,7 +663,11 @@ export default function ReflectionScreen() {
 
         <View className="gap-3 mb-6">
           <PrimaryButton
-            label="Photographier mon œuvre"
+            label={
+              isWriting
+                ? "Photographier mon écriture"
+                : "Photographier mon œuvre"
+            }
             onPress={handleTakePhoto}
             variant="secondary"
             disabled={busy}
@@ -575,13 +685,13 @@ export default function ReflectionScreen() {
           <PrimaryButton
             label={
               loadingReflection
-                ? "Analyse en cours (15–45 s)…"
+                ? "Analyse en cours (30–60 s)…"
                 : preparingPhoto
                   ? "Préparation..."
                   : "Demander une réflexion bienveillante"
             }
             onPress={handleRequestReflection}
-            disabled={!photoUri || busy}
+            disabled={!canAnalyze || busy}
           />
           {busy && <ActivityIndicator color="#6B8F71" />}
         </View>
@@ -603,14 +713,40 @@ export default function ReflectionScreen() {
                 </Text>
               )}
             </View>
-            <Text className="text-sand-700 text-base leading-7 mb-4">
-              {reflection}
-            </Text>
+            {(reflectionParagraphs.length > 1
+              ? reflectionParagraphs
+              : [reflection]
+            ).map((paragraph, index) => (
+              <Text
+                key={index}
+                className={`text-sand-700 text-base leading-7 ${
+                  index < reflectionParagraphs.length - 1 ? "mb-4" : "mb-4"
+                }`}
+              >
+                {paragraph}
+              </Text>
+            ))}
             {openQuestions.map((q, i) => (
               <Text key={i} className="text-sand-500 text-sm leading-6 mb-2">
                 · {q}
               </Text>
             ))}
+          </View>
+        )}
+
+        {followUpExercise && (
+          <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-5 mb-6">
+            <Text className="text-sage-700 text-sm font-medium mb-2">
+              Poursuivre la création
+            </Text>
+            <Text className="text-sand-600 text-sm leading-6 mb-4">
+              {followUpExercise}
+            </Text>
+            <PrimaryButton
+              label="Commencer cet exercice"
+              onPress={handleStartFollowUp}
+              variant="secondary"
+            />
           </View>
         )}
 

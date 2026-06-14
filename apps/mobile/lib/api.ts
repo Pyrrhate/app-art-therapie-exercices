@@ -84,16 +84,17 @@ export async function generateExercise(
   });
 }
 
-export async function analyzeArtwork(
-  imageBase64: string,
-  context?: { impulse?: string; technique?: ArtisticTechnique }
-): Promise<ReflectionResponse> {
+export async function analyzeArtwork(context: {
+  imageBase64?: string;
+  impulse?: string;
+  technique?: ArtisticTechnique;
+  exercise?: string;
+  durationMinutes?: number;
+  writtenText?: string;
+}): Promise<ReflectionResponse> {
   return request<ReflectionResponse>("/api/reflection/analyze", {
     method: "POST",
-    body: JSON.stringify({
-      imageBase64,
-      ...context,
-    }),
+    body: JSON.stringify(context),
   });
 }
 

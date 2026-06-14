@@ -19,6 +19,7 @@ export interface ReflectionResponse {
   source: "ai" | "fallback";
   /** Détail technique si l'analyse IA a échoué (mode secours). */
   analysisNote?: string;
+  followUpExercise?: string;
 }
 
 export interface SavedSession {
@@ -30,6 +31,8 @@ export interface SavedSession {
   photoUri?: string;
   reflection?: string;
   openQuestions?: string[];
+  writtenText?: string;
+  followUpExercise?: string;
   createdAt: string;
 }
 
@@ -41,4 +44,6 @@ export interface RitualState {
   photoUri: string | null;
   reflection: string | null;
   openQuestions: string[];
+  followUpExercise: string | null;
+  writtenText: string;
 }
