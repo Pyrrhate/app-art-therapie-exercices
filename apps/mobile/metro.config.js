@@ -1,12 +1,30 @@
 const path = require("path");
+const Module = require("module");
 const { createProxyMiddleware } = require("http-proxy-middleware");
-const { getDefaultConfig } = require("expo/metro-config");
-const { withNativeWind } = require("nativewind/metro");
 
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "../..");
 const mobileNodeModules = path.resolve(projectRoot, "node_modules");
 const workspaceNodeModules = path.resolve(workspaceRoot, "node_modules");
+
+/** NativeWind/css-interop résout react-native au chargement — avant tout require nativewind. */
+const originalNodeModulePaths = Module._nodeModulePaths;
+Module._nodeModulePaths = function (from) {
+  const paths = originalNodeModulePaths.call(this, from);
+  for (const dir of [mobileNodeModules, workspaceNodeModules]) {
+    if (!paths.includes(dir)) {
+      paths.unshift(dir);
+    }
+  }
+  return paths;
+};
+
+require.resolve("react-native/package.json", {
+  paths: [mobileNodeModules, workspaceNodeModules],
+});
+
+const { getDefaultConfig } = require("expo/metro-config");
+const { withNativeWind } = require("nativewind/metro");
 
 const apiProxyTarget = (
   process.env.EXPO_PUBLIC_API_URL ?? "https://api.pastek-art.eu"
@@ -20,8 +38,9 @@ config.resolver.nodeModulesPaths = [
   workspaceNodeModules,
 ];
 config.resolver.extraNodeModules = {
-  react: path.resolve(mobileNodeModules, "react"),
-  "react-dom": path.resolve(mobileNodeModules, "react-dom"),
+  react: path.join(mobileNodeModules, "react"),
+  "react-dom": path.join(mobileNodeModules, "react-dom"),
+  "react-native": path.join(mobileNodeModules, "react-native"),
 };
 
 const apiProxy = createProxyMiddleware({
