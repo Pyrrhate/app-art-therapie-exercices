@@ -1,4 +1,5 @@
 import "../global.css";
+import "react-native-reanimated";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform, View } from "react-native";
@@ -38,6 +39,7 @@ export default function RootLayout() {
             <Stack.Screen name="mandala/index" options={{ title: "Mandala" }} />
             <Stack.Screen name="mandala/studio" />
             <Stack.Screen name="ping-pong/index" />
+            <Stack.Screen name="nuance-finder/index" />
             <Stack.Screen name="exercise" />
             <Stack.Screen name="reflection" />
             <Stack.Screen

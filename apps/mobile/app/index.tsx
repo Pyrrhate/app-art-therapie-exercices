@@ -41,8 +41,11 @@ export default function WelcomeScreen() {
             <Text className="text-sand-600 text-sm leading-6 mb-2">
               Studio Mandala — coloriage procédural, 100 % hors ligne
             </Text>
-            <Text className="text-sand-600 text-sm leading-6">
+            <Text className="text-sand-600 text-sm leading-6 mb-2">
               Ping-Pong créatif — chaîne de mots pour trouver une impulsion
+            </Text>
+            <Text className="text-sand-600 text-sm leading-6">
+              Chercheur de Nuances — puzzle chromatique apaisant, hors ligne
             </Text>
           </View>
         </View>
@@ -60,6 +63,11 @@ export default function WelcomeScreen() {
           <PrimaryButton
             label="Ping-Pong créatif"
             onPress={() => router.push("/ping-pong")}
+            variant="secondary"
+          />
+          <PrimaryButton
+            label="Chercheur de Nuances"
+            onPress={() => router.push("/nuance-finder")}
             variant="secondary"
           />
           <PrimaryButton
