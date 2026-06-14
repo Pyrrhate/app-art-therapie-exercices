@@ -8,12 +8,16 @@ import { getApiUrl } from "@/lib/config";
 export default function SettingsScreen() {
   const [apiOk, setApiOk] = useState<boolean | null>(null);
   const [provider, setProvider] = useState<string | null>(null);
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  const [visionModel, setVisionModel] = useState<string | null>(null);
   const apiUrl = getApiUrl();
 
   useEffect(() => {
-    checkHealth().then(({ ok, provider: p }) => {
+    checkHealth().then(({ ok, provider: p, aiConfigured: ai, visionModel: vm }) => {
       setApiOk(ok);
       setProvider(p ?? null);
+      setAiConfigured(ai ?? null);
+      setVisionModel(vm ?? null);
     });
   }, []);
 
@@ -65,6 +69,17 @@ export default function SettingsScreen() {
               </>
             )}
           </View>
+          {apiOk && aiConfigured === false && (
+            <Text className="text-amber-700 text-xs mt-3 leading-5">
+              IA non configurée sur le serveur (HF_TOKEN manquant sur Vercel).
+              La réflexion photo utilisera le mode secours.
+            </Text>
+          )}
+          {apiOk && aiConfigured && visionModel && (
+            <Text className="text-sand-400 text-xs mt-2">
+              Vision : {visionModel}
+            </Text>
+          )}
           {!apiOk && apiOk !== null && (
             <Text className="text-sand-400 text-xs mt-3 leading-5">
               Web local : relancez avec{" "}

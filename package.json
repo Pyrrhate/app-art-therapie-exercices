@@ -24,7 +24,7 @@
     "concurrently": "^9.1.2"
   },
   "engines": {
-    "node": ">=20.0.0 <=22.x"
+    "node": "22.x"
   },
   "overrides": {
     "react": "18.3.1",

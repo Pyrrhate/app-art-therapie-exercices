@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
+import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { deleteSession, getSessions } from "@/lib/storage";
 import type { SavedSession } from "@/lib/types";
 
@@ -92,14 +93,16 @@ export default function SessionsScreen() {
                 <Text className="text-sand-500 text-sm mb-3">
                   {getTechniqueLabel(item.technique)}
                 </Text>
-                <Text className="text-sand-600 text-sm leading-5" numberOfLines={3}>
-                  {item.exercise}
-                </Text>
-                {item.reflection && (
-                  <Text className="text-sage-600 text-sm mt-3 italic leading-5" numberOfLines={2}>
-                    {item.reflection}
+                {sanitizeAiDisplayText(item.exercise) ? (
+                  <Text className="text-sand-600 text-sm leading-5" numberOfLines={3}>
+                    {sanitizeAiDisplayText(item.exercise)}
                   </Text>
-                )}
+                ) : null}
+                {item.reflection && sanitizeAiDisplayText(item.reflection) ? (
+                  <Text className="text-sage-600 text-sm mt-3 italic leading-5" numberOfLines={2}>
+                    {sanitizeAiDisplayText(item.reflection)}
+                  </Text>
+                ) : null}
                 <Pressable onPress={() => confirmDelete(item.id)} className="mt-4">
                   <Text className="text-sand-400 text-xs">Supprimer</Text>
                 </Pressable>

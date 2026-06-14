@@ -99,12 +99,22 @@ export async function analyzeArtwork(
 export async function checkHealth(): Promise<{
   ok: boolean;
   provider?: string;
+  aiConfigured?: boolean;
+  visionModel?: string;
 }> {
   try {
-    const result = await request<{ status: string; provider?: string }>(
-      "/api/health"
-    );
-    return { ok: result.status === "ok", provider: result.provider };
+    const result = await request<{
+      status: string;
+      provider?: string;
+      aiConfigured?: boolean;
+      visionModel?: string;
+    }>("/api/health");
+    return {
+      ok: result.status === "ok",
+      provider: result.provider,
+      aiConfigured: result.aiConfigured,
+      visionModel: result.visionModel,
+    };
   } catch {
     return { ok: false };
   }

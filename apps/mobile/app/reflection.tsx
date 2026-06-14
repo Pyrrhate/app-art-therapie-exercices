@@ -14,33 +14,42 @@ import { InlineNotice } from "@/components/InlineNotice";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { analyzeArtwork, ApiError } from "@/lib/api";
 import {
+  extractImageFileFromDataTransfer,
   formatImageSize,
   getImageByteSize,
   getImagePickerOptions,
+  ImageCloudFileError,
+  ImageCompressionError,
   ImageProcessingAbortedError,
+  ImageReadTimeoutError,
   ImageSourceTooLargeError,
   ImageTooLargeError,
-  MAX_IMAGE_LABEL,
   MAX_SOURCE_LABEL,
   pickImageFileWeb,
   prepareImageDataUrl,
   prepareImageForAnalysis,
   prepareImageFromAsset,
   prepareImageFromFile,
+  processTimeoutMs,
+  UPLOAD_MAX_LABEL,
   uriToDataUrl,
 } from "@/lib/image";
 import { saveSession } from "@/lib/storage";
 import { useRitualStore } from "@/lib/store";
 import type { SavedSession } from "@/lib/types";
 
-const PROCESS_TIMEOUT_MS = 25_000;
+const DEFAULT_PROCESS_TIMEOUT_MS = 45_000;
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  onTimeout?: () => void
+): Promise<T> {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new Error("TIMEOUT")),
-      ms
-    );
+    const timer = setTimeout(() => {
+      onTimeout?.();
+      reject(new Error("TIMEOUT"));
+    }, ms);
     promise
       .then((value) => {
         clearTimeout(timer);
@@ -51,6 +60,20 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
         reject(error);
       });
   });
+}
+
+function imageErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message === "TIMEOUT") {
+    return "La photo met trop de temps à se préparer. Patientez ou choisissez une image plus légère.";
+  }
+  if (error instanceof ImageCloudFileError) return error.message;
+  if (error instanceof ImageReadTimeoutError) return error.message;
+  if (error instanceof ImageSourceTooLargeError) return error.message;
+  if (error instanceof ImageTooLargeError) return error.message;
+  if (error instanceof ImageCompressionError) return error.message;
+  if (error instanceof ImageProcessingAbortedError) return error.message;
+  if (error instanceof Error && error.message) return error.message;
+  return "Impossible de préparer cette photo. Essayez une autre image.";
 }
 
 export default function ReflectionScreen() {
@@ -69,10 +92,12 @@ export default function ReflectionScreen() {
   } = ritual;
 
   const abortRef = useRef<AbortController | null>(null);
+  const workGenRef = useRef(0);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [photoSizeLabel, setPhotoSizeLabel] = useState<string | null>(null);
   const [preparingPhoto, setPreparingPhoto] = useState(false);
   const [loadingReflection, setLoadingReflection] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [reflectionSource, setReflectionSource] = useState<
     "ai" | "fallback" | null
   >(null);
@@ -82,20 +107,34 @@ export default function ReflectionScreen() {
     message: string;
   } | null>(null);
 
-  const cancelWork = useCallback(() => {
+  const busyRef = useRef(false);
+  const applyPickedFileRef = useRef<(file: File) => Promise<void>>(async () => {});
+
+  const finishWork = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+  }, []);
+
+  const cancelWork = useCallback(() => {
+    workGenRef.current += 1;
+    finishWork();
     setPreparingPhoto(false);
     setLoadingReflection(false);
-  }, []);
+  }, [finishWork]);
 
   useEffect(() => () => cancelWork(), [cancelWork]);
 
-  function startWork(): AbortSignal {
-    abortRef.current?.abort();
+  function startWork(): { signal: AbortSignal; generation: number } {
+    finishWork();
+    workGenRef.current += 1;
+    const generation = workGenRef.current;
     const controller = new AbortController();
     abortRef.current = controller;
-    return controller.signal;
+    return { signal: controller.signal, generation };
+  }
+
+  function isStale(generation: number): boolean {
+    return generation !== workGenRef.current;
   }
 
   async function applyPrepared(prepared: {
@@ -110,83 +149,85 @@ export default function ReflectionScreen() {
     setReflectionSource(null);
     setNotice({
       type: "success",
-      message: `Photo prête (${formatImageSize(prepared.byteSize)} · max ${MAX_IMAGE_LABEL}).`,
+      message: prepared.uploadReady
+        ? `Photo prête pour l'IA (${formatImageSize(prepared.byteSize)} · max ${UPLOAD_MAX_LABEL}).`
+        : `Photo compressée (${formatImageSize(prepared.byteSize)}).`,
     });
   }
 
   async function applyPickedAsset(asset: ImagePicker.ImagePickerAsset) {
-    const signal = startWork();
+    const { signal, generation } = startWork();
     setPreparingPhoto(true);
     setNotice({
       type: "info",
-      message: "Préparation de la photo… Vous pouvez annuler ci-dessous.",
+      message: "Compression de la photo pour l'IA…",
     });
+
+    const timeoutMs = asset.fileSize
+      ? processTimeoutMs(asset.fileSize)
+      : DEFAULT_PROCESS_TIMEOUT_MS;
 
     try {
       const prepared = await withTimeout(
         prepareImageFromAsset(asset, signal),
-        PROCESS_TIMEOUT_MS
+        timeoutMs,
+        () => finishWork()
       );
+      if (isStale(generation)) return;
       await applyPrepared(prepared);
     } catch (error) {
+      if (isStale(generation)) return;
       if (error instanceof ImageProcessingAbortedError) {
         return;
       }
       setPhotoUri(null);
       setPhotoDataUrl(null);
       setPhotoSizeLabel(null);
-      setNotice({
-        type: "error",
-        message:
-          error instanceof Error && error.message === "TIMEOUT"
-            ? "La photo met trop de temps à se préparer. Essayez une image plus légère."
-            : error instanceof ImageSourceTooLargeError ||
-                error instanceof ImageTooLargeError
-              ? error.message
-              : "Impossible de préparer cette photo. Essayez une autre image.",
-      });
+      setNotice({ type: "error", message: imageErrorMessage(error) });
     } finally {
-      setPreparingPhoto(false);
-      abortRef.current = null;
+      if (!isStale(generation)) {
+        finishWork();
+        setPreparingPhoto(false);
+      }
     }
   }
 
   async function applyPickedFile(file: File) {
-    const signal = startWork();
+    const { signal, generation } = startWork();
     setPreparingPhoto(true);
     setNotice({
       type: "info",
-      message: "Préparation de la photo… Vous pouvez annuler ci-dessous.",
+      message: `Compression (${formatImageSize(file.size)}) → max ${UPLOAD_MAX_LABEL} pour l'IA…`,
     });
+
+    const timeoutMs = processTimeoutMs(file.size);
 
     try {
       const prepared = await withTimeout(
         prepareImageFromFile(file, signal),
-        PROCESS_TIMEOUT_MS
+        timeoutMs,
+        () => finishWork()
       );
+      if (isStale(generation)) return;
       await applyPrepared(prepared);
     } catch (error) {
+      if (isStale(generation)) return;
       if (error instanceof ImageProcessingAbortedError) {
         return;
       }
       setPhotoUri(null);
       setPhotoDataUrl(null);
       setPhotoSizeLabel(null);
-      setNotice({
-        type: "error",
-        message:
-          error instanceof Error && error.message === "TIMEOUT"
-            ? "La photo met trop de temps à se préparer. Essayez une image plus légère."
-            : error instanceof ImageSourceTooLargeError ||
-                error instanceof ImageTooLargeError
-              ? error.message
-              : "Impossible de préparer cette photo. Essayez une autre image.",
-      });
+      setNotice({ type: "error", message: imageErrorMessage(error) });
     } finally {
-      setPreparingPhoto(false);
-      abortRef.current = null;
+      if (!isStale(generation)) {
+        finishWork();
+        setPreparingPhoto(false);
+      }
     }
   }
+
+  applyPickedFileRef.current = applyPickedFile;
 
   async function handlePickFromGallery() {
     try {
@@ -266,6 +307,7 @@ export default function ReflectionScreen() {
   async function handleRequestReflection() {
     if (!photoUri || preparingPhoto) return;
 
+    const { signal, generation } = startWork();
     setLoadingReflection(true);
     setReflectionSource(null);
     setNotice({
@@ -274,15 +316,20 @@ export default function ReflectionScreen() {
         "Analyse de votre œuvre en cours… Comptez 15 à 45 secondes. Vous pouvez annuler ci-dessous.",
     });
     try {
-      const signal = startWork();
       const rawDataUrl = await withTimeout(
         resolvePhotoDataUrl(),
-        PROCESS_TIMEOUT_MS
+        DEFAULT_PROCESS_TIMEOUT_MS,
+        () => finishWork()
       );
+      if (isStale(generation)) return;
+
       const imageBase64 = await withTimeout(
         prepareImageForAnalysis(rawDataUrl, signal),
-        PROCESS_TIMEOUT_MS
+        DEFAULT_PROCESS_TIMEOUT_MS,
+        () => finishWork()
       );
+      if (isStale(generation)) return;
+
       setPhotoDataUrl(imageBase64);
       setPhotoSizeLabel(formatImageSize(getImageByteSize(imageBase64)));
 
@@ -293,6 +340,7 @@ export default function ReflectionScreen() {
         }),
         90_000
       );
+      if (isStale(generation)) return;
 
       setReflection(result.reflection, result.openQuestions);
       setReflectionSource(result.source);
@@ -307,21 +355,67 @@ export default function ReflectionScreen() {
         setNotice(null);
       }
     } catch (error) {
+      if (isStale(generation)) return;
+      if (error instanceof ImageProcessingAbortedError) {
+        return;
+      }
       const message =
         error instanceof Error && error.message === "TIMEOUT"
           ? "Délai dépassé. Réessayez avec une photo plus légère."
           : error instanceof ImageSourceTooLargeError ||
-              error instanceof ImageTooLargeError
+              error instanceof ImageTooLargeError ||
+              error instanceof ImageCloudFileError ||
+              error instanceof ImageReadTimeoutError ||
+              error instanceof ImageCompressionError
             ? error.message
             : error instanceof ApiError
               ? error.message
               : "Le serveur n'a pas pu analyser l'image. Vérifiez la connexion API et réessayez.";
       setNotice({ type: "error", message });
     } finally {
-      setLoadingReflection(false);
-      abortRef.current = null;
+      if (!isStale(generation)) {
+        finishWork();
+        setLoadingReflection(false);
+      }
     }
   }
+
+  const bindWebDropZone = useCallback((ref: View | null) => {
+    if (Platform.OS !== "web" || !ref) return;
+
+    const node = ref as unknown as HTMLElement;
+    if (node.dataset.dropBound === "1") return;
+    node.dataset.dropBound = "1";
+
+    const prevent = (event: DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    node.addEventListener("dragenter", (event) => {
+      prevent(event);
+      setDragOver(true);
+    });
+    node.addEventListener("dragover", prevent);
+    node.addEventListener("dragleave", (event) => {
+      prevent(event);
+      setDragOver(false);
+    });
+    node.addEventListener("drop", (event) => {
+      prevent(event);
+      setDragOver(false);
+      if (busyRef.current) return;
+      const file = extractImageFileFromDataTransfer(event.dataTransfer!);
+      if (file) {
+        void applyPickedFileRef.current(file);
+      } else {
+        setNotice({
+          type: "error",
+          message: "Déposez une image (JPG, PNG…), pas un dossier.",
+        });
+      }
+    });
+  }, []);
 
   async function handleSave() {
     if (!technique) return;
@@ -389,6 +483,7 @@ export default function ReflectionScreen() {
 
   const previewUri = photoDataUrl ?? photoUri;
   const busy = preparingPhoto || loadingReflection;
+  busyRef.current = busy;
 
   return (
     <ScreenContainer title="Capture & Réflexion">
@@ -419,24 +514,44 @@ export default function ReflectionScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         {previewUri ? (
-          <Image
-            source={{ uri: previewUri }}
-            className="w-full h-64 rounded-2xl mb-2 bg-sand-200"
-            resizeMode="cover"
-          />
+          <View ref={bindWebDropZone}>
+            <Image
+              source={{ uri: previewUri }}
+              className="w-full h-64 rounded-2xl mb-2 bg-sand-200"
+              resizeMode="cover"
+            />
+            {Platform.OS === "web" && dragOver && (
+              <View className="absolute inset-0 rounded-2xl bg-sage-500/20 items-center justify-center mb-2">
+                <Text className="text-sage-700 text-sm font-medium">
+                  Relâchez pour remplacer
+                </Text>
+              </View>
+            )}
+          </View>
         ) : (
-          <View className="w-full h-48 rounded-2xl bg-sand-100 border border-dashed border-sand-300 items-center justify-center mb-2">
-            <Text className="text-sand-400 text-sm">
-              Aucune photo pour l'instant
+          <View
+            ref={bindWebDropZone}
+            className={`w-full h-48 rounded-2xl border border-dashed items-center justify-center mb-2 px-6 ${
+              dragOver
+                ? "bg-sage-50 border-sage-400"
+                : "bg-sand-100 border-sand-300"
+            }`}
+          >
+            <Text className="text-sand-500 text-sm text-center leading-6">
+              {Platform.OS === "web"
+                ? dragOver
+                  ? "Relâchez pour ajouter la photo"
+                  : "Glissez une photo ici\n(Bureau, Téléchargements…)"
+                : "Aucune photo pour l'instant"}
             </Text>
           </View>
         )}
 
         <Text className="text-sand-400 text-xs mb-4 leading-5">
-          Max envoi IA : {MAX_IMAGE_LABEL} · max fichier : {MAX_SOURCE_LABEL}.
+          Fichier max {MAX_SOURCE_LABEL} · envoi IA max {UPLOAD_MAX_LABEL}.
           {photoSizeLabel ? ` Actuelle : ${photoSizeLabel}.` : ""}
           {Platform.OS === "web"
-            ? " Sur Windows, évitez les photos OneDrive (icône nuage) : copiez l'image sur le Bureau ou téléchargez-la d'abord."
+            ? " Les photos sont automatiquement compressées avant envoi à l'IA."
             : ""}
         </Text>
 
@@ -448,7 +563,11 @@ export default function ReflectionScreen() {
             disabled={busy}
           />
           <PrimaryButton
-            label="Choisir depuis la galerie"
+            label={
+              Platform.OS === "web"
+                ? "Choisir une photo (Bureau…)"
+                : "Choisir depuis la galerie"
+            }
             onPress={handlePickFromGallery}
             variant="ghost"
             disabled={busy}

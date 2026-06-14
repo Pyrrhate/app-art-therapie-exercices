@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { sanitizeAiDisplayText, sanitizeQuestions } from "./sanitizeAiText";
 import type { ArtisticTechnique, RitualState } from "./types";
 
 interface RitualStore extends RitualState {
@@ -25,9 +26,15 @@ export const useRitualStore = create<RitualStore>((set) => ({
   setImpulse: (impulse) => set({ impulse }),
   setTechnique: (technique) => set({ technique }),
   setExercise: (exercise, durationMinutes) =>
-    set({ exercise, durationMinutes }),
+    set({
+      exercise: sanitizeAiDisplayText(exercise),
+      durationMinutes,
+    }),
   setPhotoUri: (photoUri) => set({ photoUri }),
   setReflection: (reflection, openQuestions) =>
-    set({ reflection, openQuestions }),
+    set({
+      reflection: sanitizeAiDisplayText(reflection),
+      openQuestions: sanitizeQuestions(openQuestions),
+    }),
   reset: () => set(initialState),
 }));
