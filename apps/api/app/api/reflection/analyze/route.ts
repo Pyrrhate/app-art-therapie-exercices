@@ -8,8 +8,16 @@ import {
 } from "@/lib/cors";
 import { checkRateLimit, getClientId } from "@/lib/rate-limit";
 
+/** ~3 Mo en base64 — compatible limite corps Vercel (~4,5 Mo). */
+const MAX_IMAGE_BASE64_CHARS = 4 * 1024 * 1024;
+
 const bodySchema = z.object({
-  imageBase64: z.string().min(100),
+  imageBase64: z
+    .string()
+    .min(100)
+    .max(MAX_IMAGE_BASE64_CHARS, {
+      message: "Image trop lourde (maximum 3 Mo environ).",
+    }),
   impulse: z.string().max(200).optional(),
   technique: z
     .enum(["drawing", "painting", "writing", "mixed_media", "recyclart"])
@@ -37,9 +45,17 @@ export async function POST(request: Request) {
     const parsed = bodySchema.safeParse(body);
 
     if (!parsed.success) {
+      const tooLarge = parsed.error.issues.some((issue) =>
+        issue.path.includes("imageBase64")
+      );
       return errorResponse(
         request,
-        { error: "Image ou contexte invalide.", code: "VALIDATION_ERROR" },
+        {
+          error: tooLarge
+            ? "Photo trop lourde (maximum 3 Mo). Choisissez une image plus légère ou reprenez la photo."
+            : "Image ou contexte invalide.",
+          code: tooLarge ? "IMAGE_TOO_LARGE" : "VALIDATION_ERROR",
+        },
         400
       );
     }

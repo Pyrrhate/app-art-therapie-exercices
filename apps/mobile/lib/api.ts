@@ -47,6 +47,13 @@ async function request<T>(
   try {
     data = await response.json();
   } catch {
+    if (response.status === 413) {
+      throw new ApiError(
+        "Photo trop lourde (maximum 3 Mo). Choisissez une image plus légère.",
+        "IMAGE_TOO_LARGE",
+        413
+      );
+    }
     throw new ApiError(
       "Réponse serveur invalide.",
       "INVALID_RESPONSE",
