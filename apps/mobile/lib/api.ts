@@ -130,4 +130,17 @@ export async function checkHealth(): Promise<{
   }
 }
 
+export async function fetchPingPongWord(
+  word: string,
+  history: string[]
+): Promise<{ word: string; source: "ai" | "fallback" }> {
+  return request<{ word: string; source: "ai" | "fallback" }>(
+    "/api/ping-pong",
+    {
+      method: "POST",
+      body: JSON.stringify({ word, history }),
+    }
+  );
+}
+
 export { ApiError, getApiUrl };

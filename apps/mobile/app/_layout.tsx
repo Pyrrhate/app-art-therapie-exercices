@@ -35,6 +35,9 @@ export default function RootLayout() {
           >
             <Stack.Screen name="index" />
             <Stack.Screen name="ritual" />
+            <Stack.Screen name="mandala/index" options={{ title: "Mandala" }} />
+            <Stack.Screen name="mandala/studio" />
+            <Stack.Screen name="ping-pong/index" />
             <Stack.Screen name="exercise" />
             <Stack.Screen name="reflection" />
             <Stack.Screen
