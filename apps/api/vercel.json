@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && npm install --workspace=@art-therapie/api",
+  "installCommand": "npm install --workspaces=false",
   "buildCommand": "npm run build",
   "framework": "nextjs"
 }
