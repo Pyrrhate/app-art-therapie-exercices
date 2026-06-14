@@ -1,5 +1,14 @@
 import type { ReactNode } from "react";
-import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import {
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { refreshApplication } from "@/lib/navigation";
 
 interface PrimaryButtonProps {
   label: string;
@@ -44,6 +53,9 @@ interface ScreenContainerProps {
   title?: string;
   subtitle?: string;
   scrollable?: boolean;
+  /** Active le tirer-pour-actualiser (natif) ou le rechargement (web). */
+  refreshable?: boolean;
+  onRefresh?: () => void | Promise<void>;
 }
 
 export function ScreenContainer({
@@ -51,7 +63,38 @@ export function ScreenContainer({
   title,
   subtitle,
   scrollable = true,
+  refreshable = false,
+  onRefresh,
 }: ScreenContainerProps) {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      if (onRefresh) {
+        await onRefresh();
+      } else {
+        await refreshApplication(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 350));
+        });
+      }
+    } finally {
+      if (Platform.OS !== "web") {
+        setRefreshing(false);
+      }
+    }
+  }, [onRefresh]);
+
+  const refreshControl =
+    refreshable && scrollable ? (
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        colors={["#6B8F71"]}
+        tintColor="#6B8F71"
+        title={Platform.OS === "ios" ? "Actualiser…" : undefined}
+      />
+    ) : undefined;
   const header = (
     <>
       {title && (
@@ -79,6 +122,7 @@ export function ScreenContainer({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={Platform.OS === "web"}
         nestedScrollEnabled
+        refreshControl={refreshControl}
       >
         {header}
         {children}

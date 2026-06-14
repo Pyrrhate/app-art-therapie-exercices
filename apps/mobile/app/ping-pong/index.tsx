@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { ApiError, fetchPingPongWord } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
 import { PING_PONG_MAX_TURNS, type PingPongTurn } from "@/lib/ping-pong/types";
@@ -78,9 +79,12 @@ export default function PingPongScreen() {
   return (
     <ScreenContainer scrollable={false}>
       <View className="flex-1 px-0">
-        <Pressable onPress={() => router.back()} className="mb-4 px-6">
-          <Text className="text-sage-500 text-base">← Accueil</Text>
-        </Pressable>
+        <View className="px-6">
+          <ScreenNavBar
+            backLabel="← Accueil"
+            onBack={() => router.replace("/")}
+          />
+        </View>
 
         <View className="px-6 mb-4">
           <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">

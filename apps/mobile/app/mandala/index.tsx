@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import type { MandalaTheme } from "@/lib/mandala/types";
 import { MANDALA_THEME_LABELS } from "@/lib/mandala/palette";
 
@@ -8,10 +9,11 @@ const THEMES: MandalaTheme[] = ["calm", "energy", "focus"];
 
 export default function MandalaThemeScreen() {
   return (
-    <ScreenContainer scrollable>
-      <Pressable onPress={() => router.back()} className="mb-4 -mt-2">
-        <Text className="text-sage-500 text-base">← Accueil</Text>
-      </Pressable>
+    <ScreenContainer scrollable refreshable>
+      <ScreenNavBar
+        backLabel="← Accueil"
+        onBack={() => router.replace("/")}
+      />
 
       <Text className="text-sage-500 text-sm uppercase tracking-widest mb-3">
         Studio Mandala
@@ -21,7 +23,7 @@ export default function MandalaThemeScreen() {
       </Text>
       <Text className="text-sand-500 text-base leading-6 mb-8">
         Choisissez une intention. Un mandala unique sera généré pour vous —
-        coloriez-le à votre rythme, sans connexion requise.
+        coloriez-le à votre rythme.
       </Text>
 
       <View className="gap-4 pb-6">
@@ -52,7 +54,7 @@ export default function MandalaThemeScreen() {
 
       <PrimaryButton
         label="Retour à l'accueil"
-        onPress={() => router.back()}
+        onPress={() => router.replace("/")}
         variant="ghost"
       />
     </ScreenContainer>

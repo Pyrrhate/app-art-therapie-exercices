@@ -5,11 +5,13 @@ import {
   Image,
   Platform,
   Pressable,
+  RefreshControl,
   Text,
   View,
 } from "react-native";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { ScreenContainer } from "@/components/ui/Button";
+import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { deleteSession, getSessions } from "@/lib/storage";
@@ -17,10 +19,17 @@ import type { SavedSession } from "@/lib/types";
 
 export default function SessionsScreen() {
   const [sessions, setSessions] = useState<SavedSession[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setSessions(await getSessions());
   }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -62,9 +71,7 @@ export default function SessionsScreen() {
 
   return (
     <ScreenContainer scrollable={false}>
-      <Pressable onPress={() => router.back()} className="mb-6 -mt-2">
-        <Text className="text-sage-500 text-base">← Retour</Text>
-      </Pressable>
+      <ScreenNavBar />
 
       <Text className="text-3xl font-light text-sand-800 mb-2">
         Mes sessions
@@ -87,6 +94,14 @@ export default function SessionsScreen() {
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={Platform.OS === "web"}
           contentContainerStyle={{ gap: 16, paddingBottom: 32 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={["#6B8F71"]}
+              tintColor="#6B8F71"
+            />
+          }
           renderItem={({ item }) => (
             <View className="bg-white rounded-2xl border border-sand-200 overflow-hidden">
               {item.photoUri && (

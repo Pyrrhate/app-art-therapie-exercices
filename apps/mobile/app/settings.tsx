@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { SupportButton } from "@/components/SupportButton";
 import { TimerSoundPicker } from "@/components/TimerSoundPicker";
 import { ScreenContainer } from "@/components/ui/Button";
+import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { checkHealth } from "@/lib/api";
 import { getApiUrl } from "@/lib/config";
 import { getTimerSound, setTimerSound } from "@/lib/preferences";
@@ -51,11 +52,28 @@ export default function SettingsScreen() {
     await previewTimerSound(id);
   }
 
+  async function refreshHealth() {
+    const {
+      ok,
+      provider: p,
+      aiConfigured: ai,
+      textModel: tm,
+      visionModel: vm,
+      reflectionPipeline: rp,
+      aiHint: hint,
+    } = await checkHealth();
+    setApiOk(ok);
+    setProvider(p ?? null);
+    setAiConfigured(ai ?? null);
+    setTextModel(tm ?? null);
+    setVisionModel(vm ?? null);
+    setReflectionPipeline(rp ?? null);
+    setAiHint(hint ?? null);
+  }
+
   return (
-    <ScreenContainer scrollable>
-      <Pressable onPress={() => router.back()} className="mb-6 -mt-2">
-        <Text className="text-sage-500 text-base">← Retour</Text>
-      </Pressable>
+    <ScreenContainer scrollable refreshable onRefresh={refreshHealth}>
+      <ScreenNavBar />
 
       <Text className="text-3xl font-light text-sand-800 mb-2">Paramètres</Text>
       <Text className="text-sand-500 text-base mb-8 leading-6">

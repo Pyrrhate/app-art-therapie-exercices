@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { ColorPalette } from "@/components/mandala/ColorPalette";
 import { MandalaCanvas } from "@/components/mandala/MandalaCanvas";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { showAlert } from "@/lib/alert";
 import { exportMandala } from "@/lib/mandala/export";
 import { generateMandala } from "@/lib/mandala/generator";
@@ -130,13 +131,11 @@ export default function MandalaStudioScreen() {
   }
 
   return (
-    <ScreenContainer scrollable>
-      <Pressable
-        onPress={() => router.replace("/mandala")}
-        className="mb-4 -mt-2"
-      >
-        <Text className="text-sage-500 text-base">← Changer d'intention</Text>
-      </Pressable>
+    <ScreenContainer scrollable refreshable>
+      <ScreenNavBar
+        backLabel="← Changer d'intention"
+        onBack={() => router.replace("/mandala")}
+      />
 
       <Text className="text-sand-800 text-xl font-light mb-1">
         {meta.emoji} {meta.title}

@@ -12,6 +12,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { InlineNotice } from "@/components/InlineNotice";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { analyzeArtwork, ApiError } from "@/lib/api";
 import {
   extractImageFileFromDataTransfer,
@@ -38,6 +39,7 @@ import { saveSession } from "@/lib/storage";
 import { useRitualStore } from "@/lib/store";
 import type { SavedSession } from "@/lib/types";
 import { getTechniqueLabel } from "@/constants";
+import { navigateHome } from "@/lib/navigation";
 
 const DEFAULT_PROCESS_TIMEOUT_MS = 45_000;
 
@@ -495,7 +497,7 @@ export default function ReflectionScreen() {
   function handleGoHome() {
     cancelWork();
     reset();
-    router.replace("/");
+    navigateHome();
   }
 
   function handleGoBack() {
@@ -529,15 +531,8 @@ export default function ReflectionScreen() {
   busyRef.current = busy;
 
   return (
-    <ScreenContainer title="Capture & Réflexion">
-      <View className="flex-row justify-between items-center mb-4 -mt-2">
-        <Pressable onPress={handleGoBack}>
-          <Text className="text-sage-500 text-base">← Retour</Text>
-        </Pressable>
-        <Pressable onPress={handleGoHome}>
-          <Text className="text-sand-500 text-sm">Accueil</Text>
-        </Pressable>
-      </View>
+    <ScreenContainer title="Capture & Réflexion" refreshable>
+      <ScreenNavBar onBack={handleGoBack} />
 
       {notice && (
         <InlineNotice

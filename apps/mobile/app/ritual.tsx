@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   Text,
   TextInput,
   View,
@@ -9,6 +8,7 @@ import {
 import { router } from "expo-router";
 import { DurationPicker } from "@/components/DurationPicker";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { TECHNIQUES } from "@/constants";
 import { generateExercise } from "@/lib/api";
@@ -59,10 +59,9 @@ export default function RitualScreen() {
     <ScreenContainer
       title="L'Impulsion"
       subtitle="Quel mot, idée ou couleur vous appelle aujourd'hui ? Choisissez ensuite votre technique et la durée du rituel."
+      refreshable
     >
-      <Pressable onPress={() => router.back()} className="mb-4 -mt-4">
-        <Text className="text-sage-500 text-base">← Accueil</Text>
-      </Pressable>
+      <ScreenNavBar backLabel="← Accueil" onBack={() => router.replace("/")} />
 
       <TextInput
         value={impulse}
