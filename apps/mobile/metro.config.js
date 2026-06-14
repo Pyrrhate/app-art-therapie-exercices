@@ -18,7 +18,7 @@ const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
 
 const apiProxyTarget = (
-  process.env.EXPO_PUBLIC_API_URL ?? "https://pastek-art.eu"
+  process.env.EXPO_PUBLIC_API_URL ?? "https://api.pastek-art.eu"
 ).replace(/\/$/, "");
 
 const config = getDefaultConfig(projectRoot);

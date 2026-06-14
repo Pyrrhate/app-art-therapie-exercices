@@ -43,7 +43,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiUrl": "https://pastek-art.eu"
+      "apiUrl": "https://api.pastek-art.eu"
     }
   }
 }

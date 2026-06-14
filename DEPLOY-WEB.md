@@ -1,70 +1,89 @@
 # Déploiement web (Expo → Vercel)
 
-L'app mobile et la **version web** partagent le même code (`apps/mobile`).  
-L'**API** reste sur un projet Vercel séparé (`apps/api`).
+L'app mobile et la **version web** partagent le même code (`apps/mobile`).
 
-## Architecture recommandée
+## Architecture (domaines)
 
 | Service | Domaine | Projet Vercel | Root Directory |
 |---------|---------|---------------|----------------|
-| **App web** | `app.pastek-art.eu` ou `www.pastek-art.eu` | `art-therapie-web` | `apps/mobile` |
-| **API** | `pastek-art.eu` | projet existant | `apps/api` |
-
-> Pour mettre l'app sur **pastek-art.eu** à la racine, déplacez l'API sur `api.pastek-art.eu` puis attachez le domaine principal au projet web.
+| **App web** | `pastek-art.eu` (+ `www`) | `art-therapie-web` | `apps/mobile` |
+| **API** | `api.pastek-art.eu` | projet API existant | `apps/api` |
 
 ---
 
-## 1. Nouveau projet Vercel (web)
+## 1. Projet Vercel — API (`apps/api`)
 
-1. Vercel → **Add New Project** → même repo GitHub
+1. Projet existant → **Settings → Domains**
+2. Retirer `pastek-art.eu` de l'API (si présent)
+3. Ajouter **`api.pastek-art.eu`**
+4. Mettre à jour **`ALLOWED_ORIGINS`** :
+
+```
+http://localhost:8081,http://localhost:8082,http://localhost:19006,https://pastek-art.eu,https://www.pastek-art.eu
+```
+
+5. Redéployer l'API
+
+Test : `https://api.pastek-art.eu/api/health` → `{"status":"ok",...}`
+
+---
+
+## 2. Projet Vercel — Web (`apps/mobile`)
+
+1. **Add New Project** → même repo GitHub
 2. **Root Directory** : `apps/mobile`
-3. Framework : **Other** (détecté via `vercel.json`)
-4. **Output Directory** : `dist` (déjà dans `vercel.json`)
-5. Ne pas modifier Install / Build Command (déjà dans `vercel.json`)
-
-## 2. Variables d'environnement (projet web)
+3. Framework : **Other** (`vercel.json` gère le build)
+4. Variable d'environnement :
 
 | Variable | Valeur |
 |----------|--------|
-| `EXPO_PUBLIC_API_URL` | `https://pastek-art.eu` |
+| `EXPO_PUBLIC_API_URL` | `https://api.pastek-art.eu` |
 
-## 3. Domaine
+5. **Settings → Domains** :
+   - `pastek-art.eu` (domaine principal)
+   - `www.pastek-art.eu` → redirection vers `pastek-art.eu` (option Vercel)
 
-Vercel → projet web → **Settings → Domains** :
+6. Deploy
 
-- `app.pastek-art.eu` (recommandé)
+Test : `https://pastek-art.eu` → écran d'accueil Art Thérapie
 
-## 4. CORS côté API
+---
 
-Sur le **projet API** Vercel, mettre à jour `ALLOWED_ORIGINS` :
+## 3. DNS (chez votre registrar)
 
-```
-http://localhost:8081,http://localhost:8082,http://localhost:19006,https://pastek-art.eu,https://app.pastek-art.eu,https://www.pastek-art.eu
-```
+| Type | Nom | Valeur |
+|------|-----|--------|
+| CNAME | `api` | `cname.vercel-dns.com` (ou valeur indiquée par Vercel) |
+| A / CNAME | `@` | Vercel (pour `pastek-art.eu`) |
+| CNAME | `www` | `cname.vercel-dns.com` |
 
-Redéployer l'API après modification.
+Les enregistrements exacts sont affichés dans Vercel → Domains pour chaque projet.
 
-## 5. Déployer
+---
+
+## 4. Déployer
 
 ```cmd
 git push origin main
 ```
 
-Ou build local pour tester :
+Build local :
 
 ```cmd
-cd C:\Users\guill\OneDrive\Documents\app-art-therapie-exercices
-set EXPO_PUBLIC_API_URL=https://pastek-art.eu
+set EXPO_PUBLIC_API_URL=https://api.pastek-art.eu
 npm run mobile:web:export
 ```
 
-Les fichiers statiques sont dans `apps/mobile/dist/` — ouvrir `dist/index.html` ou servir avec `npx serve apps/mobile/dist`.
+Fichiers générés : `apps/mobile/dist/`
 
-## 6. Vérifier
+---
 
-1. Ouvrir `https://app.pastek-art.eu` → écran d'accueil Art Thérapie
-2. Paramètres → **Connexion API** → « Connecté »
-3. Lancer un rituel complet (exercice + photo + réflexion)
+## 5. Vérifier
+
+1. `https://api.pastek-art.eu/api/health` → OK
+2. `https://pastek-art.eu` → app web
+3. Paramètres → **Connexion API** → « Connecté »
+4. Rituel complet (exercice + photo + réflexion)
 
 ---
 
@@ -72,7 +91,7 @@ Les fichiers statiques sont dans `apps/mobile/dist/` — ouvrir `dist/index.html
 
 | Problème | Solution |
 |----------|----------|
-| Page blanche | Console navigateur ; vérifier que `dist/` contient `index.html` |
-| API inaccessible | `EXPO_PUBLIC_API_URL` + `ALLOWED_ORIGINS` sur Vercel API |
-| 404 en rafraîchissant une route | `rewrites` dans `apps/mobile/vercel.json` (déjà configuré) |
-| Build échoue | Node 22 ; logs Vercel ; `npm run mobile:web:export` en local |
+| App OK mais API en échec | `EXPO_PUBLIC_API_URL=https://api.pastek-art.eu` sur le projet **web** |
+| Erreur CORS | `ALLOWED_ORIGINS` sur le projet **API** doit inclure `https://pastek-art.eu` |
+| `pastek-art.eu` affiche du JSON | Le domaine pointe encore vers l'API — le déplacer vers le projet web |
+| 404 au refresh | `rewrites` dans `apps/mobile/vercel.json` (déjà configuré) |
