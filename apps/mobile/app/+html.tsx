@@ -3,13 +3,10 @@ import { type PropsWithChildren } from "react";
 
 export default function Root({ children }: PropsWithChildren) {
   return (
-    <html lang="fr">
+    <html lang="fr" style={{ height: "100%" }}>
       <head>
         <meta charSet="utf-8" />
-        <meta
-          httpEquiv="X-UA-Compatible"
-          content="IE=edge"
-        />
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
@@ -21,7 +18,9 @@ export default function Root({ children }: PropsWithChildren) {
         <title>Art Thérapie</title>
         <ScrollViewStyleReset />
       </head>
-      <body>{children}</body>
+      <body style={{ height: "100%", margin: 0, backgroundColor: "#FAF7F4" }}>
+        {children}
+      </body>
     </html>
   );
 }

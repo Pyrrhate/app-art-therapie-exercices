@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* React Native Web — évite l'écran blanc (flex-1 sans hauteur parente) */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background-color: #faf7f4;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  height: 100%;
+  flex: 1;
+}

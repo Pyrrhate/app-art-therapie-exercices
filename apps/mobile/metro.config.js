@@ -1,21 +1,12 @@
 const path = require("path");
-const Module = require("module");
 const { createProxyMiddleware } = require("http-proxy-middleware");
-
-const projectRoot = __dirname;
-const mobileNodeModules = path.resolve(projectRoot, "node_modules");
-
-const originalNodeModulePaths = Module._nodeModulePaths;
-Module._nodeModulePaths = function (from) {
-  const paths = originalNodeModulePaths.call(this, from);
-  if (!paths.includes(mobileNodeModules)) {
-    paths.unshift(mobileNodeModules);
-  }
-  return paths;
-};
-
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
+
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, "../..");
+const mobileNodeModules = path.resolve(projectRoot, "node_modules");
+const workspaceNodeModules = path.resolve(workspaceRoot, "node_modules");
 
 const apiProxyTarget = (
   process.env.EXPO_PUBLIC_API_URL ?? "https://api.pastek-art.eu"
@@ -23,6 +14,11 @@ const apiProxyTarget = (
 
 const config = getDefaultConfig(projectRoot);
 
+config.watchFolders = [workspaceRoot];
+config.resolver.nodeModulesPaths = [
+  mobileNodeModules,
+  workspaceNodeModules,
+];
 config.resolver.extraNodeModules = {
   react: path.resolve(mobileNodeModules, "react"),
   "react-dom": path.resolve(mobileNodeModules, "react-dom"),
