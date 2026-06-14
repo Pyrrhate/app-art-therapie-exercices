@@ -3,11 +3,15 @@ export type ArtisticTechnique =
   | "painting"
   | "writing"
   | "mixed_media"
-  | "recyclart";
+  | "recyclart"
+  | "collage"
+  | "volume";
 
 export interface ExerciseRequest {
   impulse: string;
   technique: ArtisticTechnique;
+  /** Durée choisie par l'utilisateur·rice (prioritaire sur la suggestion IA). */
+  durationMinutes?: number;
 }
 
 export interface ExerciseResponse {
@@ -26,6 +30,7 @@ export interface ReflectionResponse {
   reflection: string;
   openQuestions: string[];
   source: "ai" | "fallback";
+  analysisNote?: string;
 }
 
 export interface AIProvider {
@@ -39,5 +44,6 @@ export interface ApiErrorBody {
     | "RATE_LIMITED"
     | "VALIDATION_ERROR"
     | "INTERNAL_ERROR"
-    | "IMAGE_TOO_LARGE";
+    | "IMAGE_TOO_LARGE"
+    | "AI_NOT_CONFIGURED";
 }

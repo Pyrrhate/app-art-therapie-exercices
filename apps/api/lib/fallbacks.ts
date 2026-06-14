@@ -1,24 +1,18 @@
-import type { ArtisticTechnique, ExerciseRequest, ExerciseResponse } from "./types";
-
-const TECHNIQUE_LABELS: Record<ArtisticTechnique, string> = {
-  drawing: "dessin",
-  painting: "peinture",
-  writing: "écriture",
-  mixed_media: "techniques mixtes",
-  recyclart: "recycl'art",
-};
+import { TECHNIQUE_LABELS } from "./techniques";
+import type { ExerciseRequest, ExerciseResponse } from "./types";
 
 export function getFallbackExercise(input: ExerciseRequest): ExerciseResponse {
   const technique = TECHNIQUE_LABELS[input.technique];
   const impulse = input.impulse.trim() || "votre impulsion du moment";
+  const durationMinutes = input.durationMinutes ?? 15;
 
   return {
     exercise: `Prenez un moment pour vous installer confortablement. Sans jugement, laissez l'impulsion « ${impulse} » guider votre ${technique}.
 
-Commencez par une forme ou une couleur qui vous appelle, même si elle vous surprend. Travaillez pendant le temps imparti en restant curieux·se face à ce qui émerge.
+Commencez par une forme ou une couleur qui vous appelle, même si elle vous surprend. Travaillez pendant ${durationMinutes} minutes en restant curieux·se face à ce qui émerge.
 
 Il n'y a pas de bon ou mauvais résultat — seulement votre expression du moment.`,
-    durationMinutes: 15,
+    durationMinutes,
     source: "fallback",
   };
 }

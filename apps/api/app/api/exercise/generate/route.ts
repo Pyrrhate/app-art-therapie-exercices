@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getAIProvider } from "@/lib/ai";
+import { artisticTechniqueSchema } from "@/lib/techniques";
 import {
   corsHeaders,
   errorResponse,
@@ -10,13 +11,8 @@ import { checkRateLimit, getClientId } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   impulse: z.string().min(1).max(200),
-  technique: z.enum([
-    "drawing",
-    "painting",
-    "writing",
-    "mixed_media",
-    "recyclart",
-  ]),
+  technique: artisticTechniqueSchema,
+  durationMinutes: z.union([z.literal(15), z.literal(30), z.literal(45)]).optional(),
 });
 
 export async function OPTIONS(request: Request) {

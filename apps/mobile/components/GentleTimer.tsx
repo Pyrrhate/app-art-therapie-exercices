@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
+import { playTimerSound } from "@/lib/sounds";
 
 interface GentleTimerProps {
   durationMinutes: number;
   onComplete?: () => void;
   autoStart?: boolean;
+  completionSound?: "gong" | "chime" | "none";
 }
 
 export function GentleTimer({
   durationMinutes,
   onComplete,
   autoStart = true,
+  completionSound = "gong",
 }: GentleTimerProps) {
   const totalSeconds = durationMinutes * 60;
   const [elapsed, setElapsed] = useState(0);
@@ -29,6 +31,12 @@ export function GentleTimer({
   const isComplete = elapsed >= totalSeconds;
 
   useEffect(() => {
+    setElapsed(0);
+    setRunning(autoStart);
+    completedRef.current = false;
+  }, [durationMinutes, autoStart]);
+
+  useEffect(() => {
     if (!running || isComplete) return;
 
     const interval = setInterval(() => {
@@ -37,7 +45,7 @@ export function GentleTimer({
         if (next >= totalSeconds && !completedRef.current) {
           completedRef.current = true;
           setRunning(false);
-          playCompletionCue();
+          void playCompletionCue();
           onComplete?.();
         }
         return next;
@@ -49,15 +57,12 @@ export function GentleTimer({
 
   async function playCompletionCue() {
     try {
-      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+      await playTimerSound(completionSound);
       await Haptics.notificationAsync(
         Haptics.NotificationFeedbackType.Success
       );
-      setTimeout(() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }, 400);
     } catch {
-      // Ignorer si haptique/audio indisponible
+      // Ignorer si haptique indisponible
     }
   }
 
@@ -66,31 +71,44 @@ export function GentleTimer({
     setRunning((r) => !r);
   }
 
+  const remaining = Math.max(totalSeconds - elapsed, 0);
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+
   return (
     <View className="items-center justify-center py-8">
-      <Svg width={size} height={size}>
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="#E8DDD4"
-          strokeWidth={stroke}
-          fill="none"
-        />
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={isComplete ? "#A8856A" : "#6B8F71"}
-          strokeWidth={stroke}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          rotation="-90"
-          origin={`${size / 2}, ${size / 2}`}
-        />
-      </Svg>
+      <View style={{ width: size, height: size }}>
+        <Svg width={size} height={size}>
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#E8DDD4"
+            strokeWidth={stroke}
+            fill="none"
+          />
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={isComplete ? "#A8856A" : "#6B8F71"}
+            strokeWidth={stroke}
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            rotation="-90"
+            origin={`${size / 2}, ${size / 2}`}
+          />
+        </Svg>
+        <View className="absolute inset-0 items-center justify-center">
+          <Text className="text-sand-700 text-2xl font-light">
+            {isComplete
+              ? "0:00"
+              : `${mins}:${secs.toString().padStart(2, "0")}`}
+          </Text>
+        </View>
+      </View>
 
       {!isComplete && (
         <Pressable

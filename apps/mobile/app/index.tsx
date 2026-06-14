@@ -1,90 +1,59 @@
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
-import { TechniquePicker } from "@/components/TechniquePicker";
-import { TECHNIQUES } from "@/constants";
-import { generateExercise } from "@/lib/api";
-import { showAlert } from "@/lib/alert";
-import { useRitualStore } from "@/lib/store";
 
-export default function ImpulseScreen() {
-  const { impulse, technique, setImpulse, setTechnique, setExercise } =
-    useRitualStore();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleContinue() {
-    if (!impulse.trim() || !technique) return;
-
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await generateExercise(impulse.trim(), technique);
-      setExercise(result.exercise, result.durationMinutes);
-      router.push("/exercise");
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Impossible de contacter le serveur. Vérifiez votre connexion ou réessayez.";
-      setError(message);
-      showAlert("Connexion indisponible", message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const canContinue = impulse.trim().length > 0 && technique !== null;
-
+export default function WelcomeScreen() {
   return (
-    <ScreenContainer
-      title="L'Impulsion"
-      subtitle="Quel mot, idée ou couleur vous appelle aujourd'hui ? Choisissez ensuite votre technique."
-    >
-      <TextInput
-        value={impulse}
-        onChangeText={setImpulse}
-        placeholder="Une couleur, une affirmation, un thème..."
-        placeholderTextColor="#B8A090"
-        multiline
-        className="bg-white border border-sand-200 rounded-2xl px-5 py-4 text-sand-800 text-base min-h-[100px] mb-8"
-      />
-
-      <Text className="text-sand-600 text-sm mb-4 font-medium">
-        Technique artistique
-      </Text>
-      <TechniquePicker
-        selected={technique}
-        onSelect={setTechnique}
-        techniques={TECHNIQUES}
-      />
-
-      <View className="mt-auto pt-8 gap-4">
-        {error && (
-          <Text className="text-red-500 text-sm text-center leading-5 px-2">
-            {error}
+    <ScreenContainer scrollable>
+      <View className="gap-4 pb-4">
+        <View>
+          <Text className="text-sage-500 text-sm uppercase tracking-widest mb-4">
+            Art Thérapie
           </Text>
-        )}
-        <PrimaryButton
-          label={loading ? "Préparation..." : "Commencer le rituel"}
-          onPress={handleContinue}
-          disabled={!canContinue || loading}
-        />
-          {loading && (
-            <View className="mt-2 items-center">
-              <ActivityIndicator color="#6B8F71" />
-            </View>
-          )}
-        <Pressable onPress={() => router.push("/settings")} className="py-2">
-          <Text className="text-sand-400 text-sm text-center">Paramètres</Text>
-        </Pressable>
+          <Text className="text-4xl font-light text-sand-800 mb-4 leading-tight">
+            Un rituel créatif,{"\n"}en douceur
+          </Text>
+          <Text className="text-base text-sand-500 leading-7 mb-10">
+            Trois étapes simples : une impulsion, un exercice guidé, puis une
+            réflexion bienveillante sur votre création. Vos données restent sur
+            cet appareil.
+          </Text>
+
+          <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-6">
+            <Text className="text-sand-700 font-medium mb-3">
+              Comment ça marche ?
+            </Text>
+            <Text className="text-sand-600 text-sm leading-6 mb-2">
+              1. Choisissez une impulsion et une technique
+            </Text>
+            <Text className="text-sand-600 text-sm leading-6 mb-2">
+              2. Créez pendant le temps qui vous convient
+            </Text>
+            <Text className="text-sand-600 text-sm leading-6">
+              3. Photographiez votre œuvre et recevez un miroir créatif
+            </Text>
+          </View>
+        </View>
+
+        <View className="gap-4 pt-8">
+          <PrimaryButton
+            label="Commencer un rituel"
+            onPress={() => router.push("/ritual")}
+          />
+          <PrimaryButton
+            label="Mes sessions sauvegardées"
+            onPress={() => router.push("/sessions")}
+            variant="ghost"
+          />
+          <View className="flex-row justify-center gap-6 pt-2">
+            <Pressable onPress={() => router.push("/settings")}>
+              <Text className="text-sand-400 text-sm">Paramètres</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push("/privacy")}>
+              <Text className="text-sand-400 text-sm">Confidentialité</Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
     </ScreenContainer>
   );

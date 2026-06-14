@@ -3,7 +3,9 @@ export type ArtisticTechnique =
   | "painting"
   | "writing"
   | "mixed_media"
-  | "recyclart";
+  | "recyclart"
+  | "collage"
+  | "volume";
 
 export interface ExerciseResponse {
   exercise: string;
@@ -15,6 +17,8 @@ export interface ReflectionResponse {
   reflection: string;
   openQuestions: string[];
   source: "ai" | "fallback";
+  /** Détail technique si l'analyse IA a échoué (mode secours). */
+  analysisNote?: string;
 }
 
 export interface SavedSession {

@@ -1,29 +1,23 @@
+import { TECHNIQUE_LABELS } from "../techniques";
 import type { ArtisticTechnique } from "../types";
-
-const TECHNIQUE_LABELS: Record<ArtisticTechnique, string> = {
-  drawing: "dessin",
-  painting: "peinture",
-  writing: "écriture",
-  mixed_media: "techniques mixtes",
-  recyclart: "recycl'art",
-};
 
 export function buildExercisePrompt(
   impulse: string,
-  technique: ArtisticTechnique
+  technique: ArtisticTechnique,
+  durationMinutes = 15
 ): string {
   const label = TECHNIQUE_LABELS[technique];
   return `Tu es un·e art-thérapeute bienveillant·e. Rédige un exercice créatif court (120 mots max) en français.
 
 Impulsion de l'utilisateur·rice : "${impulse}"
 Technique choisie : ${label}
+Durée prévue : ${durationMinutes} minutes (ne pas la modifier dans ta réponse)
 
 Consignes :
 - Ton chaleureux, non jugeant, invitant à l'exploration
 - Pas de diagnostic ni d'interprétation psychologique
-- Propose une durée suggérée entre 10 et 20 minutes
 - Réponds UNIQUEMENT en JSON valide, sans markdown :
-{"exercise":"texte de l'exercice ici","durationMinutes":15}`;
+{"exercise":"texte de l'exercice ici","durationMinutes":${durationMinutes}}`;
 }
 
 export function buildReflectionPrompt(
@@ -90,10 +84,13 @@ function extractJsonStringArray(raw: string, field: string): string[] {
   return items;
 }
 
-function clampDuration(value: unknown): number {
+function clampDuration(value: unknown, preferred?: number): number {
+  if (preferred === 15 || preferred === 30 || preferred === 45) {
+    return preferred;
+  }
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(n)) return 15;
-  return Math.min(30, Math.max(5, Math.round(n)));
+  return Math.min(45, Math.max(5, Math.round(n)));
 }
 
 /** Détecte les réponses JSON brutes ou mal formées affichables par erreur. */
@@ -136,7 +133,8 @@ export function parseJsonFromText<T>(text: string): T | null {
 }
 
 export function parseExerciseFromAi(
-  raw: string
+  raw: string,
+  preferredDuration?: number
 ): { exercise: string; durationMinutes: number } | null {
   const normalized = normalizeRawAiResponse(raw);
   const parsed = parseJsonFromText<{
@@ -149,7 +147,7 @@ export function parseExerciseFromAi(
     if (exercise && !looksLikeJsonArtifact(exercise)) {
       return {
         exercise,
-        durationMinutes: clampDuration(parsed.durationMinutes),
+        durationMinutes: clampDuration(parsed.durationMinutes, preferredDuration),
       };
     }
   }
@@ -163,14 +161,14 @@ export function parseExerciseFromAi(
       )?.[1];
       return {
         exercise,
-        durationMinutes: clampDuration(durationRaw),
+        durationMinutes: clampDuration(durationRaw, preferredDuration),
       };
     }
   }
 
   const prose = cleanAiText(normalized);
   if (prose.length >= 20 && !looksLikeJsonArtifact(prose)) {
-    return { exercise: prose, durationMinutes: 15 };
+    return { exercise: prose, durationMinutes: clampDuration(15, preferredDuration) };
   }
 
   return null;
@@ -217,7 +215,7 @@ function parseReflectionFromProse(raw: string): {
   }
 
   const reflection = cleanAiText(reflectionLines.join("\n\n"));
-  if (reflection.length >= 30 && !looksLikeJsonArtifact(reflection)) {
+  if (reflection.length >= 20 && !looksLikeJsonArtifact(reflection)) {
     return {
       reflection,
       openQuestions: openQuestions.filter(

@@ -17,7 +17,18 @@ const HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions";
 const HF_INFERENCE_URL = "https://router.huggingface.co/hf-inference/models";
 const VISION_FETCH_TIMEOUT_MS = 90_000;
 
-/** Modèles vision testés sur le router HF (chat completions multimodal). */
+/**
+ * Modèles recommandés (Vercel → variables d'environnement) :
+ *
+ * HF_TEXT_MODEL — génération d'exercices (chat, JSON)
+ *   Ex. meta-llama/Llama-3.1-8B-Instruct
+ *
+ * HF_VISION_MODEL — analyse photo (chat multimodal)
+ *   Ex. Qwen/Qwen2.5-VL-7B-Instruct:fastest
+ *   Alternative : llava-hf/llava-1.5-7b-hf (sans suffixe :fastest)
+ *
+ * HF_TOKEN — obligatoire en prod ; sans token → mode secours côté API.
+ */
 const DEFAULT_VISION_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct:fastest";
 const VISION_MODEL_FALLBACKS = [
   "Qwen/Qwen2.5-VL-7B-Instruct:fastest",
@@ -73,14 +84,23 @@ export class HuggingFaceProvider implements AIProvider {
   }
 
   async generateExercise(input: ExerciseRequest): Promise<ExerciseResponse> {
+    const preferredDuration = input.durationMinutes;
     if (!this.token) {
-      return getFallbackExercise(input);
+      const fallback = getFallbackExercise(input);
+      return {
+        ...fallback,
+        durationMinutes: preferredDuration ?? fallback.durationMinutes,
+      };
     }
 
     try {
-      const prompt = buildExercisePrompt(input.impulse, input.technique);
+      const prompt = buildExercisePrompt(
+        input.impulse,
+        input.technique,
+        preferredDuration ?? 15
+      );
       const raw = await this.callTextModel(prompt);
-      const parsed = parseExerciseFromAi(raw);
+      const parsed = parseExerciseFromAi(raw, preferredDuration);
 
       if (parsed) {
         return {
@@ -97,7 +117,11 @@ export class HuggingFaceProvider implements AIProvider {
       return getFallbackExercise(input);
     } catch (error) {
       console.warn("[HF generateExercise]", error);
-      return getFallbackExercise(input);
+      const fallback = getFallbackExercise(input);
+      return {
+        ...fallback,
+        durationMinutes: preferredDuration ?? fallback.durationMinutes,
+      };
     }
   }
 
@@ -105,7 +129,11 @@ export class HuggingFaceProvider implements AIProvider {
     if (!this.token) {
       console.warn("[HF analyzeArtwork] HF_TOKEN manquant");
       const fallback = getFallbackReflection();
-      return { ...fallback, source: "fallback" };
+      return {
+        ...fallback,
+        source: "fallback",
+        analysisNote: "HF_TOKEN non configuré sur le serveur.",
+      };
     }
 
     try {
@@ -125,11 +153,17 @@ export class HuggingFaceProvider implements AIProvider {
         "[HF analyzeArtwork] réponse non exploitable:",
         raw.slice(0, 300)
       );
-      throw new Error("HF vision: réponse non exploitable");
+      throw new Error("Réponse IA illisible — reformulation impossible");
     } catch (error) {
+      const note =
+        error instanceof Error ? error.message : "Erreur vision inconnue";
       console.warn("[HF analyzeArtwork]", error);
       const fallback = getFallbackReflection();
-      return { ...fallback, source: "fallback" };
+      return {
+        ...fallback,
+        source: "fallback",
+        analysisNote: note.slice(0, 200),
+      };
     }
   }
 
@@ -219,12 +253,12 @@ export class HuggingFaceProvider implements AIProvider {
               { type: "text", text: prompt },
               {
                 type: "image_url",
-                image_url: { url: imageUrl, detail: "low" },
+                image_url: { url: imageUrl, detail: "auto" },
               },
             ],
           },
         ],
-        max_tokens: 512,
+        max_tokens: 768,
         temperature: 0.6,
       }),
       signal: AbortSignal.timeout(VISION_FETCH_TIMEOUT_MS),

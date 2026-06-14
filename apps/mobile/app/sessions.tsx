@@ -3,11 +3,13 @@ import {
   Alert,
   FlatList,
   Image,
+  Platform,
   Pressable,
   Text,
   View,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { ScreenContainer } from "@/components/ui/Button";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { deleteSession, getSessions } from "@/lib/storage";
@@ -31,6 +33,16 @@ export default function SessionsScreen() {
   }, [load]);
 
   function confirmDelete(id: string) {
+    if (Platform.OS === "web") {
+      if (
+        window.confirm(
+          "Supprimer cette session ? Cette action est irréversible."
+        )
+      ) {
+        void deleteSession(id).then(load);
+      }
+      return;
+    }
     Alert.alert(
       "Supprimer cette session ?",
       "Cette action est irréversible.",
@@ -49,15 +61,15 @@ export default function SessionsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-sand-50 px-6 pt-16 pb-8">
-      <Pressable onPress={() => router.back()} className="mb-8">
+    <ScreenContainer scrollable={false}>
+      <Pressable onPress={() => router.back()} className="mb-6 -mt-2">
         <Text className="text-sage-500 text-base">← Retour</Text>
       </Pressable>
 
       <Text className="text-3xl font-light text-sand-800 mb-2">
         Mes sessions
       </Text>
-      <Text className="text-sand-500 text-base mb-8 leading-6">
+      <Text className="text-sand-500 text-base mb-6 leading-6">
         Vos rituels sauvegardés sur cet appareil uniquement.
       </Text>
 
@@ -72,7 +84,8 @@ export default function SessionsScreen() {
         <FlatList
           data={sessions}
           keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={Platform.OS === "web"}
           contentContainerStyle={{ gap: 16, paddingBottom: 32 }}
           renderItem={({ item }) => (
             <View className="bg-white rounded-2xl border border-sand-200 overflow-hidden">
@@ -94,16 +107,25 @@ export default function SessionsScreen() {
                   {getTechniqueLabel(item.technique)}
                 </Text>
                 {sanitizeAiDisplayText(item.exercise) ? (
-                  <Text className="text-sand-600 text-sm leading-5" numberOfLines={3}>
+                  <Text
+                    className="text-sand-600 text-sm leading-5"
+                    numberOfLines={3}
+                  >
                     {sanitizeAiDisplayText(item.exercise)}
                   </Text>
                 ) : null}
                 {item.reflection && sanitizeAiDisplayText(item.reflection) ? (
-                  <Text className="text-sage-600 text-sm mt-3 italic leading-5" numberOfLines={2}>
+                  <Text
+                    className="text-sage-600 text-sm mt-3 italic leading-5"
+                    numberOfLines={2}
+                  >
                     {sanitizeAiDisplayText(item.reflection)}
                   </Text>
                 ) : null}
-                <Pressable onPress={() => confirmDelete(item.id)} className="mt-4">
+                <Pressable
+                  onPress={() => confirmDelete(item.id)}
+                  className="mt-4"
+                >
                   <Text className="text-sand-400 text-xs">Supprimer</Text>
                 </Pressable>
               </View>
@@ -111,6 +133,6 @@ export default function SessionsScreen() {
           )}
         />
       )}
-    </View>
+    </ScreenContainer>
   );
 }

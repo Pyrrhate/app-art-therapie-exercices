@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getAIProvider } from "@/lib/ai";
+import { artisticTechniqueSchema } from "@/lib/techniques";
 import {
   corsHeaders,
   errorResponse,
@@ -19,9 +20,7 @@ const bodySchema = z.object({
       message: "Image trop lourde (maximum 3 Mo environ).",
     }),
   impulse: z.string().max(200).optional(),
-  technique: z
-    .enum(["drawing", "painting", "writing", "mixed_media", "recyclart"])
-    .optional(),
+  technique: artisticTechniqueSchema.optional(),
 });
 
 export async function OPTIONS(request: Request) {

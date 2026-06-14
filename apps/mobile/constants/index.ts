@@ -9,8 +9,14 @@ export const TECHNIQUES: {
   { id: "painting", label: "Peinture", emoji: "🎨" },
   { id: "writing", label: "Écriture", emoji: "📝" },
   { id: "mixed_media", label: "Techniques mixtes", emoji: "🌀" },
+  { id: "collage", label: "Collage", emoji: "✂️" },
+  { id: "volume", label: "Volume", emoji: "🗿" },
   { id: "recyclart", label: "Recycl'art", emoji: "♻️" },
 ];
+
+export const DURATION_OPTIONS = [15, 30, 45] as const;
+
+export type RitualDuration = (typeof DURATION_OPTIONS)[number];
 
 export const STORAGE_KEYS = {
   sessions: "@art_therapie/sessions",

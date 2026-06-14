@@ -75,11 +75,12 @@ async function request<T>(
 
 export async function generateExercise(
   impulse: string,
-  technique: ArtisticTechnique
+  technique: ArtisticTechnique,
+  durationMinutes?: number
 ): Promise<ExerciseResponse> {
   return request<ExerciseResponse>("/api/exercise/generate", {
     method: "POST",
-    body: JSON.stringify({ impulse, technique }),
+    body: JSON.stringify({ impulse, technique, durationMinutes }),
   });
 }
 
@@ -100,20 +101,26 @@ export async function checkHealth(): Promise<{
   ok: boolean;
   provider?: string;
   aiConfigured?: boolean;
+  textModel?: string;
   visionModel?: string;
+  aiHint?: string;
 }> {
   try {
     const result = await request<{
       status: string;
       provider?: string;
       aiConfigured?: boolean;
+      textModel?: string;
       visionModel?: string;
+      aiHint?: string;
     }>("/api/health");
     return {
       ok: result.status === "ok",
       provider: result.provider,
       aiConfigured: result.aiConfigured,
+      textModel: result.textModel,
       visionModel: result.visionModel,
+      aiHint: result.aiHint,
     };
   } catch {
     return { ok: false };

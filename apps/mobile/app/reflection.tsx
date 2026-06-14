@@ -4,7 +4,6 @@ import {
   Image,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -349,7 +348,9 @@ export default function ReflectionScreen() {
         setNotice({
           type: "error",
           message:
-            "L'IA n'a pas pu analyser votre photo (service indisponible). Les questions ci-dessous sont génériques — réessayez dans quelques minutes.",
+            result.analysisNote
+              ? `Analyse IA indisponible (${result.analysisNote}). Questions génériques affichées — réessayez dans quelques minutes.`
+              : "L'IA n'a pas pu analyser votre photo (service indisponible). Les questions ci-dessous sont génériques — réessayez dans quelques minutes.",
         });
       } else {
         setNotice(null);
@@ -512,8 +513,7 @@ export default function ReflectionScreen() {
         </Pressable>
       )}
 
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-        {previewUri ? (
+      {previewUri ? (
           <View ref={bindWebDropZone}>
             <Image
               source={{ uri: previewUri }}
@@ -626,7 +626,6 @@ export default function ReflectionScreen() {
             variant="ghost"
           />
         </View>
-      </ScrollView>
     </ScreenContainer>
   );
 }

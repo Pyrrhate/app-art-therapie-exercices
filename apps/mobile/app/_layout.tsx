@@ -26,11 +26,15 @@ export default function RootLayout() {
           <Stack
             screenOptions={{
               headerShown: false,
-              contentStyle: { backgroundColor: "#FAF7F4" },
+              contentStyle: {
+                backgroundColor: "#FAF7F4",
+                flex: 1,
+              },
               animation: "fade",
             }}
           >
             <Stack.Screen name="index" />
+            <Stack.Screen name="ritual" />
             <Stack.Screen name="exercise" />
             <Stack.Screen name="reflection" />
             <Stack.Screen
@@ -43,6 +47,14 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="settings"
+              options={
+                Platform.OS === "web"
+                  ? { presentation: "card" }
+                  : { presentation: "modal" }
+              }
+            />
+            <Stack.Screen
+              name="privacy"
               options={
                 Platform.OS === "web"
                   ? { presentation: "card" }
