@@ -35,5 +35,9 @@ export interface AIProvider {
 
 export interface ApiErrorBody {
   error: string;
-  code: "RATE_LIMITED" | "VALIDATION_ERROR" | "INTERNAL_ERROR";
+  code:
+    | "RATE_LIMITED"
+    | "VALIDATION_ERROR"
+    | "INTERNAL_ERROR"
+    | "IMAGE_TOO_LARGE";
 }
