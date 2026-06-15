@@ -98,6 +98,28 @@ export default function ZenGardenScreen() {
     setUndoStack((stack) => [...stack.slice(-49), { kind: "rock", rock }]);
   }
 
+  function handleMoveRock(rockId: string, x: number, y: number) {
+    setRocks((prev) =>
+      prev.map((r) => (r.id === rockId ? { ...r, x, y } : r))
+    );
+  }
+
+  function handleMoveRockEnd(rockId: string, from: ZenPoint, to: ZenPoint) {
+    setRocks((prev) => {
+      const next = prev.map((r) =>
+        r.id === rockId ? { ...r, x: to.x, y: to.y } : r
+      );
+      persist(strokes, next, sandColor);
+      return next;
+    });
+    if (Math.hypot(from.x - to.x, from.y - to.y) > 2) {
+      setUndoStack((stack) => [
+        ...stack.slice(-49),
+        { kind: "moveRock", rockId, from, to },
+      ]);
+    }
+  }
+
   function handleRemoveRock(rockId: string) {
     const removed = rocks.find((r) => r.id === rockId);
     if (!removed) return;
@@ -128,9 +150,17 @@ export default function ZenGardenScreen() {
         persist(strokes, next, sandColor);
         return next;
       });
-    } else {
+    } else if (last.kind === "removeRock") {
       setRocks((prev) => {
         const next = [...prev, last.rock];
+        persist(strokes, next, sandColor);
+        return next;
+      });
+    } else if (last.kind === "moveRock") {
+      setRocks((prev) => {
+        const next = prev.map((r) =>
+          r.id === last.rockId ? { ...r, x: last.from.x, y: last.from.y } : r
+        );
         persist(strokes, next, sandColor);
         return next;
       });
@@ -199,6 +229,8 @@ export default function ZenGardenScreen() {
           onStrokeComplete={() => {}}
           onPlaceRock={() => {}}
           onRemoveRock={() => {}}
+          onMoveRock={() => {}}
+          onMoveRockEnd={() => {}}
           interactive={false}
         />
         <Text className="text-sand-400 text-xs mt-6 px-8 text-center">
@@ -219,8 +251,8 @@ export default function ZenGardenScreen() {
         Râteau & pierres
       </Text>
       <Text className="text-sand-500 text-base leading-6 mb-6">
-        Glissez pour tracer le sable, touchez pour poser une pierre. Retouchez
-        une pierre pour la retirer. Sans score, sans chrono.
+        Glissez pour tracer le sable. En mode pierre : touchez pour poser,
+        glissez une pierre pour la déplacer, retouchez pour la retirer.
       </Text>
 
       {!loading && (
@@ -236,6 +268,8 @@ export default function ZenGardenScreen() {
           onStrokeComplete={handleStrokeComplete}
           onPlaceRock={handlePlaceRock}
           onRemoveRock={handleRemoveRock}
+          onMoveRock={handleMoveRock}
+          onMoveRockEnd={handleMoveRockEnd}
         />
       )}
 

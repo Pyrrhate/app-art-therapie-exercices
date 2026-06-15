@@ -22,7 +22,8 @@ export interface ZenRock {
 export type ZenUndoEntry =
   | { kind: "stroke"; stroke: RakeStroke }
   | { kind: "rock"; rock: ZenRock }
-  | { kind: "removeRock"; rock: ZenRock };
+  | { kind: "removeRock"; rock: ZenRock }
+  | { kind: "moveRock"; rockId: string; from: ZenPoint; to: ZenPoint };
 
 export interface ZenGardenState {
   strokes: RakeStroke[];

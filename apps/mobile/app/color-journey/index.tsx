@@ -195,8 +195,10 @@ export default function ColorJourneyScreen() {
         </Text>
 
         {offlineMode && (
-          <Text className="text-amber-700 text-xs mb-3">
-            Mode local actif — contenus poétiques hors ligne.
+          <Text className="text-amber-700 text-xs mb-3 leading-5">
+            Mode local actif — l&apos;API n&apos;a pas répondu ou renvoie le
+            contenu de secours. Vérifiez que l&apos;API est à jour (routes
+            color-journey) et que HF_TOKEN est configuré.
           </Text>
         )}
 

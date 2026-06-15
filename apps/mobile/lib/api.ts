@@ -1,4 +1,9 @@
 import { getApiUrl } from "./config";
+import {
+  fallbackChooseColorJourney,
+  fallbackStartColorJourney,
+  fallbackSynthesizeColorJourney,
+} from "./color-journey/fallback";
 import type {
   ArtisticTechnique,
   ExerciseResponse,
@@ -73,6 +78,16 @@ async function request<T>(
   return data as T;
 }
 
+function shouldUseColorJourneyFallback(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return true;
+  return (
+    error.code === "NETWORK_ERROR" ||
+    error.status === 404 ||
+    error.status === 503 ||
+    error.status === 502
+  );
+}
+
 export async function generateExercise(
   impulse: string,
   technique: ArtisticTechnique,
@@ -121,10 +136,17 @@ export async function startColorJourney(context: {
   contextNote?: string;
   source: "ai" | "fallback";
 }> {
-  return request("/api/color-journey/start", {
-    method: "POST",
-    body: JSON.stringify(context),
-  });
+  try {
+    return await request("/api/color-journey/start", {
+      method: "POST",
+      body: JSON.stringify(context),
+    });
+  } catch (error) {
+    if (shouldUseColorJourneyFallback(error)) {
+      return fallbackStartColorJourney(context);
+    }
+    throw error;
+  }
 }
 
 export async function chooseColorJourney(input: {
@@ -144,10 +166,25 @@ export async function chooseColorJourney(input: {
   proposals?: Array<{ hex: string; label: string; hint: string }>;
   contextNote?: string;
 }> {
-  return request("/api/color-journey/choose", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
+  try {
+    return await request("/api/color-journey/choose", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  } catch (error) {
+    if (shouldUseColorJourneyFallback(error)) {
+      return fallbackChooseColorJourney({
+        turn: input.turn,
+        chosen: {
+          hex: input.chosen.hex,
+          label: input.chosen.label,
+          hint: input.chosen.hint ?? "",
+        },
+        history: input.history,
+      });
+    }
+    throw error;
+  }
 }
 
 export async function synthesizeColorJourney(input: {
@@ -159,10 +196,17 @@ export async function synthesizeColorJourney(input: {
   palette: Array<{ hex: string; label: string; dimensionId: string }>;
   source: "ai" | "fallback";
 }> {
-  return request("/api/color-journey/synthesize", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
+  try {
+    return await request("/api/color-journey/synthesize", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  } catch (error) {
+    if (shouldUseColorJourneyFallback(error)) {
+      return fallbackSynthesizeColorJourney(input);
+    }
+    throw error;
+  }
 }
 
 export async function checkHealth(): Promise<{

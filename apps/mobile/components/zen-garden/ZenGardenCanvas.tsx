@@ -1,14 +1,18 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   PanResponder,
   Platform,
-  Pressable,
   View,
   type GestureResponderEvent,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import Svg, { Ellipse, Path, Rect } from "react-native-svg";
-import { buildRakePaths, clampToViewBox, simplifyPoints } from "@/lib/zen-garden/rake";
+import {
+  getEventGardenPoint,
+  measureGardenLayout,
+  type GardenLayout,
+} from "@/lib/zen-garden/pointer";
+import { buildRakePaths, simplifyPoints } from "@/lib/zen-garden/rake";
 import {
   DEFAULT_SAND_COLOR,
   RAKE_LINE_COLOR,
@@ -36,6 +40,8 @@ interface ZenGardenCanvasProps {
   onStrokeComplete: (stroke: RakeStroke) => void;
   onPlaceRock: (rock: ZenRock) => void;
   onRemoveRock: (rockId: string) => void;
+  onMoveRock: (rockId: string, x: number, y: number) => void;
+  onMoveRockEnd: (rockId: string, from: ZenPoint, to: ZenPoint) => void;
   onLiveStrokeChange?: (points: ZenPoint[] | null) => void;
   interactive?: boolean;
 }
@@ -51,11 +57,28 @@ export function ZenGardenCanvas({
   onStrokeComplete,
   onPlaceRock,
   onRemoveRock,
+  onMoveRock,
+  onMoveRockEnd,
   onLiveStrokeChange,
   interactive = true,
 }: ZenGardenCanvasProps) {
+  const containerRef = useRef<View>(null);
+  const layoutRef = useRef<GardenLayout | null>(null);
   const currentPoints = useRef<ZenPoint[]>([]);
+  const dragRockId = useRef<string | null>(null);
+  const dragStart = useRef<ZenPoint | null>(null);
+  const didDrag = useRef(false);
   const lastHaptic = useRef(0);
+
+  const refreshLayout = useCallback(() => {
+    measureGardenLayout(containerRef.current, (layout) => {
+      layoutRef.current = layout;
+    });
+  }, []);
+
+  useEffect(() => {
+    refreshLayout();
+  }, [size, refreshLayout]);
 
   const triggerHaptic = useCallback(() => {
     if (Platform.OS === "web") return;
@@ -66,21 +89,28 @@ export function ZenGardenCanvas({
   }, []);
 
   const toGardenPoint = useCallback(
-    (event: GestureResponderEvent) => {
-      const { locationX, locationY } = event.nativeEvent;
-      return clampToViewBox(locationX, locationY, size);
-    },
+    (event: GestureResponderEvent) =>
+      getEventGardenPoint(event, layoutRef.current, size),
     [size]
   );
 
-  const panResponder = useMemo(
+  const findRockAt = useCallback(
+    (x: number, y: number): ZenRock | undefined =>
+      rocks.find((rock) => {
+        const spec = ROCK_VARIANTS[rock.variant];
+        const hitRadius = Math.max(spec.rx, spec.ry) + 8;
+        return Math.hypot(rock.x - x, rock.y - y) <= hitRadius;
+      }),
+    [rocks]
+  );
+
+  const rakePan = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () =>
-          interactive && tool === "rake",
-        onMoveShouldSetPanResponder: () =>
-          interactive && tool === "rake",
+        onStartShouldSetPanResponder: () => interactive && tool === "rake",
+        onMoveShouldSetPanResponder: () => interactive && tool === "rake",
         onPanResponderGrant: (event) => {
+          refreshLayout();
           const p = toGardenPoint(event);
           currentPoints.current = [p];
           onLiveStrokeChange?.([p]);
@@ -99,10 +129,7 @@ export function ZenGardenCanvas({
           currentPoints.current = [];
           onLiveStrokeChange?.(null);
           if (simplified.length >= 2) {
-            onStrokeComplete({
-              id: makeId(),
-              points: simplified,
-            });
+            onStrokeComplete({ id: makeId(), points: simplified });
           }
         },
         onPanResponderTerminate: () => {
@@ -114,43 +141,94 @@ export function ZenGardenCanvas({
       interactive,
       tool,
       toGardenPoint,
+      refreshLayout,
       onLiveStrokeChange,
       onStrokeComplete,
       triggerHaptic,
     ]
   );
 
-  function findRockAt(x: number, y: number): ZenRock | undefined {
-    return rocks.find((rock) => {
-      const spec = ROCK_VARIANTS[rock.variant];
-      const hitRadius = Math.max(spec.rx, spec.ry) + 6;
-      return Math.hypot(rock.x - x, rock.y - y) <= hitRadius;
-    });
-  }
+  const rockPan = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => interactive && tool === "rock",
+        onMoveShouldSetPanResponder: () => interactive && tool === "rock",
+        onPanResponderGrant: (event) => {
+          refreshLayout();
+          const p = toGardenPoint(event);
+          const hit = findRockAt(p.x, p.y);
+          dragRockId.current = hit?.id ?? null;
+          dragStart.current = hit ? { x: hit.x, y: hit.y } : null;
+          didDrag.current = false;
+          if (hit) triggerHaptic();
+        },
+        onPanResponderMove: (event) => {
+          const id = dragRockId.current;
+          if (!id) return;
+          const p = toGardenPoint(event);
+          didDrag.current = true;
+          onMoveRock(id, p.x, p.y);
+        },
+        onPanResponderRelease: (event) => {
+          const id = dragRockId.current;
+          const start = dragStart.current;
+          dragRockId.current = null;
+          dragStart.current = null;
 
-  function handleRockPress(event: GestureResponderEvent) {
-    if (!interactive || tool !== "rock") return;
-    const p = toGardenPoint(event);
-    const existing = findRockAt(p.x, p.y);
-    if (existing) {
-      onRemoveRock(existing.id);
-    } else {
-      onPlaceRock({
-        id: makeId(),
-        x: p.x,
-        y: p.y,
-        variant: rockVariant,
-      });
-    }
-    triggerHaptic();
-  }
+          if (id && didDrag.current && start) {
+            const p = toGardenPoint(event);
+            onMoveRockEnd(id, start, p);
+            triggerHaptic();
+            return;
+          }
+
+          if (!id && !didDrag.current) {
+            const p = toGardenPoint(event);
+            const existing = findRockAt(p.x, p.y);
+            if (existing) {
+              onRemoveRock(existing.id);
+            } else {
+              onPlaceRock({
+                id: makeId(),
+                x: p.x,
+                y: p.y,
+                variant: rockVariant,
+              });
+            }
+            triggerHaptic();
+          }
+        },
+        onPanResponderTerminate: () => {
+          dragRockId.current = null;
+          dragStart.current = null;
+        },
+      }),
+    [
+      interactive,
+      tool,
+      toGardenPoint,
+      refreshLayout,
+      findRockAt,
+      rockVariant,
+      onMoveRock,
+      onMoveRockEnd,
+      onPlaceRock,
+      onRemoveRock,
+      triggerHaptic,
+    ]
+  );
 
   const allStrokes = liveStroke?.length
     ? [...strokes, { id: "live", points: liveStroke }]
     : strokes;
 
+  const panHandlers =
+    tool === "rake" ? rakePan.panHandlers : rockPan.panHandlers;
+
   return (
     <View
+      ref={containerRef}
+      onLayout={refreshLayout}
       className="rounded-2xl border border-sand-300 overflow-hidden self-center"
       style={{ width: size, height: size }}
     >
@@ -218,7 +296,6 @@ export function ZenGardenCanvas({
               rx={spec.rx * 0.35}
               ry={spec.ry * 0.25}
               fill="rgba(255,255,255,0.12)"
-              pointerEvents="none"
             />
           );
         })}
@@ -226,22 +303,18 @@ export function ZenGardenCanvas({
 
       {interactive && (
         <View
-          {...(tool === "rake" ? panResponder.panHandlers : {})}
+          {...panHandlers}
           style={{
             position: "absolute",
             top: 0,
             left: 0,
             width: size,
             height: size,
+            ...(Platform.OS === "web"
+              ? { cursor: tool === "rake" ? "crosshair" : "pointer" }
+              : null),
           }}
-        >
-          {tool === "rock" && (
-            <Pressable
-              style={{ flex: 1 }}
-              onPress={handleRockPress}
-            />
-          )}
-        </View>
+        />
       )}
     </View>
   );

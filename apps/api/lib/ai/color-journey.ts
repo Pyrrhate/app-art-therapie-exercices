@@ -3,6 +3,10 @@ import {
   COLOR_JOURNEY_TURN_COUNT,
   getDimensionForTurn,
 } from "./color-journey-dimensions";
+import {
+  cleanAiText,
+  parseJsonFromText,
+} from "./prompts";
 
 const HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions";
 
@@ -73,18 +77,40 @@ function normalizeHex(value: string): string | null {
   return null;
 }
 
-function extractJsonObject(raw: string): unknown | null {
-  const trimmed = raw.trim();
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced?.[1]?.trim() ?? trimmed;
-  const start = candidate.indexOf("{");
-  const end = candidate.lastIndexOf("}");
-  if (start === -1 || end <= start) return null;
-  try {
-    return JSON.parse(candidate.slice(start, end + 1));
-  } catch {
-    return null;
+function extractJsonObject(raw: string): Record<string, unknown> | null {
+  return parseJsonFromText<Record<string, unknown>>(raw);
+}
+
+function parseProposalsFromRaw(
+  raw: string,
+  parsed: Record<string, unknown> | null
+): ColorProposal[] {
+  const candidates = [
+    parsed?.proposals,
+    parsed?.couleurs,
+    parsed?.colors,
+    parsed?.proposition,
+  ];
+  for (const candidate of candidates) {
+    const list = parseProposals(candidate);
+    if (list.length >= 2) return list;
   }
+
+  const hexes = [
+    ...new Set(
+      [...raw.matchAll(/#[0-9A-Fa-f]{6}\b/g)].map((m) => m[0]!.toUpperCase())
+    ),
+  ].slice(0, 3);
+
+  if (hexes.length >= 2) {
+    return hexes.map((hex, i) => ({
+      hex,
+      label: `Teinte ${i + 1}`,
+      hint: "Nuance proposée pour ce tour.",
+    }));
+  }
+
+  return [];
 }
 
 function sanitizeProposal(raw: unknown): ColorProposal | null {
@@ -230,11 +256,8 @@ JSON uniquement :
 {"intro":"2 phrases d'accueil","proposals":[{"hex":"#...","label":"...","hint":"..."}],"contextNote":"1 phrase pour ce tour"}`;
 }
 
-function buildChoosePrompt(input: ColorJourneyChooseRequest): string {
+function buildReflectPrompt(input: ColorJourneyChooseRequest): string {
   const dim = getDimensionForTurn(input.turn);
-  const nextTurn = input.turn + 1;
-  const hasNext = nextTurn <= COLOR_JOURNEY_TURN_COUNT;
-  const nextDim = hasNext ? getDimensionForTurn(nextTurn) : null;
   const mood = input.mood?.trim() || input.seedWord?.trim() || "non précisé";
 
   return `Tu es un·e guide art-thérapeutique francophone. Vouvoiement, ton chaleureux, jamais diagnostic.
@@ -243,25 +266,33 @@ Contexte : « ${mood.slice(0, 120)} »
 Choix précédents :
 ${formatHistory(input.history)}
 
-Tour ${input.turn} — l'utilisateur·rice a choisi : ${input.chosen.label} (${input.chosen.hex}) pour « ${dim.title} ».
+Tour ${input.turn} — teinte choisie : ${input.chosen.label} (${input.chosen.hex}) pour « ${dim.title} ».
 
-Rédigez :
-- reflection : 2-3 phrases d'accueil de cette teinte
-- psychology : 1 phrase (associations larges, « souvent liée à… »)
-- theory : 1 phrase (complémentaire/analogue/température/contraste avec choix précédents)
-- question : 1 question ouverte optionnelle
+JSON uniquement (4 clés) :
+{"reflection":"2-3 phrases","psychology":"1 phrase associations larges","theory":"1 phrase théorie des couleurs","question":"1 question ouverte"}`;
+}
 
-${
-  hasNext
-    ? `Puis proposez le tour ${nextTurn} — « ${nextDim!.title} » (${nextDim!.subtitle}) : exactement 3 nouvelles proposals + contextNote.
+function buildProposalsPrompt(
+  input: ColorJourneyChooseRequest,
+  nextTurn: number
+): string {
+  const nextDim = getDimensionForTurn(nextTurn);
+  const mood = input.mood?.trim() || input.seedWord?.trim() || "non précisé";
 
-JSON :
-{"reflection":"...","psychology":"...","theory":"...","question":"...","proposals":[{"hex":"#...","label":"...","hint":"..."}],"contextNote":"..."}`
-    : `Dernier tour — pas de proposals.
+  return `Tu es un·e guide art-thérapeutique francophone.
 
-JSON :
-{"reflection":"...","psychology":"...","theory":"...","question":"..."}`
-}`;
+Contexte : « ${mood.slice(0, 120)} »
+Historique :
+${formatHistory(input.history)}
+Dernier choix : ${input.chosen.label} (${input.chosen.hex})
+
+Tour ${nextTurn} / ${COLOR_JOURNEY_TURN_COUNT} — dimension « ${nextDim.title} » (${nextDim.subtitle}).
+
+Propose exactement 3 couleurs distinctes (#RRGGBB, label poétique court, hint 1 phrase).
+Cohérent avec l'historique chromatique.
+
+JSON uniquement :
+{"proposals":[{"hex":"#...","label":"...","hint":"..."}],"contextNote":"1 phrase"}`;
 }
 
 function buildSynthesizePrompt(input: ColorJourneySynthesizeRequest): string {
@@ -304,8 +335,8 @@ async function callColorJourneyModel(prompt: string): Promise<string | null> {
           },
           { role: "user", content: prompt },
         ],
-        max_tokens: 900,
-        temperature: 0.78,
+        max_tokens: 1200,
+        temperature: 0.72,
       }),
       signal: AbortSignal.timeout(45_000),
     });
@@ -333,33 +364,33 @@ export async function startColorJourney(
   const raw = await callColorJourneyModel(buildStartPrompt(input));
   if (!raw) return fallbackStart(input);
 
-  const parsed = extractJsonObject(raw) as Record<string, unknown> | null;
-  const proposals = parseProposals(parsed?.proposals);
-  if (proposals.length < 2) return fallbackStart(input);
+  const parsed = extractJsonObject(raw);
+  const aiProposals = parseProposalsFromRaw(raw, parsed);
+  const proposals =
+    aiProposals.length >= 2 ? aiProposals : fallbackProposals(1);
 
   return {
-    intro: String(parsed?.intro ?? "").trim().slice(0, 400) ||
+    intro: cleanAiText(String(parsed?.intro ?? "")).slice(0, 400) ||
       fallbackStart(input).intro,
     turn: 1,
     dimension: dim,
     proposals,
     contextNote: String(parsed?.contextNote ?? `${dim.title} — ${dim.subtitle}`).slice(0, 200),
-    source: "ai",
+    source: aiProposals.length >= 2 ? "ai" : "fallback",
   };
 }
 
 export async function chooseColorJourney(
   input: ColorJourneyChooseRequest
 ): Promise<ColorJourneyChooseResponse> {
-  const raw = await callColorJourneyModel(buildChoosePrompt(input));
-  if (!raw) return fallbackChoose(input);
+  const reflectRaw = await callColorJourneyModel(buildReflectPrompt(input));
+  if (!reflectRaw) return fallbackChoose(input);
 
-  const parsed = extractJsonObject(raw) as Record<string, unknown> | null;
-  if (!parsed) return fallbackChoose(input);
+  const parsed = extractJsonObject(reflectRaw);
+  const reflection = cleanAiText(String(parsed?.reflection ?? "")).trim();
+  const psychology = cleanAiText(String(parsed?.psychology ?? "")).trim();
+  const theory = cleanAiText(String(parsed?.theory ?? "")).trim();
 
-  const reflection = String(parsed.reflection ?? "").trim();
-  const psychology = String(parsed.psychology ?? "").trim();
-  const theory = String(parsed.theory ?? "").trim();
   if (!reflection || !psychology) return fallbackChoose(input);
 
   const nextTurn = input.turn + 1;
@@ -367,28 +398,45 @@ export async function chooseColorJourney(
     reflection: reflection.slice(0, 500),
     psychology: psychology.slice(0, 280),
     theory: (theory || "Cette teinte dialogue avec votre parcours.").slice(0, 280),
-    question: String(parsed.question ?? "").trim().slice(0, 160) || undefined,
+    question:
+      cleanAiText(String(parsed?.question ?? "")).trim().slice(0, 160) ||
+      undefined,
     source: "ai",
   };
 
   if (nextTurn <= COLOR_JOURNEY_TURN_COUNT) {
-    const proposals = parseProposals(parsed.proposals);
-    if (proposals.length >= 2) {
-      response.nextTurn = nextTurn;
-      response.nextDimension = getDimensionForTurn(nextTurn);
-      response.proposals = proposals;
-      response.contextNote = String(parsed.contextNote ?? "").slice(0, 200);
-    } else {
-      const fb = fallbackChoose(input);
-      return {
-        ...fb,
-        reflection: response.reflection,
-        psychology: response.psychology,
-        theory: response.theory,
-        question: response.question,
-        source: "ai",
-      };
+    const historyWithChoice: ColorChoice[] = [
+      ...input.history,
+      {
+        hex: input.chosen.hex,
+        label: input.chosen.label,
+        dimensionId: getDimensionForTurn(input.turn).id,
+      },
+    ];
+    const proposalsInput: ColorJourneyChooseRequest = {
+      ...input,
+      history: historyWithChoice,
+    };
+    const propRaw = await callColorJourneyModel(
+      buildProposalsPrompt(proposalsInput, nextTurn)
+    );
+
+    let proposals = fallbackProposals(nextTurn);
+    let contextNote = `${getDimensionForTurn(nextTurn).title} — ${getDimensionForTurn(nextTurn).subtitle}`;
+
+    if (propRaw) {
+      const propParsed = extractJsonObject(propRaw);
+      const fromAi = parseProposalsFromRaw(propRaw, propParsed);
+      if (fromAi.length >= 2) {
+        proposals = fromAi;
+        contextNote = String(propParsed?.contextNote ?? contextNote).slice(0, 200);
+      }
     }
+
+    response.nextTurn = nextTurn;
+    response.nextDimension = getDimensionForTurn(nextTurn);
+    response.proposals = proposals;
+    response.contextNote = contextNote;
   }
 
   return response;
@@ -404,9 +452,9 @@ export async function synthesizeColorJourney(
   const raw = await callColorJourneyModel(buildSynthesizePrompt(input));
   if (!raw) return fallbackSynthesize(input);
 
-  const parsed = extractJsonObject(raw) as Record<string, unknown> | null;
-  const summary = String(parsed?.summary ?? "").trim();
-  const suggestedImpulse = String(parsed?.suggestedImpulse ?? "").trim();
+  const parsed = extractJsonObject(raw);
+  const summary = cleanAiText(String(parsed?.summary ?? "")).trim();
+  const suggestedImpulse = cleanAiText(String(parsed?.suggestedImpulse ?? "")).trim();
   if (!summary) return fallbackSynthesize(input);
 
   return {
