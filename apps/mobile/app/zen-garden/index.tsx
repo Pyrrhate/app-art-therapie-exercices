@@ -18,14 +18,17 @@ import { navigateHome } from "@/lib/navigation";
 import { exportZenGarden } from "@/lib/zen-garden/export";
 import { loadZenGarden, saveZenGarden } from "@/lib/zen-garden/storage";
 import {
-  ROCK_VARIANTS,
-  type RakeStroke,
-  type RockVariant,
-  type ZenRock,
+  createDefaultZenGardenState,
+  PEBBLE_VARIANTS,
+  type PebbleVariant,
+  type SandPatch,
+  type WaterBody,
+  type ZenGardenState,
+  type ZenPebble,
+  type ZenPoint,
   type ZenTool,
   type ZenUndoEntry,
 } from "@/lib/zen-garden/types";
-import type { ZenPoint } from "@/lib/zen-garden/types";
 
 const GARDEN_PADDING = 48;
 const GARDEN_MAX = 420;
@@ -33,44 +36,71 @@ const GARDEN_MIN = 300;
 
 export default function ZenGardenScreen() {
   const { width: windowWidth } = useWindowDimensions();
-  const gardenSize = Math.min(
+  const gardenWidth = Math.min(
     GARDEN_MAX,
     Math.max(GARDEN_MIN, windowWidth - GARDEN_PADDING)
   );
 
-  const [strokes, setStrokes] = useState<RakeStroke[]>([]);
-  const [rocks, setRocks] = useState<ZenRock[]>([]);
-  const [sandColor, setSandColor] = useState("#E8DDD4");
-  const [tool, setTool] = useState<ZenTool>("rake");
-  const [rockVariant, setRockVariant] = useState<RockVariant>(0);
-  const [liveStroke, setLiveStroke] = useState<ZenPoint[] | null>(null);
+  const [sandPatches, setSandPatches] = useState<SandPatch[]>([]);
+  const [waterBodies, setWaterBodies] = useState<WaterBody[]>([]);
+  const [pebbles, setPebbles] = useState<ZenPebble[]>([]);
+  const [sandColor, setSandColor] = useState(
+    createDefaultZenGardenState().sandColor
+  );
+  const [tool, setTool] = useState<ZenTool>("sand");
+  const [pebbleVariant, setPebbleVariant] = useState<PebbleVariant>(0);
+  const [liveSandPoints, setLiveSandPoints] = useState<ZenPoint[] | null>(null);
+  const [liveWaterRect, setLiveWaterRect] = useState<{
+    start: ZenPoint;
+    end: ZenPoint;
+  } | null>(null);
   const [undoStack, setUndoStack] = useState<ZenUndoEntry[]>([]);
   const [contemplating, setContemplating] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const buildState = useCallback(
+    (
+      nextSand: SandPatch[],
+      nextWater: WaterBody[],
+      nextPebbles: ZenPebble[],
+      nextSandColor: string
+    ): ZenGardenState => ({
+      version: 2,
+      sandPatches: nextSand,
+      waterBodies: nextWater,
+      pebbles: nextPebbles,
+      sandColor: nextSandColor,
+      updatedAt: new Date().toISOString(),
+    }),
+    []
+  );
+
   const persist = useCallback(
-    (nextStrokes: RakeStroke[], nextRocks: ZenRock[], nextSand: string) => {
+    (
+      nextSand: SandPatch[],
+      nextWater: WaterBody[],
+      nextPebbles: ZenPebble[],
+      nextSandColor: string
+    ) => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
-        void saveZenGarden({
-          strokes: nextStrokes,
-          rocks: nextRocks,
-          sandColor: nextSand,
-          updatedAt: new Date().toISOString(),
-        });
+        void saveZenGarden(
+          buildState(nextSand, nextWater, nextPebbles, nextSandColor)
+        );
       }, 400);
     },
-    []
+    [buildState]
   );
 
   useEffect(() => {
     let active = true;
     void loadZenGarden().then((state) => {
       if (!active) return;
-      setStrokes(state.strokes);
-      setRocks(state.rocks);
+      setSandPatches(state.sandPatches);
+      setWaterBodies(state.waterBodies);
+      setPebbles(state.pebbles);
       setSandColor(state.sandColor);
       setLoading(false);
     });
@@ -80,57 +110,66 @@ export default function ZenGardenScreen() {
     };
   }, []);
 
-  function handleStrokeComplete(stroke: RakeStroke) {
-    setStrokes((prev) => {
-      const next = [...prev, stroke];
-      persist(next, rocks, sandColor);
+  function handleSandComplete(patch: SandPatch) {
+    setSandPatches((prev) => {
+      const next = [...prev, patch];
+      persist(next, waterBodies, pebbles, sandColor);
       return next;
     });
-    setUndoStack((stack) => [...stack.slice(-49), { kind: "stroke", stroke }]);
+    setUndoStack((stack) => [...stack.slice(-49), { kind: "sand", patch }]);
   }
 
-  function handlePlaceRock(rock: ZenRock) {
-    setRocks((prev) => {
-      const next = [...prev, rock];
-      persist(strokes, next, sandColor);
+  function handleWaterComplete(body: WaterBody) {
+    setWaterBodies((prev) => {
+      const next = [...prev, body];
+      persist(sandPatches, next, pebbles, sandColor);
       return next;
     });
-    setUndoStack((stack) => [...stack.slice(-49), { kind: "rock", rock }]);
+    setUndoStack((stack) => [...stack.slice(-49), { kind: "water", body }]);
   }
 
-  function handleMoveRock(rockId: string, x: number, y: number) {
-    setRocks((prev) =>
-      prev.map((r) => (r.id === rockId ? { ...r, x, y } : r))
+  function handlePlacePebble(pebble: ZenPebble) {
+    setPebbles((prev) => {
+      const next = [...prev, pebble];
+      persist(sandPatches, waterBodies, next, sandColor);
+      return next;
+    });
+    setUndoStack((stack) => [...stack.slice(-49), { kind: "pebble", pebble }]);
+  }
+
+  function handleMovePebble(pebbleId: string, x: number, y: number) {
+    setPebbles((prev) =>
+      prev.map((p) => (p.id === pebbleId ? { ...p, x, y } : p))
     );
   }
 
-  function handleMoveRockEnd(rockId: string, from: ZenPoint, to: ZenPoint) {
-    setRocks((prev) => {
-      const next = prev.map((r) =>
-        r.id === rockId ? { ...r, x: to.x, y: to.y } : r
+  function handleMovePebbleEnd(pebbleId: string, from: ZenPoint, to: ZenPoint) {
+    setPebbles((prev) => {
+      const next = prev.map((p) =>
+        p.id === pebbleId ? { ...p, x: to.x, y: to.y } : p
       );
-      persist(strokes, next, sandColor);
+      persist(sandPatches, waterBodies, next, sandColor);
       return next;
     });
     if (Math.hypot(from.x - to.x, from.y - to.y) > 2) {
       setUndoStack((stack) => [
         ...stack.slice(-49),
-        { kind: "moveRock", rockId, from, to },
+        { kind: "movePebble", pebbleId, from, to },
       ]);
     }
   }
 
-  function handleRemoveRock(rockId: string) {
-    const removed = rocks.find((r) => r.id === rockId);
+  function handleRemovePebble(pebbleId: string) {
+    const removed = pebbles.find((p) => p.id === pebbleId);
     if (!removed) return;
-    setRocks((prev) => {
-      const next = prev.filter((r) => r.id !== rockId);
-      persist(strokes, next, sandColor);
+    setPebbles((prev) => {
+      const next = prev.filter((p) => p.id !== pebbleId);
+      persist(sandPatches, waterBodies, next, sandColor);
       return next;
     });
     setUndoStack((stack) => [
       ...stack.slice(-49),
-      { kind: "removeRock", rock: removed },
+      { kind: "removePebble", pebble: removed },
     ]);
   }
 
@@ -138,30 +177,36 @@ export default function ZenGardenScreen() {
     const last = undoStack[undoStack.length - 1];
     if (!last) return;
 
-    if (last.kind === "stroke") {
-      setStrokes((prev) => {
-        const next = prev.filter((s) => s.id !== last.stroke.id);
-        persist(next, rocks, sandColor);
+    if (last.kind === "sand") {
+      setSandPatches((prev) => {
+        const next = prev.filter((p) => p.id !== last.patch.id);
+        persist(next, waterBodies, pebbles, sandColor);
         return next;
       });
-    } else if (last.kind === "rock") {
-      setRocks((prev) => {
-        const next = prev.filter((r) => r.id !== last.rock.id);
-        persist(strokes, next, sandColor);
+    } else if (last.kind === "water") {
+      setWaterBodies((prev) => {
+        const next = prev.filter((b) => b.id !== last.body.id);
+        persist(sandPatches, next, pebbles, sandColor);
         return next;
       });
-    } else if (last.kind === "removeRock") {
-      setRocks((prev) => {
-        const next = [...prev, last.rock];
-        persist(strokes, next, sandColor);
+    } else if (last.kind === "pebble") {
+      setPebbles((prev) => {
+        const next = prev.filter((p) => p.id !== last.pebble.id);
+        persist(sandPatches, waterBodies, next, sandColor);
         return next;
       });
-    } else if (last.kind === "moveRock") {
-      setRocks((prev) => {
-        const next = prev.map((r) =>
-          r.id === last.rockId ? { ...r, x: last.from.x, y: last.from.y } : r
+    } else if (last.kind === "removePebble") {
+      setPebbles((prev) => {
+        const next = [...prev, last.pebble];
+        persist(sandPatches, waterBodies, next, sandColor);
+        return next;
+      });
+    } else if (last.kind === "movePebble") {
+      setPebbles((prev) => {
+        const next = prev.map((p) =>
+          p.id === last.pebbleId ? { ...p, x: last.from.x, y: last.from.y } : p
         );
-        persist(strokes, next, sandColor);
+        persist(sandPatches, waterBodies, next, sandColor);
         return next;
       });
     }
@@ -170,15 +215,11 @@ export default function ZenGardenScreen() {
 
   function handleClear() {
     const run = () => {
-      setStrokes([]);
-      setRocks([]);
+      setSandPatches([]);
+      setWaterBodies([]);
+      setPebbles([]);
       setUndoStack([]);
-      void saveZenGarden({
-        strokes: [],
-        rocks: [],
-        sandColor,
-        updatedAt: new Date().toISOString(),
-      });
+      void saveZenGarden(buildState([], [], [], sandColor));
     };
     if (Platform.OS === "web") {
       if (window.confirm("Effacer le jardin et recommencer ?")) run();
@@ -193,7 +234,9 @@ export default function ZenGardenScreen() {
   async function handleExport() {
     setExporting(true);
     try {
-      const result = await exportZenGarden({ strokes, rocks, sandColor, updatedAt: "" });
+      const result = await exportZenGarden(
+        buildState(sandPatches, waterBodies, pebbles, sandColor)
+      );
       showAlert("Export réussi", result.message);
     } catch (error) {
       showAlert(
@@ -205,10 +248,25 @@ export default function ZenGardenScreen() {
     }
   }
 
-  const hasContent = strokes.length > 0 || rocks.length > 0;
+  const hasContent =
+    sandPatches.length > 0 || waterBodies.length > 0 || pebbles.length > 0;
   const impulseText = hasContent
-    ? `Jardin zen — ${strokes.length} sillons, ${rocks.length} pierre${rocks.length > 1 ? "s" : ""}`
+    ? `Jardin zen — ${sandPatches.length} touche${sandPatches.length > 1 ? "s" : ""} de sable, ${waterBodies.length} eau, ${pebbles.length} galet${pebbles.length > 1 ? "s" : ""}`
     : "Jardin zen du moment";
+
+  const canvasProps = {
+    sandColor,
+    sandPatches,
+    waterBodies,
+    pebbles,
+    pebbleVariant,
+    onSandComplete: handleSandComplete,
+    onWaterComplete: handleWaterComplete,
+    onPlacePebble: handlePlacePebble,
+    onRemovePebble: handleRemovePebble,
+    onMovePebble: handleMovePebble,
+    onMovePebbleEnd: handleMovePebbleEnd,
+  };
 
   if (contemplating) {
     return (
@@ -220,17 +278,15 @@ export default function ZenGardenScreen() {
           <Text className="text-sand-600 text-sm">Quitter</Text>
         </Pressable>
         <ZenGardenCanvas
-          size={Math.min(windowWidth - 24, 480)}
-          sandColor={sandColor}
-          strokes={strokes}
-          rocks={rocks}
-          tool="rake"
-          rockVariant={rockVariant}
-          onStrokeComplete={() => {}}
-          onPlaceRock={() => {}}
-          onRemoveRock={() => {}}
-          onMoveRock={() => {}}
-          onMoveRockEnd={() => {}}
+          width={Math.min(windowWidth - 24, 480)}
+          tool="sand"
+          {...canvasProps}
+          onSandComplete={() => {}}
+          onWaterComplete={() => {}}
+          onPlacePebble={() => {}}
+          onRemovePebble={() => {}}
+          onMovePebble={() => {}}
+          onMovePebbleEnd={() => {}}
           interactive={false}
         />
         <Text className="text-sand-400 text-xs mt-6 px-8 text-center">
@@ -248,36 +304,32 @@ export default function ZenGardenScreen() {
         Jardin zen
       </Text>
       <Text className="text-3xl font-light text-sand-800 mb-2 leading-tight">
-        Râteau & pierres
+        Coupe latérale
       </Text>
       <Text className="text-sand-500 text-base leading-6 mb-6">
-        Glissez pour tracer le sable. En mode pierre : touchez pour poser,
-        glissez une pierre pour la déplacer, retouchez pour la retirer.
+        Composez un jardin en profil : déposez du sable, ajoutez de l'eau,
+        posez des galets. En mode galet : touchez pour poser, glissez pour
+        déplacer, retouchez pour retirer.
       </Text>
 
       {!loading && (
         <ZenGardenCanvas
-          size={gardenSize}
-          sandColor={sandColor}
-          strokes={strokes}
-          rocks={rocks}
+          width={gardenWidth}
           tool={tool}
-          rockVariant={rockVariant}
-          liveStroke={liveStroke}
-          onLiveStrokeChange={setLiveStroke}
-          onStrokeComplete={handleStrokeComplete}
-          onPlaceRock={handlePlaceRock}
-          onRemoveRock={handleRemoveRock}
-          onMoveRock={handleMoveRock}
-          onMoveRockEnd={handleMoveRockEnd}
+          liveSandPoints={liveSandPoints}
+          liveWaterRect={liveWaterRect}
+          onLiveSandChange={setLiveSandPoints}
+          onLiveWaterChange={setLiveWaterRect}
+          {...canvasProps}
         />
       )}
 
-      <View className="flex-row justify-center gap-2 mt-6 mb-4">
+      <View className="flex-row justify-center gap-2 mt-6 mb-4 flex-wrap">
         {(
           [
-            { id: "rake" as const, label: "🪵 Râteau" },
-            { id: "rock" as const, label: "🪨 Pierre" },
+            { id: "sand" as const, label: "🏖️ Sable" },
+            { id: "water" as const, label: "💧 Eau" },
+            { id: "pebble" as const, label: "🪨 Galet" },
           ] as const
         ).map((item) => (
           <Pressable
@@ -300,20 +352,20 @@ export default function ZenGardenScreen() {
         ))}
       </View>
 
-      {tool === "rock" && (
+      {tool === "pebble" && (
         <View className="flex-row flex-wrap justify-center gap-2 mb-4">
-          {([0, 1, 2, 3] as RockVariant[]).map((v) => (
+          {([0, 1, 2, 3] as PebbleVariant[]).map((v) => (
             <Pressable
               key={v}
-              onPress={() => setRockVariant(v)}
+              onPress={() => setPebbleVariant(v)}
               className={`px-3 py-2 rounded-xl border ${
-                rockVariant === v
+                pebbleVariant === v
                   ? "border-sage-500 bg-sage-50"
                   : "border-sand-200 bg-white"
               }`}
             >
               <Text className="text-sand-600 text-xs">
-                {ROCK_VARIANTS[v].label}
+                {PEBBLE_VARIANTS[v].label}
               </Text>
             </Pressable>
           ))}
@@ -348,10 +400,12 @@ export default function ZenGardenScreen() {
         {hasContent && (
           <>
             <CreativeBridge
-              title="Prolonger le moment"
+              title="Approfondir avec un exercice ?"
+              subtitle="Si vous le souhaitez, votre jardin peut devenir une impulsion pour créer."
               actions={[
                 {
-                  label: "M'inspirer pour un rituel",
+                  label: "Passer à l'exercice",
+                  variant: "primary",
                   onPress: () => startRitualFromImpulse(impulseText, "mixed_media"),
                 },
               ]}

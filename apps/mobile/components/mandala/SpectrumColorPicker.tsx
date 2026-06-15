@@ -41,14 +41,42 @@ const HUE_STOPS = Array.from({ length: 24 }, (_, i) => i * 15);
 interface SpectrumColorPickerProps {
   selected: string;
   onSelect: (hex: string) => void;
+  /** Couleurs suggérées pour ce mandala (départ, modifiable). */
+  suggestedColors?: string[];
 }
 
 export function SpectrumColorPicker({
   selected,
   onSelect,
+  suggestedColors,
 }: SpectrumColorPickerProps) {
+  const suggested = suggestedColors?.length
+    ? [...new Set(suggestedColors)]
+    : null;
+
   return (
     <View className="gap-4">
+      {suggested && (
+        <>
+          <Text className="text-sand-600 text-sm font-medium text-center">
+            Palette de départ (modifiable)
+          </Text>
+          <View className="flex-row flex-wrap justify-center gap-3 px-2">
+            {suggested.map((hex) => {
+              const isSelected = selected.toLowerCase() === hex.toLowerCase();
+              return (
+                <Pressable
+                  key={`suggested-${hex}`}
+                  onPress={() => onSelect(hex)}
+                  className={`rounded-full border-2 ${isSelected ? "border-sage-500" : "border-sand-200"}`}
+                  style={{ width: 40, height: 40, backgroundColor: hex }}
+                />
+              );
+            })}
+          </View>
+        </>
+      )}
+
       <Text className="text-sand-600 text-sm font-medium text-center">
         Palette apaisante
       </Text>

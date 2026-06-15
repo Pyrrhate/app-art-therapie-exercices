@@ -11,7 +11,7 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { TECHNIQUES } from "@/constants";
-import { generateExercise } from "@/lib/api";
+import { ApiError, generateExercise } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
 import { useRitualStore } from "@/lib/store";
 
@@ -25,7 +25,9 @@ export default function RitualScreen() {
     setDurationMinutes,
     setExercise,
   } = useRitualStore();
+  const [impulsePrefilled] = useState(() => impulse.trim().length > 0);
   const [loading, setLoading] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleContinue() {
@@ -33,21 +35,25 @@ export default function RitualScreen() {
 
     setLoading(true);
     setError(null);
+    setOfflineMode(false);
     try {
       const result = await generateExercise(
         impulse.trim(),
         technique,
         durationMinutes
       );
-      setExercise(result.exercise, durationMinutes);
+      setExercise(result.exercise, durationMinutes, result.source);
+      if (result.source === "fallback") {
+        setOfflineMode(true);
+      }
       router.push("/exercise");
     } catch (err) {
       const message =
-        err instanceof Error
+        err instanceof ApiError
           ? err.message
-          : "Impossible de contacter le serveur. Vérifiez votre connexion ou réessayez.";
+          : "Une erreur inattendue est survenue. Réessayez dans un instant.";
       setError(message);
-      showAlert("Connexion indisponible", message);
+      showAlert("Impossible de continuer", message);
     } finally {
       setLoading(false);
     }
@@ -55,13 +61,28 @@ export default function RitualScreen() {
 
   const canContinue = impulse.trim().length > 0 && technique !== null;
 
+  const subtitle = impulsePrefilled
+    ? "Choisissez votre technique et la durée, puis passez à l'exercice."
+    : "Quel mot, idée ou couleur vous appelle aujourd'hui ? Choisissez ensuite votre technique et la durée, puis passez à l'exercice.";
+
   return (
-    <ScreenContainer
-      title="L'Impulsion"
-      subtitle="Quel mot, idée ou couleur vous appelle aujourd'hui ? Choisissez ensuite votre technique et la durée du rituel."
-      refreshable
-    >
+    <ScreenContainer title="L'Impulsion" subtitle={subtitle} refreshable>
       <ScreenNavBar backLabel="← Accueil" onBack={() => router.replace("/")} />
+
+      {impulsePrefilled && (
+        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-4 mb-6">
+          <Text className="text-sage-700 text-sm leading-6">
+            Votre impulsion est prête — choisissez technique et durée, puis
+            passez à l&apos;exercice.
+          </Text>
+        </View>
+      )}
+
+      {offlineMode && (
+        <Text className="text-amber-700 text-xs mb-3 leading-5">
+          Mode local actif — exercice guidé hors ligne.
+        </Text>
+      )}
 
       <TextInput
         value={impulse}
@@ -96,7 +117,7 @@ export default function RitualScreen() {
           </Text>
         )}
         <PrimaryButton
-          label={loading ? "Préparation…" : "Commencer le rituel"}
+          label={loading ? "Préparation…" : "Passer à l'exercice"}
           onPress={handleContinue}
           disabled={!canContinue || loading}
         />

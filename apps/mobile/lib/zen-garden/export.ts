@@ -1,39 +1,66 @@
 import { Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
-import { buildRakePaths } from "./rake";
+import {
+  buildSandPatchPath,
+  buildWaterPath,
+} from "./geometry";
 import {
   DEFAULT_SAND_COLOR,
-  RAKE_LINE_COLOR,
-  ROCK_VARIANTS,
-  ZEN_VIEWBOX,
+  GROUND_Y,
+  PEBBLE_VARIANTS,
+  SAND_STROKE_COLOR,
+  SKY_COLOR,
+  SOIL_COLOR,
+  SOIL_BOTTOM,
+  SOIL_TOP,
+  WATER_COLOR,
+  WATER_OPACITY,
+  ZEN_VIEWBOX_HEIGHT,
+  ZEN_VIEWBOX_WIDTH,
   type ZenGardenState,
+  type ZenPebble,
 } from "./types";
 
-function rockSvg(rock: ZenGardenState["rocks"][number]): string {
-  const spec = ROCK_VARIANTS[rock.variant];
-  const shadow = `<ellipse cx="${rock.x + 3}" cy="${rock.y + 5}" rx="${spec.rx * 0.9}" ry="${spec.ry * 0.5}" fill="rgba(80,70,60,0.15)"/>`;
-  const body = `<ellipse cx="${rock.x}" cy="${rock.y}" rx="${spec.rx}" ry="${spec.ry}" fill="#5C5650" stroke="#4A4540" stroke-width="1.2"/>`;
-  const highlight = `<ellipse cx="${rock.x - spec.rx * 0.25}" cy="${rock.y - spec.ry * 0.2}" rx="${spec.rx * 0.35}" ry="${spec.ry * 0.25}" fill="rgba(255,255,255,0.12)"/>`;
+const EXPORT_WIDTH = 1200;
+const EXPORT_HEIGHT = Math.round(EXPORT_WIDTH * (ZEN_VIEWBOX_HEIGHT / ZEN_VIEWBOX_WIDTH));
+
+function pebbleSvg(pebble: ZenPebble): string {
+  const spec = PEBBLE_VARIANTS[pebble.variant];
+  const shadow = `<ellipse cx="${pebble.x + 2}" cy="${pebble.y + 4}" rx="${spec.rx * 0.85}" ry="${spec.ry * 0.35}" fill="rgba(80,70,60,0.18)"/>`;
+  const body = `<ellipse cx="${pebble.x}" cy="${pebble.y}" rx="${spec.rx}" ry="${spec.ry}" fill="#5C5650" stroke="#4A4540" stroke-width="1.1"/>`;
+  const highlight = `<ellipse cx="${pebble.x - spec.rx * 0.22}" cy="${pebble.y - spec.ry * 0.25}" rx="${spec.rx * 0.32}" ry="${spec.ry * 0.22}" fill="rgba(255,255,255,0.14)"/>`;
   return shadow + body + highlight;
 }
 
 export function buildZenGardenSvgString(state: ZenGardenState): string {
   const sand = state.sandColor || DEFAULT_SAND_COLOR;
-  const rakePaths = state.strokes.flatMap((s) => buildRakePaths(s.points));
-  const rakeSvg = rakePaths
+  const sandPaths = state.sandPatches
+    .map((patch) => buildSandPatchPath(patch.points))
+    .filter(Boolean)
     .map(
       (d) =>
-        `<path d="${d}" fill="none" stroke="${RAKE_LINE_COLOR}" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>`
+        `<path d="${d}" fill="${sand}" stroke="${SAND_STROKE_COLOR}" stroke-width="0.8" opacity="0.95"/>`
     )
     .join("\n");
-  const rocksSvg = state.rocks.map(rockSvg).join("\n");
+
+  const waterSvg = state.waterBodies
+    .map((body) => {
+      const d = buildWaterPath(body.x, body.y, body.width, body.height);
+      const wave = buildWaterPath(body.x, body.y, body.width, body.height);
+      return `<path d="${d}" fill="${WATER_COLOR}" opacity="${WATER_OPACITY}"/><path d="${wave}" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.8"/>`;
+    })
+    .join("\n");
+
+  const pebblesSvg = state.pebbles.map(pebbleSvg).join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ZEN_VIEWBOX} ${ZEN_VIEWBOX}" width="1200" height="1200">
-<rect width="100%" height="100%" fill="${sand}"/>
-<rect x="8" y="8" width="384" height="384" rx="12" fill="none" stroke="#D4C4B5" stroke-width="1"/>
-${rakeSvg}
-${rocksSvg}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ZEN_VIEWBOX_WIDTH} ${ZEN_VIEWBOX_HEIGHT}" width="${EXPORT_WIDTH}" height="${EXPORT_HEIGHT}">
+<rect x="0" y="0" width="${ZEN_VIEWBOX_WIDTH}" height="${GROUND_Y}" fill="${SKY_COLOR}"/>
+<rect x="0" y="${SOIL_TOP}" width="${ZEN_VIEWBOX_WIDTH}" height="${SOIL_BOTTOM - SOIL_TOP}" fill="${SOIL_COLOR}"/>
+<line x1="0" y1="${GROUND_Y}" x2="${ZEN_VIEWBOX_WIDTH}" y2="${GROUND_Y}" stroke="#8B7355" stroke-width="0.6" opacity="0.5"/>
+${sandPaths}
+${waterSvg}
+${pebblesSvg}
 </svg>`;
 }
 
@@ -53,14 +80,14 @@ async function svgToCanvas(svgString: string): Promise<HTMLCanvasElement> {
     const url = URL.createObjectURL(blob);
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = 1200;
-      canvas.height = 1200;
+      canvas.width = EXPORT_WIDTH;
+      canvas.height = EXPORT_HEIGHT;
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         reject(new Error("Canvas indisponible"));
         return;
       }
-      ctx.fillStyle = "#FAF7F4";
+      ctx.fillStyle = SKY_COLOR;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
@@ -90,7 +117,7 @@ export async function exportZenGarden(
       );
     });
     downloadBlob(blob, filename);
-    return { message: "PNG téléchargé (1200×1200 px)." };
+    return { message: `PNG téléchargé (${EXPORT_WIDTH}×${EXPORT_HEIGHT} px).` };
   }
 
   const uri = `${FileSystem.cacheDirectory}${filename.replace(".png", ".svg")}`;

@@ -17,9 +17,26 @@ const MESSAGES = [
 
 interface ZenWaitIndicatorProps {
   active: boolean;
+  /** Durée estimée en secondes (affichage approximatif). */
+  estimatedSeconds?: number;
 }
 
-export function ZenWaitIndicator({ active }: ZenWaitIndicatorProps) {
+function formatApproxDuration(totalSeconds: number): string {
+  if (totalSeconds <= 50) {
+    return `Environ ${totalSeconds} s`;
+  }
+  const min = Math.max(1, Math.round(totalSeconds / 60));
+  const max = Math.max(min, Math.round((totalSeconds * 1.35) / 60));
+  if (min === max) {
+    return `Environ ${min} min`;
+  }
+  return `Environ ${min} à ${max} min`;
+}
+
+export function ZenWaitIndicator({
+  active,
+  estimatedSeconds = 75,
+}: ZenWaitIndicatorProps) {
   const [seconds, setSeconds] = useState(0);
   const breath = useSharedValue(0.85);
 
@@ -48,6 +65,9 @@ export function ZenWaitIndicator({ active }: ZenWaitIndicatorProps) {
   if (!active) return null;
 
   const message = MESSAGES[Math.floor(seconds / 8) % MESSAGES.length];
+  const approxLabel = formatApproxDuration(estimatedSeconds);
+  const nearingEnd =
+    estimatedSeconds > 0 && seconds >= Math.round(estimatedSeconds * 0.85);
 
   return (
     <View className="items-center py-6 mb-2">
@@ -72,7 +92,9 @@ export function ZenWaitIndicator({ active }: ZenWaitIndicatorProps) {
         </View>
       </View>
       <Text className="text-sand-600 text-sm text-center leading-6 px-4">{message}</Text>
-      <Text className="text-sand-400 text-xs mt-2">Compteur zen — sans limite de temps</Text>
+      <Text className="text-sand-400 text-xs mt-2">
+        {nearingEnd ? "Presque prêt…" : approxLabel}
+      </Text>
     </View>
   );
 }

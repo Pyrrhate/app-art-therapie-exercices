@@ -11,7 +11,7 @@ import type { TimerSoundId } from "@/lib/sounds";
 import { useRitualStore } from "@/lib/store";
 
 export default function ExerciseScreen() {
-  const { exercise, durationMinutes, impulse, setDurationMinutes } =
+  const { exercise, durationMinutes, impulse, exerciseSource, setDurationMinutes } =
     useRitualStore();
   const [completionSound, setCompletionSound] = useState<TimerSoundId>("gong");
 
@@ -31,6 +31,15 @@ export default function ExerciseScreen() {
   return (
     <ScreenContainer title="Votre exercice" refreshable>
       <ScreenNavBar backLabel="← Rituel" />
+
+      {exerciseSource === "fallback" && (
+        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-3 mb-4">
+          <Text className="text-sage-700 text-xs leading-5">
+            Mode local actif — exercice guidé hors ligne.
+          </Text>
+        </View>
+      )}
+
       <View className="bg-white rounded-2xl border border-sand-200 px-5 py-6 mb-4">
         <Text className="text-sand-400 text-xs uppercase tracking-wider mb-3">
           Impulsion · {impulse}

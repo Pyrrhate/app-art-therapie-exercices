@@ -12,6 +12,7 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { ApiError, fetchPingPongWord } from "@/lib/api";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
+import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { startRitualFromImpulse } from "@/lib/fil/bridges";
 import { showAlert } from "@/lib/alert";
 import { getFallbackPingPongWord } from "@/lib/ping-pong/fallback";
@@ -27,10 +28,50 @@ export default function PingPongScreen() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [offlineMode, setOfflineMode] = useState(false);
+  const [useAiSuggestions, setUseAiSuggestions] = useState(false);
+  const [usingLocalWords, setUsingLocalWords] = useState(false);
 
   const userTurnCount = turns.filter((t) => t.from === "user").length;
   const canPlay = !finished && userTurnCount < PING_PONG_MAX_TURNS;
+  const canExitToExercise = turns.length >= 1;
+  const chain = turns.map((t) => t.word).join("  →  ");
+
+  function scrollToEnd() {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
+  }
+
+  function appendPartnerWord(word: string, history: string[]) {
+    const partnerWord = getFallbackPingPongWord(word, history);
+    setTurns((prev) => [
+      ...prev,
+      { id: makeId(), word: partnerWord, from: "ai" },
+    ]);
+    scrollToEnd();
+  }
+
+  async function fetchPartnerWord(word: string, history: string[]) {
+    setLoading(true);
+    try {
+      const result = await fetchPingPongWord(word, history);
+      setUsingLocalWords(false);
+      setTurns((prev) => [
+        ...prev,
+        { id: makeId(), word: result.word, from: "ai" },
+      ]);
+      scrollToEnd();
+    } catch (error) {
+      setUsingLocalWords(true);
+      appendPartnerWord(word, history);
+      if (!(error instanceof ApiError)) {
+        showAlert(
+          "Suggestion indisponible",
+          "Un mot local prend le relais — vous pouvez continuer l'amorce."
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit() {
     const word = input.trim();
@@ -45,34 +86,14 @@ export default function PingPongScreen() {
 
     if (userTurnCount + 1 >= PING_PONG_MAX_TURNS) {
       setFinished(true);
+      scrollToEnd();
       return;
     }
 
-    setLoading(true);
-    try {
-      const result = await fetchPingPongWord(word, history);
-      setOfflineMode(false);
-      setTurns((prev) => [
-        ...prev,
-        { id: makeId(), word: result.word, from: "ai" },
-      ]);
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
-    } catch (error) {
-      const fallbackWord = getFallbackPingPongWord(word, history);
-      setOfflineMode(true);
-      setTurns((prev) => [
-        ...prev,
-        { id: makeId(), word: fallbackWord, from: "ai" },
-      ]);
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
-      if (!(error instanceof ApiError)) {
-        showAlert(
-          "Mode poétique local",
-          "Connexion indisponible — un mot local prend le relais, en douceur."
-        );
-      }
-    } finally {
-      setLoading(false);
+    if (useAiSuggestions) {
+      await fetchPartnerWord(word, history);
+    } else {
+      appendPartnerWord(word, history);
     }
   }
 
@@ -80,8 +101,6 @@ export default function PingPongScreen() {
     if (!chain) return;
     startRitualFromImpulse(chain, "mixed_media");
   }
-
-  const chain = turns.map((t) => t.word).join("  →  ");
 
   return (
     <ScreenContainer scrollable={false}>
@@ -101,14 +120,35 @@ export default function PingPongScreen() {
             Laissez les mots danser
           </Text>
           <Text className="text-sand-500 text-sm mt-2 leading-5">
-            Un mot suggère le suivant — sans réfléchir trop. {PING_PONG_MAX_TURNS}{" "}
-            envois, puis une impulsion pour créer.
+            Amorce rapide — 2 à 3 minutes pour faire émerger une impulsion, puis
+            passer à l'exercice. {PING_PONG_MAX_TURNS} envois suffisent.
           </Text>
-          {offlineMode && (
-            <Text className="text-amber-700 text-xs mt-2">
-              Mode local actif — mots poétiques hors ligne.
-            </Text>
-          )}
+          <View className="flex-row items-center gap-2 mt-3">
+            <Pressable
+              onPress={() => {
+                setUseAiSuggestions((value) => !value);
+                if (useAiSuggestions) setUsingLocalWords(false);
+              }}
+              className={`rounded-full px-3 py-1.5 border ${
+                useAiSuggestions
+                  ? "bg-sage-100 border-sage-400"
+                  : "bg-white border-sand-200"
+              }`}
+            >
+              <Text
+                className={`text-xs ${
+                  useAiSuggestions ? "text-sage-700" : "text-sand-500"
+                }`}
+              >
+                Suggestions IA
+              </Text>
+            </Pressable>
+            {useAiSuggestions && usingLocalWords && (
+              <Text className="text-amber-700 text-xs">
+                Mots locaux — connexion indisponible.
+              </Text>
+            )}
+          </View>
         </View>
 
         <ScrollView
@@ -120,7 +160,8 @@ export default function PingPongScreen() {
           {turns.length === 0 && (
             <View className="bg-white/80 rounded-2xl border border-dashed border-sand-300 px-5 py-8 items-center">
               <Text className="text-sand-400 text-center leading-6">
-                Tapez un premier mot — un arbre, une couleur, un ressenti…
+                Tapez un premier mot — un arbre, une couleur, un ressenti… Puis
+                passez à l'exercice quand l'impulsion est là.
               </Text>
             </View>
           )}
@@ -158,53 +199,73 @@ export default function PingPongScreen() {
           )}
 
           {finished && (
-            <View className="bg-white rounded-2xl border border-sage-500/30 px-5 py-5 mt-4">
-              <Text className="text-sand-700 font-medium mb-2">
-                Votre cheminement
-              </Text>
-              <Text className="text-sand-600 text-sm leading-6 mb-4">
-                {chain}
-              </Text>
-              <PrimaryButton
-                label="Créer à partir de ce cheminement"
-                onPress={handleCreateFromJourney}
+            <>
+              <View className="bg-white rounded-2xl border border-sage-500/30 px-5 py-5 mt-4">
+                <Text className="text-sand-700 font-medium mb-2">
+                  Votre cheminement
+                </Text>
+                <Text className="text-sand-600 text-sm leading-6">{chain}</Text>
+              </View>
+
+              <CreativeBridge
+                title="Votre impulsion est prête"
+                subtitle="Transformez cette chaîne de mots en matière, couleur ou geste — l'exercice vous attend."
+                actions={[
+                  {
+                    label: "Passer à l'exercice",
+                    onPress: handleCreateFromJourney,
+                    variant: "primary",
+                  },
+                ]}
               />
+
               <AddToFilBar
                 entry={{
                   source: "ping-pong",
-                  summary: "Cheminement ping-pong",
+                  summary: "Amorce ping-pong",
                   detail: chain,
                   metadata: { chain },
                 }}
               />
-            </View>
+            </>
           )}
         </ScrollView>
 
-        {canPlay && (
-          <View className="px-6 pt-3 pb-6 border-t border-sand-200 bg-sand-50">
-            <View className="flex-row items-center gap-3">
-              <TextInput
-                value={input}
-                onChangeText={setInput}
-                placeholder="Un mot…"
-                placeholderTextColor="#B8A090"
-                onSubmitEditing={handleSubmit}
-                returnKeyType="send"
-                editable={!loading}
-                className="flex-1 bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base"
+        {!finished && (canPlay || canExitToExercise) && (
+          <View className="px-6 pt-3 pb-6 border-t border-sand-200 bg-sand-50 gap-3">
+            {canExitToExercise && !finished && (
+              <PrimaryButton
+                label="Passer à l'exercice"
+                onPress={handleCreateFromJourney}
               />
-              <Pressable
-                onPress={handleSubmit}
-                disabled={!input.trim() || loading}
-                className={`rounded-2xl px-4 py-3 ${input.trim() && !loading ? "bg-sage-500" : "bg-sand-200"}`}
-              >
-                <Text className="text-white font-medium">→</Text>
-              </Pressable>
-            </View>
-            <Text className="text-sand-400 text-xs text-center mt-2">
-              Tour {userTurnCount + 1} / {PING_PONG_MAX_TURNS}
-            </Text>
+            )}
+
+            {canPlay && (
+              <>
+                <View className="flex-row items-center gap-3">
+                  <TextInput
+                    value={input}
+                    onChangeText={setInput}
+                    placeholder="Un mot…"
+                    placeholderTextColor="#B8A090"
+                    onSubmitEditing={handleSubmit}
+                    returnKeyType="send"
+                    editable={!loading}
+                    className="flex-1 bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base"
+                  />
+                  <Pressable
+                    onPress={handleSubmit}
+                    disabled={!input.trim() || loading}
+                    className={`rounded-2xl px-4 py-3 ${input.trim() && !loading ? "bg-sage-500" : "bg-sand-200"}`}
+                  >
+                    <Text className="text-white font-medium">→</Text>
+                  </Pressable>
+                </View>
+                <Text className="text-sand-400 text-xs text-center">
+                  Tour {userTurnCount + 1} / {PING_PONG_MAX_TURNS}
+                </Text>
+              </>
+            )}
           </View>
         )}
       </View>

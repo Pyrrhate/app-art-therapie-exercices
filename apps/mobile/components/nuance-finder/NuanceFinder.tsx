@@ -11,8 +11,8 @@ import { PrimaryButton } from "@/components/ui/Button";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import {
+  openMandalaWithPalette,
   startRitualFromColors,
-  startRitualFromImpulse,
 } from "@/lib/fil/bridges";
 import { LOTUS_SOURCE } from "@/lib/nuance-finder/elements";
 import {
@@ -177,6 +177,21 @@ export function NuanceFinder() {
     return [...hexes].slice(0, 5);
   }, [flatCells, revealed, lotusCleared]);
 
+  const lotusUnlocked =
+    Object.keys(lotusCleared).length > 0 ||
+    flatCells.some((c) => c.kind === "lotus" && revealed[c.id]);
+  const pebbleCount = Object.keys(pebbles).length;
+  const canExitEarly =
+    !harmonyFound &&
+    (lotusUnlocked ||
+      pebbleCount >= 2 ||
+      revealedOrClearedCount >= 6 ||
+      revealedColors.length >= 3);
+
+  function handlePasserAExercice() {
+    startRitualFromColors(revealedColors, "Harmonie chromatique");
+  }
+
   const triggerLotusWave = useCallback(
     (lotusId: string) => {
       lotusTimers.current.forEach(clearTimeout);
@@ -233,7 +248,8 @@ export function NuanceFinder() {
     <View className="flex-1">
       <Text className="text-sand-500 text-sm leading-6 mb-4">
         Grille 8×8 — touchez les cases pour révéler les teintes. Un lotus 🪷
-        peut apaiser une zone. Appui long : poser un galet.
+        peut apaiser une zone. Appui long : poser un galet. Quand vous le
+        souhaitez, passez à l&apos;exercice.
       </Text>
 
       <View
@@ -258,6 +274,22 @@ export function NuanceFinder() {
         ))}
       </View>
 
+      {canExitEarly && (
+        <View className="gap-3 mb-4">
+          <CreativeBridge
+            title="Prêt à créer ?"
+            subtitle="Vos teintes peuvent devenir une impulsion pour peindre — vous pouvez aussi continuer à explorer."
+            actions={[
+              {
+                label: "Passer à l'exercice",
+                onPress: handlePasserAExercice,
+                variant: "primary",
+              },
+            ]}
+          />
+        </View>
+      )}
+
       {!harmonyFound && (
         <PrimaryButton
           label="Nouvelle grille"
@@ -268,23 +300,23 @@ export function NuanceFinder() {
 
       {harmonyFound && (
         <View className="gap-4 mb-4">
+          <Text className="text-sage-600 text-xl font-light tracking-wide text-center">
+            Harmonie trouvée
+          </Text>
+
           <CreativeBridge
-            title="Prolonger l'harmonie"
-            subtitle="Notez cette palette ou amorcez un rituel."
+            title="Votre impulsion est prête"
+            subtitle="Vos teintes deviennent une impulsion pour peindre — l'exercice vous attend."
             actions={[
               {
-                label: "Noter pour un rituel d'écriture",
-                onPress: () =>
-                  startRitualFromColors(revealedColors, "Harmonie chromatique"),
+                label: "Passer à l'exercice",
+                onPress: handlePasserAExercice,
+                variant: "primary",
               },
               {
-                label: "Rituel libre à partir des teintes",
-                onPress: () =>
-                  startRitualFromImpulse(
-                    `Harmonie de nuances : ${revealedColors.join(", ")}`,
-                    "mixed_media"
-                  ),
-                variant: "ghost",
+                label: "Colorier un mandala avec cette palette",
+                onPress: () => void openMandalaWithPalette(revealedColors),
+                variant: "secondary",
               },
             ]}
           />
@@ -296,10 +328,7 @@ export function NuanceFinder() {
               metadata: { colors: revealedColors },
             }}
           />
-          <Text className="text-sage-600 text-xl font-light tracking-wide text-center pt-2">
-            Harmonie trouvée
-          </Text>
-          <PrimaryButton label="Recommencer" onPress={handleRestart} />
+          <PrimaryButton label="Recommencer" onPress={handleRestart} variant="ghost" />
         </View>
       )}
     </View>

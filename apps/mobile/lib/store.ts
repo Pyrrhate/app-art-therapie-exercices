@@ -8,7 +8,11 @@ interface RitualStore extends RitualState {
   setImpulse: (impulse: string) => void;
   setTechnique: (technique: ArtisticTechnique) => void;
   setDurationMinutes: (durationMinutes: RitualDuration) => void;
-  setExercise: (exercise: string, durationMinutes?: number) => void;
+  setExercise: (
+    exercise: string,
+    durationMinutes?: number,
+    source?: "ai" | "fallback" | null
+  ) => void;
   setPhotoUri: (uri: string | null) => void;
   setWrittenText: (writtenText: string) => void;
   setReflection: (
@@ -25,6 +29,7 @@ const initialState: RitualState = {
   impulse: "",
   technique: null,
   exercise: "",
+  exerciseSource: null,
   durationMinutes: 15,
   photoUri: null,
   reflection: null,
@@ -38,10 +43,11 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
   setImpulse: (impulse) => set({ impulse }),
   setTechnique: (technique) => set({ technique }),
   setDurationMinutes: (durationMinutes) => set({ durationMinutes }),
-  setExercise: (exercise, durationMinutes) =>
+  setExercise: (exercise, durationMinutes, source) =>
     set({
       exercise: sanitizeAiDisplayText(exercise),
       durationMinutes: durationMinutes ?? get().durationMinutes,
+      ...(source !== undefined ? { exerciseSource: source } : {}),
     }),
   setPhotoUri: (photoUri) => set({ photoUri }),
   setWrittenText: (writtenText) => set({ writtenText }),

@@ -1,4 +1,4 @@
-export const PING_PONG_MAX_TURNS = 6;
+export const PING_PONG_MAX_TURNS = 4;
 
 export interface PingPongTurn {
   id: string;

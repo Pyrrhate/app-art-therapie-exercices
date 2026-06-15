@@ -19,11 +19,12 @@ export default function MandalaThemeScreen() {
         Studio Mandala
       </Text>
       <Text className="text-3xl font-light text-sand-800 mb-3 leading-tight">
-        De quoi avez-vous besoin aujourd'hui ?
+        Une pause apaisante
       </Text>
       <Text className="text-sand-500 text-base leading-6 mb-8">
-        Choisissez une intention. Un mandala unique sera généré pour vous —
-        coloriez-le à votre rythme.
+        Détente créative à votre rythme — sans chrono ni score. Choisissez une
+        intention ci-dessous ; si vous le souhaitez, votre mandala pourra ensuite
+        devenir une impulsion vers un exercice.
       </Text>
 
       <View className="gap-4 pb-6">

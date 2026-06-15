@@ -141,18 +141,21 @@ export default function SessionsListScreen() {
           />
         }
       >
+        <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
+          Mémoire des pratiques
+        </Text>
         <Text className="text-3xl font-light text-sand-800 mb-2">
-          Mes exercices
+          Mes exercices sauvegardés
         </Text>
         <Text className="text-sand-500 text-base mb-6 leading-6">
-          Touchez une fiche pour tout lire ou refaire l&apos;exercice.
+          Vos fiches d&apos;exercice, gardées localement sur cet appareil — à relire ou à refaire quand vous en avez envie.
         </Text>
 
         {sessions.length === 0 ? (
           <View className="bg-white rounded-2xl border border-dashed border-sand-300 px-6 py-12 items-center">
             <Text className="text-sand-400 text-center leading-6">
-              Aucun exercice sauvegardé.{"\n"}
-              Terminez un rituel et appuyez sur « Sauvegarder localement ».
+              Aucune fiche pour l&apos;instant.{"\n"}
+              Parcourez un rituel guidé, réalisez l&apos;exercice, puis sauvegardez-le pour le retrouver ici.
             </Text>
           </View>
         ) : (

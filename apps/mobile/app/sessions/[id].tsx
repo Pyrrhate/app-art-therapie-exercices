@@ -111,6 +111,9 @@ export default function SessionDetailScreen() {
         <Text className="text-sand-400 text-xs mb-2">
           {formatSessionDate(session.createdAt)}
         </Text>
+        <Text className="text-sage-500 text-xs uppercase tracking-wider mb-2">
+          Fiche d&apos;exercice
+        </Text>
         <Text className="text-3xl font-light text-sand-800 mb-2">
           {session.impulse}
         </Text>

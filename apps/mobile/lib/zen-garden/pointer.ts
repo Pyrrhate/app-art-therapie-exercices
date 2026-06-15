@@ -1,5 +1,5 @@
 import { Platform, type GestureResponderEvent } from "react-native";
-import { clampToViewBox } from "./rake";
+import { clampToViewBox } from "./geometry";
 import type { ZenPoint } from "./types";
 
 export interface GardenLayout {
@@ -20,7 +20,8 @@ type NativeTouch = GestureResponderEvent["nativeEvent"] & {
 export function getEventGardenPoint(
   event: GestureResponderEvent,
   layout: GardenLayout | null,
-  canvasSize: number
+  canvasWidth: number,
+  canvasHeight: number
 ): ZenPoint {
   const ne = event.nativeEvent as NativeTouch;
   let localX = ne.locationX;
@@ -41,7 +42,7 @@ export function getEventGardenPoint(
     localY = pageY - layout.pageY;
   }
 
-  return clampToViewBox(localX ?? 0, localY ?? 0, canvasSize);
+  return clampToViewBox(localX ?? 0, localY ?? 0, canvasWidth, canvasHeight);
 }
 
 export function measureGardenLayout(

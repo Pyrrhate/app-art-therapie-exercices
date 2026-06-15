@@ -1,30 +1,29 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/constants";
 import {
-  DEFAULT_SAND_COLOR,
+  createDefaultZenGardenState,
+  ZEN_STATE_VERSION,
   type ZenGardenState,
 } from "./types";
-
-const DEFAULT_STATE: ZenGardenState = {
-  strokes: [],
-  rocks: [],
-  sandColor: DEFAULT_SAND_COLOR,
-  updatedAt: new Date().toISOString(),
-};
 
 export async function loadZenGarden(): Promise<ZenGardenState> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEYS.zenGarden);
-    if (!raw) return { ...DEFAULT_STATE };
-    const parsed = JSON.parse(raw) as ZenGardenState;
+    if (!raw) return createDefaultZenGardenState();
+    const parsed = JSON.parse(raw) as Partial<ZenGardenState> & { version?: number };
+    if (!parsed.version || parsed.version < ZEN_STATE_VERSION) {
+      return createDefaultZenGardenState();
+    }
     return {
-      strokes: parsed.strokes ?? [],
-      rocks: parsed.rocks ?? [],
-      sandColor: parsed.sandColor ?? DEFAULT_SAND_COLOR,
+      version: ZEN_STATE_VERSION,
+      sandPatches: parsed.sandPatches ?? [],
+      waterBodies: parsed.waterBodies ?? [],
+      pebbles: parsed.pebbles ?? [],
+      sandColor: parsed.sandColor ?? createDefaultZenGardenState().sandColor,
       updatedAt: parsed.updatedAt ?? new Date().toISOString(),
     };
   } catch {
-    return { ...DEFAULT_STATE };
+    return createDefaultZenGardenState();
   }
 }
 
@@ -33,6 +32,7 @@ export async function saveZenGarden(state: ZenGardenState): Promise<void> {
     STORAGE_KEYS.zenGarden,
     JSON.stringify({
       ...state,
+      version: ZEN_STATE_VERSION,
       updatedAt: new Date().toISOString(),
     })
   );

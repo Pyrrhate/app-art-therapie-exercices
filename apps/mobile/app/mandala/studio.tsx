@@ -190,8 +190,10 @@ export default function MandalaStudioScreen() {
       <Text className="text-sand-800 text-xl font-light mb-1">
         {meta.emoji} {meta.title}
       </Text>
-      <Text className="text-sand-500 text-sm mb-6">
-        Touchez une zone pour la colorier
+      <Text className="text-sand-500 text-sm mb-6 leading-5">
+        Touchez une zone pour la colorier, sans pression. Vous pourrez
+        prolonger vers un exercice une fois votre mandala avancé, si vous le
+        souhaitez.
       </Text>
 
       <View
@@ -220,6 +222,41 @@ export default function MandalaStudioScreen() {
         suggestedColors={suggestedColors}
       />
 
+      {hasColoring && (
+        <>
+          <CreativeBridge
+            title="Approfondir avec un exercice ?"
+            subtitle="Si vous le souhaitez, votre création peut devenir une impulsion pour peindre."
+            actions={[
+              {
+                label: "Passer à l'exercice",
+                onPress: () =>
+                  startRitualFromColors(
+                    dominantColors.length > 0
+                      ? dominantColors
+                      : [selectedColor],
+                    "Mandala"
+                  ),
+                variant: "primary",
+              },
+            ]}
+          />
+          <AddToFilBar
+            entry={{
+              source: "mandala",
+              summary: `Mandala — ${meta.title}`,
+              detail: `${Object.keys(fills).length} zones coloriées`,
+              metadata: {
+                colors: dominantColors.length
+                  ? dominantColors
+                  : [selectedColor],
+                theme,
+              },
+            }}
+          />
+        </>
+      )}
+
       <View className="gap-3 mt-8 pb-4">
         <PrimaryButton
           label="Annuler le dernier geste"
@@ -231,6 +268,7 @@ export default function MandalaStudioScreen() {
           label={exporting ? "Export…" : "Exporter en PNG"}
           onPress={() => handleExport("png")}
           disabled={exporting || !spec}
+          variant="ghost"
         />
         <PrimaryButton
           label="Exporter en PDF (impression)"
@@ -244,40 +282,6 @@ export default function MandalaStudioScreen() {
           disabled={loading}
           variant="ghost"
         />
-
-        {hasColoring && (
-          <>
-            <CreativeBridge
-              title="Et après le coloriage ?"
-              subtitle="Laissez vos teintes guider une impulsion pour un rituel."
-              actions={[
-                {
-                  label: "M'inspirer pour un rituel",
-                  onPress: () =>
-                    startRitualFromColors(
-                      dominantColors.length > 0
-                        ? dominantColors
-                        : [selectedColor],
-                      `Mandala ${meta.title}`
-                    ),
-                },
-              ]}
-            />
-            <AddToFilBar
-              entry={{
-                source: "mandala",
-                summary: `Mandala — ${meta.title}`,
-                detail: `${Object.keys(fills).length} zones coloriées`,
-                metadata: {
-                  colors: dominantColors.length
-                    ? dominantColors
-                    : [selectedColor],
-                  theme,
-                },
-              }}
-            />
-          </>
-        )}
       </View>
     </ScreenContainer>
   );

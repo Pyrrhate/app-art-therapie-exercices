@@ -57,10 +57,10 @@ export default function FilScreen() {
         Fil créatif
       </Text>
       <Text className="text-3xl font-light text-sand-800 mb-2 leading-tight">
-        Vos traces en douceur
+        Mémoire de vos pratiques
       </Text>
       <Text className="text-sand-500 text-base leading-6 mb-6">
-        Un fil local qui relie vos moments — mandala, nuances, ping-pong, rituel.
+        Sur cet appareil, de petites traces laissées après vos exercices et modules — mandala, nuances, jardin, ping-pong, rituel.
       </Text>
 
       {loading ? (
@@ -68,11 +68,11 @@ export default function FilScreen() {
       ) : entries.length === 0 ? (
         <View className="bg-white rounded-2xl border border-dashed border-sand-300 px-5 py-10 items-center">
           <Text className="text-sand-500 text-center leading-6">
-            Rien ici pour l&apos;instant. À la fin d&apos;un module, ajoutez une
-            trace au Fil.
+            Rien ici pour l&apos;instant. Terminez un exercice ou un module, puis ajoutez une trace pour vous en souvenir.
           </Text>
-          <View className="mt-6 w-full">
-            <PrimaryButton label="Retour à l'accueil" onPress={navigateHome} />
+          <View className="mt-6 w-full gap-3">
+            <PrimaryButton label="Préparer un exercice" onPress={() => router.push("/ritual")} />
+            <PrimaryButton label="Retour à l'accueil" onPress={navigateHome} variant="ghost" />
           </View>
         </View>
       ) : (
@@ -123,7 +123,7 @@ export default function FilScreen() {
 
           <View className="gap-3 pt-4 border-t border-sand-200">
             <PrimaryButton
-              label="Commencer un rituel"
+              label="Préparer un exercice"
               onPress={() => router.push("/ritual")}
             />
             <PrimaryButton

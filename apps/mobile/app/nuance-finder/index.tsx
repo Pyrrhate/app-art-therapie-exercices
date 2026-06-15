@@ -16,11 +16,12 @@ export default function NuanceFinderScreen() {
         Le Chercheur de Nuances
       </Text>
       <Text className="text-3xl font-light text-sand-800 mb-2 leading-tight">
-        Chromatique, sans pression
+        Affiner le regard, puis créer
       </Text>
       <Text className="text-sand-500 text-base leading-6 mb-6">
-        Un petit puzzle de couleurs dans l&apos;application. Pas de score, pas
-        de chrono — seulement la découverte douce des teintes.
+        Pas la Palette intérieure — ici, un jeu visuel procédural sans IA. Une
+        grille 8×8 pour découvrir les teintes à votre rythme, prélude à la
+        création. Pas de score, pas de chrono.
       </Text>
 
       <NuanceFinder />

@@ -6,22 +6,37 @@ import {
   type GestureResponderEvent,
 } from "react-native";
 import * as Haptics from "expo-haptics";
-import Svg, { Ellipse, Path, Rect } from "react-native-svg";
+import Svg, { Ellipse, Line, Path, Rect } from "react-native-svg";
+import {
+  buildSandPatchPath,
+  buildWaterPath,
+  normalizeWaterRect,
+  simplifyPoints,
+} from "@/lib/zen-garden/geometry";
 import {
   getEventGardenPoint,
   measureGardenLayout,
   type GardenLayout,
 } from "@/lib/zen-garden/pointer";
-import { buildRakePaths, simplifyPoints } from "@/lib/zen-garden/rake";
 import {
   DEFAULT_SAND_COLOR,
-  RAKE_LINE_COLOR,
-  ROCK_VARIANTS,
-  ZEN_VIEWBOX,
-  type RakeStroke,
-  type RockVariant,
+  GROUND_Y,
+  PEBBLE_VARIANTS,
+  SAND_STROKE_COLOR,
+  SKY_COLOR,
+  SOIL_BOTTOM,
+  SOIL_COLOR,
+  SOIL_TOP,
+  WATER_COLOR,
+  WATER_OPACITY,
+  ZEN_ASPECT_RATIO,
+  ZEN_VIEWBOX_HEIGHT,
+  ZEN_VIEWBOX_WIDTH,
+  type PebbleVariant,
+  type SandPatch,
+  type WaterBody,
+  type ZenPebble,
   type ZenPoint,
-  type ZenRock,
   type ZenTool,
 } from "@/lib/zen-garden/types";
 
@@ -30,42 +45,52 @@ function makeId() {
 }
 
 interface ZenGardenCanvasProps {
-  size: number;
+  width: number;
   sandColor?: string;
-  strokes: RakeStroke[];
-  rocks: ZenRock[];
+  sandPatches: SandPatch[];
+  waterBodies: WaterBody[];
+  pebbles: ZenPebble[];
   tool: ZenTool;
-  rockVariant: RockVariant;
-  liveStroke?: ZenPoint[] | null;
-  onStrokeComplete: (stroke: RakeStroke) => void;
-  onPlaceRock: (rock: ZenRock) => void;
-  onRemoveRock: (rockId: string) => void;
-  onMoveRock: (rockId: string, x: number, y: number) => void;
-  onMoveRockEnd: (rockId: string, from: ZenPoint, to: ZenPoint) => void;
-  onLiveStrokeChange?: (points: ZenPoint[] | null) => void;
+  pebbleVariant: PebbleVariant;
+  liveSandPoints?: ZenPoint[] | null;
+  liveWaterRect?: { start: ZenPoint; end: ZenPoint } | null;
+  onSandComplete: (patch: SandPatch) => void;
+  onWaterComplete: (body: WaterBody) => void;
+  onPlacePebble: (pebble: ZenPebble) => void;
+  onRemovePebble: (pebbleId: string) => void;
+  onMovePebble: (pebbleId: string, x: number, y: number) => void;
+  onMovePebbleEnd: (pebbleId: string, from: ZenPoint, to: ZenPoint) => void;
+  onLiveSandChange?: (points: ZenPoint[] | null) => void;
+  onLiveWaterChange?: (rect: { start: ZenPoint; end: ZenPoint } | null) => void;
   interactive?: boolean;
 }
 
 export function ZenGardenCanvas({
-  size,
+  width,
   sandColor = DEFAULT_SAND_COLOR,
-  strokes,
-  rocks,
+  sandPatches,
+  waterBodies,
+  pebbles,
   tool,
-  rockVariant,
-  liveStroke,
-  onStrokeComplete,
-  onPlaceRock,
-  onRemoveRock,
-  onMoveRock,
-  onMoveRockEnd,
-  onLiveStrokeChange,
+  pebbleVariant,
+  liveSandPoints,
+  liveWaterRect,
+  onSandComplete,
+  onWaterComplete,
+  onPlacePebble,
+  onRemovePebble,
+  onMovePebble,
+  onMovePebbleEnd,
+  onLiveSandChange,
+  onLiveWaterChange,
   interactive = true,
 }: ZenGardenCanvasProps) {
+  const height = Math.round(width / ZEN_ASPECT_RATIO);
   const containerRef = useRef<View>(null);
   const layoutRef = useRef<GardenLayout | null>(null);
-  const currentPoints = useRef<ZenPoint[]>([]);
-  const dragRockId = useRef<string | null>(null);
+  const currentSandPoints = useRef<ZenPoint[]>([]);
+  const waterStart = useRef<ZenPoint | null>(null);
+  const dragPebbleId = useRef<string | null>(null);
   const dragStart = useRef<ZenPoint | null>(null);
   const didDrag = useRef(false);
   const lastHaptic = useRef(0);
@@ -78,7 +103,7 @@ export function ZenGardenCanvas({
 
   useEffect(() => {
     refreshLayout();
-  }, [size, refreshLayout]);
+  }, [width, height, refreshLayout]);
 
   const triggerHaptic = useCallback(() => {
     if (Platform.OS === "web") return;
@@ -90,51 +115,56 @@ export function ZenGardenCanvas({
 
   const toGardenPoint = useCallback(
     (event: GestureResponderEvent) =>
-      getEventGardenPoint(event, layoutRef.current, size),
-    [size]
+      getEventGardenPoint(event, layoutRef.current, width, height),
+    [width, height]
   );
 
-  const findRockAt = useCallback(
-    (x: number, y: number): ZenRock | undefined =>
-      rocks.find((rock) => {
-        const spec = ROCK_VARIANTS[rock.variant];
+  const findPebbleAt = useCallback(
+    (x: number, y: number): ZenPebble | undefined =>
+      pebbles.find((pebble) => {
+        const spec = PEBBLE_VARIANTS[pebble.variant];
         const hitRadius = Math.max(spec.rx, spec.ry) + 8;
-        return Math.hypot(rock.x - x, rock.y - y) <= hitRadius;
+        return Math.hypot(pebble.x - x, pebble.y - y) <= hitRadius;
       }),
-    [rocks]
+    [pebbles]
   );
 
-  const rakePan = useMemo(
+  const pebbleCenterY = useCallback((variant: PebbleVariant) => {
+    const ry = PEBBLE_VARIANTS[variant].ry;
+    return GROUND_Y - ry + 1;
+  }, []);
+
+  const sandPan = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => interactive && tool === "rake",
-        onMoveShouldSetPanResponder: () => interactive && tool === "rake",
+        onStartShouldSetPanResponder: () => interactive && tool === "sand",
+        onMoveShouldSetPanResponder: () => interactive && tool === "sand",
         onPanResponderGrant: (event) => {
           refreshLayout();
           const p = toGardenPoint(event);
-          currentPoints.current = [p];
-          onLiveStrokeChange?.([p]);
+          currentSandPoints.current = [p];
+          onLiveSandChange?.([p]);
           triggerHaptic();
         },
         onPanResponderMove: (event) => {
           const p = toGardenPoint(event);
-          const last = currentPoints.current[currentPoints.current.length - 1];
+          const last = currentSandPoints.current[currentSandPoints.current.length - 1];
           if (last && Math.hypot(p.x - last.x, p.y - last.y) < 2) return;
-          currentPoints.current.push(p);
-          onLiveStrokeChange?.([...currentPoints.current]);
+          currentSandPoints.current.push(p);
+          onLiveSandChange?.([...currentSandPoints.current]);
           triggerHaptic();
         },
         onPanResponderRelease: () => {
-          const simplified = simplifyPoints(currentPoints.current);
-          currentPoints.current = [];
-          onLiveStrokeChange?.(null);
+          const simplified = simplifyPoints(currentSandPoints.current);
+          currentSandPoints.current = [];
+          onLiveSandChange?.(null);
           if (simplified.length >= 2) {
-            onStrokeComplete({ id: makeId(), points: simplified });
+            onSandComplete({ id: makeId(), points: simplified });
           }
         },
         onPanResponderTerminate: () => {
-          currentPoints.current = [];
-          onLiveStrokeChange?.(null);
+          currentSandPoints.current = [];
+          onLiveSandChange?.(null);
         },
       }),
     [
@@ -142,64 +172,126 @@ export function ZenGardenCanvas({
       tool,
       toGardenPoint,
       refreshLayout,
-      onLiveStrokeChange,
-      onStrokeComplete,
+      onLiveSandChange,
+      onSandComplete,
       triggerHaptic,
     ]
   );
 
-  const rockPan = useMemo(
+  const waterPan = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => interactive && tool === "rock",
-        onMoveShouldSetPanResponder: () => interactive && tool === "rock",
+        onStartShouldSetPanResponder: () => interactive && tool === "water",
+        onMoveShouldSetPanResponder: () => interactive && tool === "water",
         onPanResponderGrant: (event) => {
           refreshLayout();
           const p = toGardenPoint(event);
-          const hit = findRockAt(p.x, p.y);
-          dragRockId.current = hit?.id ?? null;
+          waterStart.current = p;
+          onLiveWaterChange?.({ start: p, end: p });
+          triggerHaptic();
+        },
+        onPanResponderMove: (event) => {
+          const start = waterStart.current;
+          if (!start) return;
+          const p = toGardenPoint(event);
+          onLiveWaterChange?.({ start, end: p });
+        },
+        onPanResponderRelease: (event) => {
+          const start = waterStart.current;
+          waterStart.current = null;
+          onLiveWaterChange?.(null);
+          if (!start) return;
+          const end = toGardenPoint(event);
+          const rect = normalizeWaterRect(start, end);
+          if (rect) {
+            onWaterComplete({ id: makeId(), ...rect });
+            triggerHaptic();
+            return;
+          }
+          onWaterComplete({
+            id: makeId(),
+            x: start.x - 20,
+            y: GROUND_Y - 28,
+            width: 40,
+            height: 28,
+          });
+          triggerHaptic();
+        },
+        onPanResponderTerminate: () => {
+          waterStart.current = null;
+          onLiveWaterChange?.(null);
+        },
+      }),
+    [
+      interactive,
+      tool,
+      toGardenPoint,
+      refreshLayout,
+      onLiveWaterChange,
+      onWaterComplete,
+      triggerHaptic,
+    ]
+  );
+
+  const pebblePan = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => interactive && tool === "pebble",
+        onMoveShouldSetPanResponder: () => interactive && tool === "pebble",
+        onPanResponderGrant: (event) => {
+          refreshLayout();
+          const p = toGardenPoint(event);
+          const hit = findPebbleAt(p.x, p.y);
+          dragPebbleId.current = hit?.id ?? null;
           dragStart.current = hit ? { x: hit.x, y: hit.y } : null;
           didDrag.current = false;
           if (hit) triggerHaptic();
         },
         onPanResponderMove: (event) => {
-          const id = dragRockId.current;
+          const id = dragPebbleId.current;
           if (!id) return;
           const p = toGardenPoint(event);
           didDrag.current = true;
-          onMoveRock(id, p.x, p.y);
+          const spec = PEBBLE_VARIANTS[
+            pebbles.find((item) => item.id === id)?.variant ?? pebbleVariant
+          ];
+          onMovePebble(id, p.x, GROUND_Y - spec.ry + 1);
         },
         onPanResponderRelease: (event) => {
-          const id = dragRockId.current;
+          const id = dragPebbleId.current;
           const start = dragStart.current;
-          dragRockId.current = null;
+          dragPebbleId.current = null;
           dragStart.current = null;
 
           if (id && didDrag.current && start) {
             const p = toGardenPoint(event);
-            onMoveRockEnd(id, start, p);
+            const spec = PEBBLE_VARIANTS[
+              pebbles.find((item) => item.id === id)?.variant ?? pebbleVariant
+            ];
+            const to = { x: p.x, y: GROUND_Y - spec.ry + 1 };
+            onMovePebbleEnd(id, start, to);
             triggerHaptic();
             return;
           }
 
           if (!id && !didDrag.current) {
             const p = toGardenPoint(event);
-            const existing = findRockAt(p.x, p.y);
+            const existing = findPebbleAt(p.x, p.y);
             if (existing) {
-              onRemoveRock(existing.id);
+              onRemovePebble(existing.id);
             } else {
-              onPlaceRock({
+              onPlacePebble({
                 id: makeId(),
                 x: p.x,
-                y: p.y,
-                variant: rockVariant,
+                y: pebbleCenterY(pebbleVariant),
+                variant: pebbleVariant,
               });
             }
             triggerHaptic();
           }
         },
         onPanResponderTerminate: () => {
-          dragRockId.current = null;
+          dragPebbleId.current = null;
           dragStart.current = null;
         },
       }),
@@ -208,94 +300,150 @@ export function ZenGardenCanvas({
       tool,
       toGardenPoint,
       refreshLayout,
-      findRockAt,
-      rockVariant,
-      onMoveRock,
-      onMoveRockEnd,
-      onPlaceRock,
-      onRemoveRock,
+      findPebbleAt,
+      pebbleVariant,
+      pebbles,
+      pebbleCenterY,
+      onMovePebble,
+      onMovePebbleEnd,
+      onPlacePebble,
+      onRemovePebble,
       triggerHaptic,
     ]
   );
 
-  const allStrokes = liveStroke?.length
-    ? [...strokes, { id: "live", points: liveStroke }]
-    : strokes;
+  const allSandPatches =
+    liveSandPoints && liveSandPoints.length >= 2
+      ? [...sandPatches, { id: "live", points: liveSandPoints }]
+      : sandPatches;
 
   const panHandlers =
-    tool === "rake" ? rakePan.panHandlers : rockPan.panHandlers;
+    tool === "sand"
+      ? sandPan.panHandlers
+      : tool === "water"
+        ? waterPan.panHandlers
+        : pebblePan.panHandlers;
+
+  const cursorStyle =
+    tool === "sand" ? "crosshair" : tool === "water" ? "cell" : "pointer";
 
   return (
     <View
       ref={containerRef}
       onLayout={refreshLayout}
       className="rounded-2xl border border-sand-300 overflow-hidden self-center"
-      style={{ width: size, height: size }}
+      style={{ width, height }}
     >
-      <Svg width={size} height={size} viewBox={`0 0 ${ZEN_VIEWBOX} ${ZEN_VIEWBOX}`}>
-        <Rect x="0" y="0" width={ZEN_VIEWBOX} height={ZEN_VIEWBOX} fill={sandColor} />
+      <Svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${ZEN_VIEWBOX_WIDTH} ${ZEN_VIEWBOX_HEIGHT}`}
+      >
+        <Rect x="0" y="0" width={ZEN_VIEWBOX_WIDTH} height={GROUND_Y} fill={SKY_COLOR} />
         <Rect
-          x="8"
-          y="8"
-          width="384"
-          height="384"
-          rx="12"
-          fill="none"
-          stroke="#D4C4B5"
-          strokeWidth="1"
+          x="0"
+          y={SOIL_TOP}
+          width={ZEN_VIEWBOX_WIDTH}
+          height={SOIL_BOTTOM - SOIL_TOP}
+          fill={SOIL_COLOR}
         />
-        {allStrokes.map((stroke) =>
-          buildRakePaths(stroke.points).map((d, i) => (
-            <Path
-              key={`${stroke.id}-${i}`}
-              d={d}
-              fill="none"
-              stroke={RAKE_LINE_COLOR}
-              strokeWidth={0.9}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={0.85}
-            />
-          ))
-        )}
-        {rocks.map((rock) => {
-          const spec = ROCK_VARIANTS[rock.variant];
+        <Line
+          x1="0"
+          y1={GROUND_Y}
+          x2={ZEN_VIEWBOX_WIDTH}
+          y2={GROUND_Y}
+          stroke="#8B7355"
+          strokeWidth={0.6}
+          opacity={0.5}
+        />
+
+        {allSandPatches.map((patch) => {
+          const d = buildSandPatchPath(patch.points);
+          if (!d) return null;
           return (
-            <Ellipse
-              key={`${rock.id}-shadow`}
-              cx={rock.x + 3}
-              cy={rock.y + 5}
-              rx={spec.rx * 0.9}
-              ry={spec.ry * 0.5}
-              fill="rgba(80,70,60,0.15)"
+            <Path
+              key={patch.id}
+              d={d}
+              fill={sandColor}
+              stroke={SAND_STROKE_COLOR}
+              strokeWidth={0.8}
+              opacity={0.95}
             />
           );
         })}
-        {rocks.map((rock) => {
-          const spec = ROCK_VARIANTS[rock.variant];
+
+        {waterBodies.map((body) => (
+          <Path
+            key={body.id}
+            d={buildWaterPath(body.x, body.y, body.width, body.height)}
+            fill={WATER_COLOR}
+            opacity={WATER_OPACITY}
+          />
+        ))}
+        {waterBodies.map((body) => (
+          <Path
+            key={`${body.id}-wave`}
+            d={buildWaterPath(body.x, body.y, body.width, body.height)}
+            fill="none"
+            stroke="rgba(255,255,255,0.35)"
+            strokeWidth={0.8}
+          />
+        ))}
+
+        {liveWaterRect &&
+          (() => {
+            const rect = normalizeWaterRect(
+              liveWaterRect.start,
+              liveWaterRect.end
+            );
+            if (!rect) return null;
+            return (
+              <Path
+                d={buildWaterPath(rect.x, rect.y, rect.width, rect.height)}
+                fill={WATER_COLOR}
+                opacity={WATER_OPACITY * 0.7}
+              />
+            );
+          })()}
+
+        {pebbles.map((pebble) => {
+          const spec = PEBBLE_VARIANTS[pebble.variant];
           return (
             <Ellipse
-              key={rock.id}
-              cx={rock.x}
-              cy={rock.y}
+              key={`${pebble.id}-shadow`}
+              cx={pebble.x + 2}
+              cy={pebble.y + 4}
+              rx={spec.rx * 0.85}
+              ry={spec.ry * 0.35}
+              fill="rgba(80,70,60,0.18)"
+            />
+          );
+        })}
+        {pebbles.map((pebble) => {
+          const spec = PEBBLE_VARIANTS[pebble.variant];
+          return (
+            <Ellipse
+              key={pebble.id}
+              cx={pebble.x}
+              cy={pebble.y}
               rx={spec.rx}
               ry={spec.ry}
               fill="#5C5650"
               stroke="#4A4540"
-              strokeWidth={1.2}
+              strokeWidth={1.1}
             />
           );
         })}
-        {rocks.map((rock) => {
-          const spec = ROCK_VARIANTS[rock.variant];
+        {pebbles.map((pebble) => {
+          const spec = PEBBLE_VARIANTS[pebble.variant];
           return (
             <Ellipse
-              key={`${rock.id}-hi`}
-              cx={rock.x - spec.rx * 0.25}
-              cy={rock.y - spec.ry * 0.2}
-              rx={spec.rx * 0.35}
-              ry={spec.ry * 0.25}
-              fill="rgba(255,255,255,0.12)"
+              key={`${pebble.id}-hi`}
+              cx={pebble.x - spec.rx * 0.22}
+              cy={pebble.y - spec.ry * 0.25}
+              rx={spec.rx * 0.32}
+              ry={spec.ry * 0.22}
+              fill="rgba(255,255,255,0.14)"
             />
           );
         })}
@@ -308,11 +456,9 @@ export function ZenGardenCanvas({
             position: "absolute",
             top: 0,
             left: 0,
-            width: size,
-            height: size,
-            ...(Platform.OS === "web"
-              ? { cursor: tool === "rake" ? "crosshair" : "pointer" }
-              : null),
+            width,
+            height,
+            ...(Platform.OS === "web" ? { cursor: cursorStyle } : null),
           }}
         />
       )}

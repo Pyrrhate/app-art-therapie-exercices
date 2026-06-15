@@ -3,13 +3,7 @@ import {
   PRIMARY_SOURCES,
   type SourcePoint,
 } from "./colors";
-import {
-  ELEMENTAL_SOURCES,
-  getDeployColorForCell,
-  getDeployElementForCell,
-  getLotusZoneIds,
-  LOTUS_SOURCE,
-} from "./elements";
+import { getLotusZoneIds, LOTUS_SOURCE } from "./elements";
 import type { NuanceCell, NuanceGrid } from "./types";
 
 export const GRID_SIZE = 8;
@@ -47,70 +41,42 @@ export function createRng(seed: number): () => number {
   };
 }
 
+/** Grille 8×8 chromatique — sources CMY + lotus optionnel (sans les 4 éléments). */
 export function createNuanceGrid(seed = Date.now()): NuanceGrid {
   const rng = createRng(seed);
 
-  const elementPositions = pickUniquePositions(ELEMENTAL_SOURCES.length, rng);
-  const elements = ELEMENTAL_SOURCES.map((source, i) => ({
-    row: elementPositions[i]!.row,
-    col: elementPositions[i]!.col,
-    source,
+  const primaryPositions = pickUniquePositions(PRIMARY_SOURCES.length, rng);
+  const primaries: SourcePoint[] = PRIMARY_SOURCES.map((source, i) => ({
+    row: primaryPositions[i]!.row,
+    col: primaryPositions[i]!.col,
+    source: { hex: source.hex, rgb: source.rgb, label: source.label },
   }));
 
-  const used = new Set(elements.map((e) => cellId(e.row, e.col)));
-  let lotusRow = 0;
-  let lotusCol = 0;
-  let lotusGuard = 0;
-  do {
-    lotusRow = Math.floor(rng() * GRID_SIZE);
-    lotusCol = Math.floor(rng() * GRID_SIZE);
-    lotusGuard += 1;
-  } while (used.has(cellId(lotusRow, lotusCol)) && lotusGuard < 100);
-  const lotusId = cellId(lotusRow, lotusCol);
-  const lotusZoneIds = getLotusZoneIds(lotusRow, lotusCol, GRID_SIZE, 2);
+  const used = new Set(primaries.map((p) => cellId(p.row, p.col)));
+  let lotusId: string | null = null;
+  let lotusZoneIds: string[] = [];
 
-  const optionalPrimaries: SourcePoint[] = [];
-  if (rng() > 0.45) {
-    let attempts = 0;
-    while (optionalPrimaries.length < 2 && attempts < 80) {
-      attempts += 1;
-      const row = Math.floor(rng() * GRID_SIZE);
-      const col = Math.floor(rng() * GRID_SIZE);
-      const id = cellId(row, col);
-      if (used.has(id) || lotusZoneIds.includes(id)) continue;
-      used.add(id);
-      const source = PRIMARY_SOURCES[Math.floor(rng() * PRIMARY_SOURCES.length)]!;
-      optionalPrimaries.push({ row, col, source });
-    }
+  if (rng() > 0.4) {
+    let lotusRow = 0;
+    let lotusCol = 0;
+    let lotusGuard = 0;
+    do {
+      lotusRow = Math.floor(rng() * GRID_SIZE);
+      lotusCol = Math.floor(rng() * GRID_SIZE);
+      lotusGuard += 1;
+    } while (used.has(cellId(lotusRow, lotusCol)) && lotusGuard < 100);
+
+    lotusId = cellId(lotusRow, lotusCol);
+    lotusZoneIds = getLotusZoneIds(lotusRow, lotusCol, GRID_SIZE, 2);
+    used.add(lotusId);
   }
 
-  const influencePoints: SourcePoint[] = [
-    ...elements.map((e) => ({
-      row: e.row,
-      col: e.col,
-      source: {
-        label: e.source.label,
-        hex: e.source.hex,
-        rgb: e.source.rgb,
-      },
-    })),
-    ...optionalPrimaries.map((p) => ({
-      row: p.row,
-      col: p.col,
-      source: { hex: p.source.hex, rgb: p.source.rgb, label: p.source.label },
-    })),
-  ];
-
-  const sourceAt = new Map<
-    string,
-    { kind: "element" | "lotus" | "primary"; elementKind?: typeof elements[0]["source"]["kind"] }
-  >();
-  for (const e of elements) {
-    sourceAt.set(cellId(e.row, e.col), { kind: "element", elementKind: e.source.kind });
+  const sourceAt = new Map<string, "lotus" | "primary">();
+  if (lotusId) {
+    sourceAt.set(lotusId, "lotus");
   }
-  sourceAt.set(lotusId, { kind: "lotus" });
-  for (const p of optionalPrimaries) {
-    sourceAt.set(cellId(p.row, p.col), { kind: "primary" });
+  for (const p of primaries) {
+    sourceAt.set(cellId(p.row, p.col), "primary");
   }
 
   const cells: NuanceCell[][] = [];
@@ -120,9 +86,8 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
     for (let col = 0; col < GRID_SIZE; col += 1) {
       const id = cellId(row, col);
       const special = sourceAt.get(id);
-      const deployColor = getDeployColorForCell(row, col, elements);
 
-      if (special?.kind === "lotus") {
+      if (special === "lotus") {
         rowCells.push({
           id,
           row,
@@ -132,40 +97,29 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
           revealColor: LOTUS_SOURCE.hex,
           source: null,
         });
-      } else if (special?.kind === "element") {
-        const el = elements.find((e) => e.row === row && e.col === col)!;
-        rowCells.push({
-          id,
-          row,
-          col,
-          kind: "element",
-          isSource: true,
-          revealColor: el.source.hex,
-          source: null,
-          elementKind: el.source.kind,
-        });
-      } else if (special?.kind === "primary") {
-        const prim = optionalPrimaries.find((p) => p.row === row && p.col === col)!;
+      } else if (special === "primary") {
+        const prim = primaries.find((p) => p.row === row && p.col === col)!;
+        const primarySource = PRIMARY_SOURCES.find(
+          (s) => s.hex === prim.source.hex
+        )!;
         rowCells.push({
           id,
           row,
           col,
           kind: "primary",
           isSource: true,
-          revealColor: prim.source.hex,
-          source: prim.source,
+          revealColor: primarySource.hex,
+          source: primarySource,
         });
       } else {
-        const deployMeta = getDeployElementForCell(row, col, elements);
         rowCells.push({
           id,
           row,
           col,
           kind: "normal",
           isSource: false,
-          revealColor: deployColor ?? blendCellColor(row, col, influencePoints),
+          revealColor: blendCellColor(row, col, primaries),
           source: null,
-          deployFrom: deployMeta?.kind,
         });
       }
     }

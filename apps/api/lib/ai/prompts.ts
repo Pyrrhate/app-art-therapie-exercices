@@ -20,14 +20,22 @@ Consignes :
 {"exercise":"texte de l'exercice ici","durationMinutes":${durationMinutes}}`;
 }
 
-export function buildVisionObservationPrompt(isWriting = false): string {
+export function buildVisionObservationPrompt(
+  isWriting = false,
+  exercise?: string
+): string {
   const writingField = isWriting
     ? ',"texte_manuscrit":"transcription approximative ou vide"'
     : "";
-  return `Observe cette création artistique. Réponds UNIQUEMENT en JSON valide :
-{"couleurs":"teintes dominantes et contrastes","formes":"formes et composition","traits":"geste, ligne, matière","ambiance":"atmosphère générale","emotions_visibles":"qualités affectives suggérées (sans diagnostic)","matiere":"textures ou medium perçu"${writingField}}
+  const exerciseBlock = exercise?.trim()
+    ? `\n\nConsigne d'exercice que l'utilisateur·rice devait suivre — évaluez factuellement si l'image semble correspondre (sans juger la qualité) :\n« ${exercise.trim().slice(0, 900)} »`
+    : "";
+  return `Observe cette création artistique telle qu'elle apparaît réellement — ne décrivez que ce qui est visible.${exerciseBlock}
 
-Notes factuelles internes — pas d'adresse à l'auteur·rice. Français.`;
+Répondez UNIQUEMENT en JSON valide :
+{"couleurs":"teintes dominantes et contrastes réellement visibles","formes":"formes et composition observées","traits":"geste, ligne, matière perçus","ambiance":"atmosphère générale","emotions_visibles":"qualités affectives suggérées (sans diagnostic)","matiere":"textures ou medium perçu","accord_exercice":"fort|partiel|faible|incertain|sans_exercice — lien entre l'image et la consigne si fournie"${writingField}}
+
+Notes factuelles internes — pas d'adresse à l'auteur·rice. Ne pas inventer d'éléments absents. Français.`;
 }
 
 export function buildHandwritingOcrPrompt(): string {
@@ -53,7 +61,7 @@ function formatReflectionContext(ctx: ReflectionPromptContext): string {
       ? `Durée du rituel : ${ctx.durationMinutes} minutes`
       : null,
     ctx.exercise
-      ? `Exercice proposé (intitulé à prendre en compte) :\n« ${ctx.exercise.slice(0, 1200)} »`
+      ? `Exercice proposé (intitulé à prendre en compte — si l'image ou le texte ne semble pas le suivre, accueillez ce qui EST là sans reproche) :\n« ${ctx.exercise.slice(0, 1200)} »`
       : null,
     ctx.writtenText
       ? `Texte de l'utilisateur·rice (saisi ou transcrit) :\n« ${ctx.writtenText.slice(0, 4000)} »`
@@ -75,12 +83,14 @@ ${contextBlock}
 Rédigez un miroir créatif en français, vouvoiement (« vous »).
 
 Structure OBLIGATOIRE — reflection = 3 ou 4 paragraphes courts séparés par \\n\\n (50 à 70 mots chacun, pas plus) :
-1) Accueil du geste et lien discret avec l'impulsion / l'exercice
-2) Couleurs, formes, traits — tissés avec chaleur (pas de catalogue)
+1) Accueil du geste — ce qui est réellement visible ou écrit (priorité absolue aux observations visuelles)
+2) Couleurs, formes, traits — tissés avec chaleur (pas de catalogue, pas d'invention)
 3) Ambiance et émotions accueillies sans diagnostic
 4) (Optionnel) Encouragement bref
 
 Concision : une analyse plus courte vaut mieux qu'un long texte.
+
+Fidélité : ne décrivez que ce qui est visible dans l'image ou le texte fourni. Si les observations indiquent un accord_exercice faible ou partiel avec la consigne, accueillez la création telle qu'elle est (« votre geste semble avoir pris un autre chemin que l'intitulé… ») puis parlez de ce qui est montré.
 
 Si un texte écrit est fourni, accueillez aussi les mots et leur rythme.
 
@@ -107,7 +117,7 @@ ${failedReflection.slice(0, 800)}
 
 ${contextBlock}
 
-Réécrivez : 3-4 paragraphes chaleureux (\\n\\n), vouvoiement, profondeur bienveillante sur couleurs/émotions/formes, plus followUpExercise.
+Réécrivez : 3-4 paragraphes chaleureux (\\n\\n), vouvoiement, ancrés dans ce qui est RÉELLEMENT visible — pas d'invention. Si l'exercice n'a pas été suivi, accueillez la création montrée sans reproche.
 
 JSON uniquement :
 {"reflection":"…","openQuestions":["…"],"followUpExercise":"…"}`;

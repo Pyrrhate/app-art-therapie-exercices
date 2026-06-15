@@ -48,3 +48,18 @@ export const MANDALA_THEME_LABELS: Record<
     emoji: "◎",
   },
 };
+
+/** Palette de départ suggérée par thème — toujours modifiable via le picker. */
+export const THEME_SUGGESTED_PALETTES: Record<MandalaTheme, string[]> = {
+  calm: ["#FAF7F4", "#6B8F71", "#8FA88A", "#D4C4B5", "#527058", "#E8DDD4"],
+  energy: ["#FAF7F4", "#E8A84A", "#C45C4A", "#FFD700", "#6B8F71", "#A8856A"],
+  focus: ["#FFFFFF", "#527058", "#6B8F71", "#A8856A", "#E8DDD4", "#D4C4B5"],
+};
+
+export function getThemeSuggestedPalette(theme: MandalaTheme): string[] {
+  return THEME_SUGGESTED_PALETTES[theme];
+}
+
+export function getThemeDefaultColor(theme: MandalaTheme): string {
+  return THEME_SUGGESTED_PALETTES[theme][1] ?? MANDALA_COLORS[1].hex;
+}

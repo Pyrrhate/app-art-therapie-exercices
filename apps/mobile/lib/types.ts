@@ -40,6 +40,7 @@ export interface RitualState {
   impulse: string;
   technique: ArtisticTechnique | null;
   exercise: string;
+  exerciseSource: "ai" | "fallback" | null;
   durationMinutes: number;
   photoUri: string | null;
   reflection: string | null;

@@ -4,6 +4,7 @@ import {
   fallbackStartColorJourney,
   fallbackSynthesizeColorJourney,
 } from "./color-journey/fallback";
+import { getFallbackExercise } from "./ritual/fallback";
 import type {
   ArtisticTechnique,
   ExerciseResponse,
@@ -78,7 +79,7 @@ async function request<T>(
   return data as T;
 }
 
-function shouldUseColorJourneyFallback(error: unknown): boolean {
+function isRecoverableApiError(error: unknown): boolean {
   if (!(error instanceof ApiError)) return true;
   return (
     error.code === "NETWORK_ERROR" ||
@@ -93,10 +94,17 @@ export async function generateExercise(
   technique: ArtisticTechnique,
   durationMinutes?: number
 ): Promise<ExerciseResponse> {
-  return request<ExerciseResponse>("/api/exercise/generate", {
-    method: "POST",
-    body: JSON.stringify({ impulse, technique, durationMinutes }),
-  });
+  try {
+    return await request<ExerciseResponse>("/api/exercise/generate", {
+      method: "POST",
+      body: JSON.stringify({ impulse, technique, durationMinutes }),
+    });
+  } catch (error) {
+    if (isRecoverableApiError(error)) {
+      return getFallbackExercise(impulse, technique, durationMinutes);
+    }
+    throw error;
+  }
 }
 
 export async function analyzeArtwork(context: {
@@ -142,7 +150,7 @@ export async function startColorJourney(context: {
       body: JSON.stringify(context),
     });
   } catch (error) {
-    if (shouldUseColorJourneyFallback(error)) {
+    if (isRecoverableApiError(error)) {
       return fallbackStartColorJourney(context);
     }
     throw error;
@@ -172,7 +180,7 @@ export async function chooseColorJourney(input: {
       body: JSON.stringify(input),
     });
   } catch (error) {
-    if (shouldUseColorJourneyFallback(error)) {
+    if (isRecoverableApiError(error)) {
       return fallbackChooseColorJourney({
         turn: input.turn,
         chosen: {
@@ -202,7 +210,7 @@ export async function synthesizeColorJourney(input: {
       body: JSON.stringify(input),
     });
   } catch (error) {
-    if (shouldUseColorJourneyFallback(error)) {
+    if (isRecoverableApiError(error)) {
       return fallbackSynthesizeColorJourney(input);
     }
     throw error;

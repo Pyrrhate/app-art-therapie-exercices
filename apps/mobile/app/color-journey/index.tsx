@@ -172,7 +172,17 @@ export default function ColorJourneyScreen() {
     setNotice(null);
   }
 
+  function buildImpulseFromHistory(choices: ColorChoice[]): string {
+    const labels = choices.map((c) => c.label).join(", ");
+    return `Palette intérieure : ${labels}`;
+  }
+
+  function handleEarlyExitToExercise() {
+    startRitualFromImpulse(buildImpulseFromHistory(history), "painting");
+  }
+
   const paletteHexes = history.map((h) => h.hex);
+  const canExitEarly = history.length >= 3;
 
   return (
     <ScreenContainer scrollable={false}>
@@ -190,13 +200,14 @@ export default function ColorJourneyScreen() {
           Huit teintes, en dialogue
         </Text>
         <Text className="text-sand-500 text-base leading-6 mb-4">
-          L&apos;IA propose des couleurs selon la théorie chromatique et la
-          psychologie des couleurs — sans mauvaise réponse, à votre rythme.
+          Pas un jeu visuel comme le Chercheur de Nuances — ici, un dialogue
+          réflexif sur huit teintes pour nourrir une impulsion, puis passer à
+          l&apos;exercice créatif.
         </Text>
 
         {offlineMode && (
-          <Text className="text-amber-700 text-xs mb-3 leading-5">
-            Mode local actif — propositions poétiques hors ligne.
+          <Text className="text-sand-500 text-xs mb-3 leading-5">
+            Suggestions locales — le parcours continue en douceur.
           </Text>
         )}
 
@@ -210,6 +221,10 @@ export default function ColorJourneyScreen() {
 
         {phase === "intro" && (
           <View>
+            <Text className="text-sand-600 text-sm leading-6 mb-4">
+              Un mot d&apos;humeur (optionnel) personnalise vos propositions de
+              couleurs — puis vous passerez à l&apos;exercice avec votre palette.
+            </Text>
             <Text className="text-sand-700 font-medium mb-2">
               Comment vous sentez-vous ? (optionnel)
             </Text>
@@ -265,6 +280,17 @@ export default function ColorJourneyScreen() {
                     disabled={loading}
                   />
                 ))}
+
+                {canExitEarly && (
+                  <View className="mt-2">
+                    <PrimaryButton
+                      label="Passer à l'exercice avec mes teintes"
+                      onPress={handleEarlyExitToExercise}
+                      variant="ghost"
+                      disabled={loading}
+                    />
+                  </View>
+                )}
               </>
             )}
 
@@ -288,6 +314,16 @@ export default function ColorJourneyScreen() {
                   onPress={handleContinueAfterReflection}
                   disabled={loading && turn >= COLOR_JOURNEY_TURN_COUNT && !synthesis}
                 />
+                {canExitEarly && turn < COLOR_JOURNEY_TURN_COUNT && (
+                  <View className="mt-2">
+                    <PrimaryButton
+                      label="Passer à l'exercice avec mes teintes"
+                      onPress={handleEarlyExitToExercise}
+                      variant="ghost"
+                      disabled={loading}
+                    />
+                  </View>
+                )}
               </>
             )}
           </View>
@@ -322,20 +358,31 @@ export default function ColorJourneyScreen() {
               </Text>
             </View>
 
+            <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-4 mb-4">
+              <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
+                Votre impulsion
+              </Text>
+              <Text className="text-sand-800 text-lg font-light leading-7">
+                {synthesis.suggestedImpulse}
+              </Text>
+            </View>
+
             <CreativeBridge
-              title="Prolonger avec vos teintes"
+              title="Votre impulsion est prête"
+              subtitle="Vos teintes deviennent une impulsion pour peindre ou explorer en technique mixte."
               actions={[
                 {
-                  label: "Colorier un mandala avec cette palette",
-                  onPress: () => void openMandalaWithPalette(paletteHexes),
-                },
-                {
-                  label: "Commencer un rituel peinture",
+                  label: "Passer à l'exercice",
                   onPress: () =>
                     startRitualFromImpulse(
                       synthesis.suggestedImpulse,
                       "painting"
                     ),
+                  variant: "primary",
+                },
+                {
+                  label: "Colorier un mandala avec cette palette",
+                  onPress: () => void openMandalaWithPalette(paletteHexes),
                   variant: "secondary",
                 },
               ]}
