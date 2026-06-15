@@ -40,6 +40,7 @@ export default function RootLayout() {
             <Stack.Screen name="mandala/studio" />
             <Stack.Screen name="ping-pong/index" />
             <Stack.Screen name="nuance-finder/index" />
+            <Stack.Screen name="fil/index" options={{ title: "Fil créatif" }} />
             <Stack.Screen name="exercise" />
             <Stack.Screen name="reflection" />
             <Stack.Screen

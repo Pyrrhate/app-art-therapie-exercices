@@ -13,7 +13,9 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
+import { exportSessionPdf } from "@/lib/sessionExport";
 import { deleteSession, getSessionById } from "@/lib/storage";
+import { showAlert } from "@/lib/alert";
 import { useRitualStore } from "@/lib/store";
 import type { SavedSession } from "@/lib/types";
 
@@ -22,6 +24,7 @@ export default function SessionDetailScreen() {
   const restoreFromSession = useRitualStore((s) => s.restoreFromSession);
   const [session, setSession] = useState<SavedSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -54,6 +57,22 @@ export default function SessionDetailScreen() {
       { text: "Annuler", style: "cancel" },
       { text: "Supprimer", style: "destructive", onPress: () => void remove() },
     ]);
+  }
+
+  async function handleExportPdf() {
+    if (!session) return;
+    setExporting(true);
+    try {
+      const result = await exportSessionPdf(session);
+      showAlert("Export", result.message);
+    } catch (error) {
+      showAlert(
+        "Export impossible",
+        error instanceof Error ? error.message : "Réessayez dans un instant."
+      );
+    } finally {
+      setExporting(false);
+    }
   }
 
   if (loading) {
@@ -144,6 +163,12 @@ export default function SessionDetailScreen() {
           <PrimaryButton
             label="Refaire cet exercice"
             onPress={handleRedoExercise}
+          />
+          <PrimaryButton
+            label={exporting ? "Export…" : "Exporter en PDF (impression)"}
+            onPress={handleExportPdf}
+            variant="secondary"
+            disabled={exporting}
           />
           <PrimaryButton
             label="Supprimer"

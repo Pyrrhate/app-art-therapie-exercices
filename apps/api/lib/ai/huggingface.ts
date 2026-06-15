@@ -312,6 +312,25 @@ export class HuggingFaceProvider implements AIProvider {
     }
   }
 
+  async transcribeHandwriting(
+    imageBase64: string
+  ): Promise<{ text: string; source: "ai" | "fallback" }> {
+    if (!this.token) {
+      return { text: "", source: "fallback" };
+    }
+
+    try {
+      const text = await this.callVisionModel(
+        imageBase64,
+        buildHandwritingOcrPrompt()
+      );
+      return { text: text.trim(), source: "ai" };
+    } catch (error) {
+      console.warn("[HF transcribeHandwriting]", error);
+      return { text: "", source: "fallback" };
+    }
+  }
+
   private async callTextModel(
     prompt: string,
     options?: {

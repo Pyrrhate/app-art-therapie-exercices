@@ -41,9 +41,15 @@ export interface ReflectionResponse {
   followUpExercise?: string;
 }
 
+export interface HandwritingOcrResponse {
+  text: string;
+  source: "ai" | "fallback";
+}
+
 export interface AIProvider {
   generateExercise(input: ExerciseRequest): Promise<ExerciseResponse>;
   analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse>;
+  transcribeHandwriting(imageBase64: string): Promise<HandwritingOcrResponse>;
 }
 
 export interface ApiErrorBody {

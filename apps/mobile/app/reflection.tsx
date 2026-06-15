@@ -12,9 +12,12 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { InlineNotice } from "@/components/InlineNotice";
 import { ZenWaitIndicator } from "@/components/ZenWaitIndicator";
+import { AddToFilBar } from "@/components/fil/AddToFilBar";
+import { CreativeBridge } from "@/components/fil/CreativeBridge";
+import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
-import { analyzeArtwork, ApiError } from "@/lib/api";
+import { analyzeArtwork, ApiError, transcribeHandwriting } from "@/lib/api";
 import {
   extractImageFileFromDataTransfer,
   formatImageSize,
@@ -41,6 +44,7 @@ import { useRitualStore } from "@/lib/store";
 import type { SavedSession } from "@/lib/types";
 import { getTechniqueLabel } from "@/constants";
 import { navigateHome } from "@/lib/navigation";
+import { openMandalaStudio } from "@/lib/fil/bridges";
 import {
   discardRitualDraft,
   persistRitualDraft,
@@ -116,6 +120,7 @@ export default function ReflectionScreen() {
     "ai" | "fallback" | null
   >(null);
   const [saved, setSaved] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
   const [notice, setNotice] = useState<{
     type: "error" | "success" | "info";
     message: string;
@@ -320,6 +325,66 @@ export default function ReflectionScreen() {
       ? photoUri
       : await uriToDataUrl(photoUri);
     return prepareImageDataUrl(raw);
+  }
+
+  async function handleTranscribePhoto() {
+    if (!photoUri || preparingPhoto || ocrLoading) return;
+
+    const { signal, generation } = startWork();
+    setOcrLoading(true);
+    setNotice({
+      type: "info",
+      message: "Lecture de votre écriture manuscrite…",
+    });
+
+    try {
+      const rawDataUrl = await withTimeout(
+        resolvePhotoDataUrl(),
+        DEFAULT_PROCESS_TIMEOUT_MS,
+        () => finishWork()
+      );
+      if (isStale(generation)) return;
+
+      const imageBase64 = await withTimeout(
+        prepareImageForAnalysis(rawDataUrl, signal),
+        DEFAULT_PROCESS_TIMEOUT_MS,
+        () => finishWork()
+      );
+      if (isStale(generation)) return;
+
+      const result = await withTimeout(transcribeHandwriting(imageBase64), 90_000);
+      if (isStale(generation)) return;
+
+      if (result.text.trim()) {
+        setWrittenText(result.text.trim());
+        setSaved(false);
+        setNotice({
+          type: "success",
+          message:
+            result.source === "ai"
+              ? "Texte extrait — corrigez-le ci-dessus si besoin avant l'analyse."
+              : "Transcription partielle — complétez le texte manuellement.",
+        });
+      } else {
+        setNotice({
+          type: "error",
+          message:
+            "Impossible de lire l'écriture. Saisissez le texte à la main ou reprenez une photo plus nette.",
+        });
+      }
+    } catch (error) {
+      if (isStale(generation)) return;
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "La transcription a échoué. Saisissez le texte à la main.";
+      setNotice({ type: "error", message });
+    } finally {
+      if (!isStale(generation)) {
+        finishWork();
+        setOcrLoading(false);
+      }
+    }
   }
 
   async function handleRequestReflection() {
@@ -532,12 +597,10 @@ export default function ReflectionScreen() {
     router.push("/exercise");
   }
 
-  const reflectionParagraphs =
-    reflection?.split(/\n\s*\n/).filter((p) => p.trim()) ?? [];
   const canAnalyze =
     Boolean(photoUri) || writtenText.trim().length >= 10;
   const previewUri = photoDataUrl ?? photoUri;
-  const busy = preparingPhoto || loadingReflection;
+  const busy = preparingPhoto || loadingReflection || ocrLoading;
   busyRef.current = busy;
 
   return (
@@ -689,6 +752,18 @@ export default function ReflectionScreen() {
             variant="ghost"
             disabled={busy}
           />
+          {isWriting && photoUri && (
+            <PrimaryButton
+              label={
+                ocrLoading
+                  ? "Lecture en cours…"
+                  : "Extraire le texte de la photo (OCR)"
+              }
+              onPress={handleTranscribePhoto}
+              variant="secondary"
+              disabled={busy}
+            />
+          )}
           <PrimaryButton
             label={
               loadingReflection
@@ -720,19 +795,7 @@ export default function ReflectionScreen() {
                 </Text>
               )}
             </View>
-            {(reflectionParagraphs.length > 1
-              ? reflectionParagraphs
-              : [reflection]
-            ).map((paragraph, index) => (
-              <Text
-                key={index}
-                className={`text-sand-700 text-base leading-7 ${
-                  index < reflectionParagraphs.length - 1 ? "mb-4" : "mb-4"
-                }`}
-              >
-                {paragraph}
-              </Text>
-            ))}
+            <ProgressiveReflection reflection={reflection} />
             {openQuestions.map((q, i) => (
               <Text key={i} className="text-sand-500 text-sm leading-6 mb-2">
                 · {q}
@@ -755,6 +818,32 @@ export default function ReflectionScreen() {
               variant="secondary"
             />
           </View>
+        )}
+
+        {reflection && (
+          <>
+            <CreativeBridge
+              title="Prolonger le rituel"
+              subtitle="Accueillez vos couleurs dans un mandala apaisant."
+              actions={[
+                {
+                  label: "Colorier en mandala",
+                  onPress: () => openMandalaStudio("calm"),
+                },
+              ]}
+            />
+            <AddToFilBar
+              entry={{
+                source: "ritual",
+                summary: impulse || "Rituel créatif",
+                detail: reflection.slice(0, 180),
+                metadata: {
+                  impulse: impulse ?? undefined,
+                  technique: technique ?? undefined,
+                },
+              }}
+            />
+          </>
         )}
 
         <View className="gap-3 pb-8">

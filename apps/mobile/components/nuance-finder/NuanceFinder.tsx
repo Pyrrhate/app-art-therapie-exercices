@@ -11,6 +11,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { PrimaryButton } from "@/components/ui/Button";
+import { AddToFilBar } from "@/components/fil/AddToFilBar";
+import { CreativeBridge } from "@/components/fil/CreativeBridge";
+import {
+  startRitualFromColors,
+  startRitualFromImpulse,
+} from "@/lib/fil/bridges";
 import {
   ELEMENT_VISUALS,
   getElementNeighborIds,
@@ -404,6 +410,16 @@ export function NuanceFinder() {
   ).length;
   const harmonyFound = revealedOrClearedCount >= flatCells.length;
 
+  const revealedColors = useMemo(() => {
+    const hexes = new Set<string>();
+    for (const cell of flatCells) {
+      if (revealed[cell.id] || lotusCleared[cell.id]) {
+        hexes.add(cell.revealColor);
+      }
+    }
+    return [...hexes].slice(0, 5);
+  }, [flatCells, revealed, lotusCleared]);
+
   const triggerElementWave = useCallback((cell: NuanceCell) => {
     if (cell.kind !== "element") return;
     const neighborIds = getElementNeighborIds(cell.row, cell.col, GRID_SIZE);
@@ -523,6 +539,34 @@ export function NuanceFinder() {
           <Text className="text-sage-600 text-xl font-light tracking-wide">
             Harmonie trouvée
           </Text>
+          <CreativeBridge
+            title="Prolonger l'harmonie"
+            subtitle="Notez cette palette ou amorcez un rituel d'écriture."
+            actions={[
+              {
+                label: "Noter pour un rituel d'écriture",
+                onPress: () =>
+                  startRitualFromColors(revealedColors, "Harmonie chromatique"),
+              },
+              {
+                label: "Rituel libre à partir des teintes",
+                onPress: () =>
+                  startRitualFromImpulse(
+                    `Harmonie de nuances : ${revealedColors.join(", ")}`,
+                    "mixed_media"
+                  ),
+                variant: "ghost",
+              },
+            ]}
+          />
+          <AddToFilBar
+            entry={{
+              source: "nuances",
+              summary: "Harmonie chromatique trouvée",
+              detail: `${flatCells.length} cases révélées`,
+              metadata: { colors: revealedColors },
+            }}
+          />
           <PrimaryButton label="Recommencer" onPress={handleRestart} />
         </View>
       )}

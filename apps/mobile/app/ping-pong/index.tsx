@@ -11,17 +11,17 @@ import { router } from "expo-router";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { ApiError, fetchPingPongWord } from "@/lib/api";
+import { AddToFilBar } from "@/components/fil/AddToFilBar";
+import { startRitualFromImpulse } from "@/lib/fil/bridges";
 import { showAlert } from "@/lib/alert";
 import { getFallbackPingPongWord } from "@/lib/ping-pong/fallback";
 import { PING_PONG_MAX_TURNS, type PingPongTurn } from "@/lib/ping-pong/types";
-import { useRitualStore } from "@/lib/store";
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export default function PingPongScreen() {
-  const setImpulse = useRitualStore((s) => s.setImpulse);
   const scrollRef = useRef<ScrollView>(null);
   const [turns, setTurns] = useState<PingPongTurn[]>([]);
   const [input, setInput] = useState("");
@@ -77,11 +77,8 @@ export default function PingPongScreen() {
   }
 
   function handleCreateFromJourney() {
-    const lastUser = [...turns].reverse().find((t) => t.from === "user");
-    const impulse = lastUser?.word ?? turns[turns.length - 1]?.word ?? "";
-    if (!impulse) return;
-    setImpulse(impulse);
-    router.push("/ritual");
+    if (!chain) return;
+    startRitualFromImpulse(chain, "mixed_media");
   }
 
   const chain = turns.map((t) => t.word).join("  →  ");
@@ -171,6 +168,14 @@ export default function PingPongScreen() {
               <PrimaryButton
                 label="Créer à partir de ce cheminement"
                 onPress={handleCreateFromJourney}
+              />
+              <AddToFilBar
+                entry={{
+                  source: "ping-pong",
+                  summary: "Cheminement ping-pong",
+                  detail: chain,
+                  metadata: { chain },
+                }}
               />
             </View>
           )}

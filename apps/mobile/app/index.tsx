@@ -3,6 +3,8 @@ import { Platform, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { getTechniqueLabel } from "@/constants";
+import { getFilEntries } from "@/lib/fil/storage";
+import { FIL_SOURCE_META } from "@/lib/fil/types";
 import {
   hydrateRitualFromDraft,
 } from "@/lib/ritualPersistence";
@@ -38,9 +40,12 @@ const MODULES = [
 
 export default function WelcomeScreen() {
   const [draft, setDraft] = useState<RitualDraft | null>(null);
+  const [lastFilSummary, setLastFilSummary] = useState<string | null>(null);
 
   const loadDraft = useCallback(async () => {
     setDraft(await getRitualDraft());
+    const fil = await getFilEntries();
+    setLastFilSummary(fil[0]?.summary ?? null);
   }, []);
 
   useFocusEffect(
@@ -136,6 +141,18 @@ export default function WelcomeScreen() {
             label="Commencer un rituel"
             onPress={() => router.push("/ritual")}
           />
+          <PrimaryButton
+            label="Fil créatif"
+            onPress={() => router.push("/fil")}
+            variant="secondary"
+          />
+          {lastFilSummary ? (
+            <Pressable onPress={() => router.push("/fil")} className="px-1">
+              <Text className="text-sand-400 text-xs text-center leading-5">
+                Dernière trace : {lastFilSummary}
+              </Text>
+            </Pressable>
+          ) : null}
           <PrimaryButton
             label="Mes exercices sauvegardés"
             onPress={() => router.push("/sessions")}

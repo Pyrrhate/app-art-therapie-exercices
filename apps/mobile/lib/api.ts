@@ -98,6 +98,18 @@ export async function analyzeArtwork(context: {
   });
 }
 
+export async function transcribeHandwriting(
+  imageBase64: string
+): Promise<{ text: string; source: "ai" | "fallback" }> {
+  return request<{ text: string; source: "ai" | "fallback" }>(
+    "/api/reflection/ocr",
+    {
+      method: "POST",
+      body: JSON.stringify({ imageBase64 }),
+    }
+  );
+}
+
 export async function checkHealth(): Promise<{
   ok: boolean;
   provider?: string;

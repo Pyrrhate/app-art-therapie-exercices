@@ -23,4 +23,8 @@ export class MistralProvider implements AIProvider {
     const fallback = getFallbackReflection(input);
     return { ...fallback, source: "fallback" };
   }
+
+  async transcribeHandwriting(): Promise<{ text: string; source: "fallback" }> {
+    return { text: "", source: "fallback" };
+  }
 }

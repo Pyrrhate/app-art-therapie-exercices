@@ -3,6 +3,8 @@ import { ActivityIndicator, Text, View, useWindowDimensions } from "react-native
 import { router, useLocalSearchParams } from "expo-router";
 import { SpectrumColorPicker } from "@/components/mandala/SpectrumColorPicker";
 import { MandalaCanvas } from "@/components/mandala/MandalaCanvas";
+import { AddToFilBar } from "@/components/fil/AddToFilBar";
+import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { showAlert } from "@/lib/alert";
@@ -20,6 +22,10 @@ import {
   saveMandalaProgress,
 } from "@/lib/mandala/storage";
 import type { MandalaFills, MandalaTheme } from "@/lib/mandala/types";
+import {
+  extractDominantColors,
+  startRitualFromColors,
+} from "@/lib/fil/bridges";
 
 function parseTheme(value: string | string[] | undefined): MandalaTheme {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -47,6 +53,11 @@ export default function MandalaStudioScreen() {
   }, [theme, seed]);
 
   const meta = MANDALA_THEME_LABELS[theme];
+  const dominantColors = useMemo(
+    () => extractDominantColors(fills),
+    [fills]
+  );
+  const hasColoring = Object.keys(fills).length > 0;
 
   useEffect(() => {
     let active = true;
@@ -219,6 +230,40 @@ export default function MandalaStudioScreen() {
           disabled={loading}
           variant="ghost"
         />
+
+        {hasColoring && (
+          <>
+            <CreativeBridge
+              title="Et après le coloriage ?"
+              subtitle="Laissez vos teintes guider une impulsion pour un rituel."
+              actions={[
+                {
+                  label: "M'inspirer pour un rituel",
+                  onPress: () =>
+                    startRitualFromColors(
+                      dominantColors.length > 0
+                        ? dominantColors
+                        : [selectedColor],
+                      `Mandala ${meta.title}`
+                    ),
+                },
+              ]}
+            />
+            <AddToFilBar
+              entry={{
+                source: "mandala",
+                summary: `Mandala — ${meta.title}`,
+                detail: `${Object.keys(fills).length} zones coloriées`,
+                metadata: {
+                  colors: dominantColors.length
+                    ? dominantColors
+                    : [selectedColor],
+                  theme,
+                },
+              }}
+            />
+          </>
+        )}
       </View>
     </ScreenContainer>
   );
