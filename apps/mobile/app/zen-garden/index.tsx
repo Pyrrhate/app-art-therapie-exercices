@@ -7,6 +7,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { router } from "expo-router";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { ZenGardenCanvas } from "@/components/zen-garden/ZenGardenCanvas";
@@ -14,6 +15,7 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { showAlert } from "@/lib/alert";
 import { startRitualFromImpulse } from "@/lib/fil/bridges";
+import { FEATURES } from "@/lib/features";
 import { navigateHome } from "@/lib/navigation";
 import { exportZenGarden } from "@/lib/zen-garden/export";
 import { loadZenGarden, saveZenGarden } from "@/lib/zen-garden/storage";
@@ -35,6 +37,12 @@ const GARDEN_MAX = 420;
 const GARDEN_MIN = 300;
 
 export default function ZenGardenScreen() {
+  useEffect(() => {
+    if (!FEATURES.zenGarden) {
+      router.replace("/");
+    }
+  }, []);
+
   const { width: windowWidth } = useWindowDimensions();
   const gardenWidth = Math.min(
     GARDEN_MAX,
@@ -294,6 +302,10 @@ export default function ZenGardenScreen() {
         </Text>
       </View>
     );
+  }
+
+  if (!FEATURES.zenGarden) {
+    return null;
   }
 
   return (

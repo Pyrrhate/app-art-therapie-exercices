@@ -1,13 +1,25 @@
+import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
+import { FEATURES } from "@/lib/features";
 import type { MandalaTheme } from "@/lib/mandala/types";
 import { MANDALA_THEME_LABELS } from "@/lib/mandala/palette";
 
 const THEMES: MandalaTheme[] = ["calm", "energy", "focus"];
 
 export default function MandalaThemeScreen() {
+  useEffect(() => {
+    if (!FEATURES.mandala) {
+      router.replace("/");
+    }
+  }, []);
+
+  if (!FEATURES.mandala) {
+    return null;
+  }
+
   return (
     <ScreenContainer scrollable refreshable>
       <ScreenNavBar

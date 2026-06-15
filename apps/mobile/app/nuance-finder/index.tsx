@@ -19,11 +19,10 @@ export default function NuanceFinderScreen() {
         Affiner le regard, puis créer
       </Text>
       <Text className="text-sand-500 text-base leading-6 mb-6">
-        Pas la Palette intérieure — ici, un jeu visuel procédural sans IA. Une
-        grille 8×8 pour découvrir les teintes à votre rythme, prélude à la
-        création. Pas de score, pas de chrono.
+        Une autre façon d&apos;aborder la couleur — un jeu visuel procédural
+        sans IA. Une grille 8×8 pour découvrir les teintes à votre rythme,
+        prélude à la création. Pas de score, pas de chrono.
       </Text>
-
       <NuanceFinder />
     </ScreenContainer>
   );

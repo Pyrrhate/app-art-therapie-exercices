@@ -10,10 +10,8 @@ import Animated, {
 import { PrimaryButton } from "@/components/ui/Button";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
-import {
-  openMandalaWithPalette,
-  startRitualFromColors,
-} from "@/lib/fil/bridges";
+import { startRitualFromColors } from "@/lib/fil/bridges";
+import type { ColorForImpulse } from "@/lib/color-names";
 import { LOTUS_SOURCE } from "@/lib/nuance-finder/elements";
 import {
   createNuanceGrid,
@@ -27,7 +25,8 @@ const UNREVEALED_COLOR = "#FAF7F4";
 const UNREVEALED_BORDER = "#E8E0D8";
 const LOTUS_WAVE_MS = 130;
 const GRID_MAX_WIDTH = 420;
-const CELL_GAP = 5;
+const CELL_GAP = 4;
+const HORIZONTAL_PADDING = 56;
 
 interface NuanceCellViewProps {
   cell: NuanceCell;
@@ -88,8 +87,6 @@ function NuanceCellView({
       style={{
         width: cellSize,
         height: cellSize,
-        marginRight: CELL_GAP,
-        marginBottom: CELL_GAP,
       }}
       accessibilityRole="button"
       accessibilityLabel={cell.kind === "lotus" ? "Lotus" : "Case"}
@@ -141,10 +138,12 @@ function NuanceCellView({
 
 export function NuanceFinder() {
   const { width: windowWidth } = useWindowDimensions();
-  const gridWidth = Math.min(GRID_MAX_WIDTH, windowWidth - 48);
-  const cellSize = Math.floor(
-    (gridWidth - CELL_GAP * (GRID_SIZE - 1)) / GRID_SIZE
+  const gridWidth = Math.min(GRID_MAX_WIDTH, windowWidth - HORIZONTAL_PADDING);
+  const cellSize = Math.max(
+    28,
+    Math.floor((gridWidth - CELL_GAP * (GRID_SIZE - 1)) / GRID_SIZE)
   );
+  const gridOuterWidth = cellSize * GRID_SIZE + CELL_GAP * (GRID_SIZE - 1);
 
   const [gameSeed, setGameSeed] = useState(() => Date.now());
   const grid = useMemo(() => createNuanceGrid(gameSeed), [gameSeed]);
@@ -167,14 +166,23 @@ export function NuanceFinder() {
   ).length;
   const harmonyFound = revealedOrClearedCount >= flatCells.length;
 
-  const revealedColors = useMemo(() => {
-    const hexes = new Set<string>();
+  const revealedColorItems = useMemo((): ColorForImpulse[] => {
+    const items: ColorForImpulse[] = [];
+    const seen = new Set<string>();
     for (const cell of flatCells) {
-      if (revealed[cell.id] || lotusCleared[cell.id]) {
-        hexes.add(cell.revealColor);
+      if (!revealed[cell.id] && !lotusCleared[cell.id]) continue;
+      const hex = cell.revealColor.toUpperCase();
+      if (seen.has(hex)) continue;
+      seen.add(hex);
+      if (cell.kind === "lotus") {
+        items.push({ hex, label: LOTUS_SOURCE.label });
+      } else if (cell.source?.label) {
+        items.push({ hex, label: cell.source.label });
+      } else {
+        items.push(hex);
       }
     }
-    return [...hexes].slice(0, 5);
+    return items.slice(0, 5);
   }, [flatCells, revealed, lotusCleared]);
 
   const lotusUnlocked =
@@ -186,10 +194,10 @@ export function NuanceFinder() {
     (lotusUnlocked ||
       pebbleCount >= 2 ||
       revealedOrClearedCount >= 6 ||
-      revealedColors.length >= 3);
+      revealedColorItems.length >= 3);
 
   function handlePasserAExercice() {
-    startRitualFromColors(revealedColors, "Harmonie chromatique");
+    startRitualFromColors(revealedColorItems, "Harmonie chromatique");
   }
 
   const triggerLotusWave = useCallback(
@@ -247,17 +255,18 @@ export function NuanceFinder() {
   return (
     <View className="flex-1">
       <Text className="text-sand-500 text-sm leading-6 mb-4">
-        Grille 8×8 — touchez les cases pour révéler les teintes. Un lotus 🪷
-        peut apaiser une zone. Appui long : poser un galet. Quand vous le
-        souhaitez, passez à l&apos;exercice.
+        Grille 8×8 — touchez les cases pour révéler les teintes. Le lotus 🪷
+        apaise une zone autour de lui. Appui long : poser un galet. Quand vous
+        le souhaitez, passez à l&apos;exercice.
       </Text>
 
       <View
         className="self-center mb-6"
         style={{
-          width: cellSize * GRID_SIZE + CELL_GAP * (GRID_SIZE - 1),
+          width: gridOuterWidth,
           flexDirection: "row",
           flexWrap: "wrap",
+          gap: CELL_GAP,
         }}
       >
         {flatCells.map((cell) => (
@@ -313,11 +322,6 @@ export function NuanceFinder() {
                 onPress: handlePasserAExercice,
                 variant: "primary",
               },
-              {
-                label: "Colorier un mandala avec cette palette",
-                onPress: () => void openMandalaWithPalette(revealedColors),
-                variant: "secondary",
-              },
             ]}
           />
           <AddToFilBar
@@ -325,7 +329,11 @@ export function NuanceFinder() {
               source: "nuances",
               summary: "Harmonie chromatique trouvée",
               detail: `${flatCells.length} cases révélées`,
-              metadata: { colors: revealedColors },
+              metadata: {
+                colors: revealedColorItems.map((c) =>
+                  typeof c === "string" ? c : c.hex
+                ),
+              },
             }}
           />
           <PrimaryButton label="Recommencer" onPress={handleRestart} variant="ghost" />

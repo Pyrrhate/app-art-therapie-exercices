@@ -56,16 +56,16 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
   let lotusId: string | null = null;
   let lotusZoneIds: string[] = [];
 
-  if (rng() > 0.4) {
-    let lotusRow = 0;
-    let lotusCol = 0;
-    let lotusGuard = 0;
-    do {
-      lotusRow = Math.floor(rng() * GRID_SIZE);
-      lotusCol = Math.floor(rng() * GRID_SIZE);
-      lotusGuard += 1;
-    } while (used.has(cellId(lotusRow, lotusCol)) && lotusGuard < 100);
+  let lotusRow = 0;
+  let lotusCol = 0;
+  let lotusGuard = 0;
+  do {
+    lotusRow = Math.floor(rng() * GRID_SIZE);
+    lotusCol = Math.floor(rng() * GRID_SIZE);
+    lotusGuard += 1;
+  } while (used.has(cellId(lotusRow, lotusCol)) && lotusGuard < 200);
 
+  if (!used.has(cellId(lotusRow, lotusCol))) {
     lotusId = cellId(lotusRow, lotusCol);
     lotusZoneIds = getLotusZoneIds(lotusRow, lotusCol, GRID_SIZE, 2);
     used.add(lotusId);

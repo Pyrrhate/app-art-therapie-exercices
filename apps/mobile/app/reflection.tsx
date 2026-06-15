@@ -43,6 +43,7 @@ import { saveSession } from "@/lib/storage";
 import { useRitualStore } from "@/lib/store";
 import type { SavedSession } from "@/lib/types";
 import { getTechniqueLabel } from "@/constants";
+import { FEATURES } from "@/lib/features";
 import { navigateHome } from "@/lib/navigation";
 import { openMandalaStudio } from "@/lib/fil/bridges";
 import {
@@ -820,30 +821,30 @@ export default function ReflectionScreen() {
           </View>
         )}
 
+        {reflection && FEATURES.mandala && (
+          <CreativeBridge
+            title="Prolonger le rituel"
+            subtitle="Accueillez vos couleurs dans un mandala apaisant."
+            actions={[
+              {
+                label: "Colorier en mandala",
+                onPress: () => openMandalaStudio("calm"),
+              },
+            ]}
+          />
+        )}
         {reflection && (
-          <>
-            <CreativeBridge
-              title="Prolonger le rituel"
-              subtitle="Accueillez vos couleurs dans un mandala apaisant."
-              actions={[
-                {
-                  label: "Colorier en mandala",
-                  onPress: () => openMandalaStudio("calm"),
-                },
-              ]}
-            />
-            <AddToFilBar
-              entry={{
-                source: "ritual",
-                summary: impulse || "Rituel créatif",
-                detail: reflection.slice(0, 180),
-                metadata: {
-                  impulse: impulse ?? undefined,
-                  technique: technique ?? undefined,
-                },
-              }}
-            />
-          </>
+          <AddToFilBar
+            entry={{
+              source: "ritual",
+              summary: impulse || "Rituel créatif",
+              detail: reflection.slice(0, 180),
+              metadata: {
+                impulse: impulse ?? undefined,
+                technique: technique ?? undefined,
+              },
+            }}
+          />
         )}
 
         <View className="gap-3 pb-8">

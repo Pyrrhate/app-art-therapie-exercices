@@ -1,4 +1,9 @@
 import { router } from "expo-router";
+import {
+  type ColorForImpulse,
+  resolveColorLabel,
+} from "@/lib/color-names";
+import { FEATURES } from "@/lib/features";
 import type { MandalaTheme } from "@/lib/mandala/types";
 import { setMandalaCustomPalette } from "@/lib/mandala/customPalette";
 import { useRitualStore } from "@/lib/store";
@@ -16,18 +21,21 @@ export function startRitualFromImpulse(
 }
 
 export function startRitualFromColors(
-  colors: string[],
+  colors: ColorForImpulse[],
   label = "Nuancier"
 ): void {
-  const unique = [...new Set(colors.filter(Boolean))].slice(0, 4);
+  const names = [
+    ...new Set(colors.filter(Boolean).map((c) => resolveColorLabel(c))),
+  ].slice(0, 4);
   const impulse =
-    unique.length > 0
-      ? `${label} : ${unique.join(", ")}`
+    names.length > 0
+      ? `${label} : ${names.join(", ")}`
       : `${label} du moment`;
   startRitualFromImpulse(impulse, "painting");
 }
 
 export function openMandalaStudio(theme: MandalaTheme = "calm"): void {
+  if (!FEATURES.mandala) return;
   router.push({ pathname: "/mandala/studio", params: { theme } });
 }
 
@@ -35,6 +43,7 @@ export async function openMandalaWithPalette(
   colors: string[],
   theme: MandalaTheme = "calm"
 ): Promise<void> {
+  if (!FEATURES.mandala) return;
   await setMandalaCustomPalette(colors);
   openMandalaStudio(theme);
 }

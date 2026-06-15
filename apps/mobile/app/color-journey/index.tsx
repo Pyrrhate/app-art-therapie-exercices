@@ -31,7 +31,6 @@ import {
   type JourneySynthesis,
 } from "@/lib/color-journey";
 import {
-  openMandalaWithPalette,
   startRitualFromImpulse,
 } from "@/lib/fil/bridges";
 import { navigateHome } from "@/lib/navigation";
@@ -200,9 +199,8 @@ export default function ColorJourneyScreen() {
           Huit teintes, en dialogue
         </Text>
         <Text className="text-sand-500 text-base leading-6 mb-4">
-          Pas un jeu visuel comme le Chercheur de Nuances — ici, un dialogue
-          réflexif sur huit teintes pour nourrir une impulsion, puis passer à
-          l&apos;exercice créatif.
+          Un dialogue réflexif sur huit teintes pour nourrir une impulsion,
+          puis passer à l&apos;exercice créatif.
         </Text>
 
         {offlineMode && (
@@ -379,11 +377,6 @@ export default function ColorJourneyScreen() {
                       "painting"
                     ),
                   variant: "primary",
-                },
-                {
-                  label: "Colorier un mandala avec cette palette",
-                  onPress: () => void openMandalaWithPalette(paletteHexes),
-                  variant: "secondary",
                 },
               ]}
             />

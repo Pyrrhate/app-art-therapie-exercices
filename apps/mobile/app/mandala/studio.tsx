@@ -24,6 +24,7 @@ import {
   saveMandalaProgress,
 } from "@/lib/mandala/storage";
 import type { MandalaFills, MandalaTheme } from "@/lib/mandala/types";
+import { FEATURES } from "@/lib/features";
 import {
   extractDominantColors,
   startRitualFromColors,
@@ -38,6 +39,13 @@ function parseTheme(value: string | string[] | undefined): MandalaTheme {
 export default function MandalaStudioScreen() {
   const { theme: themeParam } = useLocalSearchParams<{ theme?: string }>();
   const theme = parseTheme(themeParam);
+
+  useEffect(() => {
+    if (!FEATURES.mandala) {
+      router.replace("/");
+    }
+  }, []);
+
   const { width: windowWidth } = useWindowDimensions();
   const mandalaSize = getMandalaDisplaySize(windowWidth);
   const [seed, setSeed] = useState<number | null>(null);
@@ -178,6 +186,10 @@ export default function MandalaStudioScreen() {
     } finally {
       setExporting(false);
     }
+  }
+
+  if (!FEATURES.mandala) {
+    return null;
   }
 
   return (

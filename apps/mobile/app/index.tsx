@@ -14,12 +14,7 @@ type ModuleCard = {
   title: string;
   emoji: string;
   description: string;
-  route:
-    | "/ping-pong"
-    | "/color-journey"
-    | "/nuance-finder"
-    | "/mandala"
-    | "/zen-garden";
+  route: "/ping-pong" | "/color-journey" | "/nuance-finder";
 };
 
 const CREATIVITY_MODULES: ModuleCard[] = [
@@ -37,28 +32,15 @@ const CREATIVITY_MODULES: ModuleCard[] = [
       "Dialogue réflexif sur huit teintes — une amorce couleur vers l'exercice peinture.",
     route: "/color-journey",
   },
-  {
-    title: "Chercheur de Nuances",
-    emoji: "🎨",
-    description:
-      "Jeu visuel procédural, sans IA — puzzle 8×8 pour affiner le regard, puis créer.",
-    route: "/nuance-finder",
-  },
 ];
 
 const RELAX_MODULES: ModuleCard[] = [
   {
-    title: "Studio Mandala",
-    emoji: "🪷",
+    title: "Chercheur de Nuances",
+    emoji: "🎨",
     description:
-      "Détente créative — coloriez à votre rythme, puis prolongez vers un exercice si vous le souhaitez.",
-    route: "/mandala",
-  },
-  {
-    title: "Jardin zen",
-    emoji: "🏯",
-    description: "Sable, eau et galets en coupe latérale — une pause apaisante.",
-    route: "/zen-garden",
+      "Une autre façon d'aborder la couleur — puzzle 8×8 sans IA, puis créer.",
+    route: "/nuance-finder",
   },
 ];
 
@@ -178,7 +160,8 @@ export default function WelcomeScreen() {
             Se détendre d&apos;abord
           </Text>
           <Text className="text-sand-500 text-sm leading-5 mb-3">
-            Une pause apaisante, si vous en avez besoin, avant de créer.
+            Une autre façon d&apos;aborder la couleur — sans IA, à votre rythme,
+            avant de passer à l&apos;exercice.
           </Text>
           <View className="gap-3 mb-6">
             {RELAX_MODULES.map((mod) => (
