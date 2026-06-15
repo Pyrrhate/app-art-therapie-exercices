@@ -229,7 +229,7 @@ export class HuggingFaceProvider implements AIProvider {
       if (input.imageBase64) {
         visualNotes = await this.callVisionModel(
           input.imageBase64,
-          buildVisionObservationPrompt(isWriting)
+          buildVisionObservationPrompt(isWriting, input.exercise)
         );
 
         if (isWriting && writtenText.length < 20) {

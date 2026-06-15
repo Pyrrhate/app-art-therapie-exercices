@@ -11,9 +11,10 @@ import { showAlert } from "@/lib/alert";
 import { exportMandala } from "@/lib/mandala/export";
 import { generateMandala } from "@/lib/mandala/generator";
 import {
-  MANDALA_COLORS,
-  MANDALA_THEME_LABELS,
   getMandalaDisplaySize,
+  getThemeDefaultColor,
+  getThemeSuggestedPalette,
+  MANDALA_THEME_LABELS,
 } from "@/lib/mandala/palette";
 import {
   clearMandalaProgress,
@@ -43,7 +44,9 @@ export default function MandalaStudioScreen() {
   const [undoStack, setUndoStack] = useState<
     Array<{ pathId: string; previousColor?: string }>
   >([]);
-  const [selectedColor, setSelectedColor] = useState(MANDALA_COLORS[1].hex);
+  const [selectedColor, setSelectedColor] = useState(() =>
+    getThemeDefaultColor(theme)
+  );
   const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +85,7 @@ export default function MandalaStudioScreen() {
         await saveMandalaProgress(theme, {
           seed: newSeed,
           fills: {},
-          selectedColor: MANDALA_COLORS[1].hex,
+          selectedColor: getThemeDefaultColor(theme),
         });
       }
       setLoading(false);
@@ -204,7 +207,11 @@ export default function MandalaStudioScreen() {
       <Text className="text-sand-600 text-sm font-medium mb-2 text-center">
         Palette
       </Text>
-      <SpectrumColorPicker selected={selectedColor} onSelect={handleSelectColor} />
+      <SpectrumColorPicker
+        selected={selectedColor}
+        onSelect={handleSelectColor}
+        suggestedColors={getThemeSuggestedPalette(theme)}
+      />
 
       <View className="gap-3 mt-8 pb-4">
         <PrimaryButton

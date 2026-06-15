@@ -33,7 +33,7 @@ const MODULES = [
   {
     title: "Chercheur de Nuances",
     emoji: "🎨",
-    description: "Puzzle chromatique sans score ni chrono.",
+    description: "Puzzle chromatique 8×8 sans score ni chrono.",
     route: "/nuance-finder" as const,
   },
 ];

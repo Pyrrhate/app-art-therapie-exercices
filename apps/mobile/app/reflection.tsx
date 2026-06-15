@@ -683,7 +683,7 @@ export default function ReflectionScreen() {
         </Pressable>
       )}
 
-      {loadingReflection && <ZenWaitIndicator active />}
+      {loadingReflection && <ZenWaitIndicator active estimatedSeconds={90} />}
 
       {previewUri ? (
           <View ref={bindWebDropZone}>
