@@ -6,6 +6,7 @@ import { GentleTimer } from "@/components/GentleTimer";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { getTimerSound } from "@/lib/preferences";
+import { persistRitualDraft } from "@/lib/ritualPersistence";
 import type { TimerSoundId } from "@/lib/sounds";
 import { useRitualStore } from "@/lib/store";
 
@@ -17,6 +18,10 @@ export default function ExerciseScreen() {
   useEffect(() => {
     getTimerSound().then(setCompletionSound);
   }, []);
+
+  useEffect(() => {
+    void persistRitualDraft("exercise");
+  }, [exercise, durationMinutes, impulse]);
 
   if (!exercise) {
     router.replace("/ritual");

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Text, View, useWindowDimensions } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { SpectrumColorPicker } from "@/components/mandala/SpectrumColorPicker";
 import { MandalaCanvas } from "@/components/mandala/MandalaCanvas";
@@ -11,6 +11,7 @@ import { generateMandala } from "@/lib/mandala/generator";
 import {
   MANDALA_COLORS,
   MANDALA_THEME_LABELS,
+  getMandalaDisplaySize,
 } from "@/lib/mandala/palette";
 import {
   clearMandalaProgress,
@@ -29,8 +30,13 @@ function parseTheme(value: string | string[] | undefined): MandalaTheme {
 export default function MandalaStudioScreen() {
   const { theme: themeParam } = useLocalSearchParams<{ theme?: string }>();
   const theme = parseTheme(themeParam);
+  const { width: windowWidth } = useWindowDimensions();
+  const mandalaSize = getMandalaDisplaySize(windowWidth);
   const [seed, setSeed] = useState<number | null>(null);
   const [fills, setFills] = useState<MandalaFills>({});
+  const [undoStack, setUndoStack] = useState<
+    Array<{ pathId: string; previousColor?: string }>
+  >([]);
   const [selectedColor, setSelectedColor] = useState(MANDALA_COLORS[1].hex);
   const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -53,6 +59,7 @@ export default function MandalaStudioScreen() {
       if (saved) {
         setSeed(saved.seed);
         setFills(saved.fills);
+        setUndoStack([]);
         if (saved.selectedColor) {
           setSelectedColor(saved.selectedColor);
         }
@@ -60,6 +67,7 @@ export default function MandalaStudioScreen() {
         const newSeed = createMandalaSeed();
         setSeed(newSeed);
         setFills({});
+        setUndoStack([]);
         await saveMandalaProgress(theme, {
           seed: newSeed,
           fills: {},
@@ -88,8 +96,28 @@ export default function MandalaStudioScreen() {
 
   function handleFillPath(pathId: string, color: string) {
     if (seed === null) return;
+    const previousColor = fills[pathId];
+    if (previousColor === color) return;
+
+    setUndoStack((stack) => [...stack.slice(-49), { pathId, previousColor }]);
     setFills((prev) => {
       const next = { ...prev, [pathId]: color };
+      void persistProgress(next, selectedColor, seed);
+      return next;
+    });
+  }
+
+  function handleUndo() {
+    if (seed === null || undoStack.length === 0) return;
+    const last = undoStack[undoStack.length - 1]!;
+    setUndoStack((stack) => stack.slice(0, -1));
+    setFills((prev) => {
+      const next = { ...prev };
+      if (last.previousColor === undefined) {
+        delete next[last.pathId];
+      } else {
+        next[last.pathId] = last.previousColor;
+      }
       void persistProgress(next, selectedColor, seed);
       return next;
     });
@@ -106,6 +134,7 @@ export default function MandalaStudioScreen() {
     const newSeed = createMandalaSeed();
     setSeed(newSeed);
     setFills({});
+    setUndoStack([]);
     await clearMandalaProgress(theme);
     await saveMandalaProgress(theme, {
       seed: newSeed,
@@ -144,7 +173,10 @@ export default function MandalaStudioScreen() {
         Touchez une zone pour la colorier
       </Text>
 
-      <View className="items-center mb-6 min-h-[340px] justify-center">
+      <View
+        className="items-center mb-6 justify-center"
+        style={{ minHeight: mandalaSize }}
+      >
         {loading || !spec ? (
           <ActivityIndicator size="large" color="#6B8F71" />
         ) : (
@@ -153,6 +185,7 @@ export default function MandalaStudioScreen() {
             fills={fills}
             selectedColor={selectedColor}
             onFillPath={handleFillPath}
+            size={mandalaSize}
           />
         )}
       </View>
@@ -163,6 +196,12 @@ export default function MandalaStudioScreen() {
       <SpectrumColorPicker selected={selectedColor} onSelect={handleSelectColor} />
 
       <View className="gap-3 mt-8 pb-4">
+        <PrimaryButton
+          label="Annuler le dernier geste"
+          onPress={handleUndo}
+          disabled={undoStack.length === 0 || loading}
+          variant="secondary"
+        />
         <PrimaryButton
           label={exporting ? "Export…" : "Exporter en PNG"}
           onPress={() => handleExport("png")}

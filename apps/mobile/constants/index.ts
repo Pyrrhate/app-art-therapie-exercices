@@ -21,6 +21,7 @@ export type RitualDuration = (typeof DURATION_OPTIONS)[number];
 export const STORAGE_KEYS = {
   sessions: "@art_therapie/sessions",
   mandalaProgress: "@art_therapie/mandala_progress",
+  ritualDraft: "@art_therapie/ritual_draft",
 } as const;
 
 export function getTechniqueLabel(id: string): string {

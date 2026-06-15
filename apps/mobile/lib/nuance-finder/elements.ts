@@ -48,7 +48,65 @@ export const LOTUS_SOURCE = {
   hex: "#F5E6F0",
   rgb: { r: 245, g: 230, b: 240 },
   clearColor: rgbToHex(NEUTRAL_CREAM),
+  icon: "🪷",
 };
+
+export const ELEMENT_VISUALS: Record<
+  ElementKind,
+  { icon: string; label: string; ringColors: [string, string, string, string] }
+> = {
+  earth: {
+    icon: "🌍",
+    label: "Terre",
+    ringColors: ["#6B5344", "#A0826D", "#C4A484", "#8B7355"],
+  },
+  fire: {
+    icon: "🔥",
+    label: "Feu",
+    ringColors: ["#FF6B35", "#E2552D", "#FFB347", "#C04000"],
+  },
+  water: {
+    icon: "💧",
+    label: "Eau",
+    ringColors: ["#2E6B7A", "#5B9AA9", "#87CEEB", "#4682B4"],
+  },
+  air: {
+    icon: "🌬️",
+    label: "Air",
+    ringColors: ["#A8C5DA", "#9DB4C8", "#E8F4F8", "#7EB6D4"],
+  },
+};
+
+export function getDeployElementForCell(
+  row: number,
+  col: number,
+  elements: Array<{ row: number; col: number; source: ElementSource }>
+): { kind: ElementKind; color: string } | null {
+  for (const el of elements) {
+    for (const [dr, dc, idx] of CARDINALS) {
+      if (row === el.row + dr && col === el.col + dc) {
+        return { kind: el.source.kind, color: el.source.deploy[idx]! };
+      }
+    }
+  }
+  return null;
+}
+
+export function getElementNeighborIds(
+  row: number,
+  col: number,
+  gridSize: number
+): string[] {
+  const ids: string[] = [];
+  for (const [dr, dc] of CARDINALS) {
+    const r = row + dr;
+    const c = col + dc;
+    if (r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
+      ids.push(`${r}-${c}`);
+    }
+  }
+  return ids;
+}
 
 /** N, E, S, O — indices 0..3 dans deploy */
 const CARDINALS: Array<[dr: number, dc: number, deployIndex: number]> = [

@@ -41,6 +41,10 @@ import { useRitualStore } from "@/lib/store";
 import type { SavedSession } from "@/lib/types";
 import { getTechniqueLabel } from "@/constants";
 import { navigateHome } from "@/lib/navigation";
+import {
+  discardRitualDraft,
+  persistRitualDraft,
+} from "@/lib/ritualPersistence";
 
 const DEFAULT_PROCESS_TIMEOUT_MS = 45_000;
 
@@ -133,6 +137,10 @@ export default function ReflectionScreen() {
   }, [finishWork]);
 
   useEffect(() => () => cancelWork(), [cancelWork]);
+
+  useEffect(() => {
+    void persistRitualDraft("reflection");
+  }, [exercise, impulse, photoUri, writtenText, reflection]);
 
   function startWork(): { signal: AbortSignal; generation: number } {
     finishWork();
@@ -488,6 +496,7 @@ export default function ReflectionScreen() {
     };
 
     await saveSession(session);
+    await discardRitualDraft();
     setSaved(true);
     setNotice({
       type: "success",

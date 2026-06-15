@@ -21,6 +21,11 @@ export async function saveSession(session: SavedSession): Promise<void> {
   );
 }
 
+export async function getSessionById(id: string): Promise<SavedSession | null> {
+  const sessions = await getSessions();
+  return sessions.find((s) => s.id === id) ?? null;
+}
+
 export async function deleteSession(id: string): Promise<void> {
   const existing = await getSessions();
   await AsyncStorage.setItem(

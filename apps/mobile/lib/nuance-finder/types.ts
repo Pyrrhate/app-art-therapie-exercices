@@ -12,6 +12,8 @@ export interface NuanceCell {
   revealColor: string;
   source: PrimarySource | null;
   elementKind?: ElementKind;
+  /** Case voisine d'un élément — teinte cardinale */
+  deployFrom?: ElementKind;
 }
 
 export interface NuanceGrid {

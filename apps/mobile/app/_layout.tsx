@@ -43,13 +43,14 @@ export default function RootLayout() {
             <Stack.Screen name="exercise" />
             <Stack.Screen name="reflection" />
             <Stack.Screen
-              name="sessions"
+              name="sessions/index"
               options={
                 Platform.OS === "web"
                   ? { presentation: "card" }
                   : { presentation: "modal" }
               }
             />
+            <Stack.Screen name="sessions/[id]" />
             <Stack.Screen
               name="settings"
               options={

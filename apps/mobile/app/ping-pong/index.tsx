@@ -12,6 +12,7 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { ApiError, fetchPingPongWord } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
+import { getFallbackPingPongWord } from "@/lib/ping-pong/fallback";
 import { PING_PONG_MAX_TURNS, type PingPongTurn } from "@/lib/ping-pong/types";
 import { useRitualStore } from "@/lib/store";
 
@@ -26,6 +27,7 @@ export default function PingPongScreen() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
 
   const userTurnCount = turns.filter((t) => t.from === "user").length;
   const canPlay = !finished && userTurnCount < PING_PONG_MAX_TURNS;
@@ -49,18 +51,26 @@ export default function PingPongScreen() {
     setLoading(true);
     try {
       const result = await fetchPingPongWord(word, history);
+      setOfflineMode(false);
       setTurns((prev) => [
         ...prev,
         { id: makeId(), word: result.word, from: "ai" },
       ]);
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
     } catch (error) {
-      showAlert(
-        "Connexion indisponible",
-        error instanceof ApiError
-          ? error.message
-          : "Impossible de joindre le serveur."
-      );
+      const fallbackWord = getFallbackPingPongWord(word, history);
+      setOfflineMode(true);
+      setTurns((prev) => [
+        ...prev,
+        { id: makeId(), word: fallbackWord, from: "ai" },
+      ]);
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
+      if (!(error instanceof ApiError)) {
+        showAlert(
+          "Mode poétique local",
+          "Connexion indisponible — un mot local prend le relais, en douceur."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -97,6 +107,11 @@ export default function PingPongScreen() {
             Un mot suggère le suivant — sans réfléchir trop. {PING_PONG_MAX_TURNS}{" "}
             envois, puis une impulsion pour créer.
           </Text>
+          {offlineMode && (
+            <Text className="text-amber-700 text-xs mt-2">
+              Mode local actif — mots poétiques hors ligne.
+            </Text>
+          )}
         </View>
 
         <ScrollView

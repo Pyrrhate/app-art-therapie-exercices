@@ -6,6 +6,7 @@ import {
 import {
   ELEMENTAL_SOURCES,
   getDeployColorForCell,
+  getDeployElementForCell,
   getLotusZoneIds,
   LOTUS_SOURCE,
 } from "./elements";
@@ -155,6 +156,7 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
           source: prim.source,
         });
       } else {
+        const deployMeta = getDeployElementForCell(row, col, elements);
         rowCells.push({
           id,
           row,
@@ -163,6 +165,7 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
           isSource: false,
           revealColor: deployColor ?? blendCellColor(row, col, influencePoints),
           source: null,
+          deployFrom: deployMeta?.kind,
         });
       }
     }

@@ -17,7 +17,7 @@ export function MandalaCanvas({
   fills,
   selectedColor,
   onFillPath,
-  size = 340,
+  size = 420,
 }: MandalaCanvasProps) {
   const handlePress = useCallback(
     (pathId: string) => {

@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
@@ -17,7 +17,7 @@ import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { deleteSession, getSessions } from "@/lib/storage";
 import type { SavedSession } from "@/lib/types";
 
-function SessionCard({
+function SessionListItem({
   item,
   onDelete,
 }: {
@@ -25,19 +25,16 @@ function SessionCard({
   onDelete: (id: string) => void;
 }) {
   const exercise = sanitizeAiDisplayText(item.exercise);
-  const reflection = item.reflection
-    ? sanitizeAiDisplayText(item.reflection)
-    : "";
-  const reflectionParagraphs = reflection
-    ? reflection.split(/\n\s*\n/).filter((p) => p.trim())
-    : [];
 
   return (
-    <View className="bg-white rounded-2xl border border-sand-200 overflow-hidden mb-4">
+    <Pressable
+      onPress={() => router.push(`/sessions/${item.id}`)}
+      className="bg-white rounded-2xl border border-sand-200 overflow-hidden mb-4 active:border-sage-400"
+    >
       {item.photoUri ? (
         <Image
           source={{ uri: item.photoUri }}
-          className="w-full h-44 bg-sand-100"
+          className="w-full h-36 bg-sand-100"
           resizeMode="cover"
         />
       ) : null}
@@ -48,54 +45,32 @@ function SessionCard({
         <Text className="text-sand-800 font-medium text-base mb-1">
           {item.impulse}
         </Text>
-        <Text className="text-sand-500 text-sm mb-4">
+        <Text className="text-sand-500 text-sm mb-2">
           {getTechniqueLabel(item.technique)} · {item.durationMinutes} min
         </Text>
-
         {exercise ? (
-          <View className="mb-4">
-            <Text className="text-sand-700 text-xs uppercase tracking-wider mb-2">
-              Exercice
-            </Text>
-            <Text className="text-sand-700 text-sm leading-6">{exercise}</Text>
-          </View>
+          <Text className="text-sand-600 text-sm leading-6" numberOfLines={3}>
+            {exercise}
+          </Text>
         ) : null}
-
-        {reflectionParagraphs.length > 0 ? (
-          <View className="mb-2">
-            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
-              Miroir créatif
-            </Text>
-            {reflectionParagraphs.map((paragraph, index) => (
-              <Text
-                key={index}
-                className="text-sage-700 text-sm leading-6 mb-3 italic"
-              >
-                {paragraph}
-              </Text>
-            ))}
-          </View>
-        ) : null}
-
-        {item.openQuestions?.length ? (
-          <View className="mt-2 mb-2">
-            {item.openQuestions.map((q, i) => (
-              <Text key={i} className="text-sand-500 text-sm leading-6 mb-1">
-                · {sanitizeAiDisplayText(q)}
-              </Text>
-            ))}
-          </View>
-        ) : null}
-
-        <Pressable onPress={() => onDelete(item.id)} className="mt-4">
-          <Text className="text-sand-400 text-xs">Supprimer</Text>
-        </Pressable>
+        <View className="flex-row justify-between items-center mt-4">
+          <Text className="text-sage-600 text-sm">Voir le détail →</Text>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onDelete(item.id);
+            }}
+            hitSlop={8}
+          >
+            <Text className="text-sand-400 text-xs">Supprimer</Text>
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
-export default function SessionsScreen() {
+export default function SessionsListScreen() {
   const [sessions, setSessions] = useState<SavedSession[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -170,8 +145,7 @@ export default function SessionsScreen() {
           Mes exercices
         </Text>
         <Text className="text-sand-500 text-base mb-6 leading-6">
-          Rituels créatifs sauvegardés sur cet appareil — exercice et réflexion
-          complets.
+          Touchez une fiche pour tout lire ou refaire l&apos;exercice.
         </Text>
 
         {sessions.length === 0 ? (
@@ -183,7 +157,7 @@ export default function SessionsScreen() {
           </View>
         ) : (
           sessions.map((item) => (
-            <SessionCard
+            <SessionListItem
               key={item.id}
               item={item}
               onDelete={confirmDelete}

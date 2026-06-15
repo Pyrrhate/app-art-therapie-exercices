@@ -16,6 +16,18 @@ export const MANDALA_COLORS = [
 
 export const DEFAULT_MANDALA_FILL = "#FFFFFF";
 
+/** Taille d'affichage max du mandala à l'écran (px). */
+export const MANDALA_DISPLAY_MAX = 480;
+export const MANDALA_DISPLAY_MIN = 360;
+export const MANDALA_DISPLAY_PADDING = 48;
+
+export function getMandalaDisplaySize(windowWidth: number): number {
+  return Math.min(
+    MANDALA_DISPLAY_MAX,
+    Math.max(MANDALA_DISPLAY_MIN, windowWidth - MANDALA_DISPLAY_PADDING)
+  );
+}
+
 export const MANDALA_THEME_LABELS: Record<
   MandalaTheme,
   { title: string; subtitle: string; emoji: string }

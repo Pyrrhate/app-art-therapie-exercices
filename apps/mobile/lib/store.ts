@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import type { RitualDuration } from "@/constants";
+import { clearRitualDraft } from "./ritualDraft";
 import { sanitizeAiDisplayText, sanitizeQuestions } from "./sanitizeAiText";
-import type { ArtisticTechnique, RitualState } from "./types";
+import type { ArtisticTechnique, RitualState, SavedSession } from "./types";
 
 interface RitualStore extends RitualState {
   setImpulse: (impulse: string) => void;
@@ -16,6 +17,7 @@ interface RitualStore extends RitualState {
     followUpExercise?: string | null
   ) => void;
   startFollowUpExercise: () => void;
+  restoreFromSession: (session: SavedSession) => void;
   reset: () => void;
 }
 
@@ -63,5 +65,22 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       writtenText: "",
     });
   },
-  reset: () => set(initialState),
+  restoreFromSession: (session) =>
+    set({
+      impulse: session.impulse,
+      technique: session.technique,
+      exercise: sanitizeAiDisplayText(session.exercise),
+      durationMinutes: session.durationMinutes,
+      photoUri: session.photoUri ?? null,
+      reflection: null,
+      openQuestions: [],
+      followUpExercise: session.followUpExercise
+        ? sanitizeAiDisplayText(session.followUpExercise)
+        : null,
+      writtenText: session.writtenText ?? "",
+    }),
+  reset: () => {
+    void clearRitualDraft();
+    set(initialState);
+  },
 }));
