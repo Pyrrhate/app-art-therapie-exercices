@@ -41,6 +41,7 @@ export default function RootLayout() {
             <Stack.Screen name="ping-pong/index" />
             <Stack.Screen name="nuance-finder/index" />
             <Stack.Screen name="color-journey/index" options={{ title: "Palette intérieure" }} />
+            <Stack.Screen name="zen-garden/index" options={{ title: "Jardin zen" }} />
             <Stack.Screen name="fil/index" options={{ title: "Fil créatif" }} />
             <Stack.Screen name="exercise" />
             <Stack.Screen name="reflection" />

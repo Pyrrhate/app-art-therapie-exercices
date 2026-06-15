@@ -6,7 +6,8 @@ export type FilSource =
   | "mandala"
   | "nuances"
   | "ping-pong"
-  | "color-journey";
+  | "color-journey"
+  | "zen-garden";
 
 export interface FilEntry {
   id: string;
@@ -32,4 +33,5 @@ export const FIL_SOURCE_META: Record<
   nuances: { label: "Nuances", emoji: "🎨" },
   "ping-pong": { label: "Ping-Pong", emoji: "🏓" },
   "color-journey": { label: "Palette intérieure", emoji: "🌈" },
+  "zen-garden": { label: "Jardin zen", emoji: "🏯" },
 };

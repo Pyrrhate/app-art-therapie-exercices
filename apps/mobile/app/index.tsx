@@ -42,6 +42,12 @@ const MODULES = [
     description: "Huit teintes guidées par l'IA — théorie et psychologie des couleurs.",
     route: "/color-journey" as const,
   },
+  {
+    title: "Jardin zen",
+    emoji: "🏯",
+    description: "Râteau et pierres — composition apaisante, sans objectif.",
+    route: "/zen-garden" as const,
+  },
 ];
 
 export default function WelcomeScreen() {
