@@ -16,6 +16,7 @@ import {
   getThemeSuggestedPalette,
   MANDALA_THEME_LABELS,
 } from "@/lib/mandala/palette";
+import { getMandalaCustomPalette } from "@/lib/mandala/customPalette";
 import {
   clearMandalaProgress,
   createMandalaSeed,
@@ -49,6 +50,7 @@ export default function MandalaStudioScreen() {
   );
   const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [customPalette, setCustomPalette] = useState<string[] | null>(null);
 
   const spec = useMemo(() => {
     if (seed === null) return null;
@@ -61,14 +63,19 @@ export default function MandalaStudioScreen() {
     [fills]
   );
   const hasColoring = Object.keys(fills).length > 0;
+  const suggestedColors = customPalette ?? getThemeSuggestedPalette(theme);
 
   useEffect(() => {
     let active = true;
 
     async function loadProgress() {
       setLoading(true);
-      const saved = await getMandalaProgress(theme);
+      const [saved, palette] = await Promise.all([
+        getMandalaProgress(theme),
+        getMandalaCustomPalette(),
+      ]);
       if (!active) return;
+      setCustomPalette(palette);
 
       if (saved) {
         setSeed(saved.seed);
@@ -210,7 +217,7 @@ export default function MandalaStudioScreen() {
       <SpectrumColorPicker
         selected={selectedColor}
         onSelect={handleSelectColor}
-        suggestedColors={getThemeSuggestedPalette(theme)}
+        suggestedColors={suggestedColors}
       />
 
       <View className="gap-3 mt-8 pb-4">

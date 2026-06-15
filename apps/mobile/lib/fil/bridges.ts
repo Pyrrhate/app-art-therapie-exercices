@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import type { MandalaTheme } from "@/lib/mandala/types";
+import { setMandalaCustomPalette } from "@/lib/mandala/customPalette";
 import { useRitualStore } from "@/lib/store";
 import type { ArtisticTechnique } from "@/lib/types";
 
@@ -28,6 +29,14 @@ export function startRitualFromColors(
 
 export function openMandalaStudio(theme: MandalaTheme = "calm"): void {
   router.push({ pathname: "/mandala/studio", params: { theme } });
+}
+
+export async function openMandalaWithPalette(
+  colors: string[],
+  theme: MandalaTheme = "calm"
+): Promise<void> {
+  await setMandalaCustomPalette(colors);
+  openMandalaStudio(theme);
 }
 
 export function extractDominantColors(

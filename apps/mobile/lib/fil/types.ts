@@ -1,7 +1,12 @@
 import type { MandalaTheme } from "@/lib/mandala/types";
 import type { ArtisticTechnique } from "@/lib/types";
 
-export type FilSource = "ritual" | "mandala" | "nuances" | "ping-pong";
+export type FilSource =
+  | "ritual"
+  | "mandala"
+  | "nuances"
+  | "ping-pong"
+  | "color-journey";
 
 export interface FilEntry {
   id: string;
@@ -26,4 +31,5 @@ export const FIL_SOURCE_META: Record<
   mandala: { label: "Mandala", emoji: "🪷" },
   nuances: { label: "Nuances", emoji: "🎨" },
   "ping-pong": { label: "Ping-Pong", emoji: "🏓" },
+  "color-journey": { label: "Palette intérieure", emoji: "🌈" },
 };

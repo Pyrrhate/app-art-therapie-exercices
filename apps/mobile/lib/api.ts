@@ -110,6 +110,61 @@ export async function transcribeHandwriting(
   );
 }
 
+export async function startColorJourney(context: {
+  mood?: string;
+  seedWord?: string;
+}): Promise<{
+  intro: string;
+  turn: number;
+  dimension: { id: string; title: string; subtitle: string };
+  proposals: Array<{ hex: string; label: string; hint: string }>;
+  contextNote?: string;
+  source: "ai" | "fallback";
+}> {
+  return request("/api/color-journey/start", {
+    method: "POST",
+    body: JSON.stringify(context),
+  });
+}
+
+export async function chooseColorJourney(input: {
+  turn: number;
+  chosen: { hex: string; label: string; hint?: string };
+  history: Array<{ hex: string; label: string; dimensionId: string }>;
+  mood?: string;
+  seedWord?: string;
+}): Promise<{
+  reflection: string;
+  psychology: string;
+  theory: string;
+  question?: string;
+  source: "ai" | "fallback";
+  nextTurn?: number;
+  nextDimension?: { id: string; title: string; subtitle: string };
+  proposals?: Array<{ hex: string; label: string; hint: string }>;
+  contextNote?: string;
+}> {
+  return request("/api/color-journey/choose", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function synthesizeColorJourney(input: {
+  history: Array<{ hex: string; label: string; dimensionId: string }>;
+  mood?: string;
+}): Promise<{
+  summary: string;
+  suggestedImpulse: string;
+  palette: Array<{ hex: string; label: string; dimensionId: string }>;
+  source: "ai" | "fallback";
+}> {
+  return request("/api/color-journey/synthesize", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export async function checkHealth(): Promise<{
   ok: boolean;
   provider?: string;

@@ -36,6 +36,12 @@ const MODULES = [
     description: "Puzzle chromatique 8×8 sans score ni chrono.",
     route: "/nuance-finder" as const,
   },
+  {
+    title: "Palette intérieure",
+    emoji: "🌈",
+    description: "Huit teintes guidées par l'IA — théorie et psychologie des couleurs.",
+    route: "/color-journey" as const,
+  },
 ];
 
 export default function WelcomeScreen() {

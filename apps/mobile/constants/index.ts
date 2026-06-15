@@ -23,6 +23,7 @@ export const STORAGE_KEYS = {
   mandalaProgress: "@art_therapie/mandala_progress",
   ritualDraft: "@art_therapie/ritual_draft",
   creativeFil: "@art_therapie/creative_fil",
+  mandalaCustomPalette: "@art_therapie/mandala_custom_palette",
 } as const;
 
 export function getTechniqueLabel(id: string): string {
