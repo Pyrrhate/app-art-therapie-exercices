@@ -191,14 +191,12 @@ export default function ColorJourneyScreen() {
         </Text>
         <Text className="text-sand-500 text-base leading-6 mb-4">
           L&apos;IA propose des couleurs selon la théorie chromatique et la
-          psychologie des couleurs — sans bonne réponse, à votre rythme.
+          psychologie des couleurs — sans mauvaise réponse, à votre rythme.
         </Text>
 
         {offlineMode && (
           <Text className="text-amber-700 text-xs mb-3 leading-5">
-            Mode local actif — l&apos;API n&apos;a pas répondu ou renvoie le
-            contenu de secours. Vérifiez que l&apos;API est à jour (routes
-            color-journey) et que HF_TOKEN est configuré.
+            Mode local actif — propositions poétiques hors ligne.
           </Text>
         )}
 
