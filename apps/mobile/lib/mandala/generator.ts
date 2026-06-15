@@ -33,6 +33,47 @@ function circlePath(cx: number, cy: number, r: number): string {
   return `M ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy} Z`;
 }
 
+/** Polygone régulier aux coins adoucis (rayon en unités SVG). */
+function roundedPolygonPath(
+  cx: number,
+  cy: number,
+  radius: number,
+  sides: number,
+  rotation = -90,
+  cornerRadius = 6
+): string {
+  const points: [number, number][] = [];
+  for (let i = 0; i < sides; i += 1) {
+    const a = rotation + (360 / sides) * i;
+    points.push(polar(cx, cy, radius, a));
+  }
+
+  const parts: string[] = [];
+  for (let i = 0; i < sides; i += 1) {
+    const prev = points[(i - 1 + sides) % sides]!;
+    const curr = points[i]!;
+    const next = points[(i + 1) % sides]!;
+
+    const toPrev = Math.hypot(curr[0] - prev[0], curr[1] - prev[1]);
+    const toNext = Math.hypot(next[0] - curr[0], next[1] - curr[1]);
+    const r = Math.min(cornerRadius, toPrev / 2.5, toNext / 2.5);
+
+    const inX = curr[0] + ((prev[0] - curr[0]) / toPrev) * r;
+    const inY = curr[1] + ((prev[1] - curr[1]) / toPrev) * r;
+    const outX = curr[0] + ((next[0] - curr[0]) / toNext) * r;
+    const outY = curr[1] + ((next[1] - curr[1]) / toNext) * r;
+
+    if (i === 0) {
+      parts.push(`M ${inX.toFixed(2)} ${inY.toFixed(2)}`);
+    } else {
+      parts.push(`L ${inX.toFixed(2)} ${inY.toFixed(2)}`);
+    }
+    parts.push(`Q ${curr[0].toFixed(2)} ${curr[1].toFixed(2)} ${outX.toFixed(2)} ${outY.toFixed(2)}`);
+  }
+  parts.push("Z");
+  return parts.join(" ");
+}
+
 function lotusPetalPath(
   cx: number,
   cy: number,
@@ -79,6 +120,26 @@ function starPath(
   points: number,
   rotation = -90
 ): string {
+  if (points === 4) {
+    return roundedPolygonPath(
+      cx,
+      cy,
+      outerR,
+      4,
+      rotation + 45,
+      Math.min(12, outerR * 0.18)
+    );
+  }
+  if (points === 3) {
+    return roundedPolygonPath(
+      cx,
+      cy,
+      outerR,
+      3,
+      rotation,
+      Math.min(10, outerR * 0.2)
+    );
+  }
   const verts: [number, number][] = [];
   const step = 360 / points;
   for (let i = 0; i < points * 2; i++) {

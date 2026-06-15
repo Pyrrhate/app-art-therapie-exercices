@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
-  FlatList,
   Image,
   Platform,
   Pressable,
   RefreshControl,
+  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -17,12 +17,91 @@ import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { deleteSession, getSessions } from "@/lib/storage";
 import type { SavedSession } from "@/lib/types";
 
+function SessionCard({
+  item,
+  onDelete,
+}: {
+  item: SavedSession;
+  onDelete: (id: string) => void;
+}) {
+  const exercise = sanitizeAiDisplayText(item.exercise);
+  const reflection = item.reflection
+    ? sanitizeAiDisplayText(item.reflection)
+    : "";
+  const reflectionParagraphs = reflection
+    ? reflection.split(/\n\s*\n/).filter((p) => p.trim())
+    : [];
+
+  return (
+    <View className="bg-white rounded-2xl border border-sand-200 overflow-hidden mb-4">
+      {item.photoUri ? (
+        <Image
+          source={{ uri: item.photoUri }}
+          className="w-full h-44 bg-sand-100"
+          resizeMode="cover"
+        />
+      ) : null}
+      <View className="px-5 py-4">
+        <Text className="text-sand-400 text-xs mb-1">
+          {formatSessionDate(item.createdAt)}
+        </Text>
+        <Text className="text-sand-800 font-medium text-base mb-1">
+          {item.impulse}
+        </Text>
+        <Text className="text-sand-500 text-sm mb-4">
+          {getTechniqueLabel(item.technique)} · {item.durationMinutes} min
+        </Text>
+
+        {exercise ? (
+          <View className="mb-4">
+            <Text className="text-sand-700 text-xs uppercase tracking-wider mb-2">
+              Exercice
+            </Text>
+            <Text className="text-sand-700 text-sm leading-6">{exercise}</Text>
+          </View>
+        ) : null}
+
+        {reflectionParagraphs.length > 0 ? (
+          <View className="mb-2">
+            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
+              Miroir créatif
+            </Text>
+            {reflectionParagraphs.map((paragraph, index) => (
+              <Text
+                key={index}
+                className="text-sage-700 text-sm leading-6 mb-3 italic"
+              >
+                {paragraph}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+
+        {item.openQuestions?.length ? (
+          <View className="mt-2 mb-2">
+            {item.openQuestions.map((q, i) => (
+              <Text key={i} className="text-sand-500 text-sm leading-6 mb-1">
+                · {sanitizeAiDisplayText(q)}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+
+        <Pressable onPress={() => onDelete(item.id)} className="mt-4">
+          <Text className="text-sand-400 text-xs">Supprimer</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export default function SessionsScreen() {
   const [sessions, setSessions] = useState<SavedSession[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    setSessions(await getSessions());
+    const all = await getSessions();
+    setSessions(all.filter((s) => s.exercise?.trim()));
   }, []);
 
   async function handleRefresh() {
@@ -45,7 +124,7 @@ export default function SessionsScreen() {
     if (Platform.OS === "web") {
       if (
         window.confirm(
-          "Supprimer cette session ? Cette action est irréversible."
+          "Supprimer cet exercice sauvegardé ? Cette action est irréversible."
         )
       ) {
         void deleteSession(id).then(load);
@@ -53,7 +132,7 @@ export default function SessionsScreen() {
       return;
     }
     Alert.alert(
-      "Supprimer cette session ?",
+      "Supprimer cet exercice ?",
       "Cette action est irréversible.",
       [
         { text: "Annuler", style: "cancel" },
@@ -73,81 +152,45 @@ export default function SessionsScreen() {
     <ScreenContainer scrollable={false}>
       <ScreenNavBar />
 
-      <Text className="text-3xl font-light text-sand-800 mb-2">
-        Mes sessions
-      </Text>
-      <Text className="text-sand-500 text-base mb-6 leading-6">
-        Vos rituels sauvegardés sur cet appareil uniquement.
-      </Text>
+      <ScrollView
+        className="flex-1"
+        style={Platform.OS === "web" ? { flex: 1, minHeight: 0 } : { flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={["#6B8F71"]}
+            tintColor="#6B8F71"
+          />
+        }
+      >
+        <Text className="text-3xl font-light text-sand-800 mb-2">
+          Mes exercices
+        </Text>
+        <Text className="text-sand-500 text-base mb-6 leading-6">
+          Rituels créatifs sauvegardés sur cet appareil — exercice et réflexion
+          complets.
+        </Text>
 
-      {sessions.length === 0 ? (
-        <View className="bg-white rounded-2xl border border-dashed border-sand-300 px-6 py-12 items-center">
-          <Text className="text-sand-400 text-center leading-6">
-            Aucune session pour l'instant.{"\n"}
-            Terminez un rituel et appuyez sur « Sauvegarder ».
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={sessions}
-          keyExtractor={(item) => item.id}
-          style={{ flex: 1 }}
-          showsVerticalScrollIndicator={Platform.OS === "web"}
-          contentContainerStyle={{ gap: 16, paddingBottom: 32 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={["#6B8F71"]}
-              tintColor="#6B8F71"
+        {sessions.length === 0 ? (
+          <View className="bg-white rounded-2xl border border-dashed border-sand-300 px-6 py-12 items-center">
+            <Text className="text-sand-400 text-center leading-6">
+              Aucun exercice sauvegardé.{"\n"}
+              Terminez un rituel et appuyez sur « Sauvegarder localement ».
+            </Text>
+          </View>
+        ) : (
+          sessions.map((item) => (
+            <SessionCard
+              key={item.id}
+              item={item}
+              onDelete={confirmDelete}
             />
-          }
-          renderItem={({ item }) => (
-            <View className="bg-white rounded-2xl border border-sand-200 overflow-hidden">
-              {item.photoUri && (
-                <Image
-                  source={{ uri: item.photoUri }}
-                  className="w-full h-40 bg-sand-100"
-                  resizeMode="cover"
-                />
-              )}
-              <View className="px-5 py-4">
-                <Text className="text-sand-400 text-xs mb-1">
-                  {formatSessionDate(item.createdAt)}
-                </Text>
-                <Text className="text-sand-800 font-medium text-base mb-1">
-                  {item.impulse}
-                </Text>
-                <Text className="text-sand-500 text-sm mb-3">
-                  {getTechniqueLabel(item.technique)}
-                </Text>
-                {sanitizeAiDisplayText(item.exercise) ? (
-                  <Text
-                    className="text-sand-600 text-sm leading-5"
-                    numberOfLines={3}
-                  >
-                    {sanitizeAiDisplayText(item.exercise)}
-                  </Text>
-                ) : null}
-                {item.reflection && sanitizeAiDisplayText(item.reflection) ? (
-                  <Text
-                    className="text-sage-600 text-sm mt-3 italic leading-5"
-                    numberOfLines={2}
-                  >
-                    {sanitizeAiDisplayText(item.reflection)}
-                  </Text>
-                ) : null}
-                <Pressable
-                  onPress={() => confirmDelete(item.id)}
-                  className="mt-4"
-                >
-                  <Text className="text-sand-400 text-xs">Supprimer</Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
-        />
-      )}
+          ))
+        )}
+      </ScrollView>
     </ScreenContainer>
   );
 }

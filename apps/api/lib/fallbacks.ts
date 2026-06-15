@@ -37,7 +37,7 @@ export function getFallbackReflection(input?: ReflectionRequest): {
     ? "L'exercice que vous avez suivi a offert un cadre ; ce qui a émergé mérite d'être accueilli sans chercher à le corriger."
     : "Ce qui apparaît porte une ambiance qui vous appartient — accueillez-la avec curiosité plutôt qu'avec jugement.";
   const p4 =
-    "Il n'y a rien à réussir. Laissez-vous toucher·e par ce que vous avez fait, même si cela vous surprend aujourd'hui.";
+    "Laissez-vous toucher·e par ce geste — il n'y a rien à réussir.";
 
   const followUp = technique
     ? `Reprenez ${technique === "Écriture" ? "l'écriture" : `votre ${technique.toLowerCase()}`} pendant dix minutes en repartant d'un détail qui vous a touché·e dans ce que vous venez de créer.`

@@ -58,10 +58,16 @@ export function lerpRgb(a: Rgb, b: Rgb, t: number): Rgb {
   };
 }
 
+export interface ColorSource {
+  hex: string;
+  rgb: Rgb;
+  label?: string;
+}
+
 export interface SourcePoint {
   row: number;
   col: number;
-  source: PrimarySource;
+  source: ColorSource;
 }
 
 /** Distance euclidienne entre deux cases */

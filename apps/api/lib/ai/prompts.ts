@@ -74,11 +74,13 @@ ${contextBlock}
 
 Rédigez un miroir créatif en français, vouvoiement (« vous »).
 
-Structure OBLIGATOIRE — reflection = exactement 3 ou 4 paragraphes séparés par \\n\\n :
-1) Accueil du geste créatif et lien discret avec l'impulsion et/ou l'exercice suivi
-2) Couleurs, formes, traits, matière — tissés dans un ton chaleureux (pas de catalogue froid)
-3) Ambiance et émotions visibles — accueillies avec bienveillance, sans diagnostic ni interprétation psychologique
-4) Encouragement sincère : ce qui est précieux dans ce qui a émergé
+Structure OBLIGATOIRE — reflection = 3 ou 4 paragraphes courts séparés par \\n\\n (50 à 70 mots chacun, pas plus) :
+1) Accueil du geste et lien discret avec l'impulsion / l'exercice
+2) Couleurs, formes, traits — tissés avec chaleur (pas de catalogue)
+3) Ambiance et émotions accueillies sans diagnostic
+4) (Optionnel) Encouragement bref
+
+Concision : une analyse plus courte vaut mieux qu'un long texte.
 
 Si un texte écrit est fourni, accueillez aussi les mots et leur rythme.
 
@@ -135,7 +137,7 @@ export function looksLikeColdDescription(text: string): boolean {
 
 export function looksLikeTooBriefReflection(text: string): boolean {
   const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim().length > 0);
-  return text.length < 280 || paragraphs.length < 2;
+  return text.length < 220 || paragraphs.length < 2;
 }
 
 /** @deprecated Utiliser buildVisionObservationPrompt + buildWarmReflectionPrompt */

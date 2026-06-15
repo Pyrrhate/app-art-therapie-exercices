@@ -79,7 +79,7 @@ export default function WelcomeScreen() {
             variant="secondary"
           />
           <PrimaryButton
-            label="Mes sessions sauvegardées"
+            label="Mes exercices sauvegardés"
             onPress={() => router.push("/sessions")}
             variant="ghost"
           />

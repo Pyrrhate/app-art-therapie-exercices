@@ -1,21 +1,30 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { PrimaryButton } from "@/components/ui/Button";
-import { createNuanceGrid, flattenGrid, GRID_SIZE } from "@/lib/nuance-finder/grid";
+import { LOTUS_SOURCE } from "@/lib/nuance-finder/elements";
+import {
+  createNuanceGrid,
+  findCell,
+  flattenGrid,
+  GRID_SIZE,
+} from "@/lib/nuance-finder/grid";
 import type { NuanceCell } from "@/lib/nuance-finder/types";
 
 const UNREVEALED_COLOR = "#FAF7F4";
 const UNREVEALED_BORDER = "#E8E0D8";
+const LOTUS_WAVE_MS = 130;
 
 interface NuanceCellViewProps {
   cell: NuanceCell;
   revealed: boolean;
+  lotusCleared: boolean;
   pebbled: boolean;
   onReveal: (id: string) => void;
   onTogglePebble: (id: string) => void;
@@ -24,29 +33,47 @@ interface NuanceCellViewProps {
 function NuanceCellView({
   cell,
   revealed,
+  lotusCleared,
   pebbled,
   onReveal,
   onTogglePebble,
 }: NuanceCellViewProps) {
   const opacity = useSharedValue(revealed ? 1 : 0);
-  const scale = useSharedValue(revealed && cell.isSource ? 0.72 : 1);
+  const scale = useSharedValue(
+    revealed && (cell.isSource || lotusCleared) ? 0.72 : 1
+  );
+
+  const displayColor = lotusCleared ? LOTUS_SOURCE.clearColor : cell.revealColor;
 
   useEffect(() => {
-    if (revealed) {
-      opacity.value = withTiming(1, { duration: 480 });
-      if (cell.isSource) {
-        scale.value = withSpring(1, { damping: 14, stiffness: 120 });
+    if (revealed || lotusCleared) {
+      const delay = lotusCleared && !cell.isSource ? 80 : 0;
+      opacity.value = withDelay(delay, withTiming(1, { duration: 420 }));
+      if (cell.kind === "lotus" || cell.kind === "element" || cell.kind === "primary") {
+        scale.value = withDelay(
+          delay,
+          withSpring(1, { damping: 14, stiffness: 120 })
+        );
+      } else if (lotusCleared) {
+        scale.value = withDelay(delay, withTiming(1, { duration: 500 }));
       }
     } else {
       opacity.value = 0;
       scale.value = cell.isSource ? 0.72 : 1;
     }
-  }, [revealed, cell.isSource, opacity, scale]);
+  }, [revealed, lotusCleared, cell.isSource, cell.kind, opacity, scale]);
 
   const colorStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ scale: scale.value }],
   }));
+
+  const label =
+    cell.kind === "lotus"
+      ? "Lotus"
+      : cell.kind === "element"
+        ? cell.elementKind
+        : null;
 
   return (
     <TouchableOpacity
@@ -57,33 +84,30 @@ function NuanceCellView({
       className="p-0.5"
       style={{ width: `${100 / GRID_SIZE}%`, aspectRatio: 1 }}
       accessibilityRole="button"
-      accessibilityLabel={
-        revealed
-          ? cell.isSource
-            ? "Source de couleur pure révélée"
-            : "Nuancier révélé"
-          : "Case cachée, appui long pour poser un galet"
-      }
     >
       <View
-        className="flex-1 rounded-lg overflow-hidden"
+        className="flex-1 rounded-xl overflow-hidden"
         style={{
           backgroundColor: UNREVEALED_COLOR,
           borderWidth: 1,
-          borderColor: revealed ? "transparent" : UNREVEALED_BORDER,
+          borderColor: revealed || lotusCleared ? "transparent" : UNREVEALED_BORDER,
         }}
       >
         <Animated.View
           style={[
             {
-              ...StyleSheetAbsoluteFill,
-              backgroundColor: cell.revealColor,
-              borderRadius: 8,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: displayColor,
+              borderRadius: 12,
             },
             colorStyle,
           ]}
         />
-        {pebbled && !revealed && (
+        {pebbled && !revealed && !lotusCleared && (
           <View className="absolute inset-0 items-center justify-center">
             <View
               className="rounded-full bg-sand-500/35"
@@ -91,61 +115,93 @@ function NuanceCellView({
             />
           </View>
         )}
+        {revealed && cell.kind === "lotus" && (
+          <View className="absolute inset-0 items-center justify-center">
+            <Text style={{ fontSize: 16 }}>🪷</Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
 }
 
-const StyleSheetAbsoluteFill = {
-  position: "absolute" as const,
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-};
-
 export function NuanceFinder() {
   const [gameSeed, setGameSeed] = useState(() => Date.now());
   const grid = useMemo(() => createNuanceGrid(gameSeed), [gameSeed]);
   const flatCells = useMemo(() => flattenGrid(grid), [grid]);
+  const lotusTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [lotusCleared, setLotusCleared] = useState<Record<string, boolean>>({});
   const [pebbles, setPebbles] = useState<Record<string, boolean>>({});
 
-  const revealedCount = Object.keys(revealed).length;
-  const totalCells = GRID_SIZE * GRID_SIZE;
-  const harmonyFound = revealedCount >= totalCells;
+  useEffect(
+    () => () => {
+      lotusTimers.current.forEach(clearTimeout);
+    },
+    []
+  );
 
-  const handleReveal = useCallback((id: string) => {
-    setRevealed((prev) => {
-      if (prev[id]) return prev;
-      return { ...prev, [id]: true };
-    });
-  }, []);
+  const revealedOrClearedCount = flatCells.filter(
+    (c) => revealed[c.id] || lotusCleared[c.id]
+  ).length;
+  const harmonyFound = revealedOrClearedCount >= flatCells.length;
+
+  const triggerLotusWave = useCallback(
+    (lotusId: string) => {
+      lotusTimers.current.forEach(clearTimeout);
+      lotusTimers.current = [];
+
+      grid.lotusZoneIds.forEach((zoneId, index) => {
+        const timer = setTimeout(() => {
+          setLotusCleared((prev) => ({ ...prev, [zoneId]: true }));
+          setRevealed((prev) => ({ ...prev, [zoneId]: true }));
+        }, index * LOTUS_WAVE_MS);
+        lotusTimers.current.push(timer);
+      });
+
+      void lotusId;
+    },
+    [grid.lotusZoneIds]
+  );
+
+  const handleReveal = useCallback(
+    (id: string) => {
+      if (revealed[id] && !lotusCleared[id]) return;
+
+      const cell = findCell(grid, id);
+      setRevealed((prev) => ({ ...prev, [id]: true }));
+
+      if (cell?.kind === "lotus") {
+        triggerLotusWave(id);
+      }
+    },
+    [grid, revealed, lotusCleared, triggerLotusWave]
+  );
 
   const handleTogglePebble = useCallback((id: string) => {
     setPebbles((prev) => {
       const next = { ...prev };
-      if (next[id]) {
-        delete next[id];
-      } else {
-        next[id] = true;
-      }
+      if (next[id]) delete next[id];
+      else next[id] = true;
       return next;
     });
   }, []);
 
   function handleRestart() {
+    lotusTimers.current.forEach(clearTimeout);
+    lotusTimers.current = [];
     setGameSeed(Date.now());
     setRevealed({});
+    setLotusCleared({});
     setPebbles({});
   }
 
   return (
     <View className="flex-1">
       <Text className="text-sand-500 text-sm leading-6 mb-6">
-        Touchez une case pour révéler sa nuance. Appui long : poser un galet
-        pour marquer une intuition. Aucune pénalité — prenez votre temps.
+        Quatre éléments (terre, feu, eau, air) colorent leur voisinage. Un lotus
+        caché apaise une zone autour de lui. Appui long : poser un galet.
       </Text>
 
       <View className="flex-row flex-wrap mx-auto w-full max-w-[360px] mb-6">
@@ -154,6 +210,7 @@ export function NuanceFinder() {
             key={cell.id}
             cell={cell}
             revealed={Boolean(revealed[cell.id])}
+            lotusCleared={Boolean(lotusCleared[cell.id])}
             pebbled={Boolean(pebbles[cell.id])}
             onReveal={handleReveal}
             onTogglePebble={handleTogglePebble}
@@ -165,10 +222,6 @@ export function NuanceFinder() {
         <View className="items-center gap-4 mb-4">
           <Text className="text-sage-600 text-xl font-light tracking-wide">
             Harmonie trouvée
-          </Text>
-          <Text className="text-sand-500 text-sm text-center leading-6 px-4">
-            Toute la grille respire ensemble. Vous pouvez contempler un instant,
-            puis recommencer si le cœur vous en dit.
           </Text>
           <PrimaryButton label="Recommencer" onPress={handleRestart} />
         </View>

@@ -11,6 +11,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { InlineNotice } from "@/components/InlineNotice";
+import { ZenWaitIndicator } from "@/components/ZenWaitIndicator";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { analyzeArtwork, ApiError } from "@/lib/api";
@@ -333,7 +334,7 @@ export default function ReflectionScreen() {
     setNotice({
       type: "info",
       message:
-        "Analyse en cours… Comptez 30 à 60 secondes pour une réflexion approfondie. Vous pouvez annuler ci-dessous.",
+        "Analyse en cours — laissez le compteur zen vous accompagner. Vous pouvez annuler ci-dessous.",
     });
     try {
       let imageBase64: string | undefined;
@@ -366,7 +367,7 @@ export default function ReflectionScreen() {
           durationMinutes,
           writtenText: hasText ? writtenText.trim() : undefined,
         }),
-        120_000
+        90_000
       );
       if (isStale(generation)) return;
 
@@ -610,6 +611,8 @@ export default function ReflectionScreen() {
         </Pressable>
       )}
 
+      {loadingReflection && <ZenWaitIndicator active />}
+
       {previewUri ? (
           <View ref={bindWebDropZone}>
             <Image
@@ -680,7 +683,7 @@ export default function ReflectionScreen() {
           <PrimaryButton
             label={
               loadingReflection
-                ? "Analyse en cours (30–60 s)…"
+                ? "Analyse en cours…"
                 : preparingPhoto
                   ? "Préparation..."
                   : "Demander une réflexion bienveillante"

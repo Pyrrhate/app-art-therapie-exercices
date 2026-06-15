@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { ColorPalette } from "@/components/mandala/ColorPalette";
+import { SpectrumColorPicker } from "@/components/mandala/SpectrumColorPicker";
 import { MandalaCanvas } from "@/components/mandala/MandalaCanvas";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
@@ -160,7 +160,7 @@ export default function MandalaStudioScreen() {
       <Text className="text-sand-600 text-sm font-medium mb-2 text-center">
         Palette
       </Text>
-      <ColorPalette selected={selectedColor} onSelect={handleSelectColor} />
+      <SpectrumColorPicker selected={selectedColor} onSelect={handleSelectColor} />
 
       <View className="gap-3 mt-8 pb-4">
         <PrimaryButton

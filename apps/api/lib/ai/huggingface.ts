@@ -259,7 +259,7 @@ export class HuggingFaceProvider implements AIProvider {
 
       let warmRaw = await this.callTextModel(
         buildWarmReflectionPrompt(promptCtx),
-        { temperature: 0.82, maxTokens: 1800, systemPrompt: WARM_REFLECTION_SYSTEM }
+        { temperature: 0.82, maxTokens: 950, systemPrompt: WARM_REFLECTION_SYSTEM }
       );
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -272,7 +272,7 @@ export class HuggingFaceProvider implements AIProvider {
         console.warn("[HF analyzeArtwork] reformulation (ton ou longueur)");
         warmRaw = await this.callTextModel(
           buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
-          { temperature: 0.78, maxTokens: 1800, systemPrompt: WARM_REFLECTION_SYSTEM }
+          { temperature: 0.78, maxTokens: 950, systemPrompt: WARM_REFLECTION_SYSTEM }
         );
         parsed = parseReflectionFromAi(warmRaw);
       }

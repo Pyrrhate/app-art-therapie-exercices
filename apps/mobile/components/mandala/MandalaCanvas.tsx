@@ -40,7 +40,9 @@ export function MandalaCanvas({
               d={path.d}
               fill={fills[path.id] ?? DEFAULT_MANDALA_FILL}
               stroke="#E8DDD4"
-              strokeWidth={0.6}
+              strokeWidth={0.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
               onPress={() => handlePress(path.id)}
             />
           ))}
