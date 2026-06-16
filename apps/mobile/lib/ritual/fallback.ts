@@ -1,5 +1,5 @@
 import { getTechniqueLabel } from "@/constants";
-import { deriveExerciseKeywords } from "../exercise/keywords";
+import { deriveExerciseKeywords } from "@/lib/exercise/keywords";
 import type { ArtisticTechnique, ExerciseResponse } from "../types";
 
 export function getFallbackExercise(
