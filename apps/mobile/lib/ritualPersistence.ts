@@ -16,6 +16,7 @@ export async function persistRitualDraft(step: RitualDraftStep): Promise<void> {
     impulse: state.impulse,
     technique: state.technique,
     exercise: state.exercise,
+    exerciseKeywords: state.exerciseKeywords,
     durationMinutes: state.durationMinutes,
     step,
     photoUri: state.photoUri,
@@ -35,7 +36,12 @@ export function hydrateRitualFromDraft(draft: RitualDraft): void {
   store.setImpulse(draft.impulse);
   store.setTechnique(draft.technique);
   store.setDurationMinutes(draft.durationMinutes);
-  store.setExercise(draft.exercise, draft.durationMinutes);
+  store.setExercise(
+    draft.exercise,
+    draft.durationMinutes,
+    null,
+    draft.exerciseKeywords
+  );
   if (draft.photoUri) store.setPhotoUri(draft.photoUri);
   if (draft.writtenText) store.setWrittenText(draft.writtenText);
 }

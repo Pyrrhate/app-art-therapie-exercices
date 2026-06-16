@@ -18,6 +18,7 @@ export interface ExerciseResponse {
   exercise: string;
   durationMinutes: number;
   source: "ai" | "fallback";
+  keywords: string[];
 }
 
 export interface ReflectionRequest {

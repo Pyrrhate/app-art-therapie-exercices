@@ -1,3 +1,4 @@
+import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
 import type {
   AIProvider,
@@ -187,9 +188,14 @@ export class HuggingFaceProvider implements AIProvider {
       const parsed = parseExerciseFromAi(raw, preferredDuration);
 
       if (parsed) {
+        const keywords =
+          parsed.keywords.length > 0
+            ? parsed.keywords
+            : deriveExerciseKeywords(input.impulse, input.technique);
         return {
           exercise: parsed.exercise,
           durationMinutes: parsed.durationMinutes,
+          keywords,
           source: "ai",
         };
       }

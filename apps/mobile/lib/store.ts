@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import type { RitualDuration } from "@/constants";
-import { clearRitualDraft } from "./ritualDraft";
+import {
+  deriveExerciseKeywords,
+  sanitizeExerciseKeywords,
+} from "./exercise/keywords";
 import { sanitizeAiDisplayText, sanitizeQuestions } from "./sanitizeAiText";
 import type { ArtisticTechnique, RitualState, SavedSession } from "./types";
 
@@ -11,7 +14,8 @@ interface RitualStore extends RitualState {
   setExercise: (
     exercise: string,
     durationMinutes?: number,
-    source?: "ai" | "fallback" | null
+    source?: "ai" | "fallback" | null,
+    keywords?: string[]
   ) => void;
   setPhotoUri: (uri: string | null) => void;
   setWrittenText: (writtenText: string) => void;
@@ -30,6 +34,7 @@ const initialState: RitualState = {
   technique: null,
   exercise: "",
   exerciseSource: null,
+  exerciseKeywords: [],
   durationMinutes: 15,
   photoUri: null,
   reflection: null,
@@ -43,12 +48,20 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
   setImpulse: (impulse) => set({ impulse }),
   setTechnique: (technique) => set({ technique }),
   setDurationMinutes: (durationMinutes) => set({ durationMinutes }),
-  setExercise: (exercise, durationMinutes, source) =>
+  setExercise: (exercise, durationMinutes, source, keywords) => {
+    const technique = get().technique;
+    const impulse = get().impulse;
+    const resolved =
+      keywords && keywords.length > 0
+        ? sanitizeExerciseKeywords(keywords)
+        : deriveExerciseKeywords(impulse, technique);
     set({
       exercise: sanitizeAiDisplayText(exercise),
       durationMinutes: durationMinutes ?? get().durationMinutes,
+      exerciseKeywords: resolved,
       ...(source !== undefined ? { exerciseSource: source } : {}),
-    }),
+    });
+  },
   setPhotoUri: (photoUri) => set({ photoUri }),
   setWrittenText: (writtenText) => set({ writtenText }),
   setReflection: (reflection, openQuestions, followUpExercise) =>
@@ -60,15 +73,18 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
         : null,
     }),
   startFollowUpExercise: () => {
-    const follow = get().followUpExercise;
+    const state = get();
+    const follow = state.followUpExercise;
     if (!follow) return;
     set({
       exercise: sanitizeAiDisplayText(follow),
+      exerciseKeywords: deriveExerciseKeywords(state.impulse, state.technique),
       reflection: null,
       openQuestions: [],
       followUpExercise: null,
       photoUri: null,
       writtenText: "",
+      exerciseSource: null,
     });
   },
   restoreFromSession: (session) =>
@@ -76,6 +92,7 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       impulse: session.impulse,
       technique: session.technique,
       exercise: sanitizeAiDisplayText(session.exercise),
+      exerciseKeywords: deriveExerciseKeywords(session.impulse, session.technique),
       durationMinutes: session.durationMinutes,
       photoUri: session.photoUri ?? null,
       reflection: null,
@@ -84,6 +101,7 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
         ? sanitizeAiDisplayText(session.followUpExercise)
         : null,
       writtenText: session.writtenText ?? "",
+      exerciseSource: null,
     }),
   reset: () => {
     void clearRitualDraft();

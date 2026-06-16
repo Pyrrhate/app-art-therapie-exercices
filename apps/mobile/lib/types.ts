@@ -11,6 +11,7 @@ export interface ExerciseResponse {
   exercise: string;
   durationMinutes: number;
   source: "ai" | "fallback";
+  keywords: string[];
 }
 
 export interface ReflectionResponse {
@@ -41,6 +42,7 @@ export interface RitualState {
   technique: ArtisticTechnique | null;
   exercise: string;
   exerciseSource: "ai" | "fallback" | null;
+  exerciseKeywords: string[];
   durationMinutes: number;
   photoUri: string | null;
   reflection: string | null;

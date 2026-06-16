@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { DurationPicker } from "@/components/DurationPicker";
+import { ExerciseKeywordChips } from "@/components/exercise/ExerciseKeywordChips";
 import { GentleTimer } from "@/components/GentleTimer";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
@@ -11,7 +12,7 @@ import type { TimerSoundId } from "@/lib/sounds";
 import { useRitualStore } from "@/lib/store";
 
 export default function ExerciseScreen() {
-  const { exercise, durationMinutes, impulse, exerciseSource, setDurationMinutes } =
+  const { exercise, durationMinutes, impulse, exerciseSource, exerciseKeywords, setDurationMinutes } =
     useRitualStore();
   const [completionSound, setCompletionSound] = useState<TimerSoundId>("gong");
 
@@ -39,6 +40,8 @@ export default function ExerciseScreen() {
           </Text>
         </View>
       )}
+
+      <ExerciseKeywordChips keywords={exerciseKeywords} />
 
       <View className="bg-white rounded-2xl border border-sand-200 px-5 py-6 mb-4">
         <Text className="text-sand-400 text-xs uppercase tracking-wider mb-3">

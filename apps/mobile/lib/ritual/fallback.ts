@@ -1,4 +1,5 @@
 import { getTechniqueLabel } from "@/constants";
+import { deriveExerciseKeywords } from "./exercise/keywords";
 import type { ArtisticTechnique, ExerciseResponse } from "../types";
 
 export function getFallbackExercise(
@@ -18,5 +19,6 @@ Commencez par une forme ou une couleur qui vous appelle, même si elle vous surp
 Il n'y a pas de bon ou mauvais résultat — seulement votre expression du moment.`,
     durationMinutes: minutes,
     source: "fallback",
+    keywords: deriveExerciseKeywords(impulse, technique),
   };
 }

@@ -1,3 +1,4 @@
+import { sanitizeExerciseKeywords } from "../exercise-keywords";
 import { TECHNIQUE_LABELS } from "../techniques";
 import type { ArtisticTechnique } from "../types";
 
@@ -16,8 +17,9 @@ Durée prévue : ${durationMinutes} minutes (ne pas la modifier dans ta réponse
 Consignes :
 - Ton chaleureux, non jugeant, invitant à l'exploration
 - Pas de diagnostic ni d'interprétation psychologique
+- keywords : 3 à 5 mots-clés TRÈS courts (1 à 3 mots max chacun) qui résument l'impulsion et l'axe créatif — l'utilisateur·rice les gardera sous les yeux pendant l'exercice
 - Réponds UNIQUEMENT en JSON valide, sans markdown :
-{"exercise":"texte de l'exercice ici","durationMinutes":${durationMinutes}}`;
+{"exercise":"texte de l'exercice ici","durationMinutes":${durationMinutes},"keywords":["mot1","mot2","mot3"]}`;
 }
 
 export function buildVisionObservationPrompt(
@@ -255,11 +257,12 @@ export function parseJsonFromText<T>(text: string): T | null {
 export function parseExerciseFromAi(
   raw: string,
   preferredDuration?: number
-): { exercise: string; durationMinutes: number } | null {
+): { exercise: string; durationMinutes: number; keywords: string[] } | null {
   const normalized = normalizeRawAiResponse(raw);
   const parsed = parseJsonFromText<{
     exercise?: unknown;
     durationMinutes?: unknown;
+    keywords?: unknown;
   }>(normalized);
 
   if (parsed && typeof parsed.exercise === "string") {
@@ -268,6 +271,7 @@ export function parseExerciseFromAi(
       return {
         exercise,
         durationMinutes: clampDuration(parsed.durationMinutes, preferredDuration),
+        keywords: sanitizeExerciseKeywords(parsed.keywords),
       };
     }
   }
@@ -279,16 +283,32 @@ export function parseExerciseFromAi(
       const durationRaw = normalized.match(
         /"durationMinutes"\s*:\s*(\d+)/
       )?.[1];
+      const keywordsMatch = normalized.match(
+        /"keywords"\s*:\s*\[([\s\S]*?)\]/
+      );
+      let keywords: string[] = [];
+      if (keywordsMatch?.[1]) {
+        keywords = sanitizeExerciseKeywords(
+          [...keywordsMatch[1].matchAll(/"((?:\\.|[^"\\])*)"/g)].map((m) =>
+            m[1]!.replace(/\\"/g, '"')
+          )
+        );
+      }
       return {
         exercise,
         durationMinutes: clampDuration(durationRaw, preferredDuration),
+        keywords,
       };
     }
   }
 
   const prose = cleanAiText(normalized);
   if (prose.length >= 20 && !looksLikeJsonArtifact(prose)) {
-    return { exercise: prose, durationMinutes: clampDuration(15, preferredDuration) };
+    return {
+      exercise: prose,
+      durationMinutes: clampDuration(15, preferredDuration),
+      keywords: [],
+    };
   }
 
   return null;

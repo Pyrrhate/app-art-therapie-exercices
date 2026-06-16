@@ -42,7 +42,7 @@ export default function RitualScreen() {
         technique,
         durationMinutes
       );
-      setExercise(result.exercise, durationMinutes, result.source);
+      setExercise(result.exercise, durationMinutes, result.source, result.keywords);
       if (result.source === "fallback") {
         setOfflineMode(true);
       }

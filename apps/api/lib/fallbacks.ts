@@ -1,3 +1,4 @@
+import { deriveExerciseKeywords } from "./exercise-keywords";
 import { TECHNIQUE_LABELS } from "./techniques";
 import type { ExerciseRequest, ExerciseResponse, ReflectionRequest } from "./types";
 
@@ -14,6 +15,7 @@ Commencez par une forme ou une couleur qui vous appelle, même si elle vous surp
 Il n'y a pas de bon ou mauvais résultat — seulement votre expression du moment.`,
     durationMinutes,
     source: "fallback",
+    keywords: deriveExerciseKeywords(input.impulse, input.technique),
   };
 }
 
