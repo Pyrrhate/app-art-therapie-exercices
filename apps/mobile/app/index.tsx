@@ -29,7 +29,7 @@ const CREATIVITY_MODULES: ModuleCard[] = [
     title: "Palette intérieure",
     emoji: "🌈",
     description:
-      "Dialogue réflexif sur huit teintes — une amorce couleur vers l'exercice peinture.",
+      "Dialogue réflexif sur trois teintes — une amorce couleur vers l'exercice peinture.",
     route: "/color-journey",
   },
 ];

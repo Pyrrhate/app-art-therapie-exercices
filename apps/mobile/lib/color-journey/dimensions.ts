@@ -1,3 +1,4 @@
+/** Trois dimensions actives : 3 choix humains, réflexion IA entre chaque tour. */
 export const COLOR_JOURNEY_DIMENSIONS = [
   {
     id: "anchor",
@@ -8,31 +9,6 @@ export const COLOR_JOURNEY_DIMENSIONS = [
     id: "energy",
     title: "Énergie",
     subtitle: "Ce qui vous anime doucement",
-  },
-  {
-    id: "softness",
-    title: "Douceur",
-    subtitle: "Ce qui vous enveloppe",
-  },
-  {
-    id: "clarity",
-    title: "Clarté",
-    subtitle: "Ce qui éclaire votre regard",
-  },
-  {
-    id: "depth",
-    title: "Profondeur",
-    subtitle: "Ce qui appelle à plonger",
-  },
-  {
-    id: "joy",
-    title: "Joie",
-    subtitle: "Ce qui fait vibrer la lumière",
-  },
-  {
-    id: "mystery",
-    title: "Mystère",
-    subtitle: "Ce qui reste à découvrir",
   },
   {
     id: "harmony",

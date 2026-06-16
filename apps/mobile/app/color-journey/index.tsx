@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  ActivityIndicator,
   ScrollView,
   Text,
   TextInput,
@@ -181,7 +180,7 @@ export default function ColorJourneyScreen() {
   }
 
   const paletteHexes = history.map((h) => h.hex);
-  const canExitEarly = history.length >= 3;
+  const canExitEarly = history.length >= 2;
 
   return (
     <ScreenContainer scrollable={false}>
@@ -196,10 +195,10 @@ export default function ColorJourneyScreen() {
           Palette intérieure
         </Text>
         <Text className="text-3xl font-light text-sand-800 mb-2 leading-tight">
-          Huit teintes, en dialogue
+          Trois teintes, en dialogue
         </Text>
         <Text className="text-sand-500 text-base leading-6 mb-4">
-          Un dialogue réflexif sur huit teintes pour nourrir une impulsion,
+          Un dialogue réflexif sur trois teintes pour nourrir une impulsion,
           puis passer à l&apos;exercice créatif.
         </Text>
 
@@ -239,6 +238,11 @@ export default function ColorJourneyScreen() {
               onPress={handleStart}
               disabled={loading}
             />
+            {loading && (
+              <View className="mt-4">
+                <ZenWaitIndicator active estimatedSeconds={12} />
+              </View>
+            )}
           </View>
         )}
 
@@ -268,7 +272,9 @@ export default function ColorJourneyScreen() {
                   ) : null}
                 </View>
 
-                {loading && <ZenWaitIndicator active />}
+                {loading && (
+                  <ZenWaitIndicator active estimatedSeconds={12} />
+                )}
 
                 {proposals.map((proposal) => (
                   <ColorProposalCard
@@ -296,12 +302,7 @@ export default function ColorJourneyScreen() {
               <>
                 <ReflectionPanel data={lastReflection} />
                 {loading && !synthesis && turn >= COLOR_JOURNEY_TURN_COUNT && (
-                  <View className="items-center py-4">
-                    <ActivityIndicator color="#6B8F71" />
-                    <Text className="text-sand-400 text-sm mt-2">
-                      Synthèse de votre palette…
-                    </Text>
-                  </View>
+                  <ZenWaitIndicator active estimatedSeconds={12} />
                 )}
                 <PrimaryButton
                   label={
@@ -384,7 +385,7 @@ export default function ColorJourneyScreen() {
             <AddToFilBar
               entry={{
                 source: "color-journey",
-                summary: "Palette intérieure — 8 teintes",
+                summary: "Palette intérieure — 3 teintes",
                 detail: synthesis.summary.slice(0, 200),
                 metadata: { colors: paletteHexes, impulse: synthesis.suggestedImpulse },
               }}

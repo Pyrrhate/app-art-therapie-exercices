@@ -60,8 +60,8 @@ export function fallbackStartColorJourney(context: {
   const mood = context.mood?.trim() || context.seedWord?.trim();
   return {
     intro: mood
-      ? `Accueillons votre mot « ${mood.slice(0, 40)} » — huit teintes vont dialoguer avec vous.`
-      : "Huit invitations chromatiques vous attendent, à votre rythme.",
+      ? `Accueillons votre mot « ${mood.slice(0, 40)} » — trois teintes vont dialoguer avec vous.`
+      : "Trois invitations chromatiques vous attendent, à votre rythme.",
     turn: 1,
     dimension: dim,
     proposals: proposalsForTurn(1),

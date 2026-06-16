@@ -184,8 +184,8 @@ function fallbackStart(input: ColorJourneyStartRequest): ColorJourneyStartRespon
   const mood = input.mood?.trim() || input.seedWord?.trim();
   return {
     intro: mood
-      ? `Accueillons votre mot « ${mood.slice(0, 40)} » — huit teintes vont dialoguer avec vous, sans jugement.`
-      : "Huit invitations chromatiques vous attendent. Choisissez à votre rythme, sans bonne ni mauvaise réponse.",
+      ? `Accueillons votre mot « ${mood.slice(0, 40)} » — trois teintes vont dialoguer avec vous, sans jugement.`
+      : "Trois invitations chromatiques vous attendent. Choisissez à votre rythme, sans bonne ni mauvaise réponse.",
     turn: 1,
     dimension: dim,
     proposals: fallbackProposals(1),
@@ -300,7 +300,7 @@ function buildSynthesizePrompt(input: ColorJourneySynthesizeRequest): string {
   return `Tu es un·e guide art-thérapeutique francophone. Vouvoiement, ton chaleureux.
 
 Contexte initial : « ${mood.slice(0, 120)} »
-Palette complète (8 teintes choisies) :
+Palette complète (3 teintes choisies) :
 ${formatHistory(input.history)}
 
 Synthétisez ce parcours chromatique :
