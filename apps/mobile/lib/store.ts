@@ -51,9 +51,11 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
   setExercise: (exercise, durationMinutes, source, keywords) => {
     const technique = get().technique;
     const impulse = get().impulse;
+    const sanitized =
+      keywords && keywords.length > 0 ? sanitizeExerciseKeywords(keywords) : [];
     const resolved =
-      keywords && keywords.length > 0
-        ? sanitizeExerciseKeywords(keywords)
+      sanitized.length > 0
+        ? sanitized
         : deriveExerciseKeywords(impulse, technique);
     set({
       exercise: sanitizeAiDisplayText(exercise),

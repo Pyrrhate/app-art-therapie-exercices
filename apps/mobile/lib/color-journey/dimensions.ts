@@ -1,19 +1,19 @@
-/** Trois dimensions actives : 3 choix humains, réflexion IA entre chaque tour. */
+/** Trois dimensions — une teinte par tour, guidées par la théorie des couleurs. */
 export const COLOR_JOURNEY_DIMENSIONS = [
   {
     id: "anchor",
     title: "Ancrage",
-    subtitle: "Ce qui vous tient en ce moment",
+    subtitle: "Votre première teinte, librement choisie",
   },
   {
     id: "energy",
-    title: "Énergie",
-    subtitle: "Ce qui vous anime doucement",
+    title: "Résonance",
+    subtitle: "La complémentaire — opposée sur le cercle",
   },
   {
     id: "harmony",
     title: "Harmonie",
-    subtitle: "Ce qui rassemble vos teintes",
+    subtitle: "La troisième teinte qui unit la palette",
   },
 ] as const;
 

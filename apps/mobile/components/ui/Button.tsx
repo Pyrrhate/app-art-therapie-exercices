@@ -108,6 +108,11 @@ export function ScreenContainer({
     </>
   );
 
+  const webShellStyle =
+    Platform.OS === "web"
+      ? ({ maxWidth: 680, width: "100%", alignSelf: "center" as const } as const)
+      : undefined;
+
   if (scrollable) {
     return (
       <ScrollView
@@ -124,8 +129,10 @@ export function ScreenContainer({
         nestedScrollEnabled
         refreshControl={refreshControl}
       >
-        {header}
-        {children}
+        <View style={webShellStyle}>
+          {header}
+          {children}
+        </View>
       </ScrollView>
     );
   }
@@ -135,8 +142,10 @@ export function ScreenContainer({
       className="flex-1 bg-sand-50 px-6 pt-16 pb-8"
       style={Platform.OS === "web" ? { flex: 1, height: "100%" } : undefined}
     >
-      {header}
-      {children}
+      <View style={webShellStyle}>
+        {header}
+        {children}
+      </View>
     </View>
   );
 }

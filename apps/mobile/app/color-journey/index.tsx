@@ -1,150 +1,63 @@
 import { useState } from "react";
-import {
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { ColorProposalCard } from "@/components/color-journey/ColorProposalCard";
+import { ScrollView, Text, View } from "react-native";
+import { ChromaticWheel } from "@/components/color-journey/ChromaticWheel";
 import { JourneyProgress } from "@/components/color-journey/JourneyProgress";
 import { ReflectionPanel } from "@/components/color-journey/ReflectionPanel";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
-import { InlineNotice } from "@/components/InlineNotice";
-import { ZenWaitIndicator } from "@/components/ZenWaitIndicator";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
-import {
-  chooseColorJourney,
-  ApiError,
-  startColorJourney,
-  synthesizeColorJourney,
-} from "@/lib/api";
 import {
   COLOR_JOURNEY_TURN_COUNT,
   getDimensionForTurn,
   type ColorChoice,
   type ColorJourneyPhase,
-  type ColorProposal,
   type JourneyReflection,
   type JourneySynthesis,
 } from "@/lib/color-journey";
+import { hexToColorLabel } from "@/lib/color-names";
 import {
-  startRitualFromImpulse,
-} from "@/lib/fil/bridges";
+  buildReflection,
+  buildSynthesis,
+  getTurnGuidance,
+} from "@/lib/color-journey/theory";
+import { startRitualFromImpulse } from "@/lib/fil/bridges";
 import { navigateHome } from "@/lib/navigation";
 
 export default function ColorJourneyScreen() {
-  const [phase, setPhase] = useState<ColorJourneyPhase>("intro");
-  const [mood, setMood] = useState("");
-  const [intro, setIntro] = useState("");
+  const [phase, setPhase] = useState<ColorJourneyPhase>("choosing");
   const [turn, setTurn] = useState(1);
-  const [dimensionTitle, setDimensionTitle] = useState("");
-  const [dimensionSubtitle, setDimensionSubtitle] = useState("");
-  const [contextNote, setContextNote] = useState<string | undefined>();
-  const [proposals, setProposals] = useState<ColorProposal[]>([]);
   const [history, setHistory] = useState<ColorChoice[]>([]);
   const [lastReflection, setLastReflection] = useState<JourneyReflection | null>(
     null
   );
   const [synthesis, setSynthesis] = useState<JourneySynthesis | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [offlineMode, setOfflineMode] = useState(false);
-  const [notice, setNotice] = useState<{
-    type: "error" | "info";
-    message: string;
-  } | null>(null);
 
-  async function handleStart() {
-    setLoading(true);
-    setNotice(null);
-    try {
-      const result = await startColorJourney({
-        mood: mood.trim() || undefined,
-        seedWord: mood.trim() || undefined,
-      });
-      setOfflineMode(result.source === "fallback");
-      setIntro(result.intro);
-      setTurn(result.turn);
-      setDimensionTitle(result.dimension.title);
-      setDimensionSubtitle(result.dimension.subtitle);
-      setContextNote(result.contextNote);
-      setProposals(result.proposals);
-      setPhase("choosing");
-    } catch (error) {
-      setNotice({
-        type: "error",
-        message:
-          error instanceof ApiError
-            ? error.message
-            : "Impossible de démarrer le parcours.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
+  const guidance = getTurnGuidance(turn, history);
+  const canExitEarly = history.length >= 2;
 
-  async function handleChoose(proposal: ColorProposal) {
-    if (loading) return;
-    setLoading(true);
-    setNotice(null);
+  function handleConfirmHex(hex: string) {
+    const proposal = {
+      hex,
+      label: hexToColorLabel(hex),
+      hint: "",
+    };
 
     const dimensionId = getDimensionForTurn(turn).id;
+    const choice: ColorChoice = {
+      hex,
+      label: proposal.label,
+      dimensionId,
+    };
+    const nextHistory = [...history, choice];
+    setHistory(nextHistory);
 
-    try {
-      const result = await chooseColorJourney({
-        turn,
-        chosen: proposal,
-        history,
-        mood: mood.trim() || undefined,
-        seedWord: mood.trim() || undefined,
-      });
+    const reflection = buildReflection(turn, proposal, history);
+    setLastReflection(reflection);
+    setPhase("reflecting");
 
-      if (result.source === "fallback") setOfflineMode(true);
-
-      const choice: ColorChoice = {
-        hex: proposal.hex,
-        label: proposal.label,
-        dimensionId,
-      };
-      const nextHistory = [...history, choice];
-      setHistory(nextHistory);
-
-      const reflection: JourneyReflection = {
-        reflection: result.reflection,
-        psychology: result.psychology,
-        theory: result.theory,
-        question: result.question,
-        turn,
-        chosen: proposal,
-      };
-      setLastReflection(reflection);
-      setPhase("reflecting");
-
-      if (turn >= COLOR_JOURNEY_TURN_COUNT) {
-        const synth = await synthesizeColorJourney({
-          history: nextHistory,
-          mood: mood.trim() || undefined,
-        });
-        if (synth.source === "fallback") setOfflineMode(true);
-        setSynthesis(synth);
-      } else if (result.nextTurn && result.proposals?.length) {
-        setTurn(result.nextTurn);
-        setDimensionTitle(result.nextDimension?.title ?? "");
-        setDimensionSubtitle(result.nextDimension?.subtitle ?? "");
-        setContextNote(result.contextNote);
-        setProposals(result.proposals);
-      }
-    } catch (error) {
-      setNotice({
-        type: "error",
-        message:
-          error instanceof ApiError
-            ? error.message
-            : "Impossible d'enregistrer ce choix.",
-      });
-    } finally {
-      setLoading(false);
+    if (turn >= COLOR_JOURNEY_TURN_COUNT) {
+      setSynthesis(buildSynthesis(nextHistory));
     }
   }
 
@@ -154,20 +67,16 @@ export default function ColorJourneyScreen() {
       return;
     }
     setLastReflection(null);
+    setTurn((t) => t + 1);
     setPhase("choosing");
   }
 
   function handleRestart() {
-    setPhase("intro");
-    setMood("");
-    setIntro("");
+    setPhase("choosing");
     setTurn(1);
-    setProposals([]);
     setHistory([]);
     setLastReflection(null);
     setSynthesis(null);
-    setOfflineMode(false);
-    setNotice(null);
   }
 
   function buildImpulseFromHistory(choices: ColorChoice[]): string {
@@ -180,7 +89,6 @@ export default function ColorJourneyScreen() {
   }
 
   const paletteHexes = history.map((h) => h.hex);
-  const canExitEarly = history.length >= 2;
 
   return (
     <ScreenContainer scrollable={false}>
@@ -195,56 +103,12 @@ export default function ColorJourneyScreen() {
           Palette intérieure
         </Text>
         <Text className="text-3xl font-light text-sand-800 mb-2 leading-tight">
-          Trois teintes, en dialogue
+          Trois teintes sur la roue
         </Text>
         <Text className="text-sand-500 text-base leading-6 mb-4">
-          Un dialogue réflexif sur trois teintes pour nourrir une impulsion,
-          puis passer à l&apos;exercice créatif.
+          Choisissez vos couleurs sur le cercle chromatique — complémentaire,
+          triade : la théorie guide, vous décidez.
         </Text>
-
-        {offlineMode && (
-          <Text className="text-sand-500 text-xs mb-3 leading-5">
-            Suggestions locales — le parcours continue en douceur.
-          </Text>
-        )}
-
-        {notice && (
-          <InlineNotice
-            type={notice.type}
-            message={notice.message}
-            onDismiss={() => setNotice(null)}
-          />
-        )}
-
-        {phase === "intro" && (
-          <View>
-            <Text className="text-sand-600 text-sm leading-6 mb-4">
-              Un mot d&apos;humeur (optionnel) personnalise vos propositions de
-              couleurs — puis vous passerez à l&apos;exercice avec votre palette.
-            </Text>
-            <Text className="text-sand-700 font-medium mb-2">
-              Comment vous sentez-vous ? (optionnel)
-            </Text>
-            <TextInput
-              className="bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base mb-4"
-              placeholder="Un mot, une humeur, une couleur…"
-              placeholderTextColor="#A89F91"
-              value={mood}
-              onChangeText={setMood}
-              editable={!loading}
-            />
-            <PrimaryButton
-              label={loading ? "Préparation…" : "Commencer le parcours"}
-              onPress={handleStart}
-              disabled={loading}
-            />
-            {loading && (
-              <View className="mt-4">
-                <ZenWaitIndicator active estimatedSeconds={12} />
-              </View>
-            )}
-          </View>
-        )}
 
         {(phase === "choosing" || phase === "reflecting") && (
           <View>
@@ -252,46 +116,31 @@ export default function ColorJourneyScreen() {
 
             {phase === "choosing" && (
               <>
-                {intro && turn === 1 ? (
-                  <Text className="text-sand-600 text-sm leading-6 mb-4">
-                    {intro}
-                  </Text>
-                ) : null}
-
                 <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-4 mb-4">
                   <Text className="text-sage-700 font-medium text-lg mb-1">
-                    {dimensionTitle}
+                    {guidance.title}
                   </Text>
                   <Text className="text-sand-600 text-sm leading-6">
-                    {dimensionSubtitle}
+                    {guidance.subtitle}
                   </Text>
-                  {contextNote ? (
-                    <Text className="text-sand-400 text-xs mt-2 leading-5">
-                      {contextNote}
-                    </Text>
-                  ) : null}
+                  <Text className="text-sand-400 text-xs mt-2 leading-5">
+                    {guidance.theory}
+                  </Text>
                 </View>
 
-                {loading && (
-                  <ZenWaitIndicator active estimatedSeconds={12} />
-                )}
-
-                {proposals.map((proposal) => (
-                  <ColorProposalCard
-                    key={`${proposal.hex}-${proposal.label}`}
-                    proposal={proposal}
-                    onPress={() => void handleChoose(proposal)}
-                    disabled={loading}
-                  />
-                ))}
+                <ChromaticWheel
+                  key={turn}
+                  highlightHues={guidance.highlightHues}
+                  highlightSpread={guidance.highlightSpread}
+                  onConfirm={handleConfirmHex}
+                />
 
                 {canExitEarly && (
-                  <View className="mt-2">
+                  <View className="mt-4">
                     <PrimaryButton
                       label="Passer à l'exercice avec mes teintes"
                       onPress={handleEarlyExitToExercise}
                       variant="ghost"
-                      disabled={loading}
                     />
                   </View>
                 )}
@@ -301,17 +150,13 @@ export default function ColorJourneyScreen() {
             {phase === "reflecting" && lastReflection && (
               <>
                 <ReflectionPanel data={lastReflection} />
-                {loading && !synthesis && turn >= COLOR_JOURNEY_TURN_COUNT && (
-                  <ZenWaitIndicator active estimatedSeconds={12} />
-                )}
                 <PrimaryButton
                   label={
                     turn >= COLOR_JOURNEY_TURN_COUNT
                       ? "Voir ma palette"
-                      : "Continuer"
+                      : "Teinte suivante"
                   }
                   onPress={handleContinueAfterReflection}
-                  disabled={loading && turn >= COLOR_JOURNEY_TURN_COUNT && !synthesis}
                 />
                 {canExitEarly && turn < COLOR_JOURNEY_TURN_COUNT && (
                   <View className="mt-2">
@@ -319,7 +164,6 @@ export default function ColorJourneyScreen() {
                       label="Passer à l'exercice avec mes teintes"
                       onPress={handleEarlyExitToExercise}
                       variant="ghost"
-                      disabled={loading}
                     />
                   </View>
                 )}
@@ -393,7 +237,7 @@ export default function ColorJourneyScreen() {
 
             <View className="mt-4">
               <PrimaryButton
-                label="Recommencer un parcours"
+                label="Recommencer"
                 onPress={handleRestart}
                 variant="ghost"
               />
