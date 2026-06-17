@@ -14,7 +14,7 @@ type ModuleCard = {
   title: string;
   emoji: string;
   description: string;
-  route: "/ping-pong" | "/color-journey" | "/nuance-finder";
+  route: "/ping-pong" | "/color-journey" | "/nuance-finder" | "/emotion-explorer";
 };
 
 const CREATIVITY_MODULES: ModuleCard[] = [
@@ -31,6 +31,13 @@ const CREATIVITY_MODULES: ModuleCard[] = [
     description:
       "Trois teintes sur la roue chromatique — complémentaire et harmonie, puis l'exercice.",
     route: "/color-journey",
+  },
+  {
+    title: "Explorateur émotionnel",
+    emoji: "💭",
+    description:
+      "Quatre zones de ressenti, puis un mot précis — pour amorcer l'exercice créatif.",
+    route: "/emotion-explorer",
   },
 ];
 
