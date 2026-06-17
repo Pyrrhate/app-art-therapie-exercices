@@ -1,16 +1,20 @@
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EmotionDetailBar } from "@/components/emotion-explorer/EmotionDetailBar";
 import { EmotionGrid } from "@/components/emotion-explorer/EmotionGrid";
 import { QuadrantPicker } from "@/components/emotion-explorer/QuadrantPicker";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
-import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { AccentCard } from "@/components/ui/Card";
+import { DisplayTitle } from "@/components/ui/DisplayText";
+import { PrimaryButton } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { getTechniqueLabel } from "@/constants";
 import { ApiError } from "@/lib/api";
@@ -28,6 +32,7 @@ import { startExerciseFromImpulse } from "@/lib/fil/bridges";
 import { navigateHome } from "@/lib/navigation";
 
 export default function EmotionExplorerScreen() {
+  const insets = useSafeAreaInsets();
   const [phase, setPhase] = useState<EmotionExplorerPhase>("quadrant");
   const [quadrant, setQuadrant] = useState<EmotionQuadrant | null>(null);
   const [selected, setSelected] = useState<Emotion | null>(null);
@@ -84,34 +89,62 @@ export default function EmotionExplorerScreen() {
     ? getTechniqueLabel(buildExerciseContext(selected).technique)
     : null;
 
+  const isDark = phase === "quadrant";
+  const paddingTop = Math.max(insets.top, Platform.OS === "web" ? 48 : 56);
+
   return (
-    <ScreenContainer scrollable={false}>
-      <ScreenNavBar backLabel="← Retour" onBack={handleBack} />
+    <View
+      className={`flex-1 ${isDark ? "bg-sand-900" : "bg-sand-50"}`}
+      style={Platform.OS === "web" ? { minHeight: 0, flex: 1 } : { flex: 1 }}
+    >
+      <View
+        className="px-6"
+        style={{ paddingTop, maxWidth: 680, width: "100%", alignSelf: "center" }}
+      >
+        <ScreenNavBar
+          backLabel="← Retour"
+          onBack={handleBack}
+          tone={isDark ? "light" : "default"}
+        />
+      </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingBottom: Math.max(insets.bottom, 32),
+          maxWidth: 680,
+          width: "100%",
+          alignSelf: "center",
+        }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
+        <Text
+          className={`text-sm uppercase tracking-widest mb-2 ${
+            isDark ? "text-sage-300" : "text-sage-500"
+          }`}
+        >
           Explorateur émotionnel
         </Text>
-        <Text className="text-3xl font-light text-sand-800 mb-2 leading-tight">
+        <DisplayTitle
+          className={`mb-4 ${isDark ? "text-sand-100" : "text-sand-800"}`}
+        >
           {phase === "quadrant"
             ? "Comment vous sentez-vous ?"
             : quadrant?.title ?? "Précisez votre émotion"}
-        </Text>
+        </DisplayTitle>
 
         {phase === "quadrant" && (
           <QuadrantPicker
             quadrants={EMOTION_QUADRANTS}
             onSelect={handleSelectQuadrant}
+            theme="dark"
           />
         )}
 
         {phase === "emotion" && quadrant && (
           <View>
-            <Text className="text-sand-500 text-sm leading-6 mb-4">
+            <Text className="text-sand-600 text-sm leading-6 mb-4">
               Choisissez le mot qui se rapproche le plus de votre ressenti —
               puis passez à l&apos;exercice.
             </Text>
@@ -121,7 +154,8 @@ export default function EmotionExplorerScreen() {
               onChangeText={setSearch}
               placeholder="Rechercher une émotion…"
               placeholderTextColor="#A89F91"
-              className="bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base mb-4"
+              accessibilityLabel="Rechercher une émotion"
+              className="bg-white border border-sand-200 rounded-2xl px-4 py-3 min-h-[48px] text-sand-800 text-base mb-4"
             />
 
             <EmotionGrid
@@ -140,7 +174,7 @@ export default function EmotionExplorerScreen() {
                   onContinue={() => void handleStartExercise()}
                 />
 
-                <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-3 mt-4">
+                <AccentCard className="mt-4">
                   <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
                     Exercice suggéré
                   </Text>
@@ -148,11 +182,13 @@ export default function EmotionExplorerScreen() {
                     Technique {techniqueLabel} — guidée par votre ressenti «{" "}
                     {selected.label} ».
                   </Text>
-                </View>
+                </AccentCard>
 
                 <View className="mt-4">
                   <PrimaryButton
-                    label={startingExercise ? "Préparation…" : "Passer à l'exercice"}
+                    label={
+                      startingExercise ? "Préparation…" : "Passer à l'exercice"
+                    }
                     onPress={() => void handleStartExercise()}
                     disabled={startingExercise}
                   />
@@ -182,6 +218,6 @@ export default function EmotionExplorerScreen() {
           </View>
         )}
       </ScrollView>
-    </ScreenContainer>
+    </View>
   );
 }

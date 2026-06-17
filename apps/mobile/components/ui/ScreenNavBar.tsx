@@ -8,13 +8,19 @@ interface ScreenNavBarProps {
   onBack?: () => void;
   /** Afficher le lien « Accueil » à droite (défaut : oui) */
   showHome?: boolean;
+  /** Contraste sur fond sombre */
+  tone?: "default" | "light";
 }
 
 export function ScreenNavBar({
   backLabel = "← Retour",
   onBack = navigateBackOrHome,
   showHome = true,
+  tone = "default",
 }: ScreenNavBarProps) {
+  const backClass = tone === "light" ? "text-sage-300" : "text-sage-500";
+  const homeClass = tone === "light" ? "text-sand-300" : "text-sand-500";
+
   return (
     <View className="flex-row justify-between items-center mb-4 -mt-2">
       <Pressable
@@ -23,7 +29,7 @@ export function ScreenNavBar({
         accessibilityLabel={backLabel}
         hitSlop={8}
       >
-        <Text className="text-sage-500 text-base">{backLabel}</Text>
+        <Text className={`${backClass} text-base`}>{backLabel}</Text>
       </Pressable>
       {showHome ? (
         <Pressable
@@ -32,7 +38,7 @@ export function ScreenNavBar({
           accessibilityLabel="Retour à l'accueil"
           hitSlop={8}
         >
-          <Text className="text-sand-500 text-sm font-medium">Accueil</Text>
+          <Text className={`${homeClass} text-sm font-medium`}>Accueil</Text>
         </Pressable>
       ) : (
         <View />

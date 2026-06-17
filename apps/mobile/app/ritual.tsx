@@ -7,7 +7,9 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { DurationPicker } from "@/components/DurationPicker";
+import { AccentCard, ContentCard } from "@/components/ui/Card";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { TECHNIQUES } from "@/constants";
@@ -68,14 +70,15 @@ export default function RitualScreen() {
   return (
     <ScreenContainer title="L'Impulsion" subtitle={subtitle} refreshable>
       <ScreenNavBar backLabel="← Accueil" onBack={() => router.replace("/")} />
+      <RitualProgressBar current="ritual" />
 
       {impulsePrefilled && (
-        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-4 mb-6">
+        <AccentCard className="mb-6">
           <Text className="text-sage-700 text-sm leading-6">
             Votre impulsion est prête — choisissez technique et durée, puis
             passez à l&apos;exercice.
           </Text>
-        </View>
+        </AccentCard>
       )}
 
       {offlineMode && (
@@ -84,14 +87,17 @@ export default function RitualScreen() {
         </Text>
       )}
 
-      <TextInput
-        value={impulse}
-        onChangeText={setImpulse}
-        placeholder="Une couleur, une affirmation, un thème…"
-        placeholderTextColor="#B8A090"
-        multiline
-        className="bg-white border border-sand-200 rounded-2xl px-5 py-4 text-sand-800 text-base min-h-[100px] mb-8"
-      />
+      <ContentCard className="mb-8 px-0 py-0 overflow-hidden">
+        <TextInput
+          value={impulse}
+          onChangeText={setImpulse}
+          placeholder="Une couleur, une affirmation, un thème…"
+          placeholderTextColor="#B8A090"
+          multiline
+          accessibilityLabel="Votre impulsion créative"
+          className="px-5 py-4 text-sand-800 text-base min-h-[100px]"
+        />
+      </ContentCard>
 
       <Text className="text-sand-600 text-sm mb-4 font-medium">
         Technique artistique

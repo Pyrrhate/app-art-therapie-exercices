@@ -5,6 +5,8 @@ import type { EmotionQuadrant, EmotionQuadrantId } from "@/lib/emotion-explorer"
 interface QuadrantPickerProps {
   quadrants: EmotionQuadrant[];
   onSelect: (quadrant: EmotionQuadrant) => void;
+  /** Fond sombre sur la phase quadrant — textes plus clairs. */
+  theme?: "light" | "dark";
 }
 
 const GRID_ORDER: EmotionQuadrantId[][] = [
@@ -62,16 +64,23 @@ function QuadrantBlob({
   );
 }
 
-export function QuadrantPicker({ quadrants, onSelect }: QuadrantPickerProps) {
+export function QuadrantPicker({
+  quadrants,
+  onSelect,
+  theme = "light",
+}: QuadrantPickerProps) {
   const byId = Object.fromEntries(quadrants.map((q) => [q.id, q])) as Record<
     EmotionQuadrantId,
     EmotionQuadrant
   >;
   const neutral = byId.neutral;
 
+  const subtitleClass =
+    theme === "dark" ? "text-sand-300" : "text-sand-600";
+
   return (
     <View>
-      <Text className="text-sand-600 text-base text-center leading-6 mb-6 px-2">
+      <Text className={`${subtitleClass} text-base text-center leading-6 mb-6 px-2`}>
         Touchez la teinte qui correspond le mieux à ce que vous ressentez — ou
         le centre si c&apos;est incertain.
       </Text>

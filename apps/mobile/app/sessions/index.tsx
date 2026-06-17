@@ -1,12 +1,25 @@
 import { useCallback, useState } from "react";
 import { Alert, Image, Platform, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { HoverScale } from "@/components/emotion-explorer/HoverScale";
+import { ContentCard } from "@/components/ui/Card";
+import { DisplayTitle } from "@/components/ui/DisplayText";
 import { ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { deleteSession, getSessions } from "@/lib/storage";
-import type { SavedSession } from "@/lib/types";
+import type { ArtisticTechnique, SavedSession } from "@/lib/types";
+
+const TECHNIQUE_ACCENT: Record<ArtisticTechnique, string> = {
+  drawing: "#6B8F71",
+  painting: "#A8856A",
+  writing: "#8FA88A",
+  mixed_media: "#C4A484",
+  collage: "#9A8070",
+  volume: "#7A6558",
+  recyclart: "#527058",
+};
 
 function SessionListItem({
   item,
@@ -16,12 +29,11 @@ function SessionListItem({
   onDelete: (id: string) => void;
 }) {
   const exercise = sanitizeAiDisplayText(item.exercise);
+  const accent = TECHNIQUE_ACCENT[item.technique] ?? "#6B8F71";
 
-  return (
-    <Pressable
-      onPress={() => router.push(`/sessions/${item.id}`)}
-      className="bg-white rounded-2xl border border-sand-200 overflow-hidden mb-4 active:border-sage-400"
-    >
+  const card = (
+    <View className="bg-white rounded-2xl border border-sand-200 overflow-hidden mb-4">
+      <View style={{ height: 4, backgroundColor: accent }} />
       {item.photoUri ? (
         <Image
           source={{ uri: item.photoUri }}
@@ -30,14 +42,26 @@ function SessionListItem({
         />
       ) : null}
       <View className="px-5 py-4">
-        <Text className="text-sand-400 text-xs mb-1">
+        <Text className="text-sand-500 text-xs mb-2">
           {formatSessionDate(item.createdAt)}
         </Text>
-        <Text className="text-sand-800 font-medium text-base mb-1">
+        <View className="flex-row flex-wrap gap-2 mb-3">
+          <View
+            className="rounded-full px-3 py-1"
+            style={{ backgroundColor: `${accent}22` }}
+          >
+            <Text className="text-sand-700 text-xs font-medium">
+              {getTechniqueLabel(item.technique)}
+            </Text>
+          </View>
+          <View className="bg-sand-100 rounded-full px-3 py-1">
+            <Text className="text-sand-600 text-xs">
+              {item.durationMinutes} min
+            </Text>
+          </View>
+        </View>
+        <Text className="text-sand-800 font-medium text-base mb-2">
           {item.impulse}
-        </Text>
-        <Text className="text-sand-500 text-sm mb-2">
-          {getTechniqueLabel(item.technique)} · {item.durationMinutes} min
         </Text>
         {exercise ? (
           <Text className="text-sand-600 text-sm leading-6" numberOfLines={3}>
@@ -51,12 +75,35 @@ function SessionListItem({
               e.stopPropagation?.();
               onDelete(item.id);
             }}
-            hitSlop={8}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Supprimer cette session"
           >
-            <Text className="text-sand-400 text-xs">Supprimer</Text>
+            <Text className="text-sand-500 text-xs">Supprimer</Text>
           </Pressable>
         </View>
       </View>
+    </View>
+  );
+
+  if (Platform.OS === "web") {
+    return (
+      <HoverScale
+        onPress={() => router.push(`/sessions/${item.id}`)}
+        hoverScale={1.01}
+        accessibilityRole="button"
+      >
+        {card}
+      </HoverScale>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={() => router.push(`/sessions/${item.id}`)}
+      accessibilityRole="button"
+    >
+      {card}
     </Pressable>
   );
 }
@@ -114,20 +161,20 @@ export default function SessionsListScreen() {
       <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
         Mémoire des pratiques
       </Text>
-      <Text className="text-3xl font-light text-sand-800 mb-2">
+      <DisplayTitle className="mb-2">
         Mes exercices sauvegardés
-      </Text>
-      <Text className="text-sand-500 text-base mb-6 leading-6">
+      </DisplayTitle>
+      <Text className="text-sand-600 text-base mb-6 leading-6">
         Vos fiches d&apos;exercice, gardées localement sur cet appareil — à relire ou à refaire quand vous en avez envie.
       </Text>
 
       {sessions.length === 0 ? (
-        <View className="bg-white rounded-2xl border border-dashed border-sand-300 px-6 py-12 items-center">
-          <Text className="text-sand-400 text-center leading-6">
+        <ContentCard className="border-dashed items-center py-12">
+          <Text className="text-sand-500 text-center leading-6">
             Aucune fiche pour l&apos;instant.{"\n"}
             Parcourez un rituel guidé, réalisez l&apos;exercice, puis sauvegardez-le pour le retrouver ici.
           </Text>
-        </View>
+        </ContentCard>
       ) : (
         sessions.map((item) => (
           <SessionListItem

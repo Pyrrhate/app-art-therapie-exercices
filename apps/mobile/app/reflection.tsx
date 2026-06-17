@@ -16,6 +16,7 @@ import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { analyzeArtwork, ApiError, transcribeHandwriting } from "@/lib/api";
 import {
@@ -607,6 +608,7 @@ export default function ReflectionScreen() {
   return (
     <ScreenContainer title="Capture & Réflexion" refreshable>
       <ScreenNavBar onBack={handleGoBack} />
+      <RitualProgressBar current="reflection" />
 
       {notice && (
         <InlineNotice

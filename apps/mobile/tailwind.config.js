@@ -18,9 +18,13 @@ module.exports = {
           900: "#201B17",
         },
         sage: {
+          50: "#F2F7F3",
+          100: "#E3EDE5",
+          300: "#9BB5A0",
           400: "#8FA88A",
           500: "#6B8F71",
           600: "#527058",
+          700: "#3D5441",
         },
         clay: {
           400: "#C4A484",
@@ -29,6 +33,11 @@ module.exports = {
       },
       fontFamily: {
         sans: ["System"],
+        display: ["Fraunces", "Georgia", "serif"],
+      },
+      boxShadow: {
+        card: "0 2px 8px rgba(62, 52, 44, 0.07)",
+        "card-md": "0 4px 16px rgba(62, 52, 44, 0.1)",
       },
     },
   },

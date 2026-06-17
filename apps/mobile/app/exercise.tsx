@@ -4,7 +4,9 @@ import { router } from "expo-router";
 import { DurationPicker } from "@/components/DurationPicker";
 import { ExerciseKeywordChips } from "@/components/exercise/ExerciseKeywordChips";
 import { GentleTimer } from "@/components/GentleTimer";
+import { ContentCard } from "@/components/ui/Card";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { getTimerSound } from "@/lib/preferences";
 import { persistRitualDraft } from "@/lib/ritualPersistence";
@@ -15,6 +17,7 @@ export default function ExerciseScreen() {
   const exercise = useRitualStore((s) => s.exercise);
   const durationMinutes = useRitualStore((s) => s.durationMinutes);
   const impulse = useRitualStore((s) => s.impulse);
+  const technique = useRitualStore((s) => s.technique);
   const exerciseSource = useRitualStore((s) => s.exerciseSource);
   const exerciseKeywords = useRitualStore((s) => s.exerciseKeywords);
   const setDurationMinutes = useRitualStore((s) => s.setDurationMinutes);
@@ -46,8 +49,19 @@ export default function ExerciseScreen() {
   }
 
   return (
-    <ScreenContainer title="Votre exercice" refreshable>
+    <ScreenContainer
+      title="Votre exercice"
+      variant="focus"
+      refreshable
+      stickyFooter={
+        <PrimaryButton
+          label="J'ai terminé — capturer mon œuvre"
+          onPress={() => router.push("/reflection")}
+        />
+      }
+    >
       <ScreenNavBar backLabel="← Rituel" />
+      <RitualProgressBar current="exercise" />
 
       {exerciseSource === "fallback" && (
         <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-3 mb-4">
@@ -57,14 +71,14 @@ export default function ExerciseScreen() {
         </View>
       )}
 
-      <ExerciseKeywordChips keywords={exerciseKeywords} />
+      <ExerciseKeywordChips keywords={exerciseKeywords} technique={technique} />
 
-      <View className="bg-white rounded-2xl border border-sand-200 px-5 py-6 mb-4">
-        <Text className="text-sand-400 text-xs uppercase tracking-wider mb-3">
+      <ContentCard className="mb-6">
+        <Text className="text-sand-500 text-xs uppercase tracking-wider mb-3">
           Impulsion · {impulse}
         </Text>
         <Text className="text-sand-700 text-base leading-7">{exercise}</Text>
-      </View>
+      </ContentCard>
 
       <Text className="text-sand-600 text-sm mb-3 font-medium">
         Durée du timer
@@ -79,13 +93,6 @@ export default function ExerciseScreen() {
         durationMinutes={durationMinutes}
         completionSound={completionSound}
       />
-
-      <View className="pt-6 pb-4">
-        <PrimaryButton
-          label="J'ai terminé — capturer mon œuvre"
-          onPress={() => router.push("/reflection")}
-        />
-      </View>
     </ScreenContainer>
   );
 }
