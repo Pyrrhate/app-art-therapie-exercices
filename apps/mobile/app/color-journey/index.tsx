@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { ChromaticWheel } from "@/components/color-journey/ChromaticWheel";
+import { ColorSwatch } from "@/components/color-journey/ColorSwatch";
 import { JourneyProgress } from "@/components/color-journey/JourneyProgress";
 import { ReflectionPanel } from "@/components/color-journey/ReflectionPanel";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
@@ -186,10 +187,7 @@ export default function ColorJourneyScreen() {
               <View className="flex-row flex-wrap gap-3 mb-4">
                 {history.map((choice) => (
                   <View key={choice.hex + choice.label} className="items-center">
-                    <View
-                      className="rounded-full border border-sand-200 mb-1"
-                      style={{ width: 40, height: 40, backgroundColor: choice.hex }}
-                    />
+                    <ColorSwatch hex={choice.hex} size={40} className="mb-1" />
                     <Text className="text-sand-500 text-xs text-center max-w-[72px]">
                       {choice.label}
                     </Text>

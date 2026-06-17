@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  type GestureResponderEvent,
+  Platform,
   Pressable,
   Text,
   View,
+  type GestureResponderEvent,
 } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import {
@@ -83,6 +84,20 @@ function isHueHighlighted(
   });
 }
 
+function touchPosition(
+  event: GestureResponderEvent,
+  offsetX: number,
+  offsetY: number
+): { x: number; y: number } {
+  const native = event.nativeEvent;
+  if (Platform.OS === "web") {
+    const pageX = "pageX" in native ? native.pageX : native.locationX;
+    const pageY = "pageY" in native ? native.pageY : native.locationY;
+    return { x: pageX - offsetX, y: pageY - offsetY };
+  }
+  return { x: native.locationX, y: native.locationY };
+}
+
 export function ChromaticWheel({
   size = 280,
   highlightHues = [],
@@ -92,11 +107,13 @@ export function ChromaticWheel({
 }: ChromaticWheelProps) {
   const [selectedHue, setSelectedHue] = useState<number | null>(null);
   const [preset, setPreset] = useState<LightnessPreset>("moyen");
+  const wheelRef = useRef<View>(null);
 
   const cx = size / 2;
   const cy = size / 2;
   const outerR = size / 2 - 4;
   const innerR = size * 0.28;
+  const previewR = innerR - 6;
 
   const segments = useMemo(() => {
     const list: { path: string; fill: string; hue: number; highlighted: boolean }[] =
@@ -121,22 +138,22 @@ export function ChromaticWheel({
   const handleTouch = useCallback(
     (event: GestureResponderEvent) => {
       if (disabled) return;
-      const { locationX, locationY } = event.nativeEvent;
-      const hue = hueFromTouch(locationX, locationY, cx, cy, innerR, outerR);
-      if (hue !== null) setSelectedHue(hue);
+      wheelRef.current?.measureInWindow((offsetX, offsetY) => {
+        const { x, y } = touchPosition(event, offsetX, offsetY);
+        const hue = hueFromTouch(x, y, cx, cy, innerR, outerR);
+        if (hue !== null) setSelectedHue(hue);
+      });
     },
     [cx, cy, disabled, innerR, outerR]
   );
 
   return (
     <View className="items-center">
-      <Pressable
-        onPress={handleTouch}
-        disabled={disabled}
-        accessibilityRole="adjustable"
-        accessibilityLabel="Roue chromatique"
+      <View
+        ref={wheelRef}
+        style={{ width: size, height: size }}
       >
-        <Svg width={size} height={size}>
+        <Svg width={size} height={size} pointerEvents="none">
           {segments.map((seg) => (
             <Path
               key={seg.hue}
@@ -167,16 +184,37 @@ export function ChromaticWheel({
               />
             );
           })}
-          <Circle
-            cx={cx}
-            cy={cy}
-            r={innerR - 6}
-            fill={previewHex}
-            stroke="#D4C4B5"
-            strokeWidth={2}
-          />
         </Svg>
-      </Pressable>
+
+        <Pressable
+          onPress={handleTouch}
+          disabled={disabled}
+          accessibilityRole="adjustable"
+          accessibilityLabel="Roue chromatique"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: size,
+            height: size,
+          }}
+        />
+
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: cx - previewR,
+            top: cy - previewR,
+            width: previewR * 2,
+            height: previewR * 2,
+            borderRadius: previewR,
+            backgroundColor: previewHex,
+            borderWidth: 2,
+            borderColor: "#D4C4B5",
+          }}
+        />
+      </View>
 
       <Text className="text-sand-500 text-xs mt-3 mb-3 text-center px-4">
         Touchez la roue, puis ajustez la luminosité

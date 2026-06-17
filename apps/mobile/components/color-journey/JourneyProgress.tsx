@@ -1,4 +1,5 @@
 import { Text, View } from "react-native";
+import { ColorSwatch } from "@/components/color-journey/ColorSwatch";
 import { COLOR_JOURNEY_TURN_COUNT } from "@/lib/color-journey/dimensions";
 import type { ColorChoice } from "@/lib/color-journey/types";
 
@@ -19,20 +20,17 @@ export function JourneyProgress({ currentTurn, history }: JourneyProgressProps) 
           const choice = history[i];
           const isCurrent = i + 1 === currentTurn && !choice;
           return (
-            <View
+            <ColorSwatch
               key={i}
-              className={`rounded-full border-2 ${
+              hex={choice?.hex ?? "#FAF7F4"}
+              size={28}
+              className={
                 isCurrent
-                  ? "border-sage-500"
+                  ? "border-2 border-sage-500"
                   : choice
-                    ? "border-sand-200"
-                    : "border-dashed border-sand-300"
-              }`}
-              style={{
-                width: 28,
-                height: 28,
-                backgroundColor: choice?.hex ?? "#FAF7F4",
-              }}
+                    ? "border-2 border-sand-200"
+                    : "border-2 border-dashed border-sand-300"
+              }
             />
           );
         })}
