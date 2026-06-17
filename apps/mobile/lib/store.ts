@@ -1,12 +1,12 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
-import type { RitualDuration } from "@/constants";
+import { STORAGE_KEYS, type RitualDuration } from "@/constants";
 import {
   deriveExerciseKeywords,
   sanitizeExerciseKeywords,
 } from "./exercise/keywords";
 import { sanitizeAiDisplayText, sanitizeQuestions } from "./sanitizeAiText";
 import type { ArtisticTechnique, RitualState, SavedSession } from "./types";
-
 interface RitualStore extends RitualState {
   setImpulse: (impulse: string) => void;
   setTechnique: (technique: ArtisticTechnique) => void;
@@ -106,7 +106,6 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       exerciseSource: null,
     }),
   reset: () => {
-    void clearRitualDraft();
+    void AsyncStorage.removeItem(STORAGE_KEYS.ritualDraft);
     set(initialState);
-  },
-}));
+  },}));
