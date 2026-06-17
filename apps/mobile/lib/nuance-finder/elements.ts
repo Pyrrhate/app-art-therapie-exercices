@@ -1,5 +1,4 @@
 import type { Rgb } from "./colors";
-import { NEUTRAL_CREAM, rgbToHex } from "./colors";
 
 export type ElementKind = "earth" | "fire" | "water" | "air";
 
@@ -47,7 +46,6 @@ export const LOTUS_SOURCE = {
   label: "Lotus",
   hex: "#F5E6F0",
   rgb: { r: 245, g: 230, b: 240 },
-  clearColor: rgbToHex(NEUTRAL_CREAM),
   icon: "🪷",
 };
 

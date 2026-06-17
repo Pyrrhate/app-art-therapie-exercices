@@ -16,14 +16,16 @@ import { LOTUS_SOURCE } from "@/lib/nuance-finder/elements";
 import {
   createNuanceGrid,
   findCell,
+  findLotus,
   flattenGrid,
   GRID_SIZE,
+  LOTUS_COUNT,
 } from "@/lib/nuance-finder/grid";
 import type { NuanceCell } from "@/lib/nuance-finder/types";
 
 const UNREVEALED_COLOR = "#FAF7F4";
 const UNREVEALED_BORDER = "#E8E0D8";
-const LOTUS_WAVE_MS = 130;
+const LOTUS_WAVE_MS = 85;
 const GRID_MAX_WIDTH = 420;
 const CELL_GAP = 4;
 const HORIZONTAL_PADDING = 56;
@@ -32,7 +34,7 @@ interface NuanceCellViewProps {
   cell: NuanceCell;
   cellSize: number;
   revealed: boolean;
-  lotusCleared: boolean;
+  waveDelayMs: number;
   pebbled: boolean;
   onReveal: (id: string) => void;
   onTogglePebble: (id: string) => void;
@@ -42,33 +44,33 @@ function NuanceCellView({
   cell,
   cellSize,
   revealed,
-  lotusCleared,
+  waveDelayMs,
   pebbled,
   onReveal,
   onTogglePebble,
 }: NuanceCellViewProps) {
   const opacity = useSharedValue(revealed ? 1 : 0);
-  const scale = useSharedValue(revealed && cell.isSource ? 0.72 : 1);
-
-  const displayColor = lotusCleared ? LOTUS_SOURCE.clearColor : cell.revealColor;
+  const scale = useSharedValue(revealed ? 1 : cell.isSource ? 0.75 : 0.88);
 
   useEffect(() => {
-    if (revealed || lotusCleared) {
-      const delay = lotusCleared && !cell.isSource ? 80 : 0;
-      opacity.value = withDelay(delay, withTiming(1, { duration: 420 }));
-      if (cell.isSource) {
-        scale.value = withDelay(
-          delay,
-          withSpring(1, { damping: 12, stiffness: 110 })
-        );
-      } else if (lotusCleared) {
-        scale.value = withDelay(delay, withTiming(1, { duration: 500 }));
-      }
+    if (revealed) {
+      opacity.value = withDelay(
+        waveDelayMs,
+        withTiming(1, { duration: 380 })
+      );
+      scale.value = withDelay(
+        waveDelayMs,
+        withSpring(1, {
+          damping: 11,
+          stiffness: 140,
+          mass: 0.75,
+        })
+      );
     } else {
       opacity.value = 0;
-      scale.value = cell.isSource ? 0.72 : 1;
+      scale.value = cell.isSource ? 0.75 : 0.88;
     }
-  }, [revealed, lotusCleared, cell.isSource, opacity, scale]);
+  }, [revealed, waveDelayMs, cell.isSource, opacity, scale]);
 
   const colorStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -89,14 +91,14 @@ function NuanceCellView({
         height: cellSize,
       }}
       accessibilityRole="button"
-      accessibilityLabel={cell.kind === "lotus" ? "Lotus" : "Case"}
+      accessibilityLabel={cell.kind === "lotus" ? "Lotus caché" : "Case"}
     >
       <View
         className="flex-1 overflow-hidden"
         style={{
           backgroundColor: UNREVEALED_COLOR,
           borderWidth: 1,
-          borderColor: revealed || lotusCleared ? "transparent" : UNREVEALED_BORDER,
+          borderColor: revealed ? "transparent" : UNREVEALED_BORDER,
           borderRadius,
         }}
       >
@@ -108,14 +110,14 @@ function NuanceCellView({
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: displayColor,
+              backgroundColor: cell.revealColor,
               borderRadius,
             },
             colorStyle,
           ]}
         />
 
-        {pebbled && !revealed && !lotusCleared && (
+        {pebbled && !revealed && (
           <View className="absolute inset-0 items-center justify-center">
             <View
               className="rounded-full bg-sand-500/40"
@@ -151,8 +153,9 @@ export function NuanceFinder() {
   const lotusTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
-  const [lotusCleared, setLotusCleared] = useState<Record<string, boolean>>({});
+  const [waveDelays, setWaveDelays] = useState<Record<string, number>>({});
   const [pebbles, setPebbles] = useState<Record<string, boolean>>({});
+  const [foundLotusCount, setFoundLotusCount] = useState(0);
 
   useEffect(
     () => () => {
@@ -161,16 +164,14 @@ export function NuanceFinder() {
     []
   );
 
-  const revealedOrClearedCount = flatCells.filter(
-    (c) => revealed[c.id] || lotusCleared[c.id]
-  ).length;
-  const harmonyFound = revealedOrClearedCount >= flatCells.length;
+  const revealedCount = flatCells.filter((c) => revealed[c.id]).length;
+  const harmonyFound = revealedCount >= flatCells.length;
 
   const revealedColorItems = useMemo((): ColorForImpulse[] => {
     const items: ColorForImpulse[] = [];
     const seen = new Set<string>();
     for (const cell of flatCells) {
-      if (!revealed[cell.id] && !lotusCleared[cell.id]) continue;
+      if (!revealed[cell.id]) continue;
       const hex = cell.revealColor.toUpperCase();
       if (seen.has(hex)) continue;
       seen.add(hex);
@@ -183,17 +184,14 @@ export function NuanceFinder() {
       }
     }
     return items.slice(0, 5);
-  }, [flatCells, revealed, lotusCleared]);
+  }, [flatCells, revealed]);
 
-  const lotusUnlocked =
-    Object.keys(lotusCleared).length > 0 ||
-    flatCells.some((c) => c.kind === "lotus" && revealed[c.id]);
   const pebbleCount = Object.keys(pebbles).length;
   const canExitEarly =
     !harmonyFound &&
-    (lotusUnlocked ||
+    (foundLotusCount >= 1 ||
       pebbleCount >= 2 ||
-      revealedOrClearedCount >= 6 ||
+      revealedCount >= 6 ||
       revealedColorItems.length >= 3);
 
   function handlePasserAExercice() {
@@ -202,36 +200,46 @@ export function NuanceFinder() {
 
   const triggerLotusWave = useCallback(
     (lotusId: string) => {
+      const lotus = findLotus(grid, lotusId);
+      if (!lotus) return;
+
       lotusTimers.current.forEach(clearTimeout);
       lotusTimers.current = [];
 
-      grid.lotusZoneIds.forEach((zoneId, index) => {
+      lotus.zoneIds.forEach((zoneId, index) => {
         const timer = setTimeout(() => {
-          setLotusCleared((prev) => ({ ...prev, [zoneId]: true }));
-          setRevealed((prev) => ({ ...prev, [zoneId]: true }));
+          setRevealed((prev) =>
+            prev[zoneId] ? prev : { ...prev, [zoneId]: true }
+          );
+          setWaveDelays((prev) =>
+            prev[zoneId] !== undefined
+              ? prev
+              : { ...prev, [zoneId]: index * LOTUS_WAVE_MS }
+          );
         }, index * LOTUS_WAVE_MS);
         lotusTimers.current.push(timer);
       });
 
-      void lotusId;
+      setFoundLotusCount((count) => count + 1);
     },
-    [grid.lotusZoneIds]
+    [grid]
   );
 
   const handleReveal = useCallback(
     (id: string) => {
-      if (revealed[id] && !lotusCleared[id]) return;
+      if (revealed[id]) return;
 
       const cell = findCell(grid, id);
       if (!cell) return;
 
       setRevealed((prev) => ({ ...prev, [id]: true }));
+      setWaveDelays((prev) => ({ ...prev, [id]: 0 }));
 
       if (cell.kind === "lotus") {
         triggerLotusWave(id);
       }
     },
-    [grid, revealed, lotusCleared, triggerLotusWave]
+    [grid, revealed, triggerLotusWave]
   );
 
   const handleTogglePebble = useCallback((id: string) => {
@@ -248,17 +256,25 @@ export function NuanceFinder() {
     lotusTimers.current = [];
     setGameSeed(Date.now());
     setRevealed({});
-    setLotusCleared({});
+    setWaveDelays({});
     setPebbles({});
+    setFoundLotusCount(0);
   }
 
   return (
     <View className="flex-1">
       <Text className="text-sand-500 text-sm leading-6 mb-4">
-        Grille 8×8 — touchez les cases pour révéler les teintes. Le lotus 🪷
-        apaise une zone autour de lui. Appui long : poser un galet. Quand vous
-        le souhaitez, passez à l&apos;exercice.
+        Grille 8×8 — touchez les cases pour révéler les teintes.{" "}
+        {LOTUS_COUNT} lotus 🪷 sont cachés : ils dévoilent les couleurs
+        alentour en onde. Appui long : poser un galet. Passez à l&apos;exercice
+        quand vous le souhaitez.
       </Text>
+
+      {foundLotusCount > 0 && (
+        <Text className="text-sage-600 text-xs text-center mb-3">
+          Lotus trouvés : {foundLotusCount} / {LOTUS_COUNT}
+        </Text>
+      )}
 
       <View
         className="self-center mb-6"
@@ -275,7 +291,7 @@ export function NuanceFinder() {
             cell={cell}
             cellSize={cellSize}
             revealed={Boolean(revealed[cell.id])}
-            lotusCleared={Boolean(lotusCleared[cell.id])}
+            waveDelayMs={waveDelays[cell.id] ?? 0}
             pebbled={Boolean(pebbles[cell.id])}
             onReveal={handleReveal}
             onTogglePebble={handleTogglePebble}
@@ -328,7 +344,7 @@ export function NuanceFinder() {
             entry={{
               source: "nuances",
               summary: "Harmonie chromatique trouvée",
-              detail: `${flatCells.length} cases révélées`,
+              detail: `${flatCells.length} cases révélées · ${foundLotusCount} lotus`,
               metadata: {
                 colors: revealedColorItems.map((c) =>
                   typeof c === "string" ? c : c.hex

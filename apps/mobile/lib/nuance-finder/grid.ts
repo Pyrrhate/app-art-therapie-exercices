@@ -4,9 +4,10 @@ import {
   type SourcePoint,
 } from "./colors";
 import { getLotusZoneIds, LOTUS_SOURCE } from "./elements";
-import type { NuanceCell, NuanceGrid } from "./types";
+import type { NuanceCell, NuanceGrid, NuanceLotus } from "./types";
 
 export const GRID_SIZE = 8;
+export const LOTUS_COUNT = 3;
 
 function cellId(row: number, col: number): string {
   return `${row}-${col}`;
@@ -14,13 +15,14 @@ function cellId(row: number, col: number): string {
 
 function pickUniquePositions(
   count: number,
-  rng: () => number
+  rng: () => number,
+  blocked: Set<string> = new Set()
 ): Array<{ row: number; col: number }> {
   const positions: Array<{ row: number; col: number }> = [];
-  const used = new Set<string>();
+  const used = new Set(blocked);
   let guard = 0;
 
-  while (positions.length < count && guard < 300) {
+  while (positions.length < count && guard < 400) {
     guard += 1;
     const row = Math.floor(rng() * GRID_SIZE);
     const col = Math.floor(rng() * GRID_SIZE);
@@ -41,7 +43,7 @@ export function createRng(seed: number): () => number {
   };
 }
 
-/** Grille 8×8 chromatique — sources CMY + lotus optionnel (sans les 4 éléments). */
+/** Grille 8×8 — sources CMY + trois lotus cachés. */
 export function createNuanceGrid(seed = Date.now()): NuanceGrid {
   const rng = createRng(seed);
 
@@ -53,27 +55,21 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
   }));
 
   const used = new Set(primaries.map((p) => cellId(p.row, p.col)));
-  let lotusId: string | null = null;
-  let lotusZoneIds: string[] = [];
-
-  let lotusRow = 0;
-  let lotusCol = 0;
-  let lotusGuard = 0;
-  do {
-    lotusRow = Math.floor(rng() * GRID_SIZE);
-    lotusCol = Math.floor(rng() * GRID_SIZE);
-    lotusGuard += 1;
-  } while (used.has(cellId(lotusRow, lotusCol)) && lotusGuard < 200);
-
-  if (!used.has(cellId(lotusRow, lotusCol))) {
-    lotusId = cellId(lotusRow, lotusCol);
-    lotusZoneIds = getLotusZoneIds(lotusRow, lotusCol, GRID_SIZE, 2);
-    used.add(lotusId);
-  }
+  const lotusPositions = pickUniquePositions(LOTUS_COUNT, rng, used);
+  const lotuses: NuanceLotus[] = lotusPositions.map(({ row, col }) => {
+    const id = cellId(row, col);
+    used.add(id);
+    return {
+      id,
+      row,
+      col,
+      zoneIds: getLotusZoneIds(row, col, GRID_SIZE, 2),
+    };
+  });
 
   const sourceAt = new Map<string, "lotus" | "primary">();
-  if (lotusId) {
-    sourceAt.set(lotusId, "lotus");
+  for (const lotus of lotuses) {
+    sourceAt.set(lotus.id, "lotus");
   }
   for (const p of primaries) {
     sourceAt.set(cellId(p.row, p.col), "primary");
@@ -128,8 +124,7 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
 
   return {
     seed,
-    lotusId,
-    lotusZoneIds,
+    lotuses,
     cells,
   };
 }
@@ -140,4 +135,8 @@ export function flattenGrid(grid: NuanceGrid): NuanceCell[] {
 
 export function findCell(grid: NuanceGrid, id: string): NuanceCell | undefined {
   return flattenGrid(grid).find((c) => c.id === id);
+}
+
+export function findLotus(grid: NuanceGrid, id: string): NuanceLotus | undefined {
+  return grid.lotuses.find((l) => l.id === id);
 }

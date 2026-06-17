@@ -16,9 +16,15 @@ export interface NuanceCell {
   deployFrom?: ElementKind;
 }
 
+export interface NuanceLotus {
+  id: string;
+  row: number;
+  col: number;
+  zoneIds: string[];
+}
+
 export interface NuanceGrid {
   seed: number;
-  lotusId: string | null;
-  lotusZoneIds: string[];
+  lotuses: NuanceLotus[];
   cells: NuanceCell[][];
 }
