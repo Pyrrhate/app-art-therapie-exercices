@@ -17,7 +17,7 @@ Durée prévue : ${durationMinutes} minutes (ne pas la modifier dans ta réponse
 Consignes :
 - Ton chaleureux, non jugeant, invitant à l'exploration
 - Pas de diagnostic ni d'interprétation psychologique
-- keywords : 3 à 5 mots-clés TRÈS courts (1 à 3 mots max chacun) qui résument l'impulsion et l'axe créatif — l'utilisateur·rice les gardera sous les yeux pendant l'exercice
+- keywords : 3 à 5 courtes expressions (2 à 4 mots chacune) — jamais un mot isolé coupé d'une phrase (ex. « Ce qui nourrit », « Lumière douce », pas « nourriture » seul). Inclure l'axe créatif de l'impulsion
 - Réponds UNIQUEMENT en JSON valide, sans markdown :
 {"exercise":"texte de l'exercice ici","durationMinutes":${durationMinutes},"keywords":["mot1","mot2","mot3"]}`;
 }

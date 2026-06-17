@@ -11,14 +11,16 @@ export function getFallbackExercise(
   const trimmedImpulse = impulse.trim() || "votre impulsion du moment";
   const minutes = durationMinutes ?? 15;
 
-  return {
-    exercise: `Prenez un moment pour vous installer confortablement. Sans jugement, laissez l'impulsion « ${trimmedImpulse} » guider votre ${techniqueLabel}.
+  const exercise = `Prenez un moment pour vous installer confortablement. Sans jugement, laissez l'impulsion « ${trimmedImpulse} » guider votre ${techniqueLabel}.
 
 Commencez par une forme ou une couleur qui vous appelle, même si elle vous surprend. Travaillez pendant ${minutes} minutes en restant curieux·se face à ce qui émerge.
 
-Il n'y a pas de bon ou mauvais résultat — seulement votre expression du moment.`,
+Il n'y a pas de bon ou mauvais résultat — seulement votre expression du moment.`;
+
+  return {
+    exercise,
     durationMinutes: minutes,
     source: "fallback",
-    keywords: deriveExerciseKeywords(impulse, technique),
+    keywords: deriveExerciseKeywords(impulse, technique, exercise),
   };
 }

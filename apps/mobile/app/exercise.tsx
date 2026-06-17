@@ -74,10 +74,6 @@ export default function ExerciseScreen() {
         onSelect={setDurationMinutes}
       />
 
-      <Text className="text-sand-500 text-sm text-center mt-6 mb-2">
-        Prenez votre temps — le cercle avance en douceur
-      </Text>
-
       <GentleTimer
         key={`${durationMinutes}-${completionSound}`}
         durationMinutes={durationMinutes}

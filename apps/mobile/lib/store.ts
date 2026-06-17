@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { STORAGE_KEYS, type RitualDuration } from "@/constants";
 import {
   deriveExerciseKeywords,
-  sanitizeExerciseKeywords,
+  resolveExerciseKeywords,
 } from "./exercise/keywords";
 import { sanitizeAiDisplayText, sanitizeQuestions } from "./sanitizeAiText";
 import type { ArtisticTechnique, RitualState, SavedSession } from "./types";
@@ -51,14 +51,15 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
   setExercise: (exercise, durationMinutes, source, keywords) => {
     const technique = get().technique;
     const impulse = get().impulse;
-    const sanitized =
-      keywords && keywords.length > 0 ? sanitizeExerciseKeywords(keywords) : [];
-    const resolved =
-      sanitized.length > 0
-        ? sanitized
-        : deriveExerciseKeywords(impulse, technique);
+    const exerciseText = sanitizeAiDisplayText(exercise);
+    const resolved = resolveExerciseKeywords(
+      impulse,
+      technique,
+      exerciseText,
+      keywords
+    );
     set({
-      exercise: sanitizeAiDisplayText(exercise),
+      exercise: exerciseText,
       durationMinutes: durationMinutes ?? get().durationMinutes,
       exerciseKeywords: resolved,
       ...(source !== undefined ? { exerciseSource: source } : {}),

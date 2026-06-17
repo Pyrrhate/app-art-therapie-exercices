@@ -1,14 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-  Alert,
-  Image,
-  Platform,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { useCallback, useState } from "react";
+import { Alert, Image, Platform, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
@@ -72,7 +63,6 @@ function SessionListItem({
 
 export default function SessionsListScreen() {
   const [sessions, setSessions] = useState<SavedSession[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     const all = await getSessions();
@@ -80,9 +70,7 @@ export default function SessionsListScreen() {
   }, []);
 
   async function handleRefresh() {
-    setRefreshing(true);
     await load();
-    setRefreshing(false);
   }
 
   useFocusEffect(
@@ -90,10 +78,6 @@ export default function SessionsListScreen() {
       load();
     }, [load])
   );
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   function confirmDelete(id: string) {
     if (Platform.OS === "web") {
@@ -124,50 +108,35 @@ export default function SessionsListScreen() {
   }
 
   return (
-    <ScreenContainer scrollable={false}>
+    <ScreenContainer scrollable refreshable onRefresh={handleRefresh}>
       <ScreenNavBar />
 
-      <ScrollView
-        className="flex-1"
-        style={Platform.OS === "web" ? { flex: 1, minHeight: 0 } : { flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 40 }}
-        showsVerticalScrollIndicator
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={["#6B8F71"]}
-            tintColor="#6B8F71"
-          />
-        }
-      >
-        <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
-          Mémoire des pratiques
-        </Text>
-        <Text className="text-3xl font-light text-sand-800 mb-2">
-          Mes exercices sauvegardés
-        </Text>
-        <Text className="text-sand-500 text-base mb-6 leading-6">
-          Vos fiches d&apos;exercice, gardées localement sur cet appareil — à relire ou à refaire quand vous en avez envie.
-        </Text>
+      <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
+        Mémoire des pratiques
+      </Text>
+      <Text className="text-3xl font-light text-sand-800 mb-2">
+        Mes exercices sauvegardés
+      </Text>
+      <Text className="text-sand-500 text-base mb-6 leading-6">
+        Vos fiches d&apos;exercice, gardées localement sur cet appareil — à relire ou à refaire quand vous en avez envie.
+      </Text>
 
-        {sessions.length === 0 ? (
-          <View className="bg-white rounded-2xl border border-dashed border-sand-300 px-6 py-12 items-center">
-            <Text className="text-sand-400 text-center leading-6">
-              Aucune fiche pour l&apos;instant.{"\n"}
-              Parcourez un rituel guidé, réalisez l&apos;exercice, puis sauvegardez-le pour le retrouver ici.
-            </Text>
-          </View>
-        ) : (
-          sessions.map((item) => (
-            <SessionListItem
-              key={item.id}
-              item={item}
-              onDelete={confirmDelete}
-            />
-          ))
-        )}
-      </ScrollView>
+      {sessions.length === 0 ? (
+        <View className="bg-white rounded-2xl border border-dashed border-sand-300 px-6 py-12 items-center">
+          <Text className="text-sand-400 text-center leading-6">
+            Aucune fiche pour l&apos;instant.{"\n"}
+            Parcourez un rituel guidé, réalisez l&apos;exercice, puis sauvegardez-le pour le retrouver ici.
+          </Text>
+        </View>
+      ) : (
+        sessions.map((item) => (
+          <SessionListItem
+            key={item.id}
+            item={item}
+            onDelete={confirmDelete}
+          />
+        ))
+      )}
     </ScreenContainer>
   );
 }

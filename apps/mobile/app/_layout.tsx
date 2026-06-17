@@ -19,7 +19,7 @@ export default function RootLayout() {
           style={{
             flex: 1,
             ...(Platform.OS === "web"
-              ? { minHeight: "100vh", width: "100%" }
+              ? { width: "100%", flex: 1, minHeight: 0 }
               : null),
           }}
         >
@@ -30,6 +30,7 @@ export default function RootLayout() {
               contentStyle: {
                 backgroundColor: "#FAF7F4",
                 flex: 1,
+                ...(Platform.OS === "web" ? { minHeight: 0 } : null),
               },
               animation: "fade",
             }}

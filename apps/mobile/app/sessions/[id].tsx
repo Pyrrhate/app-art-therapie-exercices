@@ -4,7 +4,6 @@ import {
   Alert,
   Image,
   Platform,
-  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -100,86 +99,80 @@ export default function SessionDetailScreen() {
   const paragraphs = reflection.split(/\n\s*\n/).filter((p) => p.trim());
 
   return (
-    <ScreenContainer scrollable={false}>
+    <ScreenContainer scrollable>
       <ScreenNavBar backLabel="← Liste" />
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 32 }}
-        showsVerticalScrollIndicator
-      >
-        <Text className="text-sand-400 text-xs mb-2">
-          {formatSessionDate(session.createdAt)}
-        </Text>
-        <Text className="text-sage-500 text-xs uppercase tracking-wider mb-2">
-          Fiche d&apos;exercice
-        </Text>
-        <Text className="text-3xl font-light text-sand-800 mb-2">
-          {session.impulse}
-        </Text>
-        <Text className="text-sand-500 text-sm mb-6">
-          {getTechniqueLabel(session.technique)} · {session.durationMinutes} min
-        </Text>
+      <Text className="text-sand-400 text-xs mb-2">
+        {formatSessionDate(session.createdAt)}
+      </Text>
+      <Text className="text-sage-500 text-xs uppercase tracking-wider mb-2">
+        Fiche d&apos;exercice
+      </Text>
+      <Text className="text-3xl font-light text-sand-800 mb-2">
+        {session.impulse}
+      </Text>
+      <Text className="text-sand-500 text-sm mb-6">
+        {getTechniqueLabel(session.technique)} · {session.durationMinutes} min
+      </Text>
 
-        {session.photoUri ? (
-          <Image
-            source={{ uri: session.photoUri }}
-            className="w-full h-56 rounded-2xl bg-sand-100 mb-6"
-            resizeMode="cover"
-          />
-        ) : null}
+      {session.photoUri ? (
+        <Image
+          source={{ uri: session.photoUri }}
+          className="w-full h-56 rounded-2xl bg-sand-100 mb-6"
+          resizeMode="cover"
+        />
+      ) : null}
 
+      <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-4">
+        <Text className="text-sand-700 text-xs uppercase tracking-wider mb-3">
+          Exercice
+        </Text>
+        <Text className="text-sand-700 text-base leading-7">{exercise}</Text>
+      </View>
+
+      {paragraphs.length > 0 && (
         <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-4">
-          <Text className="text-sand-700 text-xs uppercase tracking-wider mb-3">
-            Exercice
+          <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
+            Miroir créatif
           </Text>
-          <Text className="text-sand-700 text-base leading-7">{exercise}</Text>
-        </View>
-
-        {paragraphs.length > 0 && (
-          <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-4">
-            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-              Miroir créatif
+          {paragraphs.map((p, i) => (
+            <Text
+              key={i}
+              className="text-sage-700 text-base leading-7 mb-4 italic"
+            >
+              {p}
             </Text>
-            {paragraphs.map((p, i) => (
-              <Text
-                key={i}
-                className="text-sage-700 text-base leading-7 mb-4 italic"
-              >
-                {p}
-              </Text>
-            ))}
-          </View>
-        )}
-
-        {session.openQuestions?.length ? (
-          <View className="bg-sage-50 rounded-2xl border border-sage-100 px-5 py-5 mb-6">
-            {session.openQuestions.map((q, i) => (
-              <Text key={i} className="text-sand-600 text-sm leading-6 mb-2">
-                · {sanitizeAiDisplayText(q)}
-              </Text>
-            ))}
-          </View>
-        ) : null}
-
-        <View className="gap-3">
-          <PrimaryButton
-            label="Refaire cet exercice"
-            onPress={handleRedoExercise}
-          />
-          <PrimaryButton
-            label={exporting ? "Export…" : "Exporter en PDF (impression)"}
-            onPress={handleExportPdf}
-            variant="secondary"
-            disabled={exporting}
-          />
-          <PrimaryButton
-            label="Supprimer"
-            onPress={handleDelete}
-            variant="ghost"
-          />
+          ))}
         </View>
-      </ScrollView>
+      )}
+
+      {session.openQuestions?.length ? (
+        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-5 py-5 mb-6">
+          {session.openQuestions.map((q, i) => (
+            <Text key={i} className="text-sand-600 text-sm leading-6 mb-2">
+              · {sanitizeAiDisplayText(q)}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+
+      <View className="gap-3 pb-4">
+        <PrimaryButton
+          label="Refaire cet exercice"
+          onPress={handleRedoExercise}
+        />
+        <PrimaryButton
+          label={exporting ? "Export…" : "Exporter en PDF (impression)"}
+          onPress={handleExportPdf}
+          variant="secondary"
+          disabled={exporting}
+        />
+        <PrimaryButton
+          label="Supprimer"
+          onPress={handleDelete}
+          variant="ghost"
+        />
+      </View>
     </ScreenContainer>
   );
 }

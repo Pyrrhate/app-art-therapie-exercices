@@ -191,7 +191,11 @@ export class HuggingFaceProvider implements AIProvider {
         const keywords =
           parsed.keywords.length > 0
             ? parsed.keywords
-            : deriveExerciseKeywords(input.impulse, input.technique);
+            : deriveExerciseKeywords(
+                input.impulse,
+                input.technique,
+                parsed.exercise
+              );
         return {
           exercise: parsed.exercise,
           durationMinutes: parsed.durationMinutes,

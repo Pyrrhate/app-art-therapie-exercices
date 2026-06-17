@@ -122,7 +122,7 @@ export function ScreenContainer({
           flexGrow: 1,
           paddingHorizontal: 24,
           paddingTop: 64,
-          paddingBottom: 32,
+          paddingBottom: Platform.OS === "web" ? 56 : 32,
         }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={Platform.OS === "web"}
@@ -140,7 +140,11 @@ export function ScreenContainer({
   return (
     <View
       className="flex-1 bg-sand-50 px-6 pt-16 pb-8"
-      style={Platform.OS === "web" ? { flex: 1, height: "100%" } : undefined}
+      style={
+        Platform.OS === "web"
+          ? { flex: 1, height: "100%", minHeight: 0 }
+          : { flex: 1 }
+      }
     >
       <View style={webShellStyle}>
         {header}

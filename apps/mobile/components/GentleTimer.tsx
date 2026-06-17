@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import * as Haptics from "expo-haptics";
+import {
+  nextZenPhraseIndex,
+  pickRandomZenPhraseIndex,
+  ZEN_TIMER_PHRASES,
+} from "@/lib/exercise/zenPhrases";
 import { playTimerSound } from "@/lib/sounds";
 
 interface GentleTimerProps {
@@ -10,6 +15,9 @@ interface GentleTimerProps {
   autoStart?: boolean;
   completionSound?: "gong" | "chime" | "none";
 }
+
+const PHRASE_ROTATION_MS = 22_000;
+const TICK_MS = 200;
 
 export function GentleTimer({
   durationMinutes,
@@ -20,7 +28,10 @@ export function GentleTimer({
   const totalSeconds = durationMinutes * 60;
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(autoStart);
+  const [phraseIndex, setPhraseIndex] = useState(pickRandomZenPhraseIndex);
   const completedRef = useRef(false);
+  const anchorMsRef = useRef<number | null>(autoStart ? Date.now() : null);
+  const pausedElapsedRef = useRef(0);
 
   const progress = Math.min(elapsed / totalSeconds, 1);
   const size = 200;
@@ -33,27 +44,42 @@ export function GentleTimer({
   useEffect(() => {
     setElapsed(0);
     setRunning(autoStart);
+    setPhraseIndex(pickRandomZenPhraseIndex());
     completedRef.current = false;
+    pausedElapsedRef.current = 0;
+    anchorMsRef.current = autoStart ? Date.now() : null;
   }, [durationMinutes, autoStart]);
 
   useEffect(() => {
     if (!running || isComplete) return;
 
     const interval = setInterval(() => {
-      setElapsed((prev) => {
-        const next = prev + 1;
-        if (next >= totalSeconds && !completedRef.current) {
-          completedRef.current = true;
-          setRunning(false);
-          void playCompletionCue();
-          onComplete?.();
-        }
-        return next;
-      });
-    }, 1000);
+      if (anchorMsRef.current === null) return;
+      const next = Math.min(
+        totalSeconds,
+        Math.floor((Date.now() - anchorMsRef.current) / 1000)
+      );
+      setElapsed(next);
+
+      if (next >= totalSeconds && !completedRef.current) {
+        completedRef.current = true;
+        setRunning(false);
+        anchorMsRef.current = null;
+        void playCompletionCue();
+        onComplete?.();
+      }
+    }, TICK_MS);
 
     return () => clearInterval(interval);
   }, [running, totalSeconds, onComplete, isComplete]);
+
+  useEffect(() => {
+    if (!running || isComplete) return;
+    const interval = setInterval(() => {
+      setPhraseIndex((current) => nextZenPhraseIndex(current));
+    }, PHRASE_ROTATION_MS);
+    return () => clearInterval(interval);
+  }, [running, isComplete]);
 
   async function playCompletionCue() {
     try {
@@ -68,7 +94,15 @@ export function GentleTimer({
 
   function togglePause() {
     if (isComplete) return;
-    setRunning((r) => !r);
+    setRunning((wasRunning) => {
+      if (wasRunning) {
+        pausedElapsedRef.current = elapsed;
+        anchorMsRef.current = null;
+        return false;
+      }
+      anchorMsRef.current = Date.now() - pausedElapsedRef.current * 1000;
+      return true;
+    });
   }
 
   const remaining = Math.max(totalSeconds - elapsed, 0);
@@ -121,8 +155,14 @@ export function GentleTimer({
         </Pressable>
       )}
 
+      {!isComplete && (
+        <Text className="text-sand-500 text-sm mt-4 text-center leading-6 px-6 min-h-[48px]">
+          {ZEN_TIMER_PHRASES[phraseIndex]}
+        </Text>
+      )}
+
       {isComplete && (
-        <Text className="text-sage-500 text-sm mt-4">
+        <Text className="text-sage-500 text-sm mt-4 text-center px-6">
           Moment terminé — prenez le temps de respirer
         </Text>
       )}
