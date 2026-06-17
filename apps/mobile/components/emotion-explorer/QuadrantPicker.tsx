@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { HoverScale } from "@/components/emotion-explorer/HoverScale";
 import type { EmotionQuadrant, EmotionQuadrantId } from "@/lib/emotion-explorer";
 
 interface QuadrantPickerProps {
@@ -11,33 +12,53 @@ const GRID_ORDER: EmotionQuadrantId[][] = [
   ["low_unpleasant", "low_pleasant"],
 ];
 
+const BOARD_SIZE = 300;
+const CORNER_SIZE = 118;
+const CENTER_SIZE = 92;
+
 function QuadrantBlob({
   quadrant,
   onPress,
+  size,
+  compact = false,
 }: {
   quadrant: EmotionQuadrant;
   onPress: () => void;
+  size: number;
+  compact?: boolean;
 }) {
   return (
-    <Pressable
+    <HoverScale
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={quadrant.title}
-      className="flex-1 aspect-square active:opacity-90"
-      style={{ maxWidth: "48%" }}
+      hoverScale={1.06}
+      style={{ width: size, height: size }}
     >
       <View
-        className="flex-1 rounded-full items-center justify-center px-3 py-4 m-1"
-        style={{ backgroundColor: quadrant.color }}
+        className="flex-1 rounded-full items-center justify-center"
+        style={{
+          backgroundColor: quadrant.color,
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          paddingHorizontal: compact ? 6 : 10,
+        }}
       >
-        <Text className="text-sand-900 text-xs uppercase tracking-wider text-center opacity-80 mb-1">
+        <Text
+          className="text-sand-900 uppercase tracking-wider text-center opacity-80 mb-1"
+          style={{ fontSize: compact ? 9 : 11 }}
+        >
           {quadrant.energyLabel}
         </Text>
-        <Text className="text-sand-900 text-sm font-medium text-center leading-5">
+        <Text
+          className="text-sand-900 font-medium text-center leading-4"
+          style={{ fontSize: compact ? 11 : 13 }}
+        >
           {quadrant.valenceLabel}
         </Text>
       </View>
-    </Pressable>
+    </HoverScale>
   );
 }
 
@@ -46,29 +67,64 @@ export function QuadrantPicker({ quadrants, onSelect }: QuadrantPickerProps) {
     EmotionQuadrantId,
     EmotionQuadrant
   >;
+  const neutral = byId.neutral;
 
   return (
     <View>
       <Text className="text-sand-600 text-base text-center leading-6 mb-6 px-2">
-        Touchez la teinte qui correspond le mieux à ce que vous ressentez en ce
-        moment.
+        Touchez la teinte qui correspond le mieux à ce que vous ressentez — ou
+        le centre si c&apos;est incertain.
       </Text>
-      <View className="gap-2">
-        {GRID_ORDER.map((row, rowIndex) => (
-          <View key={rowIndex} className="flex-row justify-center gap-2">
-            {row.map((id) => {
-              const quadrant = byId[id];
-              if (!quadrant) return null;
-              return (
-                <QuadrantBlob
-                  key={id}
-                  quadrant={quadrant}
-                  onPress={() => onSelect(quadrant)}
-                />
-              );
-            })}
+
+      <View
+        style={{
+          width: BOARD_SIZE,
+          height: BOARD_SIZE,
+          alignSelf: "center",
+          position: "relative",
+        }}
+      >
+        <View className="gap-2" style={{ flex: 1, justifyContent: "space-between" }}>
+          {GRID_ORDER.map((row, rowIndex) => (
+            <View
+              key={rowIndex}
+              className="flex-row justify-between"
+              style={{ paddingHorizontal: 4 }}
+            >
+              {row.map((id) => {
+                const quadrant = byId[id];
+                if (!quadrant) return null;
+                return (
+                  <QuadrantBlob
+                    key={id}
+                    quadrant={quadrant}
+                    onPress={() => onSelect(quadrant)}
+                    size={CORNER_SIZE}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </View>
+
+        {neutral ? (
+          <View
+            pointerEvents="box-none"
+            style={{
+              position: "absolute",
+              top: (BOARD_SIZE - CENTER_SIZE) / 2,
+              left: (BOARD_SIZE - CENTER_SIZE) / 2,
+              zIndex: 10,
+            }}
+          >
+            <QuadrantBlob
+              quadrant={neutral}
+              onPress={() => onSelect(neutral)}
+              size={CENTER_SIZE}
+              compact
+            />
           </View>
-        ))}
+        ) : null}
       </View>
     </View>
   );

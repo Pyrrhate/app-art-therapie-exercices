@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
+import { HoverScale } from "@/components/emotion-explorer/HoverScale";
 import type { Emotion, EmotionQuadrant } from "@/lib/emotion-explorer";
 
 interface EmotionDetailBarProps {
@@ -28,18 +29,20 @@ export function EmotionDetailBar({
             {emotion.description}
           </Text>
         </View>
-        <Pressable
+        <HoverScale
           onPress={onContinue}
           disabled={loading}
           accessibilityRole="button"
           accessibilityLabel="Passer à l'exercice"
-          className={`rounded-full items-center justify-center ${
-            loading ? "opacity-50" : "active:opacity-80"
-          }`}
+          hoverScale={1.1}
           style={{
             width: 52,
             height: 52,
+            borderRadius: 26,
             backgroundColor: "#FAF7F4",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: loading ? 0.5 : 1,
           }}
         >
           {loading ? (
@@ -47,7 +50,7 @@ export function EmotionDetailBar({
           ) : (
             <Text className="text-sand-800 text-2xl leading-none">→</Text>
           )}
-        </Pressable>
+        </HoverScale>
       </View>
     </View>
   );

@@ -71,7 +71,9 @@ export default function EmotionExplorerScreen() {
         "Impossible de continuer",
         error instanceof ApiError
           ? error.message
-          : "Une erreur est survenue. Réessayez dans un instant."
+          : error instanceof Error
+            ? error.message
+            : "Une erreur est survenue. Réessayez dans un instant."
       );
     } finally {
       setStartingExercise(false);

@@ -6,6 +6,7 @@ const QUADRANT_TECHNIQUES: Record<EmotionQuadrantId, ArtisticTechnique> = {
   high_pleasant: "painting",
   low_unpleasant: "drawing",
   low_pleasant: "painting",
+  neutral: "mixed_media",
 };
 
 const EMOTION_TECHNIQUE_OVERRIDES: Partial<Record<string, ArtisticTechnique>> = {

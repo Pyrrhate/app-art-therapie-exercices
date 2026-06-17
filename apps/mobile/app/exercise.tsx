@@ -12,9 +12,14 @@ import type { TimerSoundId } from "@/lib/sounds";
 import { useRitualStore } from "@/lib/store";
 
 export default function ExerciseScreen() {
-  const { exercise, durationMinutes, impulse, exerciseSource, exerciseKeywords, setDurationMinutes } =
-    useRitualStore();
+  const exercise = useRitualStore((s) => s.exercise);
+  const durationMinutes = useRitualStore((s) => s.durationMinutes);
+  const impulse = useRitualStore((s) => s.impulse);
+  const exerciseSource = useRitualStore((s) => s.exerciseSource);
+  const exerciseKeywords = useRitualStore((s) => s.exerciseKeywords);
+  const setDurationMinutes = useRitualStore((s) => s.setDurationMinutes);
   const [completionSound, setCompletionSound] = useState<TimerSoundId>("gong");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     getTimerSound().then(setCompletionSound);
@@ -24,8 +29,19 @@ export default function ExerciseScreen() {
     void persistRitualDraft("exercise");
   }, [exercise, durationMinutes, impulse]);
 
-  if (!exercise) {
-    router.replace("/ritual");
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const current = useRitualStore.getState().exercise?.trim();
+      if (!current) {
+        router.replace("/ritual");
+        return;
+      }
+      setReady(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [exercise]);
+
+  if (!ready || !exercise?.trim()) {
     return null;
   }
 

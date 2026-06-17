@@ -2,7 +2,8 @@ export type EmotionQuadrantId =
   | "high_unpleasant"
   | "high_pleasant"
   | "low_unpleasant"
-  | "low_pleasant";
+  | "low_pleasant"
+  | "neutral";
 
 export interface EmotionQuadrant {
   id: EmotionQuadrantId;

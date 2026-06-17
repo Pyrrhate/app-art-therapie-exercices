@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { ChromaticWheel } from "@/components/color-journey/ChromaticWheel";
 import { ColorSwatch } from "@/components/color-journey/ColorSwatch";
 import { JourneyProgress } from "@/components/color-journey/JourneyProgress";
@@ -22,7 +22,9 @@ import {
   buildSynthesis,
   getTurnGuidance,
 } from "@/lib/color-journey/theory";
-import { startRitualFromImpulse } from "@/lib/fil/bridges";
+import { ApiError } from "@/lib/api";
+import { showAlert } from "@/lib/alert";
+import { startExerciseFromImpulse } from "@/lib/fil/bridges";
 import { navigateHome } from "@/lib/navigation";
 
 export default function ColorJourneyScreen() {
@@ -33,6 +35,7 @@ export default function ColorJourneyScreen() {
     null
   );
   const [synthesis, setSynthesis] = useState<JourneySynthesis | null>(null);
+  const [startingExercise, setStartingExercise] = useState(false);
 
   const guidance = getTurnGuidance(turn, history);
   const canExitEarly = history.length >= 2;
@@ -85,8 +88,27 @@ export default function ColorJourneyScreen() {
     return `Palette intérieure : ${labels}`;
   }
 
+  async function handleStartExercise(impulse: string) {
+    if (startingExercise || !impulse.trim()) return;
+    setStartingExercise(true);
+    try {
+      await startExerciseFromImpulse(impulse, "painting");
+    } catch (error) {
+      showAlert(
+        "Impossible de continuer",
+        error instanceof ApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Une erreur est survenue. Réessayez dans un instant."
+      );
+    } finally {
+      setStartingExercise(false);
+    }
+  }
+
   function handleEarlyExitToExercise() {
-    startRitualFromImpulse(buildImpulseFromHistory(history), "painting");
+    void handleStartExercise(buildImpulseFromHistory(history));
   }
 
   const paletteHexes = history.map((h) => h.hex);
@@ -142,6 +164,7 @@ export default function ColorJourneyScreen() {
                       label="Passer à l'exercice avec mes teintes"
                       onPress={handleEarlyExitToExercise}
                       variant="ghost"
+                      disabled={startingExercise}
                     />
                   </View>
                 )}
@@ -165,6 +188,7 @@ export default function ColorJourneyScreen() {
                       label="Passer à l'exercice avec mes teintes"
                       onPress={handleEarlyExitToExercise}
                       variant="ghost"
+                      disabled={startingExercise}
                     />
                   </View>
                 )}
@@ -213,16 +237,22 @@ export default function ColorJourneyScreen() {
               subtitle="Vos teintes deviennent une impulsion pour peindre ou explorer en technique mixte."
               actions={[
                 {
-                  label: "Passer à l'exercice",
+                  label: startingExercise
+                    ? "Préparation…"
+                    : "Passer à l'exercice",
                   onPress: () =>
-                    startRitualFromImpulse(
-                      synthesis.suggestedImpulse,
-                      "painting"
-                    ),
+                    void handleStartExercise(synthesis.suggestedImpulse),
                   variant: "primary",
+                  disabled: startingExercise,
                 },
               ]}
             />
+
+            {startingExercise && (
+              <View className="mt-3 items-center">
+                <ActivityIndicator color="#6B8F71" />
+              </View>
+            )}
 
             <AddToFilBar
               entry={{

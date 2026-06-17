@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { HoverScale } from "@/components/emotion-explorer/HoverScale";
 import type { Emotion, EmotionQuadrant } from "@/lib/emotion-explorer";
 
 interface EmotionGridProps {
@@ -19,12 +20,12 @@ export function EmotionGrid({
       {emotions.map((emotion) => {
         const selected = emotion.id === selectedId;
         return (
-          <Pressable
+          <HoverScale
             key={emotion.id}
             onPress={() => onSelect(emotion)}
             accessibilityRole="button"
             accessibilityState={{ selected }}
-            className="active:opacity-90"
+            hoverScale={1.08}
             style={{ width: "30%", minWidth: 96, maxWidth: 120 }}
           >
             <View
@@ -33,7 +34,6 @@ export function EmotionGrid({
                 backgroundColor: quadrant.bubbleColor,
                 borderColor: selected ? quadrant.color : "transparent",
                 minHeight: 88,
-                transform: [{ scale: selected ? 1.04 : 1 }],
               }}
             >
               <Text
@@ -43,7 +43,7 @@ export function EmotionGrid({
                 {emotion.label}
               </Text>
             </View>
-          </Pressable>
+          </HoverScale>
         );
       })}
     </View>

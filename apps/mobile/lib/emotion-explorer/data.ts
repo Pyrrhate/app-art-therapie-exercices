@@ -37,6 +37,15 @@ export const EMOTION_QUADRANTS: EmotionQuadrant[] = [
     energyLabel: "Énergie basse",
     valenceLabel: "Agréable",
   },
+  {
+    id: "neutral",
+    title: "Neutre · Incertain",
+    subtitle: "Ni haut ni bas, ni clair ni lourd",
+    color: "#C9B8A8",
+    bubbleColor: "#E8DDD4",
+    energyLabel: "Neutre",
+    valenceLabel: "Incertain",
+  },
 ];
 
 export const EMOTIONS: Emotion[] = [
@@ -235,6 +244,55 @@ export const EMOTIONS: Emotion[] = [
     quadrantId: "low_pleasant",
     label: "Confiant·e",
     description: "Ouverture modeste vers demain, sans certitude.",
+  },
+  // neutral
+  {
+    id: "neutral_feel",
+    quadrantId: "neutral",
+    label: "Neutre",
+    description: "Ni particulièrement bien ni mal — juste présent·e.",
+  },
+  {
+    id: "uncertain",
+    quadrantId: "neutral",
+    label: "Incertain·e",
+    description: "Difficile de nommer ce que vous ressentez en ce moment.",
+  },
+  {
+    id: "in_between",
+    quadrantId: "neutral",
+    label: "Entre-deux",
+    description: "Plusieurs états se chevauchent sans dominer.",
+  },
+  {
+    id: "numb",
+    quadrantId: "neutral",
+    label: "Engourdi·e",
+    description: "Peu de sensations nettes — comme en pause intérieure.",
+  },
+  {
+    id: "surprised",
+    quadrantId: "neutral",
+    label: "Surpris·e",
+    description: "Quelque chose a déplacé votre équilibre sans prévenir.",
+  },
+  {
+    id: "distracted",
+    quadrantId: "neutral",
+    label: "Distrait·e",
+    description: "L'attention part ailleurs ; le corps reste là.",
+  },
+  {
+    id: "okay",
+    quadrantId: "neutral",
+    label: "Ça va",
+    description: "Pas de vague forte — un terrain stable et ordinaire.",
+  },
+  {
+    id: "curious_mood",
+    quadrantId: "neutral",
+    label: "Curieux·se",
+    description: "Ouvert·e à explorer sans charge émotionnelle forte.",
   },
 ];
 
