@@ -137,12 +137,7 @@ export default function EmotionExplorerScreen() {
 
           {selected && (
             <>
-              <EmotionDetailBar
-                emotion={selected}
-                quadrant={quadrant}
-                loading={startingExercise}
-                onContinue={() => void handleStartExercise()}
-              />
+                <EmotionDetailBar emotion={selected} quadrant={quadrant} />
 
               <AccentCard className="mt-4">
                 <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
