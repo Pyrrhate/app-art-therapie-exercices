@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { Platform, Text, type TextProps } from "react-native";
+import { textPrimary } from "@/lib/themeClasses";
+import { useIsDark } from "@/lib/themeStore";
 
 interface DisplayTextProps extends TextProps {
   children: ReactNode;
@@ -12,10 +14,17 @@ const nativeDisplayFont = Platform.select({
   default: undefined,
 });
 
-export function DisplayTitle({ children, className = "", style, ...props }: DisplayTextProps) {
+export function DisplayTitle({
+  children,
+  className = "",
+  style,
+  ...props
+}: DisplayTextProps) {
+  const isDark = useIsDark();
+
   return (
     <Text
-      className={`font-display text-3xl font-light text-sand-800 leading-tight ${className}`}
+      className={`font-display text-3xl font-light leading-tight ${textPrimary(isDark)} ${className}`}
       style={[
         Platform.OS !== "web" && nativeDisplayFont
           ? { fontFamily: nativeDisplayFont }
@@ -29,10 +38,17 @@ export function DisplayTitle({ children, className = "", style, ...props }: Disp
   );
 }
 
-export function DisplayHero({ children, className = "", style, ...props }: DisplayTextProps) {
+export function DisplayHero({
+  children,
+  className = "",
+  style,
+  ...props
+}: DisplayTextProps) {
+  const isDark = useIsDark();
+
   return (
     <Text
-      className={`font-display text-4xl font-light text-sand-800 leading-tight ${className}`}
+      className={`font-display text-4xl font-light leading-tight ${textPrimary(isDark)} ${className}`}
       style={[
         Platform.OS !== "web" && nativeDisplayFont
           ? { fontFamily: nativeDisplayFont }

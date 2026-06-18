@@ -12,7 +12,7 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { TechniquePicker } from "@/components/TechniquePicker";
-import { TECHNIQUES } from "@/constants";
+import { TECHNIQUES, isAiAnalysisSupported } from "@/constants";
 import { ApiError, generateExercise } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
 import { useRitualStore } from "@/lib/store";
@@ -107,6 +107,14 @@ export default function RitualScreen() {
         onSelect={setTechnique}
         techniques={TECHNIQUES}
       />
+
+      {technique && !isAiAnalysisSupported(technique) && (
+        <Text className="text-amber-700 text-xs mt-3 mb-1 leading-5">
+          Cette technique ne propose pas d&apos;analyse IA en phase réflexion —
+          vous pourrez accueillir votre ressenti avec des questions
+          bienveillantes, sans envoi d&apos;image au serveur.
+        </Text>
+      )}
 
       <Text className="text-sand-600 text-sm mb-4 mt-8 font-medium">
         Durée du rituel

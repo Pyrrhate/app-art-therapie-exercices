@@ -9,6 +9,8 @@ import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { deleteSession, getSessions } from "@/lib/storage";
+import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
+import { useIsDark } from "@/lib/themeStore";
 import type { ArtisticTechnique, SavedSession } from "@/lib/types";
 
 const TECHNIQUE_ACCENT: Record<ArtisticTechnique, string> = {
@@ -19,20 +21,26 @@ const TECHNIQUE_ACCENT: Record<ArtisticTechnique, string> = {
   collage: "#9A8070",
   volume: "#7A6558",
   recyclart: "#527058",
+  video: "#5C4D42",
+  music: "#8FA88A",
+  dance: "#C4A484",
+  theatre: "#A8856A",
 };
 
 function SessionListItem({
   item,
   onDelete,
+  isDark,
 }: {
   item: SavedSession;
   onDelete: (id: string) => void;
+  isDark: boolean;
 }) {
   const exercise = sanitizeAiDisplayText(item.exercise);
   const accent = TECHNIQUE_ACCENT[item.technique] ?? "#6B8F71";
 
   const card = (
-    <View className="bg-white rounded-2xl border border-sand-200 overflow-hidden mb-4">
+    <View className={`rounded-2xl border overflow-hidden mb-4 ${panelBg(isDark)}`}>
       <View style={{ height: 4, backgroundColor: accent }} />
       {item.photoUri ? (
         <Image
@@ -42,7 +50,7 @@ function SessionListItem({
         />
       ) : null}
       <View className="px-5 py-4">
-        <Text className="text-sand-500 text-xs mb-2">
+        <Text className={`text-xs mb-2 ${textMuted(isDark)}`}>
           {formatSessionDate(item.createdAt)}
         </Text>
         <View className="flex-row flex-wrap gap-2 mb-3">
@@ -50,21 +58,23 @@ function SessionListItem({
             className="rounded-full px-3 py-1"
             style={{ backgroundColor: `${accent}22` }}
           >
-            <Text className="text-sand-700 text-xs font-medium">
+            <Text className={`text-xs font-medium ${textPrimary(isDark)}`}>
               {getTechniqueLabel(item.technique)}
             </Text>
           </View>
-          <View className="bg-sand-100 rounded-full px-3 py-1">
-            <Text className="text-sand-600 text-xs">
+          <View
+            className={`rounded-full px-3 py-1 ${isDark ? "bg-sand-700" : "bg-sand-100"}`}
+          >
+            <Text className={`text-xs ${textSecondary(isDark)}`}>
               {item.durationMinutes} min
             </Text>
           </View>
         </View>
-        <Text className="text-sand-800 font-medium text-base mb-2">
+        <Text className={`font-medium text-base mb-2 ${textPrimary(isDark)}`}>
           {item.impulse}
         </Text>
         {exercise ? (
-          <Text className="text-sand-600 text-sm leading-6" numberOfLines={3}>
+          <Text className={`text-sm leading-6 ${textSecondary(isDark)}`} numberOfLines={3}>
             {exercise}
           </Text>
         ) : null}
@@ -79,7 +89,7 @@ function SessionListItem({
             accessibilityRole="button"
             accessibilityLabel="Supprimer cette session"
           >
-            <Text className="text-sand-500 text-xs">Supprimer</Text>
+            <Text className={`text-xs ${textMuted(isDark)}`}>Supprimer</Text>
           </Pressable>
         </View>
       </View>
@@ -109,6 +119,7 @@ function SessionListItem({
 }
 
 export default function SessionsListScreen() {
+  const isDark = useIsDark();
   const [sessions, setSessions] = useState<SavedSession[]>([]);
 
   const load = useCallback(async () => {
@@ -164,13 +175,13 @@ export default function SessionsListScreen() {
       <DisplayTitle className="mb-2">
         Mes exercices sauvegardés
       </DisplayTitle>
-      <Text className="text-sand-600 text-base mb-6 leading-6">
+      <Text className={`text-base mb-6 leading-6 ${textSecondary(isDark)}`}>
         Vos fiches d&apos;exercice, gardées localement sur cet appareil — à relire ou à refaire quand vous en avez envie.
       </Text>
 
       {sessions.length === 0 ? (
         <ContentCard className="border-dashed items-center py-12">
-          <Text className="text-sand-500 text-center leading-6">
+          <Text className={`text-center leading-6 ${textSecondary(isDark)}`}>
             Aucune fiche pour l&apos;instant.{"\n"}
             Parcourez un rituel guidé, réalisez l&apos;exercice, puis sauvegardez-le pour le retrouver ici.
           </Text>
@@ -181,6 +192,7 @@ export default function SessionsListScreen() {
             key={item.id}
             item={item}
             onDelete={confirmDelete}
+            isDark={isDark}
           />
         ))
       )}

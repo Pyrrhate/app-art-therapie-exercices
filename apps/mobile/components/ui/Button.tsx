@@ -11,6 +11,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DisplayTitle } from "@/components/ui/DisplayText";
 import { refreshApplication } from "@/lib/navigation";
+import { screenBg, textSecondary } from "@/lib/themeClasses";
+import { useIsDark } from "@/lib/themeStore";
 
 interface PrimaryButtonProps {
   label: string;
@@ -25,16 +27,19 @@ export function PrimaryButton({
   disabled = false,
   variant = "primary",
 }: PrimaryButtonProps) {
+  const isDark = useIsDark();
   const variants = {
     primary: "bg-sage-500 active:bg-sage-600",
     secondary: "bg-clay-400 active:bg-clay-500",
-    ghost: "bg-transparent border border-sand-300",
+    ghost: isDark
+      ? "bg-transparent border border-sand-600"
+      : "bg-transparent border border-sand-300",
   };
 
   const textVariants = {
     primary: "text-white",
     secondary: "text-white",
-    ghost: "text-sand-700",
+    ghost: isDark ? "text-sand-200" : "text-sand-700",
   };
 
   return (
@@ -65,6 +70,11 @@ interface ScreenContainerProps {
   stickyFooter?: ReactNode;
 }
 
+const webScrollShell =
+  Platform.OS === "web"
+    ? ({ flex: 1, minHeight: 0, height: "100%" } as const)
+    : ({ flex: 1 } as const);
+
 export function ScreenContainer({
   children,
   title,
@@ -77,6 +87,7 @@ export function ScreenContainer({
 }: ScreenContainerProps) {
   const [refreshing, setRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
+  const isDark = useIsDark();
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -106,14 +117,14 @@ export function ScreenContainer({
       />
     ) : undefined;
 
-  const bgClass = variant === "focus" ? "bg-sand-100" : "bg-sand-50";
+  const bgClass = screenBg(isDark, variant === "focus");
   const paddingTop = Math.max(insets.top, Platform.OS === "web" ? 48 : 56);
 
   const header = (
     <>
       {title && <DisplayTitle className="mb-2">{title}</DisplayTitle>}
       {subtitle && (
-        <Text className="text-base text-sand-600 mb-8 leading-6">
+        <Text className={`text-base mb-8 leading-6 ${textSecondary(isDark)}`}>
           {subtitle}
         </Text>
       )}
@@ -126,22 +137,15 @@ export function ScreenContainer({
       : undefined;
 
   const footerPaddingBottom = Math.max(insets.bottom, Platform.OS === "web" ? 24 : 16);
+  const footerBg = isDark ? "bg-sand-900/95" : variant === "focus" ? "bg-sand-100/95" : "bg-sand-50/95";
+  const footerBorder = isDark ? "border-sand-700" : "border-sand-200";
 
   if (stickyFooter) {
     return (
-      <View
-        className={`flex-1 ${bgClass}`}
-        style={
-          Platform.OS === "web"
-            ? { flex: 1, height: "100%", minHeight: 0 }
-            : { flex: 1 }
-        }
-      >
+      <View className={`flex-1 ${bgClass}`} style={webScrollShell}>
         <ScrollView
-          className="flex-1"
-          style={Platform.OS === "web" ? { flex: 1, minHeight: 0 } : undefined}
+          style={webScrollShell}
           contentContainerStyle={{
-            flexGrow: 1,
             paddingHorizontal: 24,
             paddingTop,
             paddingBottom: 16,
@@ -157,7 +161,7 @@ export function ScreenContainer({
           </View>
         </ScrollView>
         <View
-          className={`border-t border-sand-200 px-6 pt-4 ${variant === "focus" ? "bg-sand-100/95" : "bg-sand-50/95"}`}
+          className={`border-t px-6 pt-4 ${footerBorder} ${footerBg}`}
           style={{
             paddingBottom: footerPaddingBottom,
             ...(Platform.OS === "web"
@@ -173,25 +177,25 @@ export function ScreenContainer({
 
   if (scrollable) {
     return (
-      <ScrollView
-        className={`flex-1 ${bgClass}`}
-        style={Platform.OS === "web" ? { flex: 1, height: "100%" } : undefined}
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingHorizontal: 24,
-          paddingTop,
-          paddingBottom: Math.max(insets.bottom, Platform.OS === "web" ? 56 : 32),
-        }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={Platform.OS === "web"}
-        nestedScrollEnabled
-        refreshControl={refreshControl}
-      >
-        <View style={webShellStyle}>
-          {header}
-          {children}
-        </View>
-      </ScrollView>
+      <View className={`flex-1 ${bgClass}`} style={webScrollShell}>
+        <ScrollView
+          style={webScrollShell}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingTop,
+            paddingBottom: Math.max(insets.bottom, Platform.OS === "web" ? 56 : 32),
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={Platform.OS === "web"}
+          nestedScrollEnabled
+          refreshControl={refreshControl}
+        >
+          <View style={webShellStyle}>
+            {header}
+            {children}
+          </View>
+        </ScrollView>
+      </View>
     );
   }
 
@@ -200,9 +204,7 @@ export function ScreenContainer({
       className={`flex-1 ${bgClass} px-6 pb-8`}
       style={[
         { paddingTop, paddingBottom: Math.max(insets.bottom, 32) },
-        Platform.OS === "web"
-          ? { flex: 1, height: "100%", minHeight: 0 }
-          : { flex: 1 },
+        webScrollShell,
       ]}
     >
       <View style={webShellStyle}>

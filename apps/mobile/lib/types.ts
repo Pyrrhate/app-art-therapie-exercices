@@ -5,7 +5,11 @@ export type ArtisticTechnique =
   | "mixed_media"
   | "recyclart"
   | "collage"
-  | "volume";
+  | "volume"
+  | "video"
+  | "music"
+  | "dance"
+  | "theatre";
 
 export interface ExerciseResponse {
   exercise: string;

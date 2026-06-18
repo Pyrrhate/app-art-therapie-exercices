@@ -1,11 +1,5 @@
 import { useCallback, useState } from "react";
-import {
-  Alert,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Platform, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
@@ -13,8 +7,11 @@ import { formatSessionDate } from "@/constants";
 import { clearFilEntries, getFilEntries } from "@/lib/fil/storage";
 import { FIL_SOURCE_META, type FilEntry } from "@/lib/fil/types";
 import { navigateHome } from "@/lib/navigation";
+import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
+import { useIsDark } from "@/lib/themeStore";
 
 export default function FilScreen() {
+  const isDark = useIsDark();
   const [entries, setEntries] = useState<FilEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,24 +47,26 @@ export default function FilScreen() {
   }
 
   return (
-    <ScreenContainer scrollable={false}>
+    <ScreenContainer scrollable refreshable onRefresh={load}>
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
       <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
         Fil créatif
       </Text>
-      <Text className="text-3xl font-light text-sand-800 mb-2 leading-tight">
+      <Text className={`text-3xl font-light mb-2 leading-tight ${textPrimary(isDark)}`}>
         Mémoire de vos pratiques
       </Text>
-      <Text className="text-sand-500 text-base leading-6 mb-6">
+      <Text className={`text-base leading-6 mb-6 ${textSecondary(isDark)}`}>
         Sur cet appareil, de petites traces laissées après vos exercices et modules — mandala, nuances, jardin, ping-pong, rituel.
       </Text>
 
       {loading ? (
-        <Text className="text-sand-400">Chargement…</Text>
+        <Text className={textMuted(isDark)}>Chargement…</Text>
       ) : entries.length === 0 ? (
-        <View className="bg-white rounded-2xl border border-dashed border-sand-300 px-5 py-10 items-center">
-          <Text className="text-sand-500 text-center leading-6">
+        <View
+          className={`rounded-2xl border border-dashed px-5 py-10 items-center ${panelBg(isDark)}`}
+        >
+          <Text className={`text-center leading-6 ${textSecondary(isDark)}`}>
             Rien ici pour l&apos;instant. Terminez un exercice ou un module, puis ajoutez une trace pour vous en souvenir.
           </Text>
           <View className="mt-6 w-full gap-3">
@@ -76,52 +75,46 @@ export default function FilScreen() {
           </View>
         </View>
       ) : (
-        <>
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{ paddingBottom: 24, gap: 12 }}
-            showsVerticalScrollIndicator
-          >
-            {entries.map((entry) => {
-              const meta = FIL_SOURCE_META[entry.source];
-              return (
-                <View
-                  key={entry.id}
-                  className="bg-white rounded-2xl border border-sand-200 px-5 py-4"
-                >
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-sand-400 text-xs">
-                      {formatSessionDate(entry.createdAt)}
-                    </Text>
-                    <Text className="text-sand-500 text-xs">
-                      {meta.emoji} {meta.label}
-                    </Text>
-                  </View>
-                  <Text className="text-sand-800 font-medium text-base mb-1">
-                    {entry.summary}
+        <View className="gap-3 pb-6">
+          {entries.map((entry) => {
+            const meta = FIL_SOURCE_META[entry.source];
+            return (
+              <View
+                key={entry.id}
+                className={`rounded-2xl border px-5 py-4 ${panelBg(isDark)}`}
+              >
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className={`text-xs ${textMuted(isDark)}`}>
+                    {formatSessionDate(entry.createdAt)}
                   </Text>
-                  {entry.detail ? (
-                    <Text className="text-sand-600 text-sm leading-6">
-                      {entry.detail}
-                    </Text>
-                  ) : null}
-                  {entry.metadata?.colors?.length ? (
-                    <View className="flex-row flex-wrap gap-2 mt-3">
-                      {entry.metadata.colors.map((hex) => (
-                        <View
-                          key={hex}
-                          className="w-6 h-6 rounded-full border border-sand-200"
-                          style={{ backgroundColor: hex }}
-                        />
-                      ))}
-                    </View>
-                  ) : null}
+                  <Text className={`text-xs ${textMuted(isDark)}`}>
+                    {meta.emoji} {meta.label}
+                  </Text>
                 </View>
-              );
-            })}
-          </ScrollView>
+                <Text className={`font-medium text-base mb-1 ${textPrimary(isDark)}`}>
+                  {entry.summary}
+                </Text>
+                {entry.detail ? (
+                  <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
+                    {entry.detail}
+                  </Text>
+                ) : null}
+                {entry.metadata?.colors?.length ? (
+                  <View className="flex-row flex-wrap gap-2 mt-3">
+                    {entry.metadata.colors.map((hex) => (
+                      <View
+                        key={hex}
+                        className={`w-6 h-6 rounded-full border ${isDark ? "border-sand-600" : "border-sand-200"}`}
+                        style={{ backgroundColor: hex }}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+            );
+          })}
 
-          <View className="gap-3 pt-4 border-t border-sand-200">
+          <View className={`gap-3 pt-4 border-t ${isDark ? "border-sand-700" : "border-sand-200"}`}>
             <PrimaryButton
               label="Préparer un exercice"
               onPress={() => router.push("/ritual")}
@@ -132,7 +125,7 @@ export default function FilScreen() {
               variant="ghost"
             />
           </View>
-        </>
+        </View>
       )}
     </ScreenContainer>
   );

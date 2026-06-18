@@ -1,15 +1,39 @@
 import { deriveExerciseKeywords } from "./exercise-keywords";
-import { TECHNIQUE_LABELS } from "./techniques";
+import { TECHNIQUE_LABELS, isAiAnalysisSupported } from "./techniques";
 import type { ExerciseRequest, ExerciseResponse, ReflectionRequest } from "./types";
+
+function performativeIntro(technique: ExerciseRequest["technique"]): string {
+  switch (technique) {
+    case "video":
+      return "Laissez l'impulsion guider votre cadre, vos plans et ce que vous choisissez de montrer";
+    case "music":
+      return "Laissez l'impulsion guider le rythme, les sons ou la mélodie que vous explorez";
+    case "dance":
+      return "Laissez l'impulsion guider le mouvement, le poids du corps et l'espace autour de vous";
+    case "theatre":
+      return "Laissez l'impulsion guider la voix, le jeu et la présence corporelle";
+    default:
+      return "Commencez par une forme ou une couleur qui vous appelle, même si elle vous surprend";
+  }
+}
 
 export function getFallbackExercise(input: ExerciseRequest): ExerciseResponse {
   const technique = TECHNIQUE_LABELS[input.technique];
   const impulse = input.impulse.trim() || "votre impulsion du moment";
   const durationMinutes = input.durationMinutes ?? 15;
+  const isPerformative = !isAiAnalysisSupported(input.technique);
+
+  const intro = isPerformative
+    ? performativeIntro(input.technique)
+    : "Commencez par une forme ou une couleur qui vous appelle, même si elle vous surprend";
+
+  const middle = isPerformative
+    ? `${intro}. Explorez pendant ${durationMinutes} minutes en restant à l'écoute de ce qui émerge — sans viser une performance parfaite.`
+    : `${intro}. Travaillez pendant ${durationMinutes} minutes en restant curieux·se face à ce qui émerge.`;
 
   const exercise = `Prenez un moment pour vous installer confortablement. Sans jugement, laissez l'impulsion « ${impulse} » guider votre ${technique}.
 
-Commencez par une forme ou une couleur qui vous appelle, même si elle vous surprend. Travaillez pendant ${durationMinutes} minutes en restant curieux·se face à ce qui émerge.
+${middle}
 
 Il n'y a pas de bon ou mauvais résultat — seulement votre expression du moment.`;
 

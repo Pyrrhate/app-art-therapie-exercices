@@ -2,15 +2,22 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { SupportButton } from "@/components/SupportButton";
+import { ThemePicker } from "@/components/ThemePicker";
 import { TimerSoundPicker } from "@/components/TimerSoundPicker";
+import { DisplayTitle } from "@/components/ui/DisplayText";
 import { ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { checkHealth } from "@/lib/api";
 import { getApiUrl } from "@/lib/config";
-import { getTimerSound, setTimerSound } from "@/lib/preferences";
+import { getTimerSound, setTimerSound, type ThemePreference } from "@/lib/preferences";
 import { previewTimerSound, type TimerSoundId } from "@/lib/sounds";
+import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
+import { useThemeStore } from "@/lib/themeStore";
 
 export default function SettingsScreen() {
+  const theme = useThemeStore((s) => s.theme);
+  const setTheme = useThemeStore((s) => s.setTheme);
+  const isDark = theme === "dark";
   const [apiOk, setApiOk] = useState<boolean | null>(null);
   const [provider, setProvider] = useState<string | null>(null);
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
@@ -52,6 +59,10 @@ export default function SettingsScreen() {
     await previewTimerSound(id);
   }
 
+  async function handleThemeChange(next: ThemePreference) {
+    await setTheme(next);
+  }
+
   async function refreshHealth() {
     const {
       ok,
@@ -75,21 +86,31 @@ export default function SettingsScreen() {
     <ScreenContainer scrollable refreshable onRefresh={refreshHealth}>
       <ScreenNavBar />
 
-      <Text className="text-3xl font-light text-sand-800 mb-2">Paramètres</Text>
-      <Text className="text-sand-500 text-base mb-8 leading-6">
+      <DisplayTitle className="mb-2">Paramètres</DisplayTitle>
+      <Text className={`text-base mb-8 leading-6 ${textSecondary(isDark)}`}>
         Vos créations restent sur votre appareil. Aucun compte requis.
       </Text>
 
       <View className="gap-4 pb-8">
+        <View className={`rounded-2xl border px-5 py-5 ${panelBg(isDark)}`}>
+          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
+            Apparence
+          </Text>
+          <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
+            Choisissez un thème clair ou sombre pour toute l&apos;application.
+          </Text>
+          <ThemePicker selected={theme} onSelect={handleThemeChange} />
+        </View>
+
         <Pressable
           onPress={() => router.push("/sessions")}
-          className="bg-white rounded-2xl border border-sand-200 px-5 py-5 flex-row justify-between items-center"
+          className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
         >
           <View>
-            <Text className="text-sand-700 font-medium mb-1">
+            <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
               Mes sessions
             </Text>
-            <Text className="text-sand-500 text-sm">
+            <Text className={`text-sm ${textSecondary(isDark)}`}>
               Consulter vos rituels sauvegardés
             </Text>
           </View>
@@ -98,24 +119,24 @@ export default function SettingsScreen() {
 
         <Pressable
           onPress={() => router.push("/privacy")}
-          className="bg-white rounded-2xl border border-sand-200 px-5 py-5 flex-row justify-between items-center"
+          className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
         >
           <View>
-            <Text className="text-sand-700 font-medium mb-1">
+            <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
               Confidentialité & mentions légales
             </Text>
-            <Text className="text-sand-500 text-sm">
+            <Text className={`text-sm ${textSecondary(isDark)}`}>
               Données locales, envoi IA, vos droits
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
         </Pressable>
 
-        <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5">
-          <Text className="text-sand-700 font-medium mb-2">
+        <View className={`rounded-2xl border px-5 py-5 ${panelBg(isDark)}`}>
+          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
             Son de fin de timer
           </Text>
-          <Text className="text-sand-500 text-sm mb-4 leading-5">
+          <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
             Un signal doux lorsque le temps créatif est écoulé.
           </Text>
           <TimerSoundPicker
@@ -124,9 +145,9 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5">
-          <Text className="text-sand-700 font-medium mb-2">Connexion API</Text>
-          <Text className="text-sand-400 text-xs mb-3" numberOfLines={2}>
+        <View className={`rounded-2xl border px-5 py-5 ${panelBg(isDark)}`}>
+          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>Connexion API</Text>
+          <Text className={`text-xs mb-3 ${textMuted(isDark)}`} numberOfLines={2}>
             {apiUrl ||
               "(proxy local → " +
                 (process.env.EXPO_PUBLIC_API_URL ?? "API") +
@@ -140,7 +161,7 @@ export default function SettingsScreen() {
                 <View
                   className={`w-2 h-2 rounded-full ${apiOk ? "bg-sage-500" : "bg-red-400"}`}
                 />
-                <Text className="text-sand-600 text-sm">
+                <Text className={`text-sm ${textSecondary(isDark)}`}>
                   {apiOk
                     ? `Connecté${provider ? ` (${provider})` : ""}`
                     : "Serveur inaccessible — vérifiez l'URL ou le réseau"}
@@ -160,7 +181,7 @@ export default function SettingsScreen() {
             </Text>
           )}
           {apiOk && aiConfigured && (
-            <Text className="text-sand-400 text-xs mt-2 leading-5">
+            <Text className={`text-xs mt-2 leading-5 ${textMuted(isDark)}`}>
               Texte : {textModel ?? "—"}
               {"\n"}Vision : {visionModel ?? "—"}
               {reflectionPipeline
@@ -171,7 +192,7 @@ export default function SettingsScreen() {
             </Text>
           )}
           {!apiOk && apiOk !== null && (
-            <Text className="text-sand-400 text-xs mt-3 leading-5">
+            <Text className={`text-xs mt-3 leading-5 ${textMuted(isDark)}`}>
               Web local : relancez avec npm run mobile:web:clear après npm
               install. Sur téléphone : utilisez l'IP locale du PC dans
               EXPO_PUBLIC_API_URL. Vérifiez aussi ALLOWED_ORIGINS sur Vercel.
@@ -179,9 +200,9 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5">
-          <Text className="text-sand-700 font-medium mb-2">Stockage local</Text>
-          <Text className="text-sand-500 text-sm leading-5">
+        <View className={`rounded-2xl border px-5 py-5 ${panelBg(isDark)}`}>
+          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>Stockage local</Text>
+          <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
             Toutes vos sessions sont enregistrées via AsyncStorage, uniquement
             sur cet appareil.
           </Text>
@@ -189,7 +210,7 @@ export default function SettingsScreen() {
 
         <SupportButton />
 
-        <Text className="text-sand-400 text-xs text-center mt-4">
+        <Text className={`text-xs text-center mt-4 ${textMuted(isDark)}`}>
           Art Thérapie · v0.1.0 · MVP
         </Text>
       </View>

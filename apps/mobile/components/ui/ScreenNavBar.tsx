@@ -1,5 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { navigateBackOrHome, navigateHome } from "@/lib/navigation";
+import { textMuted } from "@/lib/themeClasses";
+import { useIsDark } from "@/lib/themeStore";
 
 interface ScreenNavBarProps {
   /** Libellé du lien retour (défaut : « ← Retour ») */
@@ -8,18 +10,14 @@ interface ScreenNavBarProps {
   onBack?: () => void;
   /** Afficher le lien « Accueil » à droite (défaut : oui) */
   showHome?: boolean;
-  /** Contraste sur fond sombre */
-  tone?: "default" | "light";
 }
 
 export function ScreenNavBar({
   backLabel = "← Retour",
   onBack = navigateBackOrHome,
   showHome = true,
-  tone = "default",
 }: ScreenNavBarProps) {
-  const backClass = tone === "light" ? "text-sage-300" : "text-sage-500";
-  const homeClass = tone === "light" ? "text-sand-300" : "text-sand-500";
+  const isDark = useIsDark();
 
   return (
     <View className="flex-row justify-between items-center mb-4 -mt-2">
@@ -29,7 +27,7 @@ export function ScreenNavBar({
         accessibilityLabel={backLabel}
         hitSlop={8}
       >
-        <Text className={`${backClass} text-base`}>{backLabel}</Text>
+        <Text className="text-sage-500 text-base">{backLabel}</Text>
       </Pressable>
       {showHome ? (
         <Pressable
@@ -38,7 +36,9 @@ export function ScreenNavBar({
           accessibilityLabel="Retour à l'accueil"
           hitSlop={8}
         >
-          <Text className={`${homeClass} text-sm font-medium`}>Accueil</Text>
+          <Text className={`text-sm font-medium ${textMuted(isDark)}`}>
+            Accueil
+          </Text>
         </Pressable>
       ) : (
         <View />

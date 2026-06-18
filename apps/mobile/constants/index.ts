@@ -1,18 +1,36 @@
 import type { ArtisticTechnique } from "@/lib/types";
 
-export const TECHNIQUES: {
+export type TechniqueDefinition = {
   id: ArtisticTechnique;
   label: string;
   emoji: string;
-}[] = [
-  { id: "drawing", label: "Dessin", emoji: "✏️" },
-  { id: "painting", label: "Peinture", emoji: "🎨" },
-  { id: "writing", label: "Écriture", emoji: "📝" },
-  { id: "mixed_media", label: "Techniques mixtes", emoji: "🌀" },
-  { id: "collage", label: "Collage", emoji: "✂️" },
-  { id: "volume", label: "Volume", emoji: "🗿" },
-  { id: "recyclart", label: "Recycl'art", emoji: "♻️" },
+  /** Analyse IA disponible en phase réflexion (photo / OCR). */
+  aiAnalysis: boolean;
+};
+
+export const TECHNIQUES: TechniqueDefinition[] = [
+  { id: "drawing", label: "Dessin", emoji: "✏️", aiAnalysis: true },
+  { id: "painting", label: "Peinture", emoji: "🎨", aiAnalysis: true },
+  { id: "writing", label: "Écriture", emoji: "📝", aiAnalysis: true },
+  { id: "mixed_media", label: "Techniques mixtes", emoji: "🌀", aiAnalysis: true },
+  { id: "collage", label: "Collage", emoji: "✂️", aiAnalysis: true },
+  { id: "volume", label: "Volume", emoji: "🗿", aiAnalysis: true },
+  { id: "recyclart", label: "Recycl'art", emoji: "♻️", aiAnalysis: true },
+  { id: "video", label: "Vidéo", emoji: "🎬", aiAnalysis: false },
+  { id: "music", label: "Musique", emoji: "🎵", aiAnalysis: false },
+  { id: "dance", label: "Danse", emoji: "💃", aiAnalysis: false },
+  { id: "theatre", label: "Théâtre", emoji: "🎭", aiAnalysis: false },
 ];
+
+export function getTechniqueLabel(id: string): string {
+  return TECHNIQUES.find((t) => t.id === id)?.label ?? id;
+}
+
+export function isAiAnalysisSupported(technique: ArtisticTechnique): boolean {
+  return TECHNIQUES.find((t) => t.id === technique)?.aiAnalysis ?? true;
+}
+
+export const TECHNIQUES_WITHOUT_AI = TECHNIQUES.filter((t) => !t.aiAnalysis);
 
 export const DURATION_OPTIONS = [15, 30, 45] as const;
 
@@ -26,10 +44,6 @@ export const STORAGE_KEYS = {
   mandalaCustomPalette: "@art_therapie/mandala_custom_palette",
   zenGarden: "@art_therapie/zen_garden",
 } as const;
-
-export function getTechniqueLabel(id: string): string {
-  return TECHNIQUES.find((t) => t.id === id)?.label ?? id;
-}
 
 export function formatSessionDate(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR", {

@@ -1,5 +1,6 @@
 import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
+import { isAiAnalysisSupported } from "../techniques";
 import type {
   AIProvider,
   ExerciseRequest,
@@ -220,6 +221,15 @@ export class HuggingFaceProvider implements AIProvider {
   }
 
   async analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse> {
+    if (input.technique && !isAiAnalysisSupported(input.technique)) {
+      const fallback = getFallbackReflection(input);
+      return {
+        ...fallback,
+        source: "fallback",
+        analysisNote: "Technique sans analyse IA.",
+      };
+    }
+
     if (!this.token) {
       console.warn("[HF analyzeArtwork] HF_TOKEN manquant");
       const fallback = getFallbackReflection(input);

@@ -43,7 +43,8 @@ import {
 import { saveSession } from "@/lib/storage";
 import { useRitualStore } from "@/lib/store";
 import type { SavedSession } from "@/lib/types";
-import { getTechniqueLabel } from "@/constants";
+import { getTechniqueLabel, isAiAnalysisSupported } from "@/constants";
+import { getLocalReflection } from "@/lib/reflection/fallback";
 import { FEATURES } from "@/lib/features";
 import { navigateHome } from "@/lib/navigation";
 import { openMandalaStudio } from "@/lib/fil/bridges";
@@ -110,6 +111,7 @@ export default function ReflectionScreen() {
   } = ritual;
 
   const isWriting = technique === "writing";
+  const supportsAiAnalysis = technique ? isAiAnalysisSupported(technique) : true;
 
   const abortRef = useRef<AbortController | null>(null);
   const workGenRef = useRef(0);
@@ -391,6 +393,28 @@ export default function ReflectionScreen() {
 
   async function handleRequestReflection() {
     const hasText = writtenText.trim().length >= 10;
+
+    if (!supportsAiAnalysis) {
+      const local = getLocalReflection({
+        impulse,
+        exercise,
+        technique,
+        writtenText: hasText ? writtenText.trim() : undefined,
+      });
+      setReflection(
+        local.reflection,
+        local.openQuestions,
+        local.followUpExercise ?? null
+      );
+      setReflectionSource("fallback");
+      setNotice({
+        type: "info",
+        message:
+          "Pas d'analyse IA pour cette technique — miroir créatif local, sans envoi au serveur.",
+      });
+      return;
+    }
+
     if ((!photoUri && !hasText) || preparingPhoto) {
       if (!hasText && !photoUri) {
         setNotice({
@@ -599,8 +623,9 @@ export default function ReflectionScreen() {
     router.push("/exercise");
   }
 
-  const canAnalyze =
-    Boolean(photoUri) || writtenText.trim().length >= 10;
+  const canAnalyze = supportsAiAnalysis
+    ? Boolean(photoUri) || writtenText.trim().length >= 10
+    : true;
   const previewUri = photoDataUrl ?? photoUri;
   const busy = preparingPhoto || loadingReflection || ocrLoading;
   busyRef.current = busy;
@@ -624,6 +649,7 @@ export default function ReflectionScreen() {
             <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
               {getTechniqueLabel(technique)}
               {durationMinutes ? ` · ${durationMinutes} min` : ""}
+              {!supportsAiAnalysis ? " · sans analyse IA" : ""}
             </Text>
           )}
           {impulse ? (
@@ -634,6 +660,18 @@ export default function ReflectionScreen() {
           {exercise ? (
             <Text className="text-sand-600 text-sm leading-6">{exercise}</Text>
           ) : null}
+        </View>
+      )}
+
+      {!supportsAiAnalysis && (
+        <View className="bg-amber-50 rounded-2xl border border-amber-200 px-4 py-3 mb-4">
+          <Text className="text-amber-800 text-sm leading-6">
+            Pour{" "}
+            {technique ? getTechniqueLabel(technique).toLowerCase() : "cette technique"}
+            , l&apos;analyse IA n&apos;est pas disponible. Vous pouvez garder une
+            photo souvenir (optionnel) et accueillir un miroir créatif local —
+            sans envoi au serveur.
+          </Text>
         </View>
       )}
 
@@ -669,7 +707,7 @@ export default function ReflectionScreen() {
 
       {!isWriting && (
         <Text className="text-sand-700 text-base font-medium mb-2">
-          Votre création
+          {supportsAiAnalysis ? "Votre création" : "Photo souvenir (optionnelle)"}
         </Text>
       )}
       {isWriting && (
@@ -727,11 +765,17 @@ export default function ReflectionScreen() {
         )}
 
         <Text className="text-sand-400 text-xs mb-4 leading-5">
-          Fichier max {MAX_SOURCE_LABEL} · envoi IA max {UPLOAD_MAX_LABEL}.
-          {photoSizeLabel ? ` Actuelle : ${photoSizeLabel}.` : ""}
-          {Platform.OS === "web"
-            ? " Les photos sont automatiquement compressées avant envoi à l'IA."
-            : ""}
+          {supportsAiAnalysis ? (
+            <>
+              Fichier max {MAX_SOURCE_LABEL} · envoi IA max {UPLOAD_MAX_LABEL}.
+              {photoSizeLabel ? ` Actuelle : ${photoSizeLabel}.` : ""}
+              {Platform.OS === "web"
+                ? " Les photos sont automatiquement compressées avant envoi à l'IA."
+                : ""}
+            </>
+          ) : (
+            "Aucune photo n'est envoyée au serveur pour cette technique."
+          )}
         </Text>
 
         <View className="gap-3 mb-6">
@@ -773,7 +817,9 @@ export default function ReflectionScreen() {
                 ? "Analyse en cours…"
                 : preparingPhoto
                   ? "Préparation..."
-                  : "Demander une réflexion bienveillante"
+                  : supportsAiAnalysis
+                    ? "Demander une réflexion bienveillante"
+                    : "Accueillir mon ressenti"
             }
             onPress={handleRequestReflection}
             disabled={!canAnalyze || busy}
@@ -789,7 +835,7 @@ export default function ReflectionScreen() {
               </Text>
               {reflectionSource === "fallback" && (
                 <Text className="text-amber-600 text-xs font-medium">
-                  Mode secours
+                  {supportsAiAnalysis ? "Mode secours" : "Sans analyse IA"}
                 </Text>
               )}
               {reflectionSource === "ai" && (
