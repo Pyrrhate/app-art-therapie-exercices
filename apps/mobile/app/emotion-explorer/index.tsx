@@ -95,7 +95,7 @@ export default function EmotionExplorerScreen() {
       <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
         Explorateur émotionnel
       </Text>
-      <DisplayTitle className="mb-4">
+      <DisplayTitle className="mb-2">
         {phase === "quadrant"
           ? "Comment vous sentez-vous ?"
           : quadrant?.title ?? "Précisez votre émotion"}
