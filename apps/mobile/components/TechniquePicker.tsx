@@ -43,15 +43,6 @@ export function TechniquePicker({
             >
               {tech.label}
             </Text>
-            {!tech.aiAnalysis && (
-              <Text
-                className={`text-[10px] mt-1 leading-3 ${
-                  isSelected ? "text-white/80" : "text-amber-600"
-                }`}
-              >
-                Sans analyse IA
-              </Text>
-            )}
           </View>
         );
 
@@ -62,11 +53,7 @@ export function TechniquePicker({
               onPress={() => onSelect(tech.id)}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={
-                tech.aiAnalysis
-                  ? tech.label
-                  : `${tech.label}, sans analyse IA`
-              }
+              accessibilityLabel={tech.label}
               hoverScale={1.03}
             >
               {card}
@@ -80,9 +67,7 @@ export function TechniquePicker({
             onPress={() => onSelect(tech.id)}
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
-            accessibilityLabel={
-              tech.aiAnalysis ? tech.label : `${tech.label}, sans analyse IA`
-            }
+            accessibilityLabel={tech.label}
           >
             {card}
           </Pressable>
