@@ -24,11 +24,12 @@ export function DisplayTitle({
 
   return (
     <Text
-      className={`font-display text-3xl font-light leading-tight ${textPrimary(isDark)} ${className}`}
+      className={`font-display text-3xl font-normal leading-tight ${textPrimary(isDark)} ${className}`}
       style={[
         Platform.OS !== "web" && nativeDisplayFont
           ? { fontFamily: nativeDisplayFont }
           : null,
+        { letterSpacing: -0.5 },
         style,
       ]}
       {...props}
@@ -48,11 +49,12 @@ export function DisplayHero({
 
   return (
     <Text
-      className={`font-display text-4xl font-light leading-tight ${textPrimary(isDark)} ${className}`}
+      className={`font-display text-4xl font-normal leading-[1.15] ${textPrimary(isDark)} ${className}`}
       style={[
         Platform.OS !== "web" && nativeDisplayFont
           ? { fontFamily: nativeDisplayFont }
           : null,
+        { letterSpacing: -1 },
         style,
       ]}
       {...props}

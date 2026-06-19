@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { useCallback, useState } from "react";
 import {
   Platform,
@@ -19,39 +19,59 @@ interface PrimaryButtonProps {
   onPress: () => void;
   disabled?: boolean;
   variant?: "primary" | "secondary" | "ghost";
+  showArrow?: boolean;
+  align?: "center" | "start" | "stretch";
 }
+
+const primaryShadow =
+  Platform.OS === "web"
+    ? ({ boxShadow: "0 8px 30px -12px rgba(73, 99, 73, 0.5)" } as const)
+    : undefined;
 
 export function PrimaryButton({
   label,
   onPress,
   disabled = false,
   variant = "primary",
+  showArrow = false,
+  align = "stretch",
 }: PrimaryButtonProps) {
   const isDark = useIsDark();
   const variants = {
     primary: "bg-sage-500 active:bg-sage-600",
-    secondary: "bg-clay-400 active:bg-clay-500",
+    secondary: "bg-sage-500 active:bg-sage-600",
     ghost: isDark
       ? "bg-transparent border border-sand-600"
-      : "bg-transparent border border-sand-300",
+      : "bg-white border border-sand-200",
   };
 
   const textVariants = {
     primary: "text-white",
     secondary: "text-white",
-    ghost: isDark ? "text-sand-200" : "text-sand-700",
+    ghost: isDark ? "text-sand-200" : "text-sand-900",
   };
+
+  const alignClass =
+    align === "center"
+      ? "self-center"
+      : align === "start"
+        ? "self-start"
+        : "self-stretch";
 
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
-      className={`rounded-2xl px-6 py-4 min-h-[48px] items-center justify-center ${variants[variant]} ${disabled ? "opacity-40" : ""}`}
+      className={`rounded-full px-8 py-4 min-h-[52px] items-center justify-center flex-row gap-2 ${alignClass} ${variants[variant]} ${disabled ? "opacity-40" : ""}`}
+      style={variant !== "ghost" ? primaryShadow : undefined}
     >
-      <Text className={`text-base font-medium ${textVariants[variant]}`}>
+      <Text className={`text-sm font-semibold tracking-wide ${textVariants[variant]}`}>
         {label}
       </Text>
+      {showArrow && variant !== "ghost" ? (
+        <Text className={`text-sm ${textVariants[variant]}`}>→</Text>
+      ) : null}
     </Pressable>
   );
 }
@@ -68,6 +88,8 @@ interface ScreenContainerProps {
   onRefresh?: () => void | Promise<void>;
   /** Pied de page fixe (ex. CTA exercice). */
   stickyFooter?: ReactNode;
+  scrollRef?: RefObject<ScrollView>;
+  contentMaxWidth?: number;
 }
 
 const webScrollShell =
@@ -84,6 +106,8 @@ export function ScreenContainer({
   refreshable = false,
   onRefresh,
   stickyFooter,
+  scrollRef,
+  contentMaxWidth = 680,
 }: ScreenContainerProps) {
   const [refreshing, setRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
@@ -133,8 +157,8 @@ export function ScreenContainer({
 
   const webShellStyle =
     Platform.OS === "web"
-      ? ({ maxWidth: 680, width: "100%", alignSelf: "center" as const } as const)
-      : undefined;
+      ? ({ maxWidth: contentMaxWidth, width: "100%", alignSelf: "center" as const } as const)
+      : { maxWidth: contentMaxWidth, width: "100%", alignSelf: "center" as const };
 
   const footerPaddingBottom = Math.max(insets.bottom, Platform.OS === "web" ? 24 : 16);
   const footerBg = isDark ? "bg-sand-900/95" : variant === "focus" ? "bg-sand-100/95" : "bg-sand-50/95";
@@ -144,6 +168,7 @@ export function ScreenContainer({
     return (
       <View className={`flex-1 ${bgClass}`} style={webScrollShell}>
         <ScrollView
+          ref={scrollRef}
           style={webScrollShell}
           contentContainerStyle={{
             paddingHorizontal: 24,
@@ -179,6 +204,7 @@ export function ScreenContainer({
     return (
       <View className={`flex-1 ${bgClass}`} style={webScrollShell}>
         <ScrollView
+          ref={scrollRef}
           style={webScrollShell}
           contentContainerStyle={{
             paddingHorizontal: 24,

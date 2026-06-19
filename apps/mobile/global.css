@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Nunito+Sans:opsz,wght@6..12,300;400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;400;500&display=swap");
 
 @tailwind base;
@@ -9,7 +10,7 @@ html {
   height: 100%;
   min-height: 100vh;
   margin: 0;
-  background-color: #faf7f4;
+  background-color: #f7f5f0;
 }
 
 body {
@@ -17,12 +18,13 @@ body {
   min-height: 100vh;
   margin: 0;
   overflow: hidden;
-  background-color: #faf7f4;
+  background-color: #f7f5f0;
+  font-family: "Nunito Sans", system-ui, sans-serif;
 }
 
 html.dark,
 html.dark body {
-  background-color: #201b17;
+  background-color: #2a2f28;
 }
 
 #root {

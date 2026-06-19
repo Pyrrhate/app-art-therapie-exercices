@@ -12,61 +12,50 @@ interface ModuleIconProps {
   size?: number;
 }
 
-const ACCENT: Record<ModuleIconId, string> = {
-  "ping-pong": "#6B8F71",
-  "color-journey": "#C4A484",
-  "emotion-explorer": "#8FA88A",
-  "nuance-finder": "#A8856A",
-};
+const STROKE = "#496349";
 
-export function ModuleIcon({ id, size = 40 }: ModuleIconProps) {
-  const color = ACCENT[id];
+export function ModuleIcon({ id, size = 22 }: ModuleIconProps) {
+  const box = 44;
 
   return (
     <View
-      className="rounded-xl items-center justify-center mb-2"
-      style={{
-        width: size + 8,
-        height: size + 8,
-        backgroundColor: `${color}18`,
-      }}
+      className="rounded-full items-center justify-center mb-4 bg-sage-100"
+      style={{ width: box, height: box }}
     >
       <Svg width={size} height={size} viewBox="0 0 40 40">
         {id === "ping-pong" && (
           <>
-            <Circle cx="14" cy="20" r="8" fill={color} opacity={0.85} />
-            <Circle cx="26" cy="20" r="8" fill={color} opacity={0.45} />
+            <Circle cx="14" cy="20" r="7" fill="none" stroke={STROKE} strokeWidth={2.5} />
+            <Circle cx="26" cy="20" r="7" fill="none" stroke={STROKE} strokeWidth={2.5} />
           </>
         )}
         {id === "color-journey" && (
           <>
-            <Circle cx="20" cy="20" r="14" fill="none" stroke={color} strokeWidth={3} />
-            <Circle cx="20" cy="20" r="5" fill={color} />
-            <Path d="M20 6 A14 14 0 0 1 34 20" fill="none" stroke={color} strokeWidth={4} opacity={0.5} />
+            <Circle cx="20" cy="20" r="13" fill="none" stroke={STROKE} strokeWidth={2.5} />
+            <Circle cx="20" cy="20" r="4" fill={STROKE} />
           </>
         )}
         {id === "emotion-explorer" && (
-          <>
-            <Circle cx="12" cy="14" r="7" fill={color} opacity={0.6} />
-            <Circle cx="28" cy="14" r="7" fill={color} opacity={0.85} />
-            <Circle cx="12" cy="28" r="7" fill={color} opacity={0.4} />
-            <Circle cx="28" cy="28" r="7" fill={color} opacity={0.75} />
-            <Circle cx="20" cy="21" r="5" fill="#FAF7F4" />
-          </>
+          <Path
+            d="M20 8 C28 8 32 16 32 22 C32 30 26 34 20 34 C14 34 8 30 8 22 C8 16 12 8 20 8 Z"
+            fill="none"
+            stroke={STROKE}
+            strokeWidth={2.5}
+          />
         )}
         {id === "nuance-finder" && (
           <>
-            {[0, 1, 2, 3].map((row) =>
-              [0, 1, 2, 3].map((col) => (
+            {[0, 1, 2].map((row) =>
+              [0, 1, 2].map((col) => (
                 <Rect
                   key={`${row}-${col}`}
-                  x={6 + col * 8}
-                  y={6 + row * 8}
+                  x={10 + col * 8}
+                  y={10 + row * 8}
                   width={6}
                   height={6}
                   rx={1}
-                  fill={color}
-                  opacity={0.35 + ((row + col) % 3) * 0.2}
+                  fill={STROKE}
+                  opacity={0.45 + ((row + col) % 2) * 0.25}
                 />
               ))
             )}

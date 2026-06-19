@@ -12,9 +12,7 @@ interface CardProps extends ViewProps {
 
 const webShadowStyle =
   Platform.OS === "web"
-    ? ({
-        boxShadow: "0 2px 8px rgba(62, 52, 44, 0.07)",
-      } as const)
+    ? ({ boxShadow: "0 2px 20px rgba(73, 99, 73, 0.06)" } as const)
     : undefined;
 
 function variantClasses(variant: CardVariant, isDark: boolean): string {
@@ -25,14 +23,14 @@ function variantClasses(variant: CardVariant, isDark: boolean): string {
       case "content":
         return "bg-sand-800 border border-sand-700";
       case "accent":
-        return "bg-sand-800 border border-sage-600 border-l-4 border-l-sage-500";
+        return "bg-sand-800 border border-sage-600/40 border-l-4 border-l-sage-500";
     }
   }
   switch (variant) {
     case "surface":
-      return "bg-sand-50 border border-sand-100";
+      return "bg-sand-100 border border-sand-100";
     case "content":
-      return "bg-white border border-sand-200";
+      return "bg-white border border-sand-100";
     case "accent":
       return "bg-sage-50 border border-sage-100 border-l-4 border-l-sage-500";
   }
@@ -50,7 +48,7 @@ export function Card({
 
   return (
     <View
-      className={`rounded-2xl px-5 py-4 ${variantClasses(variant, isDark)} ${className}`}
+      className={`rounded-3xl px-5 py-5 ${variantClasses(variant, isDark)} ${className}`}
       style={[shadow, style]}
       {...props}
     >
