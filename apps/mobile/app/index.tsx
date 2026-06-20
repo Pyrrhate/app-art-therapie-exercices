@@ -5,6 +5,7 @@ import { ModuleCard } from "@/components/home/ModuleCard";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { AccentCard } from "@/components/ui/Card";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { ModuleIconId } from "@/components/ui/ModuleIcon";
 import { getTechniqueLabel } from "@/constants";
@@ -91,31 +92,22 @@ export default function WelcomeScreen() {
         onNavigateTraces={() => scrollTo(tracesY)}
       />
 
-      <View className="items-center mb-16 px-2">
-        <Text className="text-sage-500 text-xs uppercase tracking-[0.2em] mb-6 font-medium">
-          Art Thérapie
-        </Text>
-        <Text
-          className={`font-display text-center text-4xl leading-[1.12] mb-6 ${isDark ? "text-sand-100" : "text-sand-900"}`}
-          style={{ letterSpacing: -1, maxWidth: 640 }}
-        >
-          Trouver une impulsion,{"\n"}
-          <Text className="text-sage-500 font-display">puis créer</Text>
-        </Text>
-        <Text
-          className={`text-base text-center leading-7 mb-8 max-w-md ${textSecondary(isDark)}`}
-        >
-          Un parcours guidé pour amorcer votre créativité, mener un exercice en
-          douceur, puis garder trace de vos pratiques — le tout sur cet appareil.
-        </Text>
+      <PastekScreenHero
+        label="Art Thérapie"
+        title={"Trouver une impulsion,\n"}
+        accent="puis créer"
+        description="Un parcours guidé pour amorcer votre créativité, mener un exercice en douceur, puis garder trace de vos pratiques — le tout sur cet appareil."
+        className="mb-8"
+      />
 
-        <PrimaryButton
-          label="Commencer un exercice"
-          onPress={() => router.push("/ritual")}
-          showArrow
-          align="center"
-        />
-      </View>
+      <PrimaryButton
+        label="Commencer un exercice"
+        onPress={() => router.push("/ritual")}
+        showArrow
+        align="center"
+      />
+
+      <View className="mb-16" />
 
       {draft && (
         <AccentCard className="mb-12 gap-2">

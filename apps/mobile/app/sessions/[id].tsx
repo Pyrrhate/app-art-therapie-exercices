@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
@@ -102,28 +103,24 @@ export default function SessionDetailScreen() {
     <ScreenContainer scrollable>
       <ScreenNavBar backLabel="← Liste" />
 
-      <Text className="text-sand-400 text-xs mb-2">
-        {formatSessionDate(session.createdAt)}
-      </Text>
-      <Text className="text-sage-500 text-xs uppercase tracking-wider mb-2">
-        Fiche d&apos;exercice
-      </Text>
-      <Text className="text-3xl font-light text-sand-800 mb-2">
-        {session.impulse}
-      </Text>
-      <Text className="text-sand-500 text-sm mb-6">
-        {getTechniqueLabel(session.technique)} · {session.durationMinutes} min
-      </Text>
+      <PastekScreenHero
+        label="Fiche d'exercice"
+        title={session.impulse}
+        description={`${getTechniqueLabel(session.technique)} · ${session.durationMinutes} min · ${formatSessionDate(session.createdAt)}`}
+        centered={false}
+        size="md"
+        className="mb-6"
+      />
 
       {session.photoUri ? (
         <Image
           source={{ uri: session.photoUri }}
-          className="w-full h-56 rounded-2xl bg-sand-100 mb-6"
+          className="w-full h-56 rounded-3xl bg-sand-100 mb-6"
           resizeMode="cover"
         />
       ) : null}
 
-      <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-4">
+      <View className="bg-white rounded-3xl border border-sand-100 px-5 py-5 mb-4">
         <Text className="text-sand-700 text-xs uppercase tracking-wider mb-3">
           Exercice
         </Text>
@@ -131,7 +128,7 @@ export default function SessionDetailScreen() {
       </View>
 
       {paragraphs.length > 0 && (
-        <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-4">
+        <View className="bg-white rounded-3xl border border-sand-100 px-5 py-5 mb-4">
           <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
             Miroir créatif
           </Text>
@@ -147,7 +144,7 @@ export default function SessionDetailScreen() {
       )}
 
       {session.openQuestions?.length ? (
-        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-5 py-5 mb-6">
+        <View className="bg-sage-50 rounded-3xl border border-sage-100 px-5 py-5 mb-6">
           {session.openQuestions.map((q, i) => (
             <Text key={i} className="text-sand-600 text-sm leading-6 mb-2">
               · {sanitizeAiDisplayText(q)}

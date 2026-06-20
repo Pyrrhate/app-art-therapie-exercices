@@ -2,8 +2,8 @@ import { useCallback, useState } from "react";
 import { Alert, Image, Platform, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { HoverScale } from "@/components/emotion-explorer/HoverScale";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { ContentCard } from "@/components/ui/Card";
-import { DisplayTitle } from "@/components/ui/DisplayText";
 import { ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
@@ -40,7 +40,7 @@ function SessionListItem({
   const accent = TECHNIQUE_ACCENT[item.technique] ?? "#6B8F71";
 
   const card = (
-    <View className={`rounded-2xl border overflow-hidden mb-4 ${panelBg(isDark)}`}>
+    <View className={`rounded-3xl border overflow-hidden mb-4 ${panelBg(isDark)}`}>
       <View style={{ height: 4, backgroundColor: accent }} />
       {item.photoUri ? (
         <Image
@@ -169,15 +169,13 @@ export default function SessionsListScreen() {
     <ScreenContainer scrollable refreshable onRefresh={handleRefresh}>
       <ScreenNavBar />
 
-      <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
-        Mémoire des pratiques
-      </Text>
-      <DisplayTitle className="mb-2">
-        Mes exercices sauvegardés
-      </DisplayTitle>
-      <Text className={`text-base mb-6 leading-6 ${textSecondary(isDark)}`}>
-        Vos fiches d&apos;exercice, gardées localement sur cet appareil — à relire ou à refaire quand vous en avez envie.
-      </Text>
+      <PastekScreenHero
+        label="Vos traces"
+        title="Mes exercices "
+        accent="sauvegardés"
+        description="Vos fiches d'exercice, gardées localement sur cet appareil — à relire ou à refaire quand vous en avez envie."
+        className="mb-6"
+      />
 
       {sessions.length === 0 ? (
         <ContentCard className="border-dashed items-center py-12">

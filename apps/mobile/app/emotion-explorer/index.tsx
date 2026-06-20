@@ -9,8 +9,7 @@ import { EmotionDetailBar } from "@/components/emotion-explorer/EmotionDetailBar
 import { EmotionGrid } from "@/components/emotion-explorer/EmotionGrid";
 import { QuadrantPicker } from "@/components/emotion-explorer/QuadrantPicker";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
-import { AccentCard } from "@/components/ui/Card";
-import { DisplayTitle } from "@/components/ui/DisplayText";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { getTechniqueLabel } from "@/constants";
@@ -27,7 +26,7 @@ import {
 } from "@/lib/emotion-explorer";
 import { startExerciseFromImpulse } from "@/lib/fil/bridges";
 import { navigateHome } from "@/lib/navigation";
-import { textSecondary } from "@/lib/themeClasses";
+import { textMuted, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
 export default function EmotionExplorerScreen() {
@@ -89,42 +88,56 @@ export default function EmotionExplorerScreen() {
     : null;
 
   return (
-    <ScreenContainer scrollable refreshable>
+    <ScreenContainer scrollable refreshable contentMaxWidth={720}>
       <ScreenNavBar backLabel="← Retour" onBack={handleBack} />
 
-      <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
-        Explorateur émotionnel
-      </Text>
-      <DisplayTitle className="mb-2">
-        {phase === "quadrant"
-          ? "Comment vous sentez-vous ?"
-          : quadrant?.title ?? "Précisez votre émotion"}
-      </DisplayTitle>
+      {phase === "quadrant" ? (
+        <PastekScreenHero
+          label="Explorateur émotionnel"
+          title={"Comment vous\n"}
+          accent="sentez-vous ?"
+          className="mb-6"
+        />
+      ) : (
+        <PastekScreenHero
+          label="Explorateur émotionnel"
+          title="Précisez "
+          accent="votre émotion"
+          description={
+            quadrant
+              ? `${quadrant.title} — choisissez le mot qui se rapproche le plus de votre ressenti.`
+              : undefined
+          }
+          className="mb-6"
+        />
+      )}
 
       {phase === "quadrant" && (
-        <QuadrantPicker
-          quadrants={EMOTION_QUADRANTS}
-          onSelect={handleSelectQuadrant}
-        />
+        <>
+          <QuadrantPicker
+            quadrants={EMOTION_QUADRANTS}
+            onSelect={handleSelectQuadrant}
+          />
+          <Text
+            className={`text-sm text-center leading-6 mt-2 mb-4 px-4 ${textMuted(isDark)}`}
+          >
+            Prenez le temps qu&apos;il faut. Aucun mauvais choix.
+          </Text>
+        </>
       )}
 
       {phase === "emotion" && quadrant && (
         <View>
-          <Text className={`text-sm leading-6 mb-4 ${textSecondary(isDark)}`}>
-            Choisissez le mot qui se rapproche le plus de votre ressenti —
-            puis passez à l&apos;exercice.
-          </Text>
-
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Rechercher une émotion…"
             placeholderTextColor={isDark ? "#7A6558" : "#A89F91"}
             accessibilityLabel="Rechercher une émotion"
-            className={`border rounded-2xl px-4 py-3 min-h-[48px] text-base mb-4 ${
+            className={`border rounded-2xl px-5 py-3.5 min-h-[48px] text-base mb-6 ${
               isDark
                 ? "bg-sand-800 border-sand-700 text-sand-100"
-                : "bg-white border-sand-200 text-sand-800"
+                : "bg-white/80 border-sand-200 text-sand-900"
             }`}
           />
 
@@ -136,32 +149,37 @@ export default function EmotionExplorerScreen() {
           />
 
           {selected && (
-            <>
-                <EmotionDetailBar emotion={selected} quadrant={quadrant} />
-
-              <AccentCard className="mt-4">
-                <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
-                  Exercice suggéré
+            <View className="gap-4 mt-2">
+              <View className="items-center gap-1 mb-1">
+                <Text className={`text-sm ${textMuted(isDark)}`}>
+                  Vous avez choisi
                 </Text>
-                <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-                  Technique {techniqueLabel} — guidée par votre ressenti «{" "}
-                  {selected.label} ».
+                <Text
+                  className="font-display text-xl text-sage-500 text-center"
+                  style={{ letterSpacing: -0.3 }}
+                >
+                  {selected.label}
                 </Text>
-              </AccentCard>
-
-              <View className="mt-4">
-                <PrimaryButton
-                  label={
-                    startingExercise ? "Préparation…" : "Passer à l'exercice"
-                  }
-                  onPress={() => void handleStartExercise()}
-                  disabled={startingExercise}
-                />
               </View>
 
+              <EmotionDetailBar emotion={selected} quadrant={quadrant} />
+
+              <Text className={`text-sm text-center leading-6 ${textSecondary(isDark)}`}>
+                Technique {techniqueLabel} — guidée par votre ressenti.
+              </Text>
+
+              <PrimaryButton
+                label={
+                  startingExercise ? "Préparation…" : "Passer à l'exercice"
+                }
+                onPress={() => void handleStartExercise()}
+                disabled={startingExercise}
+                align="center"
+              />
+
               {startingExercise && (
-                <View className="mt-3 items-center">
-                  <ActivityIndicator color="#6B8F71" />
+                <View className="items-center">
+                  <ActivityIndicator color="#496349" />
                 </View>
               )}
 
@@ -178,7 +196,7 @@ export default function EmotionExplorerScreen() {
                   }}
                 />
               )}
-            </>
+            </View>
           )}
         </View>
       )}

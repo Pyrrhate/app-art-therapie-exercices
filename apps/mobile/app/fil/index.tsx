@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { Alert, Platform, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate } from "@/constants";
@@ -50,21 +51,19 @@ export default function FilScreen() {
     <ScreenContainer scrollable refreshable onRefresh={load}>
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
-      <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
-        Fil créatif
-      </Text>
-      <Text className={`text-3xl font-light mb-2 leading-tight ${textPrimary(isDark)}`}>
-        Mémoire de vos pratiques
-      </Text>
-      <Text className={`text-base leading-6 mb-6 ${textSecondary(isDark)}`}>
-        Sur cet appareil, de petites traces laissées après vos exercices et modules — mandala, nuances, jardin, ping-pong, rituel.
-      </Text>
+      <PastekScreenHero
+        label="Fil créatif"
+        title="Mémoire de vos "
+        accent="pratiques"
+        description="Sur cet appareil, de petites traces laissées après vos exercices et modules — mandala, nuances, jardin, ping-pong, rituel."
+        className="mb-6"
+      />
 
       {loading ? (
         <Text className={textMuted(isDark)}>Chargement…</Text>
       ) : entries.length === 0 ? (
         <View
-          className={`rounded-2xl border border-dashed px-5 py-10 items-center ${panelBg(isDark)}`}
+          className={`rounded-3xl border border-dashed px-5 py-10 items-center ${panelBg(isDark)}`}
         >
           <Text className={`text-center leading-6 ${textSecondary(isDark)}`}>
             Rien ici pour l&apos;instant. Terminez un exercice ou un module, puis ajoutez une trace pour vous en souvenir.
@@ -81,7 +80,7 @@ export default function FilScreen() {
             return (
               <View
                 key={entry.id}
-                className={`rounded-2xl border px-5 py-4 ${panelBg(isDark)}`}
+                className={`rounded-3xl border px-5 py-4 ${panelBg(isDark)}`}
               >
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className={`text-xs ${textMuted(isDark)}`}>

@@ -631,7 +631,12 @@ export default function ReflectionScreen() {
   busyRef.current = busy;
 
   return (
-    <ScreenContainer title="Capture & Réflexion" refreshable>
+    <ScreenContainer
+      heroLabel="Réflexion"
+      title="Capture & "
+      titleAccent="réflexion"
+      refreshable
+    >
       <ScreenNavBar onBack={handleGoBack} />
       <RitualProgressBar current="reflection" />
 

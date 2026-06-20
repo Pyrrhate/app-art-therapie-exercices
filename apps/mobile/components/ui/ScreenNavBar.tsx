@@ -27,7 +27,7 @@ export function ScreenNavBar({
         accessibilityLabel={backLabel}
         hitSlop={8}
       >
-        <Text className="text-sage-500 text-base">{backLabel}</Text>
+        <Text className="text-sage-500 text-sm">{backLabel}</Text>
       </Pressable>
       {showHome ? (
         <Pressable

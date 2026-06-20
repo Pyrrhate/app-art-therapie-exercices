@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { Text, View } from "react-native";
 
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 
@@ -12,12 +13,13 @@ export default function PrivacyScreen() {
     <ScreenContainer scrollable refreshable>
       <ScreenNavBar />
 
-      <Text className="text-3xl font-light text-sand-800 mb-2 mt-2">
-        Mentions légales & confidentialité
-      </Text>
-      <Text className="text-sand-400 text-xs mb-8">
-        Dernière mise à jour : juin 2026
-      </Text>
+      <PastekScreenHero
+        label="Confidentialité"
+        title="Mentions légales & "
+        accent="confidentialité"
+        description="Dernière mise à jour : juin 2026"
+        className="mb-8"
+      />
 
       <Section title="Éditeur">
         <P>

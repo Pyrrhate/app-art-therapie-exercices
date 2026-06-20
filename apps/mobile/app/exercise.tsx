@@ -50,9 +50,13 @@ export default function ExerciseScreen() {
 
   return (
     <ScreenContainer
-      title="Votre exercice"
+      heroLabel="Exercice"
+      title="Votre "
+      titleAccent="exercice"
       variant="focus"
       refreshable
+      heroCentered={false}
+      heroSize="md"
       stickyFooter={
         <PrimaryButton
           label="J'ai terminé — capturer mon œuvre"

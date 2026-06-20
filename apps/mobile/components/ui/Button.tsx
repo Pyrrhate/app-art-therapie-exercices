@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DisplayTitle } from "@/components/ui/DisplayText";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { refreshApplication } from "@/lib/navigation";
 import { screenBg, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -78,8 +78,14 @@ export function PrimaryButton({
 
 interface ScreenContainerProps {
   children: ReactNode;
+  /** Petit label sage au-dessus du titre (style Pastek). */
+  heroLabel?: string;
   title?: string;
+  titleAccent?: string;
+  titleEnd?: string;
   subtitle?: string;
+  heroCentered?: boolean;
+  heroSize?: "lg" | "md";
   scrollable?: boolean;
   /** Fond légèrement plus neutre pour l'écran exercice (mode focus). */
   variant?: "default" | "focus";
@@ -107,7 +113,12 @@ export function ScreenContainer({
   onRefresh,
   stickyFooter,
   scrollRef,
-  contentMaxWidth = 680,
+  contentMaxWidth = 720,
+  heroLabel,
+  titleAccent,
+  titleEnd,
+  heroCentered,
+  heroSize,
 }: ScreenContainerProps) {
   const [refreshing, setRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
@@ -135,8 +146,8 @@ export function ScreenContainer({
       <RefreshControl
         refreshing={refreshing}
         onRefresh={handleRefresh}
-        colors={["#6B8F71"]}
-        tintColor="#6B8F71"
+        colors={["#496349"]}
+        tintColor="#496349"
         title={Platform.OS === "ios" ? "Actualiser…" : undefined}
       />
     ) : undefined;
@@ -144,16 +155,19 @@ export function ScreenContainer({
   const bgClass = screenBg(isDark, variant === "focus");
   const paddingTop = Math.max(insets.top, Platform.OS === "web" ? 48 : 56);
 
-  const header = (
-    <>
-      {title && <DisplayTitle className="mb-2">{title}</DisplayTitle>}
-      {subtitle && (
-        <Text className={`text-base mb-8 leading-6 ${textSecondary(isDark)}`}>
-          {subtitle}
-        </Text>
-      )}
-    </>
-  );
+  const header =
+    title || heroLabel ? (
+      <PastekScreenHero
+        label={heroLabel}
+        title={title ?? ""}
+        accent={titleAccent}
+        titleEnd={titleEnd}
+        description={subtitle}
+        centered={heroCentered ?? Boolean(heroLabel)}
+        size={heroSize ?? (heroLabel ? "lg" : "md")}
+        className="mb-6"
+      />
+    ) : null;
 
   const webShellStyle =
     Platform.OS === "web"

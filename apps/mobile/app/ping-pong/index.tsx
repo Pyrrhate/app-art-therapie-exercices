@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { ApiError, fetchPingPongWord } from "@/lib/api";
@@ -113,16 +114,13 @@ export default function PingPongScreen() {
         </View>
 
         <View className="px-6 mb-4">
-          <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
-            Ping-Pong créatif
-          </Text>
-          <Text className="text-2xl font-light text-sand-800 leading-tight">
-            Laissez les mots danser
-          </Text>
-          <Text className="text-sand-500 text-sm mt-2 leading-5">
-            Amorce rapide — 2 à 3 minutes pour faire émerger une impulsion, puis
-            passer à l'exercice. {PING_PONG_MAX_TURNS} envois suffisent.
-          </Text>
+          <PastekScreenHero
+            label="Ping-Pong créatif"
+            title="Laissez les mots "
+            accent="danser"
+            description={`Amorce rapide — 2 à 3 minutes pour faire émerger une impulsion, puis passer à l'exercice. ${PING_PONG_MAX_TURNS} envois suffisent.`}
+            className="mb-3"
+          />
           <View className="flex-row items-center gap-2 mt-3">
             <Pressable
               onPress={() => {

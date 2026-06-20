@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { SupportButton } from "@/components/SupportButton";
 import { ThemePicker } from "@/components/ThemePicker";
 import { TimerSoundPicker } from "@/components/TimerSoundPicker";
-import { DisplayTitle } from "@/components/ui/DisplayText";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { checkHealth } from "@/lib/api";
@@ -86,13 +86,16 @@ export default function SettingsScreen() {
     <ScreenContainer scrollable refreshable onRefresh={refreshHealth}>
       <ScreenNavBar />
 
-      <DisplayTitle className="mb-2">Paramètres</DisplayTitle>
-      <Text className={`text-base mb-8 leading-6 ${textSecondary(isDark)}`}>
-        Vos créations restent sur votre appareil. Aucun compte requis.
-      </Text>
+      <PastekScreenHero
+        label="Paramètres"
+        title="Vos "
+        accent="préférences"
+        description="Vos créations restent sur votre appareil. Aucun compte requis."
+        className="mb-8"
+      />
 
       <View className="gap-4 pb-8">
-        <View className={`rounded-2xl border px-5 py-5 ${panelBg(isDark)}`}>
+        <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
             Apparence
           </Text>
@@ -132,7 +135,7 @@ export default function SettingsScreen() {
           <Text className="text-sage-500 text-lg">→</Text>
         </Pressable>
 
-        <View className={`rounded-2xl border px-5 py-5 ${panelBg(isDark)}`}>
+        <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
             Son de fin de timer
           </Text>
@@ -145,7 +148,7 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <View className={`rounded-2xl border px-5 py-5 ${panelBg(isDark)}`}>
+        <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>Connexion API</Text>
           <Text className={`text-xs mb-3 ${textMuted(isDark)}`} numberOfLines={2}>
             {apiUrl ||
@@ -200,7 +203,7 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        <View className={`rounded-2xl border px-5 py-5 ${panelBg(isDark)}`}>
+        <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>Stockage local</Text>
           <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
             Toutes vos sessions sont enregistrées via AsyncStorage, uniquement

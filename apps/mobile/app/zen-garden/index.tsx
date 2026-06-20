@@ -11,6 +11,7 @@ import { router } from "expo-router";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { ZenGardenCanvas } from "@/components/zen-garden/ZenGardenCanvas";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { showAlert } from "@/lib/alert";
@@ -312,17 +313,13 @@ export default function ZenGardenScreen() {
     <ScreenContainer scrollable refreshable>
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
-      <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
-        Jardin zen
-      </Text>
-      <Text className="text-3xl font-light text-sand-800 mb-2 leading-tight">
-        Coupe latérale
-      </Text>
-      <Text className="text-sand-500 text-base leading-6 mb-6">
-        Composez un jardin en profil : déposez du sable, ajoutez de l'eau,
-        posez des galets. En mode galet : touchez pour poser, glissez pour
-        déplacer, retouchez pour retirer.
-      </Text>
+      <PastekScreenHero
+        label="Jardin zen"
+        title="Coupe "
+        accent="latérale"
+        description="Composez un jardin en profil : déposez du sable, ajoutez de l'eau, posez des galets. En mode galet : touchez pour poser, glissez pour déplacer, retouchez pour retirer."
+        className="mb-6"
+      />
 
       {!loading && (
         <ZenGardenCanvas

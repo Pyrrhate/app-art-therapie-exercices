@@ -5,6 +5,7 @@ import { SpectrumColorPicker } from "@/components/mandala/SpectrumColorPicker";
 import { MandalaCanvas } from "@/components/mandala/MandalaCanvas";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { showAlert } from "@/lib/alert";
@@ -199,14 +200,14 @@ export default function MandalaStudioScreen() {
         onBack={() => router.replace("/mandala")}
       />
 
-      <Text className="text-sand-800 text-xl font-light mb-1">
-        {meta.emoji} {meta.title}
-      </Text>
-      <Text className="text-sand-500 text-sm mb-6 leading-5">
-        Touchez une zone pour la colorier, sans pression. Vous pourrez
-        prolonger vers un exercice une fois votre mandala avancé, si vous le
-        souhaitez.
-      </Text>
+      <PastekScreenHero
+        label="Studio Mandala"
+        title={`${meta.emoji} ${meta.title}`}
+        description="Touchez une zone pour la colorier, sans pression. Vous pourrez prolonger vers un exercice une fois votre mandala avancé, si vous le souhaitez."
+        centered={false}
+        size="md"
+        className="mb-6"
+      />
 
       <View
         className="items-center mb-6 justify-center"

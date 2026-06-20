@@ -68,7 +68,13 @@ export default function RitualScreen() {
     : "Quel mot, idée ou couleur vous appelle aujourd'hui ? Choisissez ensuite votre technique et la durée, puis passez à l'exercice.";
 
   return (
-    <ScreenContainer title="L'Impulsion" subtitle={subtitle} refreshable>
+    <ScreenContainer
+      heroLabel="Rituel créatif"
+      title="L'"
+      titleAccent="Impulsion"
+      subtitle={subtitle}
+      refreshable
+    >
       <ScreenNavBar backLabel="← Accueil" onBack={() => router.replace("/")} />
       <RitualProgressBar current="ritual" />
 

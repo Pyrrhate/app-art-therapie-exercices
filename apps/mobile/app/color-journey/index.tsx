@@ -6,6 +6,7 @@ import { JourneyProgress } from "@/components/color-journey/JourneyProgress";
 import { ReflectionPanel } from "@/components/color-journey/ReflectionPanel";
 import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import {
@@ -122,16 +123,13 @@ export default function ColorJourneyScreen() {
         contentContainerStyle={{ paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-sage-500 text-sm uppercase tracking-widest mb-2">
-          Palette intérieure
-        </Text>
-        <Text className="text-3xl font-light text-sand-800 mb-2 leading-tight">
-          Trois teintes sur la roue
-        </Text>
-        <Text className="text-sand-500 text-base leading-6 mb-4">
-          Choisissez vos couleurs sur le cercle chromatique — complémentaire,
-          triade : la théorie guide, vous décidez.
-        </Text>
+        <PastekScreenHero
+          label="Palette intérieure"
+          title="Trois teintes "
+          accent="sur la roue"
+          description="Choisissez vos couleurs sur le cercle chromatique — complémentaire, triade : la théorie guide, vous décidez."
+          className="mb-4"
+        />
 
         {(phase === "choosing" || phase === "reflecting") && (
           <View>
