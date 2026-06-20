@@ -1,4 +1,4 @@
-import Svg, { Circle, Path, Rect } from "react-native-svg";
+import Svg, { Circle, Rect } from "react-native-svg";
 import { View } from "react-native";
 
 export type ModuleIconId =
@@ -12,52 +12,81 @@ interface ModuleIconProps {
   size?: number;
 }
 
-const ACCENT: Record<ModuleIconId, string> = {
-  "ping-pong": "#6B8F71",
-  "color-journey": "#C4A484",
-  "emotion-explorer": "#8FA88A",
-  "nuance-finder": "#A8856A",
+const ICON_BG: Record<ModuleIconId, string> = {
+  "ping-pong": "#E3EDE5",
+  "color-journey": "#F0EBE4",
+  "emotion-explorer": "#E3EDE5",
+  "nuance-finder": "#F0EBE4",
 };
 
-export function ModuleIcon({ id, size = 40 }: ModuleIconProps) {
-  const color = ACCENT[id];
+const NUANCE_TILES = [
+  "#E8DDD4",
+  "#C4A484",
+  "#D4C4B5",
+  "#A8856A",
+  "#F0EBE4",
+  "#B8A090",
+  "#C4A484",
+  "#9A8070",
+  "#D4C4B5",
+  "#A8856A",
+  "#E8DDD4",
+  "#7A6558",
+  "#C4A484",
+  "#D4C4B5",
+  "#B8A090",
+  "#A8856A",
+];
+
+export function ModuleIcon({ id, size = 36 }: ModuleIconProps) {
+  const box = 48;
 
   return (
     <View
-      className="rounded-xl items-center justify-center mb-2"
+      className="rounded-xl items-center justify-center mb-4"
       style={{
-        width: size + 8,
-        height: size + 8,
-        backgroundColor: `${color}18`,
+        width: box,
+        height: box,
+        backgroundColor: ICON_BG[id],
       }}
     >
       <Svg width={size} height={size} viewBox="0 0 40 40">
         {id === "ping-pong" && (
           <>
-            <Circle cx="14" cy="20" r="8" fill={color} opacity={0.85} />
-            <Circle cx="26" cy="20" r="8" fill={color} opacity={0.45} />
+            <Circle cx="14" cy="20" r="8" fill="#496349" opacity={0.9} />
+            <Circle cx="26" cy="20" r="8" fill="#8FA88A" opacity={0.55} />
           </>
         )}
         {id === "color-journey" && (
           <>
-            <Circle cx="20" cy="20" r="14" fill="none" stroke={color} strokeWidth={3} />
-            <Circle cx="20" cy="20" r="5" fill={color} />
-            <Path
-              d="M20 6 A14 14 0 0 1 34 20"
+            <Circle
+              cx="20"
+              cy="20"
+              r="12"
               fill="none"
-              stroke={color}
-              strokeWidth={4}
-              opacity={0.5}
+              stroke="#A8856A"
+              strokeWidth={2.5}
             />
+            <Circle cx="20" cy="20" r="4.5" fill="#A8856A" />
           </>
         )}
         {id === "emotion-explorer" && (
           <>
-            <Circle cx="12" cy="14" r="7" fill={color} opacity={0.6} />
-            <Circle cx="28" cy="14" r="7" fill={color} opacity={0.85} />
-            <Circle cx="12" cy="28" r="7" fill={color} opacity={0.4} />
-            <Circle cx="28" cy="28" r="7" fill={color} opacity={0.75} />
-            <Circle cx="20" cy="21" r="5" fill="#FAF7F4" />
+            {[
+              [14, 14, 0.55],
+              [26, 14, 0.75],
+              [14, 26, 0.45],
+              [26, 26, 0.65],
+            ].map(([cx, cy, opacity]) => (
+              <Circle
+                key={`${cx}-${cy}`}
+                cx={cx}
+                cy={cy}
+                r="5.5"
+                fill="#8FA88A"
+                opacity={opacity}
+              />
+            ))}
           </>
         )}
         {id === "nuance-finder" && (
@@ -66,13 +95,12 @@ export function ModuleIcon({ id, size = 40 }: ModuleIconProps) {
               [0, 1, 2, 3].map((col) => (
                 <Rect
                   key={`${row}-${col}`}
-                  x={6 + col * 8}
-                  y={6 + row * 8}
-                  width={6}
-                  height={6}
+                  x={8 + col * 7}
+                  y={8 + row * 7}
+                  width={5.5}
+                  height={5.5}
                   rx={1}
-                  fill={color}
-                  opacity={0.35 + ((row + col) % 3) * 0.2}
+                  fill={NUANCE_TILES[row * 4 + col]!}
                 />
               ))
             )}
