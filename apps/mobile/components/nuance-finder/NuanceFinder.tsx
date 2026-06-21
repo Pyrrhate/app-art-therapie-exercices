@@ -14,6 +14,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { PrimaryButton } from "@/components/ui/Button";
+import { LotusMark, PastekIcon } from "@/components/ui/ModuleIcon";
 import { recordFilEntry } from "@/lib/fil/record";
 import type { ColorForImpulse } from "@/lib/color-names";
 import { LOTUS_SOURCE } from "@/lib/nuance-finder/elements";
@@ -127,9 +128,12 @@ function NuanceCellView({
 
         {showLotusIcon && (
           <View className="absolute inset-0 items-center justify-center">
-            <Text style={{ fontSize: Math.max(18, cellSize * 0.42) }}>
-              {LOTUS_SOURCE.icon}
-            </Text>
+            <PastekIcon
+              id="lotus"
+              boxSize={Math.max(22, cellSize * 0.52)}
+              size={Math.max(14, cellSize * 0.38)}
+              className="mb-0"
+            />
           </View>
         )}
       </View>
@@ -284,13 +288,20 @@ export function NuanceFinder() {
             : "bg-white/80 border-sand-200"
         }`}
       >
-        <Text
-          className={`text-[13px] leading-6 text-center ${textMuted(isDark)}`}
-        >
-          Touchez les cases pour révéler les teintes. {LOTUS_COUNT} lotus{" "}
-          {LOTUS_SOURCE.icon} sont cachés : ils dévoilent les couleurs alentour
-          en onde. Appui long : poser un galet.
-        </Text>
+        <View className="flex-row flex-wrap justify-center items-center gap-x-1 gap-y-1">
+          <Text
+            className={`text-[13px] leading-6 text-center ${textMuted(isDark)}`}
+          >
+            Touchez les cases pour révéler les teintes. {LOTUS_COUNT} lotus
+          </Text>
+          <LotusMark size={16} />
+          <Text
+            className={`text-[13px] leading-6 text-center ${textMuted(isDark)}`}
+          >
+            sont cachés : ils dévoilent les couleurs alentour en onde. Appui
+            long : poser un galet.
+          </Text>
+        </View>
       </View>
 
       <View
@@ -331,9 +342,15 @@ export function NuanceFinder() {
             Harmonie trouvée
           </Text>
           {foundLotusCount > 0 && (
-            <Text className={`text-sm text-center ${textMuted(isDark)}`}>
-              {foundLotusCount} lotus {LOTUS_SOURCE.icon} découverts
-            </Text>
+            <View className="flex-row items-center justify-center gap-1.5">
+              <Text className={`text-sm text-center ${textMuted(isDark)}`}>
+                {foundLotusCount} lotus
+              </Text>
+              <LotusMark size={14} />
+              <Text className={`text-sm text-center ${textMuted(isDark)}`}>
+                découverts
+              </Text>
+            </View>
           )}
         </View>
       ) : null}

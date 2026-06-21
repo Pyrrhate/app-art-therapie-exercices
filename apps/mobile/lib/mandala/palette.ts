@@ -30,22 +30,19 @@ export function getMandalaDisplaySize(windowWidth: number): number {
 
 export const MANDALA_THEME_LABELS: Record<
   MandalaTheme,
-  { title: string; subtitle: string; emoji: string }
+  { title: string; subtitle: string }
 > = {
   calm: {
     title: "M'apaiser",
     subtitle: "Courbes douces, lotus, espaces ouverts",
-    emoji: "🪷",
   },
   energy: {
     title: "Canaliser mon énergie",
     subtitle: "Angles vifs, étoiles, motifs denses",
-    emoji: "⚡",
   },
   focus: {
     title: "Me recentrer",
     subtitle: "Anneaux concentriques, équilibre géométrique",
-    emoji: "◎",
   },
 };
 

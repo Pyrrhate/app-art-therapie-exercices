@@ -3,23 +3,22 @@ import type { ArtisticTechnique } from "@/lib/types";
 export type TechniqueDefinition = {
   id: ArtisticTechnique;
   label: string;
-  emoji: string;
   /** Analyse IA disponible en phase réflexion (photo / OCR). */
   aiAnalysis: boolean;
 };
 
 export const TECHNIQUES: TechniqueDefinition[] = [
-  { id: "drawing", label: "Dessin", emoji: "✏️", aiAnalysis: true },
-  { id: "painting", label: "Peinture", emoji: "🎨", aiAnalysis: true },
-  { id: "writing", label: "Écriture", emoji: "📝", aiAnalysis: true },
-  { id: "mixed_media", label: "Techniques mixtes", emoji: "🌀", aiAnalysis: true },
-  { id: "collage", label: "Collage", emoji: "✂️", aiAnalysis: true },
-  { id: "volume", label: "Volume", emoji: "🗿", aiAnalysis: true },
-  { id: "recyclart", label: "Recycl'art", emoji: "♻️", aiAnalysis: true },
-  { id: "video", label: "Vidéo", emoji: "🎬", aiAnalysis: false },
-  { id: "music", label: "Musique", emoji: "🎵", aiAnalysis: false },
-  { id: "dance", label: "Danse", emoji: "💃", aiAnalysis: false },
-  { id: "theatre", label: "Théâtre", emoji: "🎭", aiAnalysis: false },
+  { id: "drawing", label: "Dessin", aiAnalysis: true },
+  { id: "painting", label: "Peinture", aiAnalysis: true },
+  { id: "writing", label: "Écriture", aiAnalysis: true },
+  { id: "mixed_media", label: "Techniques mixtes", aiAnalysis: true },
+  { id: "collage", label: "Collage", aiAnalysis: true },
+  { id: "volume", label: "Volume", aiAnalysis: true },
+  { id: "recyclart", label: "Recycl'art", aiAnalysis: true },
+  { id: "video", label: "Vidéo", aiAnalysis: false },
+  { id: "music", label: "Musique", aiAnalysis: false },
+  { id: "dance", label: "Danse", aiAnalysis: false },
+  { id: "theatre", label: "Théâtre", aiAnalysis: false },
 ];
 
 export function getTechniqueLabel(id: string): string {

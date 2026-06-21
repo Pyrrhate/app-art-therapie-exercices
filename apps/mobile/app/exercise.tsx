@@ -93,7 +93,6 @@ export default function ExerciseScreen() {
       />
 
       <GentleTimer
-        key={`${durationMinutes}-${completionSound}`}
         durationMinutes={durationMinutes}
         completionSound={completionSound}
       />

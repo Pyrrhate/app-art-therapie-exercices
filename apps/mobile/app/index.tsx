@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { ModuleCard } from "@/components/home/ModuleCard";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { AccentCard } from "@/components/ui/Card";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -170,16 +171,27 @@ export default function WelcomeScreen() {
                 <Pressable
                   key={entry.id}
                   onPress={() => router.push(`/fil/${entry.id}`)}
-                  className={`rounded-2xl border px-4 py-3 ${
+                  className={`rounded-2xl border px-4 py-3 flex-row items-start gap-3 ${
                     isDark ? "border-sand-700 bg-sand-800/50" : "border-sand-200 bg-white/80"
                   }`}
                 >
-                  <Text className={`text-xs mb-1 ${textMuted(isDark)}`}>
-                    {formatSessionDate(entry.createdAt)} · {meta.emoji} {meta.label}
-                  </Text>
-                  <Text className={`text-sm font-medium ${textSecondary(isDark)}`} numberOfLines={2}>
-                    {entry.summary}
-                  </Text>
+                  <PastekIcon
+                    id={meta.icon}
+                    boxSize={36}
+                    size={24}
+                    className="mb-0 mt-0.5"
+                  />
+                  <View className="flex-1">
+                    <Text className={`text-xs mb-1 ${textMuted(isDark)}`}>
+                      {formatSessionDate(entry.createdAt)} · {meta.label}
+                    </Text>
+                    <Text
+                      className={`text-sm font-medium ${textSecondary(isDark)}`}
+                      numberOfLines={2}
+                    >
+                      {entry.summary}
+                    </Text>
+                  </View>
                 </Pressable>
               );
             })}

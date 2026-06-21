@@ -46,7 +46,6 @@ export const LOTUS_SOURCE = {
   label: "Lotus",
   hex: "#F5E6F0",
   rgb: { r: 245, g: 230, b: 240 },
-  icon: "🪷",
 };
 
 export const ELEMENT_VISUALS: Record<

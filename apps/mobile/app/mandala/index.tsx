@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
+import { mandalaThemeToIcon, PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
@@ -50,7 +51,7 @@ export default function MandalaThemeScreen() {
               }
               className="bg-white rounded-3xl border border-sand-100 px-5 py-5 active:border-sage-500"
             >
-              <Text className="text-2xl mb-2">{meta.emoji}</Text>
+              <PastekIcon id={mandalaThemeToIcon(theme)} boxSize={40} size={28} className="mb-2" />
               <Text className="text-sand-800 font-medium text-lg mb-1">
                 {meta.title}
               </Text>

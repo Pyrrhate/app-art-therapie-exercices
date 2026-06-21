@@ -25,7 +25,7 @@ import {
 } from "@/lib/mandala/storage";
 import type { MandalaFills, MandalaTheme } from "@/lib/mandala/types";
 import { FEATURES } from "@/lib/features";
-import { recordFilEntry } from "@/lib/fil/record";
+import { mandalaThemeToIcon, PastekIcon } from "@/components/ui/ModuleIcon";
 import {
   extractDominantColors,
   startRitualFromColors,
@@ -215,9 +215,16 @@ export default function MandalaStudioScreen() {
         onBack={() => router.replace("/mandala")}
       />
 
+      <PastekIcon
+        id={mandalaThemeToIcon(theme)}
+        boxSize={40}
+        size={28}
+        className="mb-4"
+      />
+
       <PastekScreenHero
         label="Studio Mandala"
-        title={`${meta.emoji} ${meta.title}`}
+        title={meta.title}
         description="Touchez une zone pour la colorier, sans pression. Vous pourrez prolonger vers un exercice une fois votre mandala avancé, si vous le souhaitez."
         centered={false}
         size="md"

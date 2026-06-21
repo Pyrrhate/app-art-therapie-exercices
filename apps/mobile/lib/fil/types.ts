@@ -1,6 +1,6 @@
+import type { PastekIconId } from "@/components/ui/ModuleIcon";
 import type { MandalaTheme } from "@/lib/mandala/types";
 import type { ArtisticTechnique } from "@/lib/types";
-
 export type FilSource =
   | "ritual"
   | "mandala"
@@ -36,15 +36,15 @@ export interface FilEntry {
 
 export const FIL_SOURCE_META: Record<
   FilSource,
-  { label: string; emoji: string }
+  { label: string; icon: PastekIconId }
 > = {
-  ritual: { label: "Rituel", emoji: "✨" },
-  mandala: { label: "Mandala", emoji: "🪷" },
-  nuances: { label: "Nuances", emoji: "🎨" },
-  "ping-pong": { label: "Ping-Pong", emoji: "🏓" },
-  "color-journey": { label: "Palette intérieure", emoji: "🌈" },
-  "emotion-explorer": { label: "Explorateur émotionnel", emoji: "💭" },
-  "zen-garden": { label: "Jardin zen", emoji: "🏯" },
+  ritual: { label: "Rituel", icon: "ritual" },
+  mandala: { label: "Mandala", icon: "mandala" },
+  nuances: { label: "Nuances", icon: "nuance-finder" },
+  "ping-pong": { label: "Ping-Pong", icon: "ping-pong" },
+  "color-journey": { label: "Palette intérieure", icon: "color-journey" },
+  "emotion-explorer": { label: "Explorateur émotionnel", icon: "emotion-explorer" },
+  "zen-garden": { label: "Jardin zen", icon: "zen-garden" },
 };
 
 export function isRitualFilEntry(entry: FilEntry): boolean {

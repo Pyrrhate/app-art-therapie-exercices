@@ -1,11 +1,16 @@
 import { useCallback, useState } from "react";
-import { Alert, Platform, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate } from "@/constants";
 import { clearFilEntries, deleteFilEntry, getFilEntries } from "@/lib/fil/storage";
+import {
+  confirmClearAllFil,
+  confirmDeleteFilEntry,
+} from "@/lib/fil/deleteConfirm";
 import {
   FIL_SOURCE_META,
   isRitualFilEntry,
@@ -32,38 +37,19 @@ export default function FilScreen() {
     }, [load])
   );
 
-  function handleClear() {
-    const run = async () => {
-      await clearFilEntries();
-      setEntries([]);
-    };
-    if (Platform.OS === "web") {
-      if (window.confirm("Effacer tout le Fil créatif ?")) void run();
-      return;
-    }
-    Alert.alert(
-      "Effacer le Fil ?",
-      "Toutes les traces seront supprimées de cet appareil.",
-      [
-        { text: "Annuler", style: "cancel" },
-        { text: "Effacer", style: "destructive", onPress: () => void run() },
-      ]
-    );
+  async function handleClear() {
+    if (entries.length === 0) return;
+    const confirmed = await confirmClearAllFil(entries.length);
+    if (!confirmed) return;
+    await clearFilEntries();
+    setEntries([]);
   }
 
-  function handleDeleteEntry(id: string) {
-    const run = async () => {
-      await deleteFilEntry(id);
-      setEntries((prev) => prev.filter((e) => e.id !== id));
-    };
-    if (Platform.OS === "web") {
-      if (window.confirm("Supprimer cette trace ?")) void run();
-      return;
-    }
-    Alert.alert("Supprimer cette trace ?", undefined, [
-      { text: "Annuler", style: "cancel" },
-      { text: "Supprimer", style: "destructive", onPress: () => void run() },
-    ]);
+  async function handleDeleteEntry(entry: FilEntry) {
+    const confirmed = await confirmDeleteFilEntry(entry.summary);
+    if (!confirmed) return;
+    await deleteFilEntry(entry.id);
+    setEntries((prev) => prev.filter((e) => e.id !== entry.id));
   }
 
   return (
@@ -109,10 +95,18 @@ export default function FilScreen() {
                   <Text className={`text-xs ${textMuted(isDark)}`}>
                     {formatSessionDate(entry.createdAt)}
                   </Text>
-                  <Text className={`text-xs ${textMuted(isDark)}`}>
-                    {meta.emoji} {meta.label}
-                    {isRitualFilEntry(entry) ? " · fiche complète" : ""}
-                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    <PastekIcon
+                      id={meta.icon}
+                      boxSize={24}
+                      size={14}
+                      className="mb-0"
+                    />
+                    <Text className={`text-xs ${textMuted(isDark)}`}>
+                      {meta.label}
+                      {isRitualFilEntry(entry) ? " · fiche complète" : ""}
+                    </Text>
+                  </View>
                 </View>
                 <Text className={`font-medium text-base mb-1 ${textPrimary(isDark)}`}>
                   {entry.summary}
@@ -140,25 +134,31 @@ export default function FilScreen() {
                 <Pressable
                   onPress={(e) => {
                     e.stopPropagation?.();
-                    handleDeleteEntry(entry.id);
+                    void handleDeleteEntry(entry);
                   }}
                   hitSlop={8}
                   className="mt-3 self-end"
                 >
-                  <Text className={`text-xs ${textMuted(isDark)}`}>Supprimer</Text>
+                  <Text className={`text-xs ${textMuted(isDark)}`}>
+                    Retirer du Fil
+                  </Text>
                 </Pressable>
               </Pressable>
             );
           })}
 
-          <View className={`gap-3 pt-4 border-t ${isDark ? "border-sand-700" : "border-sand-200"}`}>
+          <View className={`gap-3 pt-6 mt-2 border-t ${isDark ? "border-sand-700" : "border-sand-200"}`}>
             <PrimaryButton
               label="Préparer un exercice"
               onPress={() => router.push("/ritual")}
             />
+            <Text className={`text-xs text-center leading-5 px-2 ${textMuted(isDark)}`}>
+              Pour retirer une trace, ouvrez-la ou utilisez « Retirer du Fil » sur
+              la carte. L&apos;effacement complet demande une double confirmation.
+            </Text>
             <PrimaryButton
-              label="Effacer le Fil"
-              onPress={handleClear}
+              label="Effacer tout le Fil…"
+              onPress={() => void handleClear()}
               variant="ghost"
             />
           </View>

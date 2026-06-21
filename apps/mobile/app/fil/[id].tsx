@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
-  Platform,
   Text,
   View,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
 import { deleteFilEntry, getFilEntryById } from "@/lib/fil/storage";
+import { confirmDeleteFilEntry } from "@/lib/fil/deleteConfirm";
 import {
   FIL_SOURCE_META,
   isRitualFilEntry,
@@ -64,20 +64,12 @@ export default function FilDetailScreen() {
     }
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!entry) return;
-    const remove = async () => {
-      await deleteFilEntry(entry.id);
-      router.back();
-    };
-    if (Platform.OS === "web") {
-      if (window.confirm("Supprimer cette trace ?")) void remove();
-      return;
-    }
-    Alert.alert("Supprimer cette trace ?", "Cette action est irréversible.", [
-      { text: "Annuler", style: "cancel" },
-      { text: "Supprimer", style: "destructive", onPress: () => void remove() },
-    ]);
+    const confirmed = await confirmDeleteFilEntry(entry.summary);
+    if (!confirmed) return;
+    await deleteFilEntry(entry.id);
+    router.back();
   }
 
   async function handleExportPdf() {
@@ -127,8 +119,10 @@ export default function FilDetailScreen() {
     <ScreenContainer scrollable>
       <ScreenNavBar backLabel="← Fil" />
 
+      <PastekIcon id={meta.icon} boxSize={44} size={30} className="mb-4" />
+
       <PastekScreenHero
-        label={`${meta.emoji} ${meta.label}`}
+        label={meta.label}
         title={entry.summary}
         description={formatSessionDate(entry.createdAt)}
         centered={false}
@@ -228,8 +222,8 @@ export default function FilDetailScreen() {
           />
         )}
         <PrimaryButton
-          label="Supprimer"
-          onPress={handleDelete}
+          label="Retirer du Fil"
+          onPress={() => void handleDelete()}
           variant="ghost"
         />
       </View>

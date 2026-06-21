@@ -1,5 +1,6 @@
 import { Platform, Pressable, Text, View } from "react-native";
 import { HoverScale } from "@/components/emotion-explorer/HoverScale";
+import { PastekIcon } from "@/components/ui/ModuleIcon";
 import type { TechniqueDefinition } from "@/constants";
 import type { ArtisticTechnique } from "@/lib/types";
 import { panelBg, textPrimary } from "@/lib/themeClasses";
@@ -35,7 +36,13 @@ export function TechniquePicker({
                 : undefined
             }
           >
-            <Text className="text-lg mb-1">{tech.emoji}</Text>
+            <PastekIcon
+              id={tech.id}
+              boxSize={32}
+              size={22}
+              className="mb-1"
+              tone={isSelected ? "light" : "default"}
+            />
             <Text
               className={`text-sm ${
                 isSelected ? "text-white" : textPrimary(isDark)
