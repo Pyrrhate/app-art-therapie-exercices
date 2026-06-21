@@ -36,6 +36,11 @@ export default function PrivacyScreen() {
           votre appareil via AsyncStorage.
         </P>
         <P>
+          Vous pouvez exporter et restaurer votre Fil créatif depuis les
+          paramètres : le fichier reste chez vous (Drive, mail, etc.) et n'est
+          jamais envoyé à nos serveurs.
+        </P>
+        <P>
           Lorsque vous demandez une réflexion IA, votre photo est compressée
           puis envoyée à notre serveur API pour analyse. Elle n'est pas
           conservée côté serveur après traitement.

@@ -1,13 +1,21 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { SupportButton } from "@/components/SupportButton";
 import { ThemePicker } from "@/components/ThemePicker";
 import { TimerSoundPicker } from "@/components/TimerSoundPicker";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
-import { ScreenContainer } from "@/components/ui/Button";
+import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { checkHealth } from "@/lib/api";
+import { summarizeBackup, parseAppBackupJson } from "@/lib/backup/build";
+import {
+  exportAppBackup,
+  formatRestoreConfirmMessage,
+} from "@/lib/backup/export";
+import { pickBackupFileContents } from "@/lib/backup/pick";
+import { assertBackupSize, restoreAppBackup } from "@/lib/backup/restore";
+import { showAlert } from "@/lib/alert";
 import { getApiUrl } from "@/lib/config";
 import { getTimerSound, setTimerSound, type ThemePreference } from "@/lib/preferences";
 import { previewTimerSound, type TimerSoundId } from "@/lib/sounds";
@@ -28,6 +36,7 @@ export default function SettingsScreen() {
   );
   const [aiHint, setAiHint] = useState<string | null>(null);
   const [timerSound, setTimerSoundState] = useState<TimerSoundId>("gong");
+  const [backupBusy, setBackupBusy] = useState(false);
   const apiUrl = getApiUrl();
 
   useEffect(() => {
@@ -61,6 +70,68 @@ export default function SettingsScreen() {
 
   async function handleThemeChange(next: ThemePreference) {
     await setTheme(next);
+  }
+
+  async function handleExportBackup() {
+    if (backupBusy) return;
+    setBackupBusy(true);
+    try {
+      const result = await exportAppBackup();
+      showAlert("Sauvegarde exportée", result.message);
+    } catch (error) {
+      showAlert(
+        "Export impossible",
+        error instanceof Error ? error.message : "Réessayez dans un instant."
+      );
+    } finally {
+      setBackupBusy(false);
+    }
+  }
+
+  function confirmRestore(summary: ReturnType<typeof summarizeBackup>): Promise<boolean> {
+    const message = formatRestoreConfirmMessage(summary);
+    if (Platform.OS === "web") {
+      return Promise.resolve(window.confirm(`Restaurer cette sauvegarde ?\n\n${message}`));
+    }
+    return new Promise((resolve) => {
+      Alert.alert("Restaurer cette sauvegarde ?", message, [
+        { text: "Annuler", style: "cancel", onPress: () => resolve(false) },
+        {
+          text: "Remplacer",
+          style: "destructive",
+          onPress: () => resolve(true),
+        },
+      ]);
+    });
+  }
+
+  async function handleRestoreBackup() {
+    if (backupBusy) return;
+    setBackupBusy(true);
+    try {
+      const json = await pickBackupFileContents();
+      if (!json) return;
+
+      assertBackupSize(json);
+      const summary = summarizeBackup(json);
+      const confirmed = await confirmRestore(summary);
+      if (!confirmed) return;
+
+      const backup = parseAppBackupJson(json);
+      await restoreAppBackup(backup);
+      await getTimerSound().then(setTimerSoundState);
+      showAlert(
+        "Restauration terminée",
+        `${summary.filCount} trace${summary.filCount > 1 ? "s" : ""} récupérée${summary.filCount > 1 ? "s" : ""} dans le Fil créatif.`
+      );
+    } catch (error) {
+      showAlert(
+        "Restauration impossible",
+        error instanceof Error ? error.message : "Fichier invalide ou corrompu."
+      );
+    } finally {
+      setBackupBusy(false);
+    }
   }
 
   async function refreshHealth() {
@@ -204,10 +275,37 @@ export default function SettingsScreen() {
         </View>
 
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
+          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
+            Sauvegarde & restauration
+          </Text>
+          <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
+            Exportez votre Fil créatif, vos préférences et votre brouillon de
+            rituel dans un fichier JSON — uniquement chez vous. Restaurez-le sur
+            un autre appareil sans compte ni serveur Art Thérapie.
+          </Text>
+          <View className="gap-3">
+            <PrimaryButton
+              label={backupBusy ? "…" : "Exporter ma pratique"}
+              onPress={() => void handleExportBackup()}
+              disabled={backupBusy}
+              align="stretch"
+            />
+            <PrimaryButton
+              label="Restaurer depuis un fichier"
+              onPress={() => void handleRestoreBackup()}
+              variant="ghost"
+              disabled={backupBusy}
+              align="stretch"
+            />
+          </View>
+        </View>
+
+        <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>Stockage local</Text>
           <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
             Toutes vos traces sont enregistrées automatiquement dans le Fil
-            créatif via AsyncStorage, uniquement sur cet appareil.
+            créatif sur cet appareil. Pour changer de téléphone ou tablette,
+            exportez puis restaurez une sauvegarde.
           </Text>
         </View>
 

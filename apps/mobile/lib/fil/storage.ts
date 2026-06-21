@@ -59,6 +59,13 @@ export async function clearFilEntries(): Promise<void> {
   await AsyncStorage.removeItem(STORAGE_KEYS.creativeFil);
 }
 
+export async function replaceFilEntries(entries: FilEntry[]): Promise<void> {
+  await AsyncStorage.setItem(
+    STORAGE_KEYS.creativeFil,
+    JSON.stringify(entries.slice(0, MAX_ENTRIES))
+  );
+}
+
 function sessionToFilEntry(session: SavedSession): FilEntry {
   return {
     id: session.id,
