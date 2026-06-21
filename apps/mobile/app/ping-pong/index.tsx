@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -12,8 +12,8 @@ import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { ApiError, fetchPingPongWord } from "@/lib/api";
-import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
+import { recordFilEntry } from "@/lib/fil/record";
 import { startRitualFromImpulse } from "@/lib/fil/bridges";
 import { showAlert } from "@/lib/alert";
 import { getFallbackPingPongWord } from "@/lib/ping-pong/fallback";
@@ -29,6 +29,7 @@ export default function PingPongScreen() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
+  const filRecordedRef = useRef(false);
   const [useAiSuggestions, setUseAiSuggestions] = useState(false);
   const [usingLocalWords, setUsingLocalWords] = useState(false);
 
@@ -36,6 +37,27 @@ export default function PingPongScreen() {
   const canPlay = !finished && userTurnCount < PING_PONG_MAX_TURNS;
   const canExitToExercise = turns.length >= 1;
   const chain = turns.map((t) => t.word).join("  →  ");
+
+  function recordPingPongFil() {
+    if (filRecordedRef.current || !chain.trim()) return;
+    filRecordedRef.current = true;
+    void recordFilEntry({
+      source: "ping-pong",
+      summary: "Amorce ping-pong",
+      detail: chain,
+      metadata: { chain },
+    });
+  }
+
+  useEffect(() => {
+    if (finished) recordPingPongFil();
+  }, [finished, chain]);
+
+  function handleCreateFromJourney() {
+    if (!chain) return;
+    recordPingPongFil();
+    startRitualFromImpulse(chain, "mixed_media");
+  }
 
   function scrollToEnd() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
@@ -96,11 +118,6 @@ export default function PingPongScreen() {
     } else {
       appendPartnerWord(word, history);
     }
-  }
-
-  function handleCreateFromJourney() {
-    if (!chain) return;
-    startRitualFromImpulse(chain, "mixed_media");
   }
 
   return (
@@ -215,15 +232,6 @@ export default function PingPongScreen() {
                     variant: "primary",
                   },
                 ]}
-              />
-
-              <AddToFilBar
-                entry={{
-                  source: "ping-pong",
-                  summary: "Amorce ping-pong",
-                  detail: chain,
-                  metadata: { chain },
-                }}
               />
             </>
           )}

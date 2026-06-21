@@ -106,15 +106,15 @@ export default function SettingsScreen() {
         </View>
 
         <Pressable
-          onPress={() => router.push("/sessions")}
+          onPress={() => router.push("/fil")}
           className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
         >
           <View>
             <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-              Mes sessions
+              Fil créatif
             </Text>
             <Text className={`text-sm ${textSecondary(isDark)}`}>
-              Consulter vos rituels sauvegardés
+              Toutes vos traces — rituels et amorces
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
@@ -206,8 +206,8 @@ export default function SettingsScreen() {
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>Stockage local</Text>
           <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-            Toutes vos sessions sont enregistrées via AsyncStorage, uniquement
-            sur cet appareil.
+            Toutes vos traces sont enregistrées automatiquement dans le Fil
+            créatif via AsyncStorage, uniquement sur cet appareil.
           </Text>
         </View>
 

@@ -1,12 +1,16 @@
 import { useCallback, useState } from "react";
-import { Alert, Platform, Text, View } from "react-native";
+import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate } from "@/constants";
-import { clearFilEntries, getFilEntries } from "@/lib/fil/storage";
-import { FIL_SOURCE_META, type FilEntry } from "@/lib/fil/types";
+import { clearFilEntries, deleteFilEntry, getFilEntries } from "@/lib/fil/storage";
+import {
+  FIL_SOURCE_META,
+  isRitualFilEntry,
+  type FilEntry,
+} from "@/lib/fil/types";
 import { navigateHome } from "@/lib/navigation";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -47,6 +51,21 @@ export default function FilScreen() {
     );
   }
 
+  function handleDeleteEntry(id: string) {
+    const run = async () => {
+      await deleteFilEntry(id);
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+    };
+    if (Platform.OS === "web") {
+      if (window.confirm("Supprimer cette trace ?")) void run();
+      return;
+    }
+    Alert.alert("Supprimer cette trace ?", undefined, [
+      { text: "Annuler", style: "cancel" },
+      { text: "Supprimer", style: "destructive", onPress: () => void run() },
+    ]);
+  }
+
   return (
     <ScreenContainer scrollable refreshable onRefresh={load}>
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
@@ -55,7 +74,7 @@ export default function FilScreen() {
         label="Fil créatif"
         title="Mémoire de vos "
         accent="pratiques"
-        description="Sur cet appareil, de petites traces laissées après vos exercices et modules — mandala, nuances, jardin, ping-pong, rituel."
+        description="Chaque rituel et chaque amorce laissent automatiquement une trace ici — sur cet appareil uniquement."
         className="mb-6"
       />
 
@@ -66,7 +85,7 @@ export default function FilScreen() {
           className={`rounded-3xl border border-dashed px-5 py-10 items-center ${panelBg(isDark)}`}
         >
           <Text className={`text-center leading-6 ${textSecondary(isDark)}`}>
-            Rien ici pour l&apos;instant. Terminez un exercice ou un module, puis ajoutez une trace pour vous en souvenir.
+            Rien ici pour l&apos;instant. Terminez un exercice ou une amorce — une trace s&apos;ajoutera toute seule.
           </Text>
           <View className="mt-6 w-full gap-3">
             <PrimaryButton label="Préparer un exercice" onPress={() => router.push("/ritual")} />
@@ -77,9 +96,13 @@ export default function FilScreen() {
         <View className="gap-3 pb-6">
           {entries.map((entry) => {
             const meta = FIL_SOURCE_META[entry.source];
+            const preview =
+              entry.metadata?.reflection?.slice(0, 120) ??
+              entry.detail?.slice(0, 120);
             return (
-              <View
+              <Pressable
                 key={entry.id}
+                onPress={() => router.push(`/fil/${entry.id}`)}
                 className={`rounded-3xl border px-5 py-4 ${panelBg(isDark)}`}
               >
                 <View className="flex-row items-center justify-between mb-2">
@@ -88,19 +111,24 @@ export default function FilScreen() {
                   </Text>
                   <Text className={`text-xs ${textMuted(isDark)}`}>
                     {meta.emoji} {meta.label}
+                    {isRitualFilEntry(entry) ? " · fiche complète" : ""}
                   </Text>
                 </View>
                 <Text className={`font-medium text-base mb-1 ${textPrimary(isDark)}`}>
                   {entry.summary}
                 </Text>
-                {entry.detail ? (
-                  <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-                    {entry.detail}
+                {preview ? (
+                  <Text
+                    className={`text-sm leading-6 ${textSecondary(isDark)}`}
+                    numberOfLines={3}
+                  >
+                    {preview}
+                    {preview.length >= 120 ? "…" : ""}
                   </Text>
                 ) : null}
                 {entry.metadata?.colors?.length ? (
                   <View className="flex-row flex-wrap gap-2 mt-3">
-                    {entry.metadata.colors.map((hex) => (
+                    {entry.metadata.colors.slice(0, 6).map((hex) => (
                       <View
                         key={hex}
                         className={`w-6 h-6 rounded-full border ${isDark ? "border-sand-600" : "border-sand-200"}`}
@@ -109,7 +137,17 @@ export default function FilScreen() {
                     ))}
                   </View>
                 ) : null}
-              </View>
+                <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    handleDeleteEntry(entry.id);
+                  }}
+                  hitSlop={8}
+                  className="mt-3 self-end"
+                >
+                  <Text className={`text-xs ${textMuted(isDark)}`}>Supprimer</Text>
+                </Pressable>
+              </Pressable>
             );
           })}
 

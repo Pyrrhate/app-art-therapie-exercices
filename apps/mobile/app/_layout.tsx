@@ -44,17 +44,9 @@ function RootStack() {
       />
       <Stack.Screen name="zen-garden/index" options={{ title: "Jardin zen" }} />
       <Stack.Screen name="fil/index" options={{ title: "Fil créatif" }} />
+      <Stack.Screen name="fil/[id]" />
       <Stack.Screen name="exercise" />
       <Stack.Screen name="reflection" />
-      <Stack.Screen
-        name="sessions/index"
-        options={
-          Platform.OS === "web"
-            ? { presentation: "card" }
-            : { presentation: "modal" }
-        }
-      />
-      <Stack.Screen name="sessions/[id]" />
       <Stack.Screen
         name="settings"
         options={

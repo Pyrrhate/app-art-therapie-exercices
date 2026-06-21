@@ -7,6 +7,8 @@ import { useIsDark } from "@/lib/themeStore";
 interface QuadrantPickerProps {
   quadrants: EmotionQuadrant[];
   onSelect: (quadrant: EmotionQuadrant) => void;
+  /** Occupe l'espace restant et centre la grille de cercles en hauteur. */
+  fillHeight?: boolean;
 }
 
 const GRID_ORDER: EmotionQuadrantId[][] = [
@@ -110,7 +112,11 @@ function QuadrantRow({
   );
 }
 
-export function QuadrantPicker({ quadrants, onSelect }: QuadrantPickerProps) {
+export function QuadrantPicker({
+  quadrants,
+  onSelect,
+  fillHeight = false,
+}: QuadrantPickerProps) {
   const isDark = useIsDark();
   const { width } = useWindowDimensions();
   const byId = Object.fromEntries(quadrants.map((q) => [q.id, q])) as Record<
@@ -128,17 +134,29 @@ export function QuadrantPicker({ quadrants, onSelect }: QuadrantPickerProps) {
   const neutralSize = Math.round(cornerSize * 0.68);
 
   return (
-    <View className="pb-4">
-      <Text
-        className={`${textMuted(isDark)} text-[13px] text-center leading-6 mb-8 px-6`}
+    <View className={fillHeight ? "flex-1" : "pb-4"}>
+      <View
+        className={`rounded-2xl border px-5 py-4 mb-6 ${
+          isDark
+            ? "bg-sand-800/80 border-sand-700"
+            : "bg-white/80 border-sand-200"
+        }`}
       >
-        Touchez la teinte qui correspond le mieux à ce que vous ressentez — ou
-        le centre si c&apos;est incertain.
-      </Text>
+        <Text
+          className={`text-[13px] leading-6 text-center ${textMuted(isDark)}`}
+        >
+          Touchez la zone qui correspond le mieux à ce que vous ressentez — ou
+          le centre si c&apos;est incertain.
+        </Text>
+      </View>
 
       <View
-        className="items-center"
-        style={{ maxWidth: boardMax, alignSelf: "center" }}
+        className={
+          fillHeight
+            ? "flex-1 justify-center items-center"
+            : "items-center"
+        }
+        style={{ maxWidth: boardMax, alignSelf: "center", width: "100%" }}
       >
         <QuadrantRow
           ids={GRID_ORDER[0]}

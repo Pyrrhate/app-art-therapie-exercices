@@ -10,18 +10,27 @@ export type FilSource =
   | "emotion-explorer"
   | "zen-garden";
 
+export interface FilMetadata {
+  colors?: string[];
+  impulse?: string;
+  technique?: ArtisticTechnique;
+  theme?: MandalaTheme;
+  chain?: string;
+  exercise?: string;
+  durationMinutes?: number;
+  reflection?: string;
+  openQuestions?: string[];
+  writtenText?: string;
+  followUpExercise?: string;
+  photoUri?: string;
+}
+
 export interface FilEntry {
   id: string;
   source: FilSource;
   summary: string;
   detail?: string;
-  metadata?: {
-    colors?: string[];
-    impulse?: string;
-    technique?: ArtisticTechnique;
-    theme?: MandalaTheme;
-    chain?: string;
-  };
+  metadata?: FilMetadata;
   createdAt: string;
 }
 
@@ -37,3 +46,10 @@ export const FIL_SOURCE_META: Record<
   "emotion-explorer": { label: "Explorateur émotionnel", emoji: "💭" },
   "zen-garden": { label: "Jardin zen", emoji: "🏯" },
 };
+
+export function isRitualFilEntry(entry: FilEntry): boolean {
+  return (
+    entry.source === "ritual" &&
+    Boolean(entry.metadata?.technique && entry.metadata?.exercise)
+  );
+}

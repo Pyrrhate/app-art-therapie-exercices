@@ -12,7 +12,6 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { InlineNotice } from "@/components/InlineNotice";
 import { ZenWaitIndicator } from "@/components/ZenWaitIndicator";
-import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
@@ -40,9 +39,8 @@ import {
   UPLOAD_MAX_LABEL,
   uriToDataUrl,
 } from "@/lib/image";
-import { saveSession } from "@/lib/storage";
+import { recordFilEntry } from "@/lib/fil/record";
 import { useRitualStore } from "@/lib/store";
-import type { SavedSession } from "@/lib/types";
 import { getTechniqueLabel, isAiAnalysisSupported } from "@/constants";
 import { getLocalReflection } from "@/lib/reflection/fallback";
 import { FEATURES } from "@/lib/features";
@@ -115,6 +113,7 @@ export default function ReflectionScreen() {
 
   const abortRef = useRef<AbortController | null>(null);
   const workGenRef = useRef(0);
+  const filRecordedRef = useRef(false);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [photoSizeLabel, setPhotoSizeLabel] = useState<string | null>(null);
   const [preparingPhoto, setPreparingPhoto] = useState(false);
@@ -123,7 +122,6 @@ export default function ReflectionScreen() {
   const [reflectionSource, setReflectionSource] = useState<
     "ai" | "fallback" | null
   >(null);
-  const [saved, setSaved] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [notice, setNotice] = useState<{
     type: "error" | "success" | "info";
@@ -172,7 +170,6 @@ export default function ReflectionScreen() {
     setPhotoUri(prepared.previewUri);
     setPhotoDataUrl(prepared.dataUrl);
     setPhotoSizeLabel(formatImageSize(prepared.byteSize));
-    setSaved(false);
     setReflectionSource(null);
     setNotice({
       type: "success",
@@ -361,7 +358,6 @@ export default function ReflectionScreen() {
 
       if (result.text.trim()) {
         setWrittenText(result.text.trim());
-        setSaved(false);
         setNotice({
           type: "success",
           message:
@@ -551,49 +547,58 @@ export default function ReflectionScreen() {
     });
   }, []);
 
-  async function handleSave() {
-    if (!technique) return;
-
-    let storedPhotoUri = photoUri ?? undefined;
-    try {
-      if (photoUri) {
-        const dataUrl = await resolvePhotoDataUrl();
-        storedPhotoUri = dataUrl;
-        setPhotoDataUrl(dataUrl);
-      }
-    } catch (error) {
-      setNotice({
-        type: "error",
-        message:
-          error instanceof ImageTooLargeError
-            ? error.message
-            : "Impossible de préparer la photo pour la sauvegarde.",
-      });
+  useEffect(() => {
+    if (!reflection) {
+      filRecordedRef.current = false;
       return;
     }
+    if (!technique || !exercise || filRecordedRef.current) return;
+    filRecordedRef.current = true;
 
-    const session: SavedSession = {
-      id: Date.now().toString(),
-      impulse,
-      technique,
-      exercise,
-      durationMinutes,
-      photoUri: storedPhotoUri,
-      reflection: reflection ?? undefined,
-      openQuestions: openQuestions.length ? openQuestions : undefined,
-      writtenText: writtenText.trim() || undefined,
-      followUpExercise: followUpExercise ?? undefined,
-      createdAt: new Date().toISOString(),
-    };
+    void (async () => {
+      let storedPhotoUri = photoUri ?? undefined;
+      try {
+        if (photoUri) {
+          storedPhotoUri = await resolvePhotoDataUrl();
+          setPhotoDataUrl(storedPhotoUri);
+        }
+      } catch {
+        /* conserve l'URI d'origine si la compression échoue */
+      }
 
-    await saveSession(session);
-    await discardRitualDraft();
-    setSaved(true);
-    setNotice({
-      type: "success",
-      message: "Session enregistrée sur cet appareil.",
-    });
-  }
+      await recordFilEntry({
+        source: "ritual",
+        summary: impulse || "Rituel créatif",
+        detail: reflection.slice(0, 280),
+        metadata: {
+          impulse,
+          technique,
+          exercise,
+          durationMinutes,
+          photoUri: storedPhotoUri,
+          reflection,
+          openQuestions: openQuestions.length ? openQuestions : undefined,
+          writtenText: writtenText.trim() || undefined,
+          followUpExercise: followUpExercise ?? undefined,
+        },
+      });
+      await discardRitualDraft();
+      setNotice({
+        type: "success",
+        message: "Trace enregistrée dans votre Fil créatif.",
+      });
+    })();
+  }, [
+    reflection,
+    technique,
+    exercise,
+    impulse,
+    durationMinutes,
+    photoUri,
+    openQuestions,
+    followUpExercise,
+    writtenText,
+  ]);
 
   function handleGoHome() {
     cancelWork();
@@ -696,10 +701,7 @@ export default function ReflectionScreen() {
             placeholder="Collez ou saisissez votre texte…"
             placeholderTextColor="#A89F91"
             value={writtenText}
-            onChangeText={(text) => {
-              setWrittenText(text);
-              setSaved(false);
-            }}
+            onChangeText={setWrittenText}
             editable={!busy}
           />
           <Text className="text-sand-400 text-xs">
@@ -886,25 +888,12 @@ export default function ReflectionScreen() {
             ]}
           />
         )}
-        {reflection && (
-          <AddToFilBar
-            entry={{
-              source: "ritual",
-              summary: impulse || "Rituel créatif",
-              detail: reflection.slice(0, 180),
-              metadata: {
-                impulse: impulse ?? undefined,
-                technique: technique ?? undefined,
-              },
-            }}
-          />
-        )}
 
         <View className="gap-3 pb-8">
           <PrimaryButton
-            label={saved ? "Sauvegardé ✓" : "Sauvegarder localement"}
-            onPress={handleSave}
-            disabled={saved || busy}
+            label="Voir le Fil créatif"
+            onPress={() => router.push("/fil")}
+            variant="secondary"
           />
           <PrimaryButton
             label="Nouveau rituel"

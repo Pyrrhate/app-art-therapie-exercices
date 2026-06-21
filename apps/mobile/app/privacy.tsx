@@ -30,10 +30,10 @@ export default function PrivacyScreen() {
 
       <Section title="Données collectées">
         <P>
-          Aucun compte utilisateur n'est requis. Les sessions (impulsion,
-          technique, exercice, photo, réflexion) sont enregistrées localement
-          sur votre appareil via AsyncStorage, uniquement si vous choisissez
-          « Sauvegarder localement ».
+          Aucun compte utilisateur n'est requis. Vos rituels (impulsion,
+          technique, exercice, photo, réflexion) et vos amorces sont
+          enregistrés automatiquement dans le Fil créatif, localement sur
+          votre appareil via AsyncStorage.
         </P>
         <P>
           Lorsque vous demandez une réflexion IA, votre photo est compressée
@@ -59,8 +59,8 @@ export default function PrivacyScreen() {
 
       <Section title="Vos droits">
         <P>
-          Accès, rectification, effacement : supprimez vos sessions dans
-          l'application ou désinstallez l'app. Pour toute question :
+          Accès, rectification, effacement : supprimez vos traces dans le Fil
+          créatif ou désinstallez l'app. Pour toute question :
           {CONTACT_EMAIL}.
         </P>
       </Section>
@@ -75,8 +75,8 @@ export default function PrivacyScreen() {
       <Section title="Cookies & web">
         <P>
           L'application web ne dépose pas de cookies publicitaires. Seul le
-          stockage local du navigateur peut être utilisé pour les sessions
-          sauvegardées.
+          stockage local du navigateur peut être utilisé pour le Fil créatif
+          et les préférences.
         </P>
       </Section>
 

@@ -95,6 +95,31 @@ async function exportNativeHtml(
   return uri;
 }
 
+import type { FilEntry } from "@/lib/fil/types";
+import type { SavedSession } from "@/lib/types";
+
+export async function exportFilRitualPdf(
+  entry: FilEntry
+): Promise<{ uri?: string; message: string }> {
+  const m = entry.metadata;
+  if (!m?.technique || !m.exercise) {
+    throw new Error("Cette trace ne contient pas de fiche d'exercice complète.");
+  }
+  return exportSessionPdf({
+    id: entry.id,
+    impulse: m.impulse ?? entry.summary,
+    technique: m.technique,
+    exercise: m.exercise,
+    durationMinutes: m.durationMinutes ?? 15,
+    photoUri: m.photoUri,
+    reflection: m.reflection,
+    openQuestions: m.openQuestions,
+    writtenText: m.writtenText,
+    followUpExercise: m.followUpExercise,
+    createdAt: entry.createdAt,
+  });
+}
+
 export async function exportSessionPdf(
   session: SavedSession
 ): Promise<{ uri?: string; message: string }> {

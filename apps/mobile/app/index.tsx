@@ -8,8 +8,9 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { ModuleIconId } from "@/components/ui/ModuleIcon";
-import { getTechniqueLabel } from "@/constants";
+import { formatSessionDate, getTechniqueLabel } from "@/constants";
 import { getFilEntries } from "@/lib/fil/storage";
+import { FIL_SOURCE_META, type FilEntry } from "@/lib/fil/types";
 import { hydrateRitualFromDraft } from "@/lib/ritualPersistence";
 import { getRitualDraft, type RitualDraft } from "@/lib/ritualDraft";
 import { textMuted, textSecondary } from "@/lib/themeClasses";
@@ -56,12 +57,12 @@ export default function WelcomeScreen() {
   const [amorcesY, setAmorcesY] = useState(0);
   const [tracesY, setTracesY] = useState(0);
   const [draft, setDraft] = useState<RitualDraft | null>(null);
-  const [lastFilSummary, setLastFilSummary] = useState<string | null>(null);
+  const [recentFil, setRecentFil] = useState<FilEntry[]>([]);
 
   const loadDraft = useCallback(async () => {
     setDraft(await getRitualDraft());
     const fil = await getFilEntries();
-    setLastFilSummary(fil[0]?.summary ?? null);
+    setRecentFil(fil.slice(0, 3));
   }, []);
 
   useFocusEffect(
@@ -150,35 +151,44 @@ export default function WelcomeScreen() {
       >
         <SectionHeader
           label="Vos traces"
-          title="La mémoire de vos pratiques créatives"
-          titleEnd=", ici sur votre appareil."
+          title="Le Fil créatif — "
+          accent="mémoire automatique"
+          titleEnd=" de vos pratiques sur cet appareil."
         />
 
-        <View className="flex-row flex-wrap gap-3">
-          <View className="flex-1 min-w-[200px]">
-            <PrimaryButton
-              label="Fil créatif"
-              onPress={() => router.push("/fil")}
-              align="stretch"
-            />
-          </View>
-          <View className="flex-1 min-w-[200px]">
-            <PrimaryButton
-              label="Mes exercices sauvegardés"
-              onPress={() => router.push("/sessions")}
-              variant="ghost"
-              align="stretch"
-            />
-          </View>
-        </View>
+        <PrimaryButton
+          label="Ouvrir le Fil créatif"
+          onPress={() => router.push("/fil")}
+          align="stretch"
+        />
 
-        {lastFilSummary ? (
-          <Pressable onPress={() => router.push("/fil")} className="px-1">
-            <Text className={`text-xs text-center leading-5 ${textMuted(isDark)}`}>
-              Dernière trace : {lastFilSummary}
-            </Text>
-          </Pressable>
-        ) : null}
+        {recentFil.length > 0 ? (
+          <View className="gap-2 mt-2">
+            {recentFil.map((entry) => {
+              const meta = FIL_SOURCE_META[entry.source];
+              return (
+                <Pressable
+                  key={entry.id}
+                  onPress={() => router.push(`/fil/${entry.id}`)}
+                  className={`rounded-2xl border px-4 py-3 ${
+                    isDark ? "border-sand-700 bg-sand-800/50" : "border-sand-200 bg-white/80"
+                  }`}
+                >
+                  <Text className={`text-xs mb-1 ${textMuted(isDark)}`}>
+                    {formatSessionDate(entry.createdAt)} · {meta.emoji} {meta.label}
+                  </Text>
+                  <Text className={`text-sm font-medium ${textSecondary(isDark)}`} numberOfLines={2}>
+                    {entry.summary}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : (
+          <Text className={`text-sm text-center leading-6 px-2 ${textMuted(isDark)}`}>
+            Chaque rituel et chaque amorce laissent une trace ici, sans action de votre part.
+          </Text>
+        )}
 
         <View className="flex-row justify-center gap-8 pt-4 pb-2">
           <Pressable onPress={() => router.push("/settings")} hitSlop={8}>

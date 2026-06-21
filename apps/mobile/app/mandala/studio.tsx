@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Text, View, useWindowDimensions } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { SpectrumColorPicker } from "@/components/mandala/SpectrumColorPicker";
 import { MandalaCanvas } from "@/components/mandala/MandalaCanvas";
-import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
@@ -26,6 +25,7 @@ import {
 } from "@/lib/mandala/storage";
 import type { MandalaFills, MandalaTheme } from "@/lib/mandala/types";
 import { FEATURES } from "@/lib/features";
+import { recordFilEntry } from "@/lib/fil/record";
 import {
   extractDominantColors,
   startRitualFromColors,
@@ -60,6 +60,7 @@ export default function MandalaStudioScreen() {
   const [exporting, setExporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [customPalette, setCustomPalette] = useState<string[] | null>(null);
+  const filRecordedRef = useRef(false);
 
   const spec = useMemo(() => {
     if (seed === null) return null;
@@ -73,6 +74,20 @@ export default function MandalaStudioScreen() {
   );
   const hasColoring = Object.keys(fills).length > 0;
   const suggestedColors = customPalette ?? getThemeSuggestedPalette(theme);
+
+  useEffect(() => {
+    if (!hasColoring || filRecordedRef.current) return;
+    filRecordedRef.current = true;
+    void recordFilEntry({
+      source: "mandala",
+      summary: `Mandala — ${meta.title}`,
+      detail: `${Object.keys(fills).length} zones coloriées`,
+      metadata: {
+        colors: dominantColors.length ? dominantColors : [selectedColor],
+        theme,
+      },
+    });
+  }, [hasColoring, fills, dominantColors, meta.title, selectedColor, theme]);
 
   useEffect(() => {
     let active = true;
@@ -253,19 +268,6 @@ export default function MandalaStudioScreen() {
                 variant: "primary",
               },
             ]}
-          />
-          <AddToFilBar
-            entry={{
-              source: "mandala",
-              summary: `Mandala — ${meta.title}`,
-              detail: `${Object.keys(fills).length} zones coloriées`,
-              metadata: {
-                colors: dominantColors.length
-                  ? dominantColors
-                  : [selectedColor],
-                theme,
-              },
-            }}
           />
         </>
       )}

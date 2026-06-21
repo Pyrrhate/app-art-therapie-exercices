@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Text,
@@ -8,7 +8,6 @@ import {
 import { EmotionDetailBar } from "@/components/emotion-explorer/EmotionDetailBar";
 import { EmotionGrid } from "@/components/emotion-explorer/EmotionGrid";
 import { QuadrantPicker } from "@/components/emotion-explorer/QuadrantPicker";
-import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
@@ -25,6 +24,7 @@ import {
   type EmotionQuadrant,
 } from "@/lib/emotion-explorer";
 import { startExerciseFromImpulse } from "@/lib/fil/bridges";
+import { recordFilEntry } from "@/lib/fil/record";
 import { navigateHome } from "@/lib/navigation";
 import { textMuted, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -36,7 +36,19 @@ export default function EmotionExplorerScreen() {
   const [selected, setSelected] = useState<Emotion | null>(null);
   const [search, setSearch] = useState("");
   const [startingExercise, setStartingExercise] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const filRecordedFor = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!selected || filRecordedFor.current === selected.id) return;
+    filRecordedFor.current = selected.id;
+    const ctx = buildExerciseContext(selected);
+    void recordFilEntry({
+      source: "emotion-explorer",
+      summary: `Explorateur — ${selected.label}`,
+      detail: selected.description,
+      metadata: { impulse: ctx.impulse, technique: ctx.technique },
+    });
+  }, [selected]);
 
   const emotions = useMemo(() => {
     if (search.trim()) return searchEmotions(search);
@@ -68,7 +80,6 @@ export default function EmotionExplorerScreen() {
     setStartingExercise(true);
     try {
       await startExerciseFromImpulse(impulse, technique);
-      setCompleted(true);
     } catch (error) {
       showAlert(
         "Impossible de continuer",
@@ -88,7 +99,11 @@ export default function EmotionExplorerScreen() {
     : null;
 
   return (
-    <ScreenContainer scrollable refreshable contentMaxWidth={720}>
+    <ScreenContainer
+      scrollable={phase !== "quadrant"}
+      refreshable={phase !== "quadrant"}
+      contentMaxWidth={720}
+    >
       <ScreenNavBar backLabel="← Retour" onBack={handleBack} />
 
       {phase === "quadrant" ? (
@@ -113,17 +128,18 @@ export default function EmotionExplorerScreen() {
       )}
 
       {phase === "quadrant" && (
-        <>
+        <View className="flex-1 justify-between">
           <QuadrantPicker
+            fillHeight
             quadrants={EMOTION_QUADRANTS}
             onSelect={handleSelectQuadrant}
           />
           <Text
-            className={`text-sm text-center leading-6 mt-2 mb-4 px-4 ${textMuted(isDark)}`}
+            className={`text-sm text-center leading-6 mt-4 mb-2 px-4 ${textMuted(isDark)}`}
           >
             Prenez le temps qu&apos;il faut. Aucun mauvais choix.
           </Text>
-        </>
+        </View>
       )}
 
       {phase === "emotion" && quadrant && (
@@ -181,20 +197,6 @@ export default function EmotionExplorerScreen() {
                 <View className="items-center">
                   <ActivityIndicator color="#496349" />
                 </View>
-              )}
-
-              {!completed && (
-                <AddToFilBar
-                  entry={{
-                    source: "emotion-explorer",
-                    summary: `Explorateur — ${selected.label}`,
-                    detail: selected.description,
-                    metadata: {
-                      impulse: buildExerciseContext(selected).impulse,
-                      technique: buildExerciseContext(selected).technique,
-                    },
-                  }}
-                />
               )}
             </View>
           )}

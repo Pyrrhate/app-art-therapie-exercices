@@ -7,6 +7,7 @@ import {
 } from "./exercise/keywords";
 import { sanitizeAiDisplayText, sanitizeQuestions } from "./sanitizeAiText";
 import type { ArtisticTechnique, RitualState, SavedSession } from "./types";
+import type { FilEntry } from "./fil/types";
 interface RitualStore extends RitualState {
   setImpulse: (impulse: string) => void;
   setTechnique: (technique: ArtisticTechnique) => void;
@@ -25,6 +26,8 @@ interface RitualStore extends RitualState {
     followUpExercise?: string | null
   ) => void;
   startFollowUpExercise: () => void;
+  restoreFromFilEntry: (entry: FilEntry) => void;
+  /** @deprecated Utiliser restoreFromFilEntry */
   restoreFromSession: (session: SavedSession) => void;
   reset: () => void;
 }
@@ -87,6 +90,28 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       followUpExercise: null,
       photoUri: null,
       writtenText: "",
+      exerciseSource: null,
+    });
+  },
+  restoreFromFilEntry: (entry) => {
+    const m = entry.metadata;
+    if (!m?.technique || !m.exercise) return;
+    set({
+      impulse: m.impulse ?? entry.summary,
+      technique: m.technique,
+      exercise: sanitizeAiDisplayText(m.exercise),
+      exerciseKeywords: deriveExerciseKeywords(
+        m.impulse ?? entry.summary,
+        m.technique
+      ),
+      durationMinutes: m.durationMinutes ?? 15,
+      photoUri: m.photoUri ?? null,
+      reflection: null,
+      openQuestions: [],
+      followUpExercise: m.followUpExercise
+        ? sanitizeAiDisplayText(m.followUpExercise)
+        : null,
+      writtenText: m.writtenText ?? "",
       exerciseSource: null,
     });
   },

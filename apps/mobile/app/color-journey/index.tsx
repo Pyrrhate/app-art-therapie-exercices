@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { ChromaticWheel } from "@/components/color-journey/ChromaticWheel";
 import { ColorSwatch } from "@/components/color-journey/ColorSwatch";
 import { JourneyProgress } from "@/components/color-journey/JourneyProgress";
 import { ReflectionPanel } from "@/components/color-journey/ReflectionPanel";
-import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
@@ -26,6 +25,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
 import { startExerciseFromImpulse } from "@/lib/fil/bridges";
+import { recordFilEntry } from "@/lib/fil/record";
 import { navigateHome } from "@/lib/navigation";
 
 export default function ColorJourneyScreen() {
@@ -37,6 +37,7 @@ export default function ColorJourneyScreen() {
   );
   const [synthesis, setSynthesis] = useState<JourneySynthesis | null>(null);
   const [startingExercise, setStartingExercise] = useState(false);
+  const filRecordedRef = useRef(false);
 
   const guidance = getTurnGuidance(turn, history);
   const canExitEarly = history.length >= 2;
@@ -76,14 +77,6 @@ export default function ColorJourneyScreen() {
     setPhase("choosing");
   }
 
-  function handleRestart() {
-    setPhase("choosing");
-    setTurn(1);
-    setHistory([]);
-    setLastReflection(null);
-    setSynthesis(null);
-  }
-
   function buildImpulseFromHistory(choices: ColorChoice[]): string {
     const labels = choices.map((c) => c.label).join(", ");
     return `Palette intérieure : ${labels}`;
@@ -113,6 +106,26 @@ export default function ColorJourneyScreen() {
   }
 
   const paletteHexes = history.map((h) => h.hex);
+
+  useEffect(() => {
+    if (phase !== "complete" || !synthesis || filRecordedRef.current) return;
+    filRecordedRef.current = true;
+    void recordFilEntry({
+      source: "color-journey",
+      summary: "Palette intérieure — 3 teintes",
+      detail: synthesis.summary.slice(0, 200),
+      metadata: { colors: paletteHexes, impulse: synthesis.suggestedImpulse },
+    });
+  }, [phase, synthesis, paletteHexes]);
+
+  function handleRestart() {
+    filRecordedRef.current = false;
+    setPhase("choosing");
+    setTurn(1);
+    setHistory([]);
+    setLastReflection(null);
+    setSynthesis(null);
+  }
 
   return (
     <ScreenContainer scrollable={false}>
@@ -251,15 +264,6 @@ export default function ColorJourneyScreen() {
                 <ActivityIndicator color="#6B8F71" />
               </View>
             )}
-
-            <AddToFilBar
-              entry={{
-                source: "color-journey",
-                summary: "Palette intérieure — 3 teintes",
-                detail: synthesis.summary.slice(0, 200),
-                metadata: { colors: paletteHexes, impulse: synthesis.suggestedImpulse },
-              }}
-            />
 
             <View className="mt-4">
               <PrimaryButton

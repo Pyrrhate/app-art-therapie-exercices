@@ -8,7 +8,6 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { ZenGardenCanvas } from "@/components/zen-garden/ZenGardenCanvas";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -16,6 +15,7 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { showAlert } from "@/lib/alert";
 import { startRitualFromImpulse } from "@/lib/fil/bridges";
+import { recordFilEntry } from "@/lib/fil/record";
 import { FEATURES } from "@/lib/features";
 import { navigateHome } from "@/lib/navigation";
 import { exportZenGarden } from "@/lib/zen-garden/export";
@@ -263,6 +263,19 @@ export default function ZenGardenScreen() {
     ? `Jardin zen — ${sandPatches.length} touche${sandPatches.length > 1 ? "s" : ""} de sable, ${waterBodies.length} eau, ${pebbles.length} galet${pebbles.length > 1 ? "s" : ""}`
     : "Jardin zen du moment";
 
+  const filRecordedRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasContent || filRecordedRef.current) return;
+    filRecordedRef.current = true;
+    void recordFilEntry({
+      source: "zen-garden",
+      summary: "Jardin zen",
+      detail: impulseText,
+      metadata: { impulse: impulseText },
+    });
+  }, [hasContent, impulseText]);
+
   const canvasProps = {
     sandColor,
     sandPatches,
@@ -418,14 +431,6 @@ export default function ZenGardenScreen() {
                   onPress: () => startRitualFromImpulse(impulseText, "mixed_media"),
                 },
               ]}
-            />
-            <AddToFilBar
-              entry={{
-                source: "zen-garden",
-                summary: "Jardin zen",
-                detail: impulseText,
-                metadata: { impulse: impulseText },
-              }}
             />
           </>
         )}

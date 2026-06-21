@@ -13,8 +13,8 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { AddToFilBar } from "@/components/fil/AddToFilBar";
 import { PrimaryButton } from "@/components/ui/Button";
+import { recordFilEntry } from "@/lib/fil/record";
 import type { ColorForImpulse } from "@/lib/color-names";
 import { LOTUS_SOURCE } from "@/lib/nuance-finder/elements";
 import {
@@ -156,6 +156,7 @@ export function NuanceFinder() {
   const [waveDelays, setWaveDelays] = useState<Record<string, number>>({});
   const [pebbles, setPebbles] = useState<Record<string, boolean>>({});
   const [foundLotusCount, setFoundLotusCount] = useState(0);
+  const filRecordedRef = useRef(false);
 
   useEffect(
     () => () => {
@@ -186,7 +187,27 @@ export function NuanceFinder() {
     return items.slice(0, 5);
   }, [flatCells, revealed]);
 
+  function recordNuanceFil() {
+    if (filRecordedRef.current) return;
+    filRecordedRef.current = true;
+    void recordFilEntry({
+      source: "nuances",
+      summary: "Harmonie chromatique trouvée",
+      detail: `${flatCells.length} cases · ${foundLotusCount} lotus`,
+      metadata: {
+        colors: revealedColorItems.map((c) =>
+          typeof c === "string" ? c : c.hex
+        ),
+      },
+    });
+  }
+
+  useEffect(() => {
+    if (revealedCount >= 6) recordNuanceFil();
+  }, [revealedCount, foundLotusCount, flatCells.length, revealedColorItems]);
+
   function handlePasserAExercice() {
+    recordNuanceFil();
     startRitualFromColors(revealedColorItems, "Harmonie chromatique");
   }
 
@@ -244,6 +265,7 @@ export function NuanceFinder() {
   }, []);
 
   function handleRestart() {
+    filRecordedRef.current = false;
     lotusTimers.current.forEach(clearTimeout);
     lotusTimers.current = [];
     setGameSeed(Date.now());
@@ -313,18 +335,6 @@ export function NuanceFinder() {
               {foundLotusCount} lotus {LOTUS_SOURCE.icon} découverts
             </Text>
           )}
-          <AddToFilBar
-            entry={{
-              source: "nuances",
-              summary: "Harmonie chromatique trouvée",
-              detail: `${flatCells.length} cases révélées · ${foundLotusCount} lotus`,
-              metadata: {
-                colors: revealedColorItems.map((c) =>
-                  typeof c === "string" ? c : c.hex
-                ),
-              },
-            }}
-          />
         </View>
       ) : null}
 
