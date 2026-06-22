@@ -78,7 +78,7 @@ export default function RitualScreen() {
       <PastekScreenHero
         label="Rituel créatif"
         title="L'"
-        titleAccent="Impulsion"
+        accent="Impulsion"
         description={subtitle}
         className="mb-4"
       />
