@@ -94,6 +94,8 @@ interface ScreenContainerProps {
   onRefresh?: () => void | Promise<void>;
   /** Pied de page fixe (ex. CTA exercice). */
   stickyFooter?: ReactNode;
+  /** Barre fixe au-dessus du défilement (ex. navigation). */
+  fixedHeader?: ReactNode;
   scrollRef?: RefObject<ScrollView>;
   contentMaxWidth?: number;
 }
@@ -112,6 +114,7 @@ export function ScreenContainer({
   refreshable = false,
   onRefresh,
   stickyFooter,
+  fixedHeader,
   scrollRef,
   contentMaxWidth = 720,
   heroLabel,
@@ -181,12 +184,23 @@ export function ScreenContainer({
   if (stickyFooter) {
     return (
       <View className={`flex-1 ${bgClass}`} style={webScrollShell}>
+        {fixedHeader ? (
+          <View
+            style={{
+              paddingHorizontal: 24,
+              paddingTop,
+              paddingBottom: 4,
+            }}
+          >
+            <View style={webShellStyle}>{fixedHeader}</View>
+          </View>
+        ) : null}
         <ScrollView
           ref={scrollRef}
           style={webScrollShell}
           contentContainerStyle={{
             paddingHorizontal: 24,
-            paddingTop,
+            paddingTop: fixedHeader ? 0 : paddingTop,
             paddingBottom: 16,
           }}
           keyboardShouldPersistTaps="handled"

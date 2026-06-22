@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { DurationPicker } from "@/components/DurationPicker";
 import { ExerciseKeywordChips } from "@/components/exercise/ExerciseKeywordChips";
 import { GentleTimer } from "@/components/GentleTimer";
 import { ContentCard } from "@/components/ui/Card";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { getTimerSound } from "@/lib/preferences";
@@ -50,13 +51,9 @@ export default function ExerciseScreen() {
 
   return (
     <ScreenContainer
-      heroLabel="Exercice"
-      title="Votre "
-      titleAccent="exercice"
       variant="focus"
       refreshable
-      heroCentered={false}
-      heroSize="md"
+      fixedHeader={<ScreenNavBar backLabel="← Rituel" />}
       stickyFooter={
         <PrimaryButton
           label="J'ai terminé — capturer mon œuvre"
@@ -64,11 +61,19 @@ export default function ExerciseScreen() {
         />
       }
     >
-      <ScreenNavBar backLabel="← Rituel" />
+      <PastekScreenHero
+        label="Exercice"
+        title="Votre "
+        accent="exercice"
+        centered={false}
+        size="md"
+        className="mb-3"
+      />
+
       <RitualProgressBar current="exercise" />
 
       {exerciseSource === "fallback" && (
-        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-3 mb-4">
+        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-3 py-2 mb-3">
           <Text className="text-sage-700 text-xs leading-5">
             Mode local actif — exercice guidé hors ligne.
           </Text>
@@ -77,14 +82,20 @@ export default function ExerciseScreen() {
 
       <ExerciseKeywordChips keywords={exerciseKeywords} technique={technique} />
 
-      <ContentCard className="mb-6">
-        <Text className="text-sand-500 text-xs uppercase tracking-wider mb-3">
+      <ContentCard className="mb-4 px-4 py-3">
+        <Text className="text-sand-500 text-xs uppercase tracking-wider mb-2">
           Impulsion · {impulse}
         </Text>
-        <Text className="text-sand-700 text-base leading-7">{exercise}</Text>
+        <ScrollView
+          style={{ maxHeight: 100 }}
+          nestedScrollEnabled
+          showsVerticalScrollIndicator
+        >
+          <Text className="text-sand-700 text-sm leading-6">{exercise}</Text>
+        </ScrollView>
       </ContentCard>
 
-      <Text className="text-sand-600 text-sm mb-3 font-medium">
+      <Text className="text-sand-600 text-sm mb-2 font-medium">
         Durée du timer
       </Text>
       <DurationPicker
