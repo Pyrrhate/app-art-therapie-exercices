@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { ModuleCard } from "@/components/home/ModuleCard";
+import { ModuleQuickTile } from "@/components/home/ModuleQuickTile";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { AccentCard } from "@/components/ui/Card";
@@ -20,6 +21,7 @@ import { useRitualStore } from "@/lib/store";
 
 type ModuleDef = {
   title: string;
+  shortTitle: string;
   icon: ModuleIconId;
   description: string;
   route: "/ping-pong" | "/color-journey" | "/nuance-finder" | "/emotion-explorer";
@@ -28,34 +30,41 @@ type ModuleDef = {
 const MODULES: ModuleDef[] = [
   {
     title: "Ping-Pong créatif",
+    shortTitle: "Ping-Pong",
     icon: "ping-pong",
     description: "Amorce rapide — quelques mots, puis l'exercice.",
     route: "/ping-pong",
   },
   {
     title: "Palette intérieure",
+    shortTitle: "Palette",
     icon: "color-journey",
     description: "Trois teintes sur la roue chromatique, puis créer.",
     route: "/color-journey",
   },
   {
     title: "Explorateur émotionnel",
+    shortTitle: "Émotions",
     icon: "emotion-explorer",
     description: "Quatre zones de ressenti, un mot précis, puis créer.",
     route: "/emotion-explorer",
   },
   {
     title: "Chercheur de Nuances",
+    shortTitle: "Nuances",
     icon: "nuance-finder",
     description: "Puzzle couleur sans IA — se détendre avant de créer.",
     route: "/nuance-finder",
   },
 ];
 
+const WIDE_LAYOUT_MIN = 720;
+
 export default function WelcomeScreen() {
   const isDark = useIsDark();
+  const { width } = useWindowDimensions();
+  const isWide = width >= WIDE_LAYOUT_MIN;
   const scrollRef = useRef<ScrollView>(null);
-  const [amorcesY, setAmorcesY] = useState(0);
   const [tracesY, setTracesY] = useState(0);
   const [draft, setDraft] = useState<RitualDraft | null>(null);
   const [recentFil, setRecentFil] = useState<FilEntry[]>([]);
@@ -63,17 +72,17 @@ export default function WelcomeScreen() {
   const loadDraft = useCallback(async () => {
     setDraft(await getRitualDraft());
     const fil = await getFilEntries();
-    setRecentFil(fil.slice(0, 3));
-  }, []);
+    setRecentFil(fil.slice(0, isWide ? 3 : 2));
+  }, [isWide]);
 
   useFocusEffect(
     useCallback(() => {
-      loadDraft();
+      void loadDraft();
     }, [loadDraft])
   );
 
-  function scrollTo(y: number) {
-    scrollRef.current?.scrollTo({ y: Math.max(0, y - 24), animated: true });
+  function scrollToTraces() {
+    scrollRef.current?.scrollTo({ y: Math.max(0, tracesY - 24), animated: true });
   }
 
   function handleContinueDraft() {
@@ -89,105 +98,150 @@ export default function WelcomeScreen() {
 
   return (
     <ScreenContainer scrollable refreshable scrollRef={scrollRef} contentMaxWidth={920}>
-      <AppHeader
-        onNavigateAmorces={() => scrollTo(amorcesY)}
-        onNavigateTraces={() => scrollTo(tracesY)}
-      />
+      <AppHeader compact onNavigateTraces={scrollToTraces} />
 
       <PastekScreenHero
         label="Art Thérapie"
-        title={"Trouver une impulsion,\n"}
-        accent="puis créer"
-        description="Un parcours guidé pour amorcer votre créativité, mener un exercice en douceur, puis garder trace de vos pratiques — le tout sur cet appareil."
-        className="mb-8"
+        title={isWide ? "Trouver une impulsion,\n" : "Impulsion & "}
+        accent={isWide ? "puis créer" : "création"}
+        description={
+          isWide
+            ? "Un parcours guidé pour amorcer votre créativité, mener un exercice en douceur, puis garder trace de vos pratiques — le tout sur cet appareil."
+            : undefined
+        }
+        size={isWide ? "lg" : "md"}
+        className={isWide ? "mb-6" : "mb-4"}
       />
+
+      {draft && (
+        <AccentCard className={`gap-2 ${isWide ? "mb-6" : "mb-3"}`}>
+          <Text className="text-sage-600 font-medium text-sm">
+            Reprendre votre rituel
+          </Text>
+          <Text
+            className={`text-sm leading-5 ${textSecondary(isDark)}`}
+            numberOfLines={isWide ? undefined : 2}
+          >
+            {draft.impulse} · {getTechniqueLabel(draft.technique)}
+          </Text>
+          {!isWide ? null : (
+            <Text className={`text-xs ${textMuted(isDark)}`}>
+              {draft.step === "reflection"
+                ? "Étape : capture & réflexion"
+                : "Étape : exercice en cours"}
+            </Text>
+          )}
+          <View className={isWide ? "gap-3" : "flex-row gap-2 mt-1"}>
+            <View className={isWide ? undefined : { flex: 1 }}>
+              <PrimaryButton
+                label="Continuer"
+                onPress={handleContinueDraft}
+                align="stretch"
+              />
+            </View>
+            <View className={isWide ? undefined : { flex: 1 }}>
+              <PrimaryButton
+                label="Abandonner"
+                onPress={handleDismissDraft}
+                variant="ghost"
+                align="stretch"
+              />
+            </View>
+          </View>
+        </AccentCard>
+      )}
 
       <PrimaryButton
         label="Commencer un exercice"
         onPress={() => router.push("/ritual")}
         showArrow
-        align="center"
+        align="stretch"
       />
 
-      <View className="mb-16" />
-
-      {draft && (
-        <AccentCard className="mb-12 gap-2">
-          <Text className="text-sage-600 font-medium">Reprendre votre rituel</Text>
-          <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-            {draft.impulse} · {getTechniqueLabel(draft.technique)}
-          </Text>
-          <Text className={`text-xs ${textMuted(isDark)}`}>
-            {draft.step === "reflection"
-              ? "Étape : capture & réflexion"
-              : "Étape : exercice en cours"}
-          </Text>
-          <PrimaryButton label="Continuer" onPress={handleContinueDraft} align="stretch" />
-          <PrimaryButton
-            label="Abandonner"
-            onPress={handleDismissDraft}
-            variant="ghost"
-            align="stretch"
+      <View className={isWide ? "mt-8 mb-2" : "mt-5 mb-1"}>
+        {isWide ? (
+          <SectionHeader
+            label="Amorces créatives"
+            title="Des parcours légers pour faire émerger "
+            accent="une impulsion"
+            titleEnd=" avant l'acte."
           />
-        </AccentCard>
-      )}
+        ) : (
+          <Text
+            className={`text-xs uppercase tracking-[0.18em] font-medium mb-3 ${textMuted(isDark)}`}
+          >
+            Amorces créatives
+          </Text>
+        )}
 
-      <View onLayout={(e) => setAmorcesY(e.nativeEvent.layout.y)}>
-        <SectionHeader
-          label="Amorces créatives"
-          title="Des parcours légers pour faire émerger "
-          accent="une impulsion"
-          titleEnd=" avant l'acte."
-        />
-        <View className="flex-row flex-wrap gap-4 mb-4">
-          {MODULES.map((mod) => (
-            <ModuleCard key={mod.route} {...mod} />
-          ))}
+        <View className="flex-row flex-wrap gap-2">
+          {MODULES.map(({ shortTitle, ...mod }) =>
+            isWide ? (
+              <ModuleCard key={mod.route} {...mod} />
+            ) : (
+              <ModuleQuickTile key={mod.route} shortTitle={shortTitle} {...mod} />
+            )
+          )}
         </View>
       </View>
 
       <View
-        className={`border-t pt-12 mt-8 gap-6 ${isDark ? "border-sand-700" : "border-sand-200"}`}
+        className={`border-t gap-4 ${isDark ? "border-sand-700" : "border-sand-200"} ${
+          isWide ? "pt-12 mt-10" : "pt-8 mt-6"
+        }`}
         onLayout={(e) => setTracesY(e.nativeEvent.layout.y)}
       >
-        <SectionHeader
-          label="Vos traces"
-          title="Le Fil créatif — "
-          accent="mémoire automatique"
-          titleEnd=" de vos pratiques sur cet appareil."
-        />
+        {isWide ? (
+          <SectionHeader
+            label="Vos traces"
+            title="Le Fil créatif — "
+            accent="mémoire automatique"
+            titleEnd=" de vos pratiques sur cet appareil."
+          />
+        ) : (
+          <View className="flex-row items-center justify-between mb-1">
+            <Text className={`text-xs uppercase tracking-[0.18em] font-medium ${textMuted(isDark)}`}>
+              Fil créatif
+            </Text>
+            <Pressable onPress={() => router.push("/fil")} hitSlop={8}>
+              <Text className="text-sage-500 text-sm font-medium">Tout voir →</Text>
+            </Pressable>
+          </View>
+        )}
 
-        <PrimaryButton
-          label="Ouvrir le Fil créatif"
-          onPress={() => router.push("/fil")}
-          align="stretch"
-        />
+        {isWide ? (
+          <PrimaryButton
+            label="Ouvrir le Fil créatif"
+            onPress={() => router.push("/fil")}
+            align="stretch"
+          />
+        ) : null}
 
         {recentFil.length > 0 ? (
-          <View className="gap-2 mt-2">
+          <View className="gap-2">
             {recentFil.map((entry) => {
               const meta = FIL_SOURCE_META[entry.source];
               return (
                 <Pressable
                   key={entry.id}
                   onPress={() => router.push(`/fil/${entry.id}`)}
-                  className={`rounded-2xl border px-4 py-3 flex-row items-start gap-3 ${
+                  className={`rounded-2xl border px-3 py-2.5 flex-row items-center gap-3 ${
                     isDark ? "border-sand-700 bg-sand-800/50" : "border-sand-200 bg-white/80"
                   }`}
                 >
                   <PastekIcon
                     id={meta.icon}
-                    boxSize={36}
-                    size={24}
-                    className="mb-0 mt-0.5"
+                    boxSize={32}
+                    size={20}
+                    className="mb-0"
                   />
-                  <View className="flex-1">
-                    <Text className={`text-xs mb-1 ${textMuted(isDark)}`}>
+                  <View className="flex-1 min-w-0">
+                    <Text className={`text-xs ${textMuted(isDark)}`} numberOfLines={1}>
                       {formatSessionDate(entry.createdAt)} · {meta.label}
                     </Text>
                     <Text
                       className={`text-sm font-medium ${textSecondary(isDark)}`}
-                      numberOfLines={2}
+                      numberOfLines={1}
                     >
                       {entry.summary}
                     </Text>
@@ -197,12 +251,19 @@ export default function WelcomeScreen() {
             })}
           </View>
         ) : (
-          <Text className={`text-sm text-center leading-6 px-2 ${textMuted(isDark)}`}>
-            Chaque rituel et chaque amorce laissent une trace ici, sans action de votre part.
-          </Text>
+          <Pressable
+            onPress={() => router.push("/fil")}
+            className={`rounded-2xl border border-dashed px-4 py-4 ${
+              isDark ? "border-sand-600" : "border-sand-300"
+            }`}
+          >
+            <Text className={`text-sm text-center leading-5 ${textMuted(isDark)}`}>
+              Vos rituels et amorces laissent une trace ici, automatiquement.
+            </Text>
+          </Pressable>
         )}
 
-        <View className="flex-row justify-center gap-8 pt-4 pb-2">
+        <View className="flex-row justify-center gap-8 pt-2 pb-2">
           <Pressable onPress={() => router.push("/settings")} hitSlop={8}>
             <Text className={`text-sm ${textMuted(isDark)}`}>Paramètres</Text>
           </Pressable>

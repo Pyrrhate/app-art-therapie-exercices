@@ -4,15 +4,19 @@ import { textMuted, textPrimary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
 interface AppHeaderProps {
-  onNavigateAmorces?: () => void;
+  compact?: boolean;
   onNavigateTraces?: () => void;
 }
 
-export function AppHeader({ onNavigateAmorces, onNavigateTraces }: AppHeaderProps) {
+export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps) {
   const isDark = useIsDark();
 
   return (
-    <View className="flex-row items-center justify-between mb-10 pt-2">
+    <View
+      className={`flex-row items-center justify-between pt-1 ${
+        compact ? "mb-4" : "mb-10"
+      }`}
+    >
       <View className="flex-row items-center gap-2.5">
         <View className="w-9 h-9 rounded-full bg-sage-500 items-center justify-center">
           <Text className="text-white font-display text-lg leading-none">p</Text>
@@ -22,21 +26,16 @@ export function AppHeader({ onNavigateAmorces, onNavigateTraces }: AppHeaderProp
         </Text>
       </View>
 
-      <View className="flex-row items-center gap-5">
-        {onNavigateAmorces ? (
-          <Pressable onPress={onNavigateAmorces} hitSlop={8}>
-            <Text className={`text-sm ${textMuted(isDark)}`}>Amorces</Text>
-          </Pressable>
-        ) : null}
-        {onNavigateTraces ? (
-          <Pressable onPress={onNavigateTraces} hitSlop={8}>
-            <Text className={`text-sm ${textMuted(isDark)}`}>Vos traces</Text>
-          </Pressable>
-        ) : (
-          <Pressable onPress={() => router.push("/fil")} hitSlop={8}>
-            <Text className={`text-sm ${textMuted(isDark)}`}>Vos traces</Text>
-          </Pressable>
-        )}
+      <View className="flex-row items-center gap-4">
+        <Pressable
+          onPress={onNavigateTraces ?? (() => router.push("/fil"))}
+          hitSlop={8}
+        >
+          <Text className={`text-sm ${textMuted(isDark)}`}>Fil</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push("/settings")} hitSlop={8}>
+          <Text className={`text-sm ${textMuted(isDark)}`}>Réglages</Text>
+        </Pressable>
       </View>
     </View>
   );
