@@ -1,12 +1,18 @@
-import { useCallback, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { formatSessionDate } from "@/constants";
-import { clearFilEntries, deleteFilEntry, getFilEntries } from "@/lib/fil/storage";
+import {
+  clearFilEntries,
+  deleteFilEntry,
+  FIL_MAX_ENTRIES,
+  FIL_NEAR_LIMIT_THRESHOLD,
+  getFilEntries,
+} from "@/lib/fil/storage";
 import {
   confirmClearAllFil,
   confirmDeleteFilEntry,
@@ -15,15 +21,27 @@ import {
   FIL_SOURCE_META,
   isRitualFilEntry,
   type FilEntry,
+  type FilSource,
 } from "@/lib/fil/types";
 import { navigateHome } from "@/lib/navigation";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
+const FILTER_SOURCES: Array<{ id: FilSource | "all"; label: string }> = [
+  { id: "all", label: "Tout" },
+  { id: "ritual", label: "Rituel" },
+  { id: "ping-pong", label: "Ping-Pong" },
+  { id: "color-journey", label: "Palette" },
+  { id: "emotion-explorer", label: "Émotions" },
+  { id: "nuances", label: "Nuances" },
+];
+
 export default function FilScreen() {
   const isDark = useIsDark();
   const [entries, setEntries] = useState<FilEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<FilSource | "all">("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -36,6 +54,28 @@ export default function FilScreen() {
       void load();
     }, [load])
   );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return entries.filter((entry) => {
+      if (sourceFilter !== "all" && entry.source !== sourceFilter) return false;
+      if (!q) return true;
+      const meta = FIL_SOURCE_META[entry.source];
+      const haystack = [
+        entry.summary,
+        entry.detail,
+        meta.label,
+        entry.metadata?.impulse,
+        entry.metadata?.reflection,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [entries, query, sourceFilter]);
+
+  const nearLimit = entries.length >= FIL_NEAR_LIMIT_THRESHOLD;
 
   async function handleClear() {
     if (entries.length === 0) return;
@@ -80,7 +120,62 @@ export default function FilScreen() {
         </View>
       ) : (
         <View className="gap-3 pb-6">
-          {entries.map((entry) => {
+          {nearLimit ? (
+            <View className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-1">
+              <Text className="text-amber-800 text-sm leading-5">
+                {entries.length} / {FIL_MAX_ENTRIES} traces — la plus ancienne sera
+                retirée automatiquement au prochain ajout. Exportez votre pratique
+                dans les paramètres si vous souhaitez tout conserver.
+              </Text>
+            </View>
+          ) : null}
+
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Rechercher une trace…"
+            placeholderTextColor={isDark ? "#8A8078" : "#B8A090"}
+            className={`rounded-2xl border px-4 py-3 text-base mb-2 ${
+              isDark
+                ? "border-sand-600 bg-sand-800 text-sand-100"
+                : "border-sand-200 bg-white text-sand-800"
+            }`}
+          />
+
+          <View className="flex-row flex-wrap gap-2 mb-2">
+            {FILTER_SOURCES.map((item) => {
+              const active = sourceFilter === item.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => setSourceFilter(item.id)}
+                  className={`rounded-full px-3 py-1.5 border ${
+                    active
+                      ? "bg-sage-500 border-sage-500"
+                      : isDark
+                        ? "border-sand-600"
+                        : "border-sand-200"
+                  }`}
+                >
+                  <Text
+                    className={`text-xs ${
+                      active ? "text-white font-medium" : textMuted(isDark)
+                    }`}
+                  >
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {filtered.length === 0 ? (
+            <Text className={`text-sm text-center py-6 ${textMuted(isDark)}`}>
+              Aucune trace ne correspond à votre recherche.
+            </Text>
+          ) : null}
+
+          {filtered.map((entry) => {
             const meta = FIL_SOURCE_META[entry.source];
             const preview =
               entry.metadata?.reflection?.slice(0, 120) ??

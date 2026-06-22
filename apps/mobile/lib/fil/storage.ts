@@ -4,6 +4,8 @@ import type { SavedSession } from "@/lib/types";
 import type { FilEntry } from "./types";
 
 const MAX_ENTRIES = 80;
+export const FIL_MAX_ENTRIES = MAX_ENTRIES;
+export const FIL_NEAR_LIMIT_THRESHOLD = 70;
 const MIGRATION_FLAG = "@art_therapie/fil_sessions_migrated";
 
 export async function getFilEntries(): Promise<FilEntry[]> {

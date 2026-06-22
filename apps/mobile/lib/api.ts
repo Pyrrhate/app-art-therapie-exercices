@@ -1,9 +1,4 @@
 import { getApiUrl } from "./config";
-import {
-  fallbackChooseColorJourney,
-  fallbackStartColorJourney,
-  fallbackSynthesizeColorJourney,
-} from "./color-journey/fallback";
 import { getFallbackExercise } from "./ritual/fallback";
 import type {
   ArtisticTechnique,
@@ -131,90 +126,6 @@ export async function transcribeHandwriting(
       body: JSON.stringify({ imageBase64 }),
     }
   );
-}
-
-export async function startColorJourney(context: {
-  mood?: string;
-  seedWord?: string;
-}): Promise<{
-  intro: string;
-  turn: number;
-  dimension: { id: string; title: string; subtitle: string };
-  proposals: Array<{ hex: string; label: string; hint: string }>;
-  contextNote?: string;
-  source: "ai" | "fallback";
-}> {
-  try {
-    return await request("/api/color-journey/start", {
-      method: "POST",
-      body: JSON.stringify(context),
-    });
-  } catch (error) {
-    if (isRecoverableApiError(error)) {
-      return fallbackStartColorJourney(context);
-    }
-    throw error;
-  }
-}
-
-export async function chooseColorJourney(input: {
-  turn: number;
-  chosen: { hex: string; label: string; hint?: string };
-  history: Array<{ hex: string; label: string; dimensionId: string }>;
-  mood?: string;
-  seedWord?: string;
-}): Promise<{
-  reflection: string;
-  psychology: string;
-  theory: string;
-  question?: string;
-  source: "ai" | "fallback";
-  nextTurn?: number;
-  nextDimension?: { id: string; title: string; subtitle: string };
-  proposals?: Array<{ hex: string; label: string; hint: string }>;
-  contextNote?: string;
-}> {
-  try {
-    return await request("/api/color-journey/choose", {
-      method: "POST",
-      body: JSON.stringify(input),
-    });
-  } catch (error) {
-    if (isRecoverableApiError(error)) {
-      return fallbackChooseColorJourney({
-        turn: input.turn,
-        chosen: {
-          hex: input.chosen.hex,
-          label: input.chosen.label,
-          hint: input.chosen.hint ?? "",
-        },
-        history: input.history,
-      });
-    }
-    throw error;
-  }
-}
-
-export async function synthesizeColorJourney(input: {
-  history: Array<{ hex: string; label: string; dimensionId: string }>;
-  mood?: string;
-}): Promise<{
-  summary: string;
-  suggestedImpulse: string;
-  palette: Array<{ hex: string; label: string; dimensionId: string }>;
-  source: "ai" | "fallback";
-}> {
-  try {
-    return await request("/api/color-journey/synthesize", {
-      method: "POST",
-      body: JSON.stringify(input),
-    });
-  } catch (error) {
-    if (isRecoverableApiError(error)) {
-      return fallbackSynthesizeColorJourney(input);
-    }
-    throw error;
-  }
 }
 
 export async function checkHealth(): Promise<{

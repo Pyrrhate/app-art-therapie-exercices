@@ -149,7 +149,7 @@ export function GentleTimer({
   const secs = remaining % 60;
 
   return (
-    <View className="items-center justify-center py-8">
+    <View className="items-center justify-center py-5">
       <View style={{ width: size, height: size }}>
         <Svg width={size} height={size}>
           <Circle

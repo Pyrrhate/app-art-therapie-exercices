@@ -20,12 +20,12 @@ export function TechniquePicker({
   const isDark = useIsDark();
 
   return (
-    <View className="flex-row flex-wrap gap-3">
+    <View className="flex-row flex-wrap gap-2">
       {techniques.map((tech) => {
         const isSelected = selected === tech.id;
         const card = (
           <View
-            className={`rounded-2xl px-4 py-3 min-h-[80px] min-w-[100px] border justify-center ${
+            className={`rounded-xl px-3 py-2 min-h-[68px] min-w-[92px] border justify-center ${
               isSelected
                 ? "bg-sage-500 border-sage-500"
                 : panelBg(isDark)
@@ -38,13 +38,13 @@ export function TechniquePicker({
           >
             <PastekIcon
               id={tech.id}
-              boxSize={32}
-              size={22}
-              className="mb-1"
+              boxSize={28}
+              size={18}
+              className="mb-0.5"
               tone={isSelected ? "light" : "default"}
             />
             <Text
-              className={`text-sm ${
+              className={`text-xs ${
                 isSelected ? "text-white" : textPrimary(isDark)
               }`}
             >

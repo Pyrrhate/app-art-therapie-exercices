@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+    - name: Typecheck API & shared
+        run: npm run typecheck --workspace=@art-therapie/api --workspace=@art-therapie/shared
+
+      - name: Lint API
+        run: npm run lint --workspace=@art-therapie/api --if-present
+
+      - name: Test
+        run: npm run test

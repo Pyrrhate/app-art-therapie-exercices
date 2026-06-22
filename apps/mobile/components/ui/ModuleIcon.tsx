@@ -1,7 +1,6 @@
 import Svg, { Circle, Line, Path, Rect } from "react-native-svg";
 import { View } from "react-native";
 import type { ArtisticTechnique } from "@/lib/types";
-import type { MandalaTheme } from "@/lib/mandala/types";
 
 export type ModuleIconId =
   | "ping-pong"
@@ -86,10 +85,6 @@ export function filSourceToIcon(source: string): PastekIconId {
     "zen-garden": "zen-garden",
   };
   return map[source] ?? "ritual";
-}
-
-export function mandalaThemeToIcon(theme: MandalaTheme): PastekIconId {
-  return `mandala-${theme}` as PastekIconId;
 }
 
 function palette(tone: "default" | "light") {

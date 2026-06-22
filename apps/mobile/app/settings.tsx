@@ -15,6 +15,7 @@ import {
 } from "@/lib/backup/export";
 import { pickBackupFileContents } from "@/lib/backup/pick";
 import { assertBackupSize, restoreAppBackup } from "@/lib/backup/restore";
+import { clearAllLocalData } from "@/lib/data/clearAll";
 import { showAlert } from "@/lib/alert";
 import { getApiUrl } from "@/lib/config";
 import { getTimerSound, setTimerSound, type ThemePreference } from "@/lib/preferences";
@@ -70,6 +71,42 @@ export default function SettingsScreen() {
 
   async function handleThemeChange(next: ThemePreference) {
     await setTheme(next);
+  }
+
+  async function handleClearAllData() {
+    if (backupBusy) return;
+    const confirmed =
+      Platform.OS === "web"
+        ? window.confirm(
+            "Effacer toutes les données locales ?\n\nFil créatif, brouillon, préférences — tout sera supprimé sur cet appareil. Cette action est irréversible."
+          )
+        : await new Promise<boolean>((resolve) => {
+            Alert.alert(
+              "Effacer toutes les données ?",
+              "Fil créatif, brouillon et préférences seront supprimés sur cet appareil. Irréversible.",
+              [
+                { text: "Annuler", style: "cancel", onPress: () => resolve(false) },
+                {
+                  text: "Tout effacer",
+                  style: "destructive",
+                  onPress: () => resolve(true),
+                },
+              ]
+            );
+          });
+    if (!confirmed) return;
+    setBackupBusy(true);
+    try {
+      await clearAllLocalData();
+      showAlert("Données effacées", "L'application a été réinitialisée sur cet appareil.");
+    } catch (err) {
+      showAlert(
+        "Échec",
+        err instanceof Error ? err.message : "Impossible d'effacer les données."
+      );
+    } finally {
+      setBackupBusy(false);
+    }
   }
 
   async function handleExportBackup() {
@@ -307,6 +344,24 @@ export default function SettingsScreen() {
             créatif sur cet appareil. Pour changer de téléphone ou tablette,
             exportez puis restaurez une sauvegarde.
           </Text>
+        </View>
+
+        <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
+          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
+            Effacer toutes les données
+          </Text>
+          <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
+            Supprime le Fil créatif, le brouillon de rituel et les préférences
+            sur cet appareil. Exportez d&apos;abord une sauvegarde si vous
+            souhaitez conserver vos traces.
+          </Text>
+          <PrimaryButton
+            label="Tout effacer sur cet appareil…"
+            onPress={() => void handleClearAllData()}
+            variant="ghost"
+            disabled={backupBusy}
+            align="stretch"
+          />
         </View>
 
         <SupportButton />

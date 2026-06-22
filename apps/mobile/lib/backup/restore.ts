@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { STORAGE_KEYS } from "@/constants";
 import { replaceFilEntries } from "@/lib/fil/storage";
 import { clearRitualDraft, saveRitualDraft } from "@/lib/ritualDraft";
 import { setThemePreference, setTimerSound } from "@/lib/preferences";
@@ -7,6 +6,13 @@ import { useThemeStore } from "@/lib/themeStore";
 import type { AppBackup } from "./types";
 
 const MAX_BACKUP_BYTES = 25 * 1024 * 1024;
+
+/** Clés legacy (modules abandonnés) — restauration d'anciennes sauvegardes uniquement. */
+const LEGACY_STORAGE_KEYS = {
+  mandalaProgress: "@art_therapie/mandala_progress",
+  mandalaCustomPalette: "@art_therapie/mandala_custom_palette",
+  zenGarden: "@art_therapie/zen_garden",
+} as const;
 
 export async function restoreAppBackup(backup: AppBackup): Promise<void> {
   await replaceFilEntries(backup.data.creativeFil);
@@ -21,15 +27,18 @@ export async function restoreAppBackup(backup: AppBackup): Promise<void> {
   await setTimerSound(backup.data.preferences.timerSound);
   useThemeStore.setState({ theme: backup.data.preferences.theme });
 
+  const legacy = backup.data as {
+    mandalaProgress?: string | null;
+    mandalaCustomPalette?: string | null;
+    zenGarden?: string | null;
+  };
+
+  await restoreOptionalKey(LEGACY_STORAGE_KEYS.mandalaProgress, legacy.mandalaProgress);
   await restoreOptionalKey(
-    STORAGE_KEYS.mandalaProgress,
-    backup.data.mandalaProgress
+    LEGACY_STORAGE_KEYS.mandalaCustomPalette,
+    legacy.mandalaCustomPalette
   );
-  await restoreOptionalKey(
-    STORAGE_KEYS.mandalaCustomPalette,
-    backup.data.mandalaCustomPalette
-  );
-  await restoreOptionalKey(STORAGE_KEYS.zenGarden, backup.data.zenGarden);
+  await restoreOptionalKey(LEGACY_STORAGE_KEYS.zenGarden, legacy.zenGarden);
 }
 
 async function restoreOptionalKey(

@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@art-therapie/shared": "*",
     "next": "^15.1.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -20,7 +22,8 @@
     "@types/react": "~18.3.12",
     "eslint": "^9.17.0",
     "eslint-config-next": "^15.1.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.5"
   },
   "engines": {
     "node": "22.x"

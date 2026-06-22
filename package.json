@@ -5,7 +5,8 @@
   "description": "MVP Art Thérapie — monorepo Expo + Next.js",
   "workspaces": [
     "apps/mobile",
-    "apps/api"
+    "apps/api",
+    "packages/shared"
   ],
   "scripts": {
     "postinstall": "node scripts/patch-nativewind-babel.cjs && node scripts/generate-gong.cjs",
@@ -19,10 +20,12 @@
     "api:build": "npm run build --workspace=apps/api",
     "dev": "concurrently \"npm run api\" \"npm run mobile\"",
     "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "vitest": "^3.0.5"
   },
   "engines": {
     "node": "22.x"

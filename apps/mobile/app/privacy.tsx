@@ -23,8 +23,8 @@ export default function PrivacyScreen() {
 
       <Section title="Éditeur">
         <P>
-          Application « Art Thérapie » — rituel créatif guidé. Éditeur :
-          Pastek Art (placeholder). Contact : {CONTACT_EMAIL}.
+          Application « Pastek Art » — rituel créatif guidé. Éditeur : Guillot
+          / Pastek Art. Contact : {CONTACT_EMAIL}.
         </P>
       </Section>
 
@@ -42,8 +42,10 @@ export default function PrivacyScreen() {
         </P>
         <P>
           Lorsque vous demandez une réflexion IA, votre photo est compressée
-          puis envoyée à notre serveur API pour analyse. Elle n'est pas
-          conservée côté serveur après traitement.
+          puis envoyée à notre serveur API (Vercel), qui la transmet à Hugging
+          Face pour analyse. Elle n'est pas conservée côté serveur après
+          traitement. Les amorces sans IA (palette, émotions, nuances) ne
+          envoient aucune donnée au serveur.
         </P>
       </Section>
 
@@ -64,16 +66,19 @@ export default function PrivacyScreen() {
 
       <Section title="Vos droits">
         <P>
-          Accès, rectification, effacement : supprimez vos traces dans le Fil
-          créatif ou désinstallez l'app. Pour toute question :
+          Accès, rectification, effacement : retirez vos traces dans le Fil
+          créatif, utilisez « Tout effacer sur cet appareil » dans les
+          paramètres, ou désinstallez l&apos;app. Pour toute question :{" "}
           {CONTACT_EMAIL}.
         </P>
       </Section>
 
       <Section title="Sous-traitants">
         <P>
-          Hébergement API (Vercel) et modèles IA (Hugging Face), selon leurs
-          propres conditions. Les clés API restent côté serveur.
+          Hébergement API : Vercel (vercel.com/legal/privacy-policy). Modèles
+          IA : Hugging Face (huggingface.co/privacy) — inférence uniquement,
+          sans entraînement sur vos contenus via cette application. Les clés
+          API restent côté serveur.
         </P>
       </Section>
 
@@ -86,8 +91,7 @@ export default function PrivacyScreen() {
       </Section>
 
       <Text className="text-sand-400 text-xs text-center leading-5 pb-8">
-        Cette page constitue une politique de confidentialité simplifiée pour un
-        MVP. Adaptez les coordonnées éditeur avant publication officielle.
+        Politique de confidentialité simplifiée — juin 2026.
       </Text>
     </ScreenContainer>
   );

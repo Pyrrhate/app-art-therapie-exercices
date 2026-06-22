@@ -1,19 +1,11 @@
-export type ArtisticTechnique =
-  | "drawing"
-  | "painting"
-  | "writing"
-  | "mixed_media"
-  | "recyclart"
-  | "collage"
-  | "volume"
-  | "video"
-  | "music"
-  | "dance"
-  | "theatre";
+import type { ArtisticTechnique } from "@art-therapie/shared";
+import type { RitualDuration } from "@art-therapie/shared";
+
+export type { ArtisticTechnique } from "@art-therapie/shared";
 
 export interface ExerciseResponse {
   exercise: string;
-  durationMinutes: number;
+  durationMinutes: RitualDuration;
   source: "ai" | "fallback";
   keywords: string[];
 }
@@ -30,9 +22,9 @@ export interface ReflectionResponse {
 export interface SavedSession {
   id: string;
   impulse: string;
-  technique: ArtisticTechnique;
+  technique: import("@art-therapie/shared").ArtisticTechnique;
   exercise: string;
-  durationMinutes: number;
+  durationMinutes: RitualDuration;
   photoUri?: string;
   reflection?: string;
   openQuestions?: string[];
@@ -43,11 +35,11 @@ export interface SavedSession {
 
 export interface RitualState {
   impulse: string;
-  technique: ArtisticTechnique | null;
+  technique: import("@art-therapie/shared").ArtisticTechnique | null;
   exercise: string;
   exerciseSource: "ai" | "fallback" | null;
   exerciseKeywords: string[];
-  durationMinutes: number;
+  durationMinutes: RitualDuration;
   photoUri: string | null;
   reflection: string | null;
   openQuestions: string[];

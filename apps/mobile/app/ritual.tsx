@@ -8,8 +8,10 @@ import {
 import { router } from "expo-router";
 import { DurationPicker } from "@/components/DurationPicker";
 import { AccentCard, ContentCard } from "@/components/ui/Card";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
+import { RitualDraftBanner } from "@/components/ritual/RitualDraftBanner";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { TECHNIQUES, isAiAnalysisSupported } from "@/constants";
@@ -68,14 +70,19 @@ export default function RitualScreen() {
     : "Quel mot, idée ou couleur vous appelle aujourd'hui ? Choisissez ensuite votre technique et la durée, puis passez à l'exercice.";
 
   return (
-    <ScreenContainer
-      heroLabel="Rituel créatif"
-      title="L'"
-      titleAccent="Impulsion"
-      subtitle={subtitle}
-      refreshable
-    >
+    <ScreenContainer refreshable>
       <ScreenNavBar backLabel="← Accueil" onBack={() => router.replace("/")} />
+
+      <RitualDraftBanner className="mb-4" />
+
+      <PastekScreenHero
+        label="Rituel créatif"
+        title="L'"
+        titleAccent="Impulsion"
+        description={subtitle}
+        className="mb-4"
+      />
+
       <RitualProgressBar current="ritual" />
 
       {impulsePrefilled && (
@@ -105,7 +112,7 @@ export default function RitualScreen() {
         />
       </ContentCard>
 
-      <Text className="text-sand-600 text-sm mb-4 font-medium">
+      <Text className="text-sand-600 text-sm mb-2 font-medium">
         Technique artistique
       </Text>
       <TechniquePicker
@@ -115,14 +122,14 @@ export default function RitualScreen() {
       />
 
       {technique && !isAiAnalysisSupported(technique) && (
-        <Text className="text-amber-700 text-xs mt-3 mb-1 leading-5">
+        <Text className="text-amber-700 text-xs mt-2 mb-1 leading-5">
           Cette technique ne propose pas d&apos;analyse IA en phase réflexion —
           vous pourrez accueillir votre ressenti avec des questions
           bienveillantes, sans envoi d&apos;image au serveur.
         </Text>
       )}
 
-      <Text className="text-sand-600 text-sm mb-4 mt-8 font-medium">
+      <Text className="text-sand-600 text-sm mb-2 mt-5 font-medium">
         Durée du rituel
       </Text>
       <DurationPicker

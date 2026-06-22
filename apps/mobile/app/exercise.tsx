@@ -8,6 +8,7 @@ import { ContentCard } from "@/components/ui/Card";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
+import { RitualDraftBanner } from "@/components/ritual/RitualDraftBanner";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { getTimerSound } from "@/lib/preferences";
 import { persistRitualDraft } from "@/lib/ritualPersistence";
@@ -69,6 +70,8 @@ export default function ExerciseScreen() {
         size="md"
         className="mb-3"
       />
+
+      <RitualDraftBanner className="mb-3" />
 
       <RitualProgressBar current="exercise" />
 

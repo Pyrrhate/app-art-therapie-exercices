@@ -12,9 +12,9 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { InlineNotice } from "@/components/InlineNotice";
 import { ZenWaitIndicator } from "@/components/ZenWaitIndicator";
-import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { analyzeArtwork, ApiError, transcribeHandwriting } from "@/lib/api";
@@ -43,9 +43,7 @@ import { recordFilEntry } from "@/lib/fil/record";
 import { useRitualStore } from "@/lib/store";
 import { getTechniqueLabel, isAiAnalysisSupported } from "@/constants";
 import { getLocalReflection } from "@/lib/reflection/fallback";
-import { FEATURES } from "@/lib/features";
 import { navigateHome } from "@/lib/navigation";
-import { openMandalaStudio } from "@/lib/fil/bridges";
 import {
   discardRitualDraft,
   persistRitualDraft,
@@ -636,13 +634,15 @@ export default function ReflectionScreen() {
   busyRef.current = busy;
 
   return (
-    <ScreenContainer
-      heroLabel="Réflexion"
-      title="Capture & "
-      titleAccent="réflexion"
-      refreshable
-    >
-      <ScreenNavBar onBack={handleGoBack} />
+    <ScreenContainer refreshable fixedHeader={<ScreenNavBar onBack={handleGoBack} />}>
+      <PastekScreenHero
+        label="Réflexion"
+        title="Capture & "
+        accent="réflexion"
+        centered={false}
+        size="md"
+        className="mb-3"
+      />
       <RitualProgressBar current="reflection" />
 
       {notice && (
@@ -678,9 +678,11 @@ export default function ReflectionScreen() {
           <Text className="text-amber-800 text-sm leading-6">
             Pour{" "}
             {technique ? getTechniqueLabel(technique).toLowerCase() : "cette technique"}
-            , l&apos;analyse IA n&apos;est pas disponible. Vous pouvez garder une
-            photo souvenir (optionnel) et accueillir un miroir créatif local —
-            sans envoi au serveur.
+            , privilégiez un{" "}
+            <Text className="font-medium">miroir textuel</Text> : décrivez ce que
+            vous avez vécu, ressenti ou exploré — sans envoi de photo au serveur.
+            Une image souvenir reste possible, mais elle ne sera pas analysée par
+            l&apos;IA.
           </Text>
         </View>
       )}
@@ -874,19 +876,6 @@ export default function ReflectionScreen() {
               variant="secondary"
             />
           </View>
-        )}
-
-        {reflection && FEATURES.mandala && (
-          <CreativeBridge
-            title="Prolonger le rituel"
-            subtitle="Accueillez vos couleurs dans un mandala apaisant."
-            actions={[
-              {
-                label: "Colorier en mandala",
-                onPress: () => openMandalaStudio("calm"),
-              },
-            ]}
-          />
         )}
 
         <View className="gap-3 pb-8">

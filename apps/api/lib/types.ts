@@ -1,19 +1,8 @@
-export type ArtisticTechnique =
-  | "drawing"
-  | "painting"
-  | "writing"
-  | "mixed_media"
-  | "recyclart"
-  | "collage"
-  | "volume"
-  | "video"
-  | "music"
-  | "dance"
-  | "theatre";
+export type { ArtisticTechnique } from "@art-therapie/shared";
 
 export interface ExerciseRequest {
   impulse: string;
-  technique: ArtisticTechnique;
+  technique: import("@art-therapie/shared").ArtisticTechnique;
   /** Durée choisie par l'utilisateur·rice (prioritaire sur la suggestion IA). */
   durationMinutes?: number;
 }
@@ -29,7 +18,7 @@ export interface ReflectionRequest {
   /** Image base64 — optionnelle si writtenText fourni (technique écriture). */
   imageBase64?: string;
   impulse?: string;
-  technique?: ArtisticTechnique;
+  technique?: import("@art-therapie/shared").ArtisticTechnique;
   /** Consigne d'exercice suivie par l'utilisateur·rice. */
   exercise?: string;
   durationMinutes?: number;

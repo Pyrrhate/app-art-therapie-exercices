@@ -1,6 +1,6 @@
 import type { PastekIconId } from "@/components/ui/ModuleIcon";
-import type { MandalaTheme } from "@/lib/mandala/types";
 import type { ArtisticTechnique } from "@/lib/types";
+
 export type FilSource =
   | "ritual"
   | "mandala"
@@ -14,7 +14,8 @@ export interface FilMetadata {
   colors?: string[];
   impulse?: string;
   technique?: ArtisticTechnique;
-  theme?: MandalaTheme;
+  /** Anciennes traces mandala (module abandonné). */
+  theme?: string;
   chain?: string;
   exercise?: string;
   durationMinutes?: number;

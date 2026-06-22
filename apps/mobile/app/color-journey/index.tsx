@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { ChromaticWheel } from "@/components/color-journey/ChromaticWheel";
 import { ColorSwatch } from "@/components/color-journey/ColorSwatch";
 import { JourneyProgress } from "@/components/color-journey/JourneyProgress";
@@ -128,153 +128,147 @@ export default function ColorJourneyScreen() {
   }
 
   return (
-    <ScreenContainer scrollable={false}>
+    <ScreenContainer scrollable refreshable contentMaxWidth={720}>
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 32 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <PastekScreenHero
-          label="Palette intérieure"
-          title="Trois teintes "
-          accent="sur la roue"
-          description="Choisissez vos couleurs sur le cercle chromatique — complémentaire, triade : la théorie guide, vous décidez."
-          className="mb-4"
-        />
+      <PastekScreenHero
+        label="Palette intérieure"
+        title="Trois teintes "
+        accent="sur la roue"
+        description="Choisissez vos couleurs sur le cercle chromatique — complémentaire, triade : la théorie guide, vous décidez."
+        className="mb-4"
+      />
 
-        {(phase === "choosing" || phase === "reflecting") && (
-          <View>
-            <JourneyProgress currentTurn={turn} history={history} />
+      {(phase === "choosing" || phase === "reflecting") && (
+        <View>
+          <JourneyProgress currentTurn={turn} history={history} />
 
-            {phase === "choosing" && (
-              <>
-                <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-4 mb-4">
-                  <Text className="text-sage-700 font-medium text-lg mb-1">
-                    {guidance.title}
-                  </Text>
-                  <Text className="text-sand-600 text-sm leading-6">
-                    {guidance.subtitle}
-                  </Text>
-                  <Text className="text-sand-400 text-xs mt-2 leading-5">
-                    {guidance.theory}
+          {phase === "choosing" && (
+            <>
+              <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-4 mb-4">
+                <Text className="text-sage-700 font-medium text-lg mb-1">
+                  {guidance.title}
+                </Text>
+                <Text className="text-sand-600 text-sm leading-6">
+                  {guidance.subtitle}
+                </Text>
+                <Text className="text-sand-400 text-xs mt-2 leading-5">
+                  {guidance.theory}
+                </Text>
+              </View>
+
+              <ChromaticWheel
+                key={turn}
+                highlightHues={guidance.highlightHues}
+                highlightSpread={guidance.highlightSpread}
+                onConfirm={handleConfirmHex}
+              />
+
+              {canExitEarly && (
+                <View className="mt-4 mb-2">
+                  <PrimaryButton
+                    label="Passer à l'exercice avec mes teintes"
+                    onPress={handleEarlyExitToExercise}
+                    variant="ghost"
+                    disabled={startingExercise}
+                  />
+                </View>
+              )}
+            </>
+          )}
+
+          {phase === "reflecting" && lastReflection && (
+            <>
+              <ReflectionPanel data={lastReflection} />
+              <PrimaryButton
+                label={
+                  turn >= COLOR_JOURNEY_TURN_COUNT
+                    ? "Voir ma palette"
+                    : "Teinte suivante"
+                }
+                onPress={handleContinueAfterReflection}
+              />
+              {canExitEarly && turn < COLOR_JOURNEY_TURN_COUNT && (
+                <View className="mt-2 mb-2">
+                  <PrimaryButton
+                    label="Passer à l'exercice avec mes teintes"
+                    onPress={handleEarlyExitToExercise}
+                    variant="ghost"
+                    disabled={startingExercise}
+                  />
+                </View>
+              )}
+            </>
+          )}
+        </View>
+      )}
+
+      {phase === "complete" && synthesis && (
+        <View className="pb-4">
+          <JourneyProgress
+            currentTurn={COLOR_JOURNEY_TURN_COUNT}
+            history={history}
+          />
+
+          <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-4">
+            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
+              Votre palette intérieure
+            </Text>
+            <View className="flex-row flex-wrap gap-3 mb-4">
+              {history.map((choice) => (
+                <View key={choice.hex + choice.label} className="items-center">
+                  <ColorSwatch hex={choice.hex} size={40} className="mb-1" />
+                  <Text className="text-sand-500 text-xs text-center max-w-[72px]">
+                    {choice.label}
                   </Text>
                 </View>
-
-                <ChromaticWheel
-                  key={turn}
-                  highlightHues={guidance.highlightHues}
-                  highlightSpread={guidance.highlightSpread}
-                  onConfirm={handleConfirmHex}
-                />
-
-                {canExitEarly && (
-                  <View className="mt-4">
-                    <PrimaryButton
-                      label="Passer à l'exercice avec mes teintes"
-                      onPress={handleEarlyExitToExercise}
-                      variant="ghost"
-                      disabled={startingExercise}
-                    />
-                  </View>
-                )}
-              </>
-            )}
-
-            {phase === "reflecting" && lastReflection && (
-              <>
-                <ReflectionPanel data={lastReflection} />
-                <PrimaryButton
-                  label={
-                    turn >= COLOR_JOURNEY_TURN_COUNT
-                      ? "Voir ma palette"
-                      : "Teinte suivante"
-                  }
-                  onPress={handleContinueAfterReflection}
-                />
-                {canExitEarly && turn < COLOR_JOURNEY_TURN_COUNT && (
-                  <View className="mt-2">
-                    <PrimaryButton
-                      label="Passer à l'exercice avec mes teintes"
-                      onPress={handleEarlyExitToExercise}
-                      variant="ghost"
-                      disabled={startingExercise}
-                    />
-                  </View>
-                )}
-              </>
-            )}
+              ))}
+            </View>
+            <Text className="text-sand-700 text-base leading-7">
+              {synthesis.summary}
+            </Text>
           </View>
-        )}
 
-        {phase === "complete" && synthesis && (
-          <View>
-            <JourneyProgress
-              currentTurn={COLOR_JOURNEY_TURN_COUNT}
-              history={history}
-            />
-
-            <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-4">
-              <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-                Votre palette intérieure
-              </Text>
-              <View className="flex-row flex-wrap gap-3 mb-4">
-                {history.map((choice) => (
-                  <View key={choice.hex + choice.label} className="items-center">
-                    <ColorSwatch hex={choice.hex} size={40} className="mb-1" />
-                    <Text className="text-sand-500 text-xs text-center max-w-[72px]">
-                      {choice.label}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-              <Text className="text-sand-700 text-base leading-7">
-                {synthesis.summary}
-              </Text>
-            </View>
-
-            <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-4 mb-4">
-              <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
-                Votre impulsion
-              </Text>
-              <Text className="text-sand-800 text-lg font-light leading-7">
-                {synthesis.suggestedImpulse}
-              </Text>
-            </View>
-
-            <CreativeBridge
-              title="Votre impulsion est prête"
-              subtitle="Vos teintes deviennent une impulsion pour peindre ou explorer en technique mixte."
-              actions={[
-                {
-                  label: startingExercise
-                    ? "Préparation…"
-                    : "Passer à l'exercice",
-                  onPress: () =>
-                    void handleStartExercise(synthesis.suggestedImpulse),
-                  variant: "primary",
-                  disabled: startingExercise,
-                },
-              ]}
-            />
-
-            {startingExercise && (
-              <View className="mt-3 items-center">
-                <ActivityIndicator color="#6B8F71" />
-              </View>
-            )}
-
-            <View className="mt-4">
-              <PrimaryButton
-                label="Recommencer"
-                onPress={handleRestart}
-                variant="ghost"
-              />
-            </View>
+          <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-4 mb-4">
+            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
+              Votre impulsion
+            </Text>
+            <Text className="text-sand-800 text-lg font-light leading-7">
+              {synthesis.suggestedImpulse}
+            </Text>
           </View>
-        )}
-      </ScrollView>
+
+          <CreativeBridge
+            title="Votre impulsion est prête"
+            subtitle="Vos teintes deviennent une impulsion pour peindre ou explorer en technique mixte."
+            actions={[
+              {
+                label: startingExercise
+                  ? "Préparation…"
+                  : "Passer à l'exercice",
+                onPress: () =>
+                  void handleStartExercise(synthesis.suggestedImpulse),
+                variant: "primary",
+                disabled: startingExercise,
+              },
+            ]}
+          />
+
+          {startingExercise && (
+            <View className="mt-3 items-center">
+              <ActivityIndicator color="#6B8F71" />
+            </View>
+          )}
+
+          <View className="mt-4">
+            <PrimaryButton
+              label="Recommencer"
+              onPress={handleRestart}
+              variant="ghost"
+            />
+          </View>
+        </View>
+      )}
     </ScreenContainer>
   );
 }

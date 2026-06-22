@@ -17,16 +17,12 @@ export function formatBackupSize(bytes: number): string {
 }
 
 export async function buildAppBackup(): Promise<AppBackup> {
-  const [creativeFil, ritualDraft, theme, timerSound, mandalaProgress, mandalaCustomPalette, zenGarden] =
-    await Promise.all([
-      getFilEntries(),
-      getRitualDraft(),
-      getThemePreference(),
-      getTimerSound(),
-      AsyncStorage.getItem(STORAGE_KEYS.mandalaProgress),
-      AsyncStorage.getItem(STORAGE_KEYS.mandalaCustomPalette),
-      AsyncStorage.getItem(STORAGE_KEYS.zenGarden),
-    ]);
+  const [creativeFil, ritualDraft, theme, timerSound] = await Promise.all([
+    getFilEntries(),
+    getRitualDraft(),
+    getThemePreference(),
+    getTimerSound(),
+  ]);
 
   return {
     version: BACKUP_FORMAT_VERSION,
@@ -36,9 +32,6 @@ export async function buildAppBackup(): Promise<AppBackup> {
       creativeFil,
       ritualDraft,
       preferences: { theme, timerSound },
-      mandalaProgress,
-      mandalaCustomPalette,
-      zenGarden,
     },
   };
 }
