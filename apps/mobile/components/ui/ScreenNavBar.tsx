@@ -1,5 +1,4 @@
 import { Pressable, Text, View } from "react-native";
-import { KofiDonateLink } from "@/components/ui/KofiDonateLink";
 import { navigateBackOrHome, navigateHome } from "@/lib/navigation";
 import { textMuted } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -21,7 +20,7 @@ export function ScreenNavBar({
   const isDark = useIsDark();
 
   return (
-    <View className="flex-row justify-between items-center mb-4 -mt-2 gap-2">
+    <View className="flex-row justify-between items-center mb-4 pt-9 gap-2">
       <Pressable
         onPress={onBack}
         accessibilityRole="button"
@@ -47,7 +46,6 @@ export function ScreenNavBar({
             </Text>
           </Pressable>
         ) : null}
-        <KofiDonateLink />
       </View>
     </View>
   );

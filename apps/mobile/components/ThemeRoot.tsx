@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { Platform, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { KofiDonateLink } from "@/components/ui/KofiDonateLink";
 import { THEME_COLORS, useThemeStore } from "@/lib/themeStore";
 
 export function ThemeRoot({ children }: { children: ReactNode }) {
@@ -27,6 +28,7 @@ export function ThemeRoot({ children }: { children: ReactNode }) {
     <View style={{ flex: 1, backgroundColor: colors.root, minHeight: 0 }}>
       <StatusBar style={isDark ? "light" : "dark"} />
       {children}
+      <KofiDonateLink />
     </View>
   );
 }

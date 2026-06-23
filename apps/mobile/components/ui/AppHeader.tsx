@@ -1,6 +1,5 @@
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
-import { KofiDonateLink } from "@/components/ui/KofiDonateLink";
 import { textMuted, textPrimary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -14,7 +13,7 @@ export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps)
 
   return (
     <View
-      className={`flex-row items-center justify-between pt-1 ${
+      className={`flex-row items-center justify-between pt-10 ${
         compact ? "mb-4" : "mb-10"
       }`}
     >
@@ -37,7 +36,6 @@ export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps)
         <Pressable onPress={() => router.push("/settings")} hitSlop={8}>
           <Text className={`text-sm ${textMuted(isDark)}`}>Réglages</Text>
         </Pressable>
-        <KofiDonateLink />
       </View>
     </View>
   );
