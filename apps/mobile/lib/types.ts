@@ -1,5 +1,13 @@
 import type { ArtisticTechnique } from "@art-therapie/shared";
 import type { RitualDuration } from "@art-therapie/shared";
+import type {
+  ExperienceMode,
+  IntegrationAnswers,
+  Round1Data,
+  SecondRoundTransitionAnswers,
+} from "@/lib/experience/types";
+import { EMPTY_SECOND_ROUND_ANSWERS } from "@/lib/experience/types";
+import type { MultimodalUserAnswers } from "@/lib/multimodal/types";
 
 export type { ArtisticTechnique } from "@art-therapie/shared";
 
@@ -45,4 +53,12 @@ export interface RitualState {
   openQuestions: string[];
   followUpExercise: string | null;
   writtenText: string;
+  experienceMode: ExperienceMode;
+  preAnswers: MultimodalUserAnswers;
+  postAnswers: IntegrationAnswers;
+  currentRound: 1 | 2;
+  isSecondRoundPrep: boolean;
+  round1Snapshot: Round1Data | null;
+  transitionAnswers: SecondRoundTransitionAnswers;
+  sessionExerciseId: string;
 }

@@ -8,6 +8,7 @@ import {
 import { router } from "expo-router";
 import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
+import { ExperienceModeSelector } from "@/components/experience/ExperienceModeSelector";
 import { DurationPicker } from "@/components/DurationPicker";
 import { AccentCard, ContentCard } from "@/components/ui/Card";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -26,10 +27,12 @@ export default function RitualScreen() {
     impulse,
     technique,
     durationMinutes,
+    experienceMode,
     setImpulse,
     setTechnique,
     setDurationMinutes,
     setExercise,
+    setExperienceMode,
   } = useRitualStore();
   const [impulsePrefilled] = useState(() => impulse.trim().length > 0);
   const [loading, setLoading] = useState(false);
@@ -76,6 +79,11 @@ export default function RitualScreen() {
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
       <RitualDraftBanner className="mb-4" />
+
+      <ExperienceModeSelector
+        value={experienceMode}
+        onChange={setExperienceMode}
+      />
 
       <PastekScreenHero
         label="Rituel créatif"

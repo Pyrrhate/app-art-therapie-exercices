@@ -13,6 +13,15 @@ import { router } from "expo-router";
 import { InlineNotice } from "@/components/InlineNotice";
 import { ZenWaitIndicator } from "@/components/ZenWaitIndicator";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
+import {
+  IntegrationQuestionnaireStep,
+  integrationAnswersComplete,
+  WorkflowStepTransition,
+} from "@/components/experience";
+import {
+  ContextQuestionnaireStep,
+  preAnswersComplete,
+} from "@/components/multimodal/ContextQuestionnaireStep";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
@@ -43,8 +52,17 @@ import { recordFilEntry } from "@/lib/fil/record";
 import { useRitualStore } from "@/lib/store";
 import { getTechniqueLabel, isAiAnalysisSupported } from "@/constants";
 import { getLocalReflection } from "@/lib/reflection/fallback";
+import { mergeWrittenTextWithPreAnalysis } from "@/lib/experience/formatPreAnalysisContext";
+import {
+  initialReflectionPhase,
+  type ReflectionWorkflowPhase,
+} from "@/lib/experience/types";
 import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
+import {
+  createSessionLogId,
+  saveSessionLog,
+} from "@/lib/sessionLog/storage";
 import {
   discardRitualDraft,
   persistRitualDraft,
@@ -100,12 +118,22 @@ export default function ReflectionScreen() {
     openQuestions,
     followUpExercise,
     writtenText,
+    experienceMode,
+    preAnswers,
+    postAnswers,
     setPhotoUri,
     setWrittenText,
     setReflection,
+    setPreAnswers,
+    setPostAnswers,
     startFollowUpExercise,
     reset,
   } = ritual;
+
+  const isDeep = experienceMode === "deep";
+  const [workflowPhase, setWorkflowPhase] = useState<ReflectionWorkflowPhase>(() =>
+    initialReflectionPhase(experienceMode)
+  );
 
   const isWriting = technique === "writing";
   const supportsAiAnalysis = technique ? isAiAnalysisSupported(technique) : true;
@@ -390,11 +418,16 @@ export default function ReflectionScreen() {
     const hasText = writtenText.trim().length >= 10;
 
     if (!supportsAiAnalysis) {
+      const mergedText = isDeep
+        ? mergeWrittenTextWithPreAnalysis(writtenText, preAnswers)
+        : hasText
+          ? writtenText.trim()
+          : undefined;
       const local = getLocalReflection({
         impulse,
         exercise,
         technique,
-        writtenText: hasText ? writtenText.trim() : undefined,
+        writtenText: mergedText,
       });
       setReflection(
         local.reflection,
@@ -452,6 +485,12 @@ export default function ReflectionScreen() {
         setPhotoSizeLabel(formatImageSize(getImageByteSize(imageBase64)));
       }
 
+      const textForApi = isDeep
+        ? mergeWrittenTextWithPreAnalysis(writtenText, preAnswers)
+        : hasText
+          ? writtenText.trim()
+          : undefined;
+
       const result = await withTimeout(
         analyzeArtwork({
           imageBase64,
@@ -459,7 +498,7 @@ export default function ReflectionScreen() {
           technique: technique ?? undefined,
           exercise,
           durationMinutes,
-          writtenText: hasText ? writtenText.trim() : undefined,
+          writtenText: textForApi,
         }),
         90_000
       );
@@ -552,6 +591,7 @@ export default function ReflectionScreen() {
       return;
     }
     if (!technique || !exercise || filRecordedRef.current) return;
+    if (isDeep) return;
     filRecordedRef.current = true;
 
     void (async () => {
@@ -597,6 +637,7 @@ export default function ReflectionScreen() {
     openQuestions,
     followUpExercise,
     writtenText,
+    isDeep,
   ]);
 
   function handleGoHome() {
@@ -626,6 +667,77 @@ export default function ReflectionScreen() {
     startFollowUpExercise();
     router.push(ROUTES.exercise);
   }
+
+  async function handleSaveIntegration() {
+    if (
+      !integrationAnswersComplete(postAnswers) ||
+      !technique ||
+      !reflection ||
+      !exercise
+    ) {
+      return;
+    }
+
+    try {
+      await saveSessionLog({
+        id: createSessionLogId(),
+        createdAt: new Date().toISOString(),
+        mode: "deep",
+        exercise: {
+          impulse,
+          technique,
+          techniqueLabel: getTechniqueLabel(technique),
+          exercise,
+          durationMinutes,
+        },
+        preAnalysis: preAnswers,
+        aiReflection: {
+          reflection,
+          openQuestions,
+          source: reflectionSource ?? "fallback",
+          followUpExercise,
+        },
+        postIntegration: postAnswers,
+        writtenText: writtenText.trim() || undefined,
+        hasPhoto: Boolean(photoUri),
+      });
+      setWorkflowPhase("complete");
+      setNotice({
+        type: "success",
+        message: "Votre séance profonde est enregistrée dans le journal local.",
+      });
+
+      await recordFilEntry({
+        source: "ritual",
+        summary: impulse || "Séance profonde",
+        detail: postAnswers.resonance.trim().slice(0, 280),
+        metadata: {
+          impulse,
+          technique,
+          exercise,
+          durationMinutes,
+          reflection,
+          openQuestions: openQuestions.length ? openQuestions : undefined,
+          writtenText: writtenText.trim() || undefined,
+          followUpExercise: followUpExercise ?? undefined,
+        },
+      });
+      await discardRitualDraft();
+    } catch {
+      setNotice({
+        type: "error",
+        message: "Impossible d'enregistrer le journal pour le moment.",
+      });
+    }
+  }
+
+  const showPreAnalysis = isDeep && workflowPhase === "pre_analysis";
+  const showCapture =
+    !isDeep || workflowPhase === "capture";
+  const showPostIntegration = isDeep && workflowPhase === "post_integration";
+  const showComplete = isDeep && workflowPhase === "complete";
+  const showDeepIntegrationCta =
+    isDeep && workflowPhase === "capture" && Boolean(reflection);
 
   const canAnalyze = supportsAiAnalysis
     ? Boolean(photoUri) || writtenText.trim().length >= 10
@@ -660,6 +772,7 @@ export default function ReflectionScreen() {
             <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
               {getTechniqueLabel(technique)}
               {durationMinutes ? ` · ${durationMinutes} min` : ""}
+              {isDeep ? " · parcours profond" : " · parcours express"}
               {!supportsAiAnalysis ? " · sans analyse IA" : ""}
             </Text>
           )}
@@ -674,7 +787,7 @@ export default function ReflectionScreen() {
         </View>
       )}
 
-      {!supportsAiAnalysis && (
+      {!supportsAiAnalysis && showCapture && (
         <View className="bg-amber-50 rounded-2xl border border-amber-200 px-4 py-3 mb-4">
           <Text className="text-amber-800 text-sm leading-6">
             Pour{" "}
@@ -688,6 +801,32 @@ export default function ReflectionScreen() {
         </View>
       )}
 
+      {showPreAnalysis && (
+        <WorkflowStepTransition stepKey="pre_analysis">
+          <View className="mb-2">
+            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
+              Parcours profond · Ancrage
+            </Text>
+            <Text className="text-sand-700 text-base font-medium mb-4">
+              Trois questions avant le miroir créatif
+            </Text>
+            <ContextQuestionnaireStep
+              answers={preAnswers}
+              onChange={setPreAnswers}
+            />
+            <View className="mt-6">
+              <PrimaryButton
+                label="Continuer vers la capture"
+                onPress={() => setWorkflowPhase("capture")}
+                disabled={!preAnswersComplete(preAnswers)}
+              />
+            </View>
+          </View>
+        </WorkflowStepTransition>
+      )}
+
+      {showCapture && (
+        <WorkflowStepTransition stepKey="capture">
       {isWriting && (
         <View className="mb-6">
           <Text className="text-sand-700 text-base font-medium mb-2">
@@ -863,7 +1002,7 @@ export default function ReflectionScreen() {
           </View>
         )}
 
-        {followUpExercise && (
+        {followUpExercise && !showDeepIntegrationCta && (
           <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-5 mb-6">
             <Text className="text-sage-700 text-sm font-medium mb-2">
               Poursuivre la création
@@ -879,6 +1018,56 @@ export default function ReflectionScreen() {
           </View>
         )}
 
+        {showDeepIntegrationCta && (
+          <View className="mb-6">
+            <PrimaryButton
+              label="Poursuivre l'intégration"
+              onPress={() => setWorkflowPhase("post_integration")}
+            />
+          </View>
+        )}
+        </WorkflowStepTransition>
+      )}
+
+      {showPostIntegration && (
+        <WorkflowStepTransition stepKey="post_integration">
+          <View className="mb-2">
+            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
+              Parcours profond · Intégration
+            </Text>
+            <Text className="text-sand-700 text-base font-medium mb-4">
+              Clôturer votre séance en douceur
+            </Text>
+            <IntegrationQuestionnaireStep
+              answers={postAnswers}
+              onChange={setPostAnswers}
+            />
+            <View className="mt-6 gap-3">
+              <PrimaryButton
+                label="Enregistrer dans mon journal"
+                onPress={() => void handleSaveIntegration()}
+                disabled={!integrationAnswersComplete(postAnswers)}
+              />
+            </View>
+          </View>
+        </WorkflowStepTransition>
+      )}
+
+      {showComplete && (
+        <WorkflowStepTransition stepKey="complete">
+          <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-6 mb-6">
+            <Text className="text-sage-700 text-base font-medium mb-2">
+              Séance profonde enregistrée
+            </Text>
+            <Text className="text-sand-600 text-sm leading-6">
+              Votre parcours complet — ancrage, réflexion et intégration — est
+              conservé localement. Vous pouvez revenir quand vous le souhaitez.
+            </Text>
+          </View>
+        </WorkflowStepTransition>
+      )}
+
+        {(!isDeep || showComplete) && (
         <View className="gap-3 pb-8">
           <PrimaryButton
             label="Voir le Fil créatif"
@@ -891,6 +1080,7 @@ export default function ReflectionScreen() {
             variant="ghost"
           />
         </View>
+        )}
     </ScreenContainer>
   );
 }

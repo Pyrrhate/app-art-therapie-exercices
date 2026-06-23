@@ -7,6 +7,10 @@ import {
 } from "./exercise/keywords";
 import { sanitizeAiDisplayText, sanitizeQuestions } from "./sanitizeAiText";
 import type { ArtisticTechnique, RitualState, SavedSession } from "./types";
+import type { ExperienceMode, IntegrationAnswers, Round1Data, SecondRoundTransitionAnswers } from "@/lib/experience/types";
+import { EMPTY_INTEGRATION_ANSWERS, EMPTY_SECOND_ROUND_ANSWERS } from "@/lib/experience/types";
+import type { MultimodalUserAnswers } from "@/lib/multimodal/types";
+import { EMPTY_USER_ANSWERS } from "@/lib/multimodal/types";
 import type { FilEntry } from "./fil/types";
 interface RitualStore extends RitualState {
   setImpulse: (impulse: string) => void;
@@ -29,6 +33,12 @@ interface RitualStore extends RitualState {
   restoreFromFilEntry: (entry: FilEntry) => void;
   /** @deprecated Utiliser restoreFromFilEntry */
   restoreFromSession: (session: SavedSession) => void;
+  setExperienceMode: (mode: ExperienceMode) => void;
+  setPreAnswers: (answers: MultimodalUserAnswers) => void;
+  setPostAnswers: (answers: IntegrationAnswers) => void;
+  setTransitionAnswers: (answers: SecondRoundTransitionAnswers) => void;
+  beginSecondRound: (snapshot: Round1Data) => void;
+  ensureSessionExerciseId: () => string;
   reset: () => void;
 }
 
@@ -44,6 +54,14 @@ const initialState: RitualState = {
   openQuestions: [],
   followUpExercise: null,
   writtenText: "",
+  experienceMode: "express",
+  preAnswers: { ...EMPTY_USER_ANSWERS },
+  postAnswers: { ...EMPTY_INTEGRATION_ANSWERS },
+  currentRound: 1,
+  isSecondRoundPrep: false,
+  round1Snapshot: null,
+  transitionAnswers: { ...EMPTY_SECOND_ROUND_ANSWERS },
+  sessionExerciseId: "",
 };
 
 export const useRitualStore = create<RitualStore>((set, get) => ({
@@ -70,6 +88,29 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
   },
   setPhotoUri: (photoUri) => set({ photoUri }),
   setWrittenText: (writtenText) => set({ writtenText }),
+  setExperienceMode: (experienceMode) => set({ experienceMode }),
+  setPreAnswers: (preAnswers) => set({ preAnswers }),
+  setPostAnswers: (postAnswers) => set({ postAnswers }),
+  setTransitionAnswers: (transitionAnswers) => set({ transitionAnswers }),
+  ensureSessionExerciseId: () => {
+    const existing = get().sessionExerciseId;
+    if (existing) return existing;
+    const id = `ex_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    set({ sessionExerciseId: id });
+    return id;
+  },
+  beginSecondRound: (snapshot) =>
+    set({
+      currentRound: 2,
+      isSecondRoundPrep: true,
+      round1Snapshot: snapshot,
+      transitionAnswers: { ...EMPTY_SECOND_ROUND_ANSWERS },
+      photoUri: null,
+      reflection: null,
+      openQuestions: [],
+      followUpExercise: null,
+      writtenText: "",
+    }),
   setReflection: (reflection, openQuestions, followUpExercise) =>
     set({
       reflection: sanitizeAiDisplayText(reflection),
