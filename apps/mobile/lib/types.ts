@@ -7,7 +7,6 @@ import type {
   SecondRoundTransitionAnswers,
   EvolutionTriggers,
 } from "@/lib/experience/types";
-import { EMPTY_SECOND_ROUND_ANSWERS } from "@/lib/experience/types";
 import type { CustomSessionConfig } from "@/lib/custom/types";
 import type { MultimodalUserAnswers } from "@/lib/multimodal/types";
 

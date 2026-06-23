@@ -156,7 +156,7 @@ export function buildRound1Snapshot(input: {
   postAnswers?: IntegrationAnswers;
   writtenText?: string;
   photoUri?: string | null;
-import type { Round1Data, Round1Snapshot } from "@/lib/experience/types";
+}): Round1Snapshot {
   return {
     exercise: input.exercise,
     reflection: input.reflection,
@@ -177,9 +177,9 @@ import type { Round1Data, Round1Snapshot } from "@/lib/experience/types";
 
 /** Convertit un snapshot vers le format historique Round1Data. */
 export function round1SnapshotToData(
-  snapshot: import("@/lib/experience/types").Round1Snapshot,
+  snapshot: Round1Snapshot,
   reflectionSource: "ai" | "fallback" = "ai"
-): import("@/lib/experience/types").Round1Data {
+): Round1Data {
   return {
     media: snapshot.photoUri ?? "",
     writtenText: snapshot.writtenText,

@@ -7,7 +7,7 @@ import {
 } from "./exercise/keywords";
 import { sanitizeAiDisplayText, sanitizeQuestions } from "./sanitizeAiText";
 import type { ArtisticTechnique, RitualState, SavedSession } from "./types";
-import type { ExperienceMode, IntegrationAnswers, Round1Snapshot, SecondRoundTransitionAnswers, EvolutionTriggers } from "@/lib/experience/types";
+import type { ExperienceMode, IntegrationAnswers, Round1Snapshot, SecondRoundTransitionAnswers } from "@/lib/experience/types";
 import { EMPTY_INTEGRATION_ANSWERS, EMPTY_SECOND_ROUND_ANSWERS } from "@/lib/experience/types";
 import type { MultimodalUserAnswers } from "@/lib/multimodal/types";
 import { EMPTY_USER_ANSWERS } from "@/lib/multimodal/types";
