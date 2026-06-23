@@ -48,6 +48,27 @@ export function secondRoundTransitionComplete(
   );
 }
 
+/** Signaux extraits du 1er tour pour guider l'augmentation du 2e. */
+export interface EvolutionTriggers {
+  blockages?: string[];
+  dominantThemes?: string[];
+  deepeningGoals?: string[];
+  emotionalHighlights?: string[];
+  rawSummary?: string;
+}
+
+/** Instantané figé du 1er tour avant le 2e (données préservées). */
+export interface Round1Snapshot {
+  exercise: string;
+  reflection: string;
+  openQuestions: string[];
+  preAnswers?: MultimodalUserAnswers;
+  postAnswers?: IntegrationAnswers;
+  writtenText?: string;
+  photoUri?: string | null;
+  evolutionTriggers: EvolutionTriggers;
+}
+
 export interface Round1Data {
   media: string;
   writtenText?: string;
@@ -103,7 +124,7 @@ export interface DeepSessionLog {
     durationMinutes: RitualDuration;
   };
   /** Structure multi-tours (tour 1 seul ou tour 1 + tour 2). */
-  sessionData: SessionData;
+  sessionData?: SessionData;
   /** @deprecated Conservé pour rétrocompatibilité des journaux existants. */
   preAnalysis?: MultimodalUserAnswers;
   aiReflection?: {

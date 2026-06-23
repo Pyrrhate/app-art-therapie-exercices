@@ -12,19 +12,19 @@ const QUESTIONS: {
 }[] = [
   {
     key: "gestureChange",
-    label: "Évolution du geste",
+    label: "Changement de geste",
     placeholder:
-      "Qu'est-ce qui a changé dans ton geste ou ton approche par rapport au premier essai ?",
+      "Qu'aimeriez-vous faire différemment dans ce second passage ?",
   },
   {
     key: "newIntention",
     label: "Nouvelle intention",
-    placeholder: "Quelle nouvelle intention as-tu mise dans cette création ?",
+    placeholder: "Quelle intention portez-vous pour ce 2e tour ?",
   },
   {
     key: "physicalState",
     label: "Ressenti corporel",
-    placeholder: "Comment te sens-tu physiquement maintenant ?",
+    placeholder: "Comment se sent votre corps en ce moment ?",
   },
 ];
 
@@ -32,15 +32,17 @@ interface SecondRoundTransitionStepProps {
   answers: SecondRoundTransitionAnswers;
   onChange: (answers: SecondRoundTransitionAnswers) => void;
   onContinue: () => void;
+  loading?: boolean;
 }
 
 export function SecondRoundTransitionStep({
   answers,
   onChange,
   onContinue,
+  loading = false,
 }: SecondRoundTransitionStepProps) {
   const isDark = useIsDark();
-  const inputClass = `border rounded-2xl px-4 py-3 text-base min-h-[80px] ${
+  const inputClass = `border rounded-2xl px-4 py-3 text-base min-h-[72px] ${
     isDark
       ? "border-sand-600 bg-sand-800 text-sand-100"
       : "border-sand-200 bg-white text-sand-800"
@@ -49,8 +51,8 @@ export function SecondRoundTransitionStep({
   return (
     <View accessibilityRole="form" className="gap-5">
       <Text className={`text-base leading-7 ${textSecondary(isDark)}`}>
-        Avant d&apos;analyser votre seconde création, trois questions flash pour
-        saisir ce qui a évolué entre les deux essais.
+        Trois questions flash avant de reprendre la création — vos réponses
+        nourriront l&apos;exercice augmenté et l&apos;analyse du 2e tour.
       </Text>
 
       {QUESTIONS.map((q) => (
@@ -70,12 +72,11 @@ export function SecondRoundTransitionStep({
           />
         </View>
       ))}
-
       <View className="mt-2">
         <PrimaryButton
-          label="Continuer vers la capture"
+          label={loading ? "Préparation de l'exercice…" : "Commencer le 2e tour"}
           onPress={onContinue}
-          disabled={!secondRoundTransitionComplete(answers)}
+          disabled={!secondRoundTransitionComplete(answers) || loading}
         />
       </View>
     </View>

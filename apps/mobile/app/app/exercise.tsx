@@ -5,6 +5,7 @@ import { ROUTES } from "@/lib/routes";
 import { DurationPicker } from "@/components/DurationPicker";
 import { ExerciseKeywordChips } from "@/components/exercise/ExerciseKeywordChips";
 import { GentleTimer } from "@/components/GentleTimer";
+import { AugmentedExerciseBanner } from "@/components/experience";
 import { ContentCard } from "@/components/ui/Card";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -23,6 +24,9 @@ export default function ExerciseScreen() {
   const technique = useRitualStore((s) => s.technique);
   const exerciseSource = useRitualStore((s) => s.exerciseSource);
   const exerciseKeywords = useRitualStore((s) => s.exerciseKeywords);
+  const currentRound = useRitualStore((s) => s.currentRound);
+  const isExerciseAugmented = useRitualStore((s) => s.isExerciseAugmented);
+  const evolutionTriggers = useRitualStore((s) => s.evolutionTriggers);
   const setDurationMinutes = useRitualStore((s) => s.setDurationMinutes);
   const [completionSound, setCompletionSound] = useState<TimerSoundId>("gong");
   const [ready, setReady] = useState(false);
@@ -76,6 +80,10 @@ export default function ExerciseScreen() {
       <RitualDraftBanner className="mb-3" />
 
       <RitualProgressBar current="exercise" />
+
+      {currentRound === 2 && isExerciseAugmented && (
+        <AugmentedExerciseBanner triggers={evolutionTriggers} />
+      )}
 
       {exerciseSource === "fallback" && (
         <View className="bg-sage-50 rounded-2xl border border-sage-100 px-3 py-2 mb-3">

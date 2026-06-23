@@ -61,3 +61,29 @@ Il n'y a pas de bon ou mauvais résultat — seulement votre expression du momen
     keywords: deriveExerciseKeywords(impulse, technique, exercise),
   };
 }
+
+/** Exercice augmenté local quand l'API est indisponible (2e tour). */
+export function getFallbackAugmentedExercise(
+  impulse: string,
+  technique: ArtisticTechnique,
+  augmentationContext: string,
+  durationMinutes?: number
+): ExerciseResponse {
+  const base = getFallbackExercise(impulse, technique, durationMinutes);
+  const themes = augmentationContext
+    .split("\n")
+    .filter((l) => l.includes("Thèmes") || l.includes("Émotion") || l.includes("Intention"))
+    .slice(0, 2)
+    .join(" ");
+
+  const augmented = `${base.exercise}
+
+Pour ce second passage, accueillez ce qui a émergé lors du premier tour${themes ? ` (${themes})` : ""}. Variez légèrement votre geste : changez d'échelle, de rythme ou de matière, sans viser la perfection — laissez l'impulsion guider une nouvelle exploration.`;
+
+  return {
+    exercise: augmented,
+    durationMinutes: base.durationMinutes,
+    source: "fallback",
+    keywords: deriveExerciseKeywords(impulse, technique, augmented),
+  };
+}

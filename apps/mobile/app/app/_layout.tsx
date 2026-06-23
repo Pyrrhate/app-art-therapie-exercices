@@ -12,6 +12,10 @@ export default function AppStackLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="ritual" />
+      <Stack.Screen
+        name="custom"
+        options={{ title: "Mode Sur-Mesure" }}
+      />
       <Stack.Screen name="ping-pong/index" />
       <Stack.Screen name="nuance-finder/index" />
       <Stack.Screen

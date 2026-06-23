@@ -183,7 +183,8 @@ export class HuggingFaceProvider implements AIProvider {
       const prompt = buildExercisePrompt(
         input.impulse,
         input.technique,
-        preferredDuration ?? 15
+        preferredDuration ?? 15,
+        input.augmentationContext
       );
       const raw = await this.callTextModel(prompt);
       const parsed = parseExerciseFromAi(raw, preferredDuration);

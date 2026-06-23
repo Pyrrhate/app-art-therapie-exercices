@@ -5,6 +5,8 @@ export interface ExerciseRequest {
   technique: import("@art-therapie/shared").ArtisticTechnique;
   /** Durée choisie par l'utilisateur·rice (prioritaire sur la suggestion IA). */
   durationMinutes?: number;
+  /** Prompt d'augmentation pour le 2e tour (remplace le prompt standard). */
+  augmentationContext?: string;
 }
 
 export interface ExerciseResponse {

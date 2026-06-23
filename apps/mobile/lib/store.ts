@@ -7,11 +7,14 @@ import {
 } from "./exercise/keywords";
 import { sanitizeAiDisplayText, sanitizeQuestions } from "./sanitizeAiText";
 import type { ArtisticTechnique, RitualState, SavedSession } from "./types";
-import type { ExperienceMode, IntegrationAnswers, Round1Data, SecondRoundTransitionAnswers } from "@/lib/experience/types";
+import type { ExperienceMode, IntegrationAnswers, Round1Snapshot, SecondRoundTransitionAnswers, EvolutionTriggers } from "@/lib/experience/types";
 import { EMPTY_INTEGRATION_ANSWERS, EMPTY_SECOND_ROUND_ANSWERS } from "@/lib/experience/types";
 import type { MultimodalUserAnswers } from "@/lib/multimodal/types";
 import { EMPTY_USER_ANSWERS } from "@/lib/multimodal/types";
+import type { CustomSessionConfig } from "@/lib/custom/types";
+import { EMPTY_CUSTOM_SESSION_CONFIG } from "@/lib/custom/types";
 import type { FilEntry } from "./fil/types";
+
 interface RitualStore extends RitualState {
   setImpulse: (impulse: string) => void;
   setTechnique: (technique: ArtisticTechnique) => void;
@@ -37,8 +40,18 @@ interface RitualStore extends RitualState {
   setPreAnswers: (answers: MultimodalUserAnswers) => void;
   setPostAnswers: (answers: IntegrationAnswers) => void;
   setTransitionAnswers: (answers: SecondRoundTransitionAnswers) => void;
-  beginSecondRound: (snapshot: Round1Data) => void;
+  setRound1Snapshot: (snapshot: Round1Snapshot) => void;
+  startSecondRound: (snapshot: Round1Snapshot) => void;
+  /** @deprecated Utiliser startSecondRound */
+  beginSecondRound: (snapshot: Round1Snapshot) => void;
+  applyAugmentedExercise: (
+    exercise: string,
+    source: "ai" | "fallback",
+    keywords?: string[]
+  ) => void;
+  completeSecondRoundPrep: () => void;
   ensureSessionExerciseId: () => string;
+  setCustomSessionConfig: (patch: Partial<CustomSessionConfig>) => void;
   reset: () => void;
 }
 
@@ -61,7 +74,10 @@ const initialState: RitualState = {
   isSecondRoundPrep: false,
   round1Snapshot: null,
   transitionAnswers: { ...EMPTY_SECOND_ROUND_ANSWERS },
+  evolutionTriggers: null,
+  isExerciseAugmented: false,
   sessionExerciseId: "",
+  customSessionConfig: { ...EMPTY_CUSTOM_SESSION_CONFIG },
 };
 
 export const useRitualStore = create<RitualStore>((set, get) => ({
@@ -99,18 +115,47 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
     set({ sessionExerciseId: id });
     return id;
   },
-  beginSecondRound: (snapshot) =>
+  beginSecondRound: (snapshot) => get().startSecondRound(snapshot),
+  setRound1Snapshot: (round1Snapshot) =>
+    set({
+      round1Snapshot,
+      evolutionTriggers: round1Snapshot.evolutionTriggers,
+    }),
+  startSecondRound: (snapshot) =>
     set({
       currentRound: 2,
       isSecondRoundPrep: true,
       round1Snapshot: snapshot,
+      evolutionTriggers: snapshot.evolutionTriggers,
       transitionAnswers: { ...EMPTY_SECOND_ROUND_ANSWERS },
+      isExerciseAugmented: false,
       photoUri: null,
       reflection: null,
       openQuestions: [],
       followUpExercise: null,
       writtenText: "",
     }),
+  applyAugmentedExercise: (exercise, source, keywords) => {
+    const state = get();
+    const exerciseText = sanitizeAiDisplayText(exercise);
+    set({
+      exercise: exerciseText,
+      exerciseKeywords: resolveExerciseKeywords(
+        state.impulse,
+        state.technique,
+        exerciseText,
+        keywords
+      ),
+      exerciseSource: source,
+      isExerciseAugmented: true,
+      isSecondRoundPrep: false,
+    });
+  },
+  completeSecondRoundPrep: () => set({ isSecondRoundPrep: false }),
+  setCustomSessionConfig: (patch) =>
+    set((state) => ({
+      customSessionConfig: { ...state.customSessionConfig, ...patch },
+    })),
   setReflection: (reflection, openQuestions, followUpExercise) =>
     set({
       reflection: sanitizeAiDisplayText(reflection),

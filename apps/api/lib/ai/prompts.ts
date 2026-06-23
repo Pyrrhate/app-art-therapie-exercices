@@ -5,8 +5,16 @@ import type { ArtisticTechnique } from "../types";
 export function buildExercisePrompt(
   impulse: string,
   technique: ArtisticTechnique,
-  durationMinutes = 15
+  durationMinutes = 15,
+  augmentationContext?: string
 ): string {
+  if (augmentationContext?.trim()) {
+    const preferred = durationMinutes;
+    return `${augmentationContext.trim()}
+
+Durée prévue : ${preferred} minutes (ne pas la modifier dans ta réponse JSON).`;
+  }
+
   const label = TECHNIQUE_LABELS[technique];
   return `Tu es un·e art-thérapeute bienveillant·e. Rédige un exercice créatif court (120 mots max) en français.
 

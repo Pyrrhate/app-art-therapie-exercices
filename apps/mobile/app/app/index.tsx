@@ -149,12 +149,20 @@ export default function WelcomeScreen() {
         </AccentCard>
       )}
 
-      <PrimaryButton
-        label="Commencer un exercice"
-        onPress={() => router.push(ROUTES.ritual)}
-        showArrow
-        align="stretch"
-      />
+      <View className="gap-3">
+        <PrimaryButton
+          label="Commencer un exercice"
+          onPress={() => router.push(ROUTES.ritual)}
+          showArrow
+          align="stretch"
+        />
+        <PrimaryButton
+          label="Mode Sur-Mesure"
+          onPress={() => router.push(ROUTES.custom)}
+          variant="secondary"
+          align="stretch"
+        />
+      </View>
 
       <View className={isWide ? "mt-8 mb-2" : "mt-5 mb-1"}>
         {isWide ? (

@@ -1,5 +1,5 @@
 import { getApiUrl } from "./config";
-import { getFallbackExercise } from "./ritual/fallback";
+import { getFallbackExercise, getFallbackAugmentedExercise } from "./ritual/fallback";
 import type {
   ArtisticTechnique,
   ExerciseResponse,
@@ -87,16 +87,51 @@ function isRecoverableApiError(error: unknown): boolean {
 export async function generateExercise(
   impulse: string,
   technique: ArtisticTechnique,
+  durationMinutes?: number,
+  augmentationContext?: string
+): Promise<ExerciseResponse> {
+  try {
+    return await request<ExerciseResponse>("/api/exercise/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        impulse,
+        technique,
+        durationMinutes,
+        ...(augmentationContext ? { augmentationContext } : {}),
+      }),
+    });
+  } catch (error) {
+    if (isRecoverableApiError(error)) {
+      return getFallbackExercise(impulse, technique, durationMinutes);
+    }
+    throw error;
+  }
+}
+
+export async function generateAugmentedExercise(
+  impulse: string,
+  technique: ArtisticTechnique,
+  augmentationContext: string,
   durationMinutes?: number
 ): Promise<ExerciseResponse> {
   try {
     return await request<ExerciseResponse>("/api/exercise/generate", {
       method: "POST",
-      body: JSON.stringify({ impulse, technique, durationMinutes }),
+      body: JSON.stringify({
+        impulse,
+        technique,
+        durationMinutes,
+        augmentationContext,
+      }),
     });
   } catch (error) {
     if (isRecoverableApiError(error)) {
-      return getFallbackExercise(impulse, technique, durationMinutes);
+      return getFallbackAugmentedExercise(
+        impulse,
+        technique,
+        augmentationContext,
+        durationMinutes
+      );
     }
     throw error;
   }

@@ -4,6 +4,7 @@ export const APP_BASE = "/app";
 export const ROUTES = {
   home: APP_BASE,
   ritual: `${APP_BASE}/ritual`,
+  custom: `${APP_BASE}/custom`,
   exercise: `${APP_BASE}/exercise`,
   reflection: `${APP_BASE}/reflection`,
   settings: `${APP_BASE}/settings`,

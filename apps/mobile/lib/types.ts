@@ -3,13 +3,16 @@ import type { RitualDuration } from "@art-therapie/shared";
 import type {
   ExperienceMode,
   IntegrationAnswers,
-  Round1Data,
+  Round1Snapshot,
   SecondRoundTransitionAnswers,
+  EvolutionTriggers,
 } from "@/lib/experience/types";
 import { EMPTY_SECOND_ROUND_ANSWERS } from "@/lib/experience/types";
+import type { CustomSessionConfig } from "@/lib/custom/types";
 import type { MultimodalUserAnswers } from "@/lib/multimodal/types";
 
 export type { ArtisticTechnique } from "@art-therapie/shared";
+export type { CustomSessionConfig };
 
 export interface ExerciseResponse {
   exercise: string;
@@ -58,7 +61,10 @@ export interface RitualState {
   postAnswers: IntegrationAnswers;
   currentRound: 1 | 2;
   isSecondRoundPrep: boolean;
-  round1Snapshot: Round1Data | null;
+  round1Snapshot: Round1Snapshot | null;
   transitionAnswers: SecondRoundTransitionAnswers;
+  evolutionTriggers: EvolutionTriggers | null;
+  isExerciseAugmented: boolean;
   sessionExerciseId: string;
+  customSessionConfig: CustomSessionConfig;
 }

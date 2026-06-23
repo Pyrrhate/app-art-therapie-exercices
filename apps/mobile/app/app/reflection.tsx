@@ -14,8 +14,10 @@ import { InlineNotice } from "@/components/InlineNotice";
 import { ZenWaitIndicator } from "@/components/ZenWaitIndicator";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
 import {
+  DeepModeGatewayPrompt,
   IntegrationQuestionnaireStep,
   integrationAnswersComplete,
+  SecondRoundTransitionStep,
   WorkflowStepTransition,
 } from "@/components/experience";
 import {
@@ -26,7 +28,7 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
-import { analyzeArtwork, ApiError, transcribeHandwriting } from "@/lib/api";
+import { analyzeArtwork, ApiError, generateAugmentedExercise, transcribeHandwriting } from "@/lib/api";
 import {
   extractImageFileFromDataTransfer,
   formatImageSize,
@@ -53,6 +55,9 @@ import { useRitualStore } from "@/lib/store";
 import { getTechniqueLabel, isAiAnalysisSupported } from "@/constants";
 import { getLocalReflection } from "@/lib/reflection/fallback";
 import { mergeWrittenTextWithPreAnalysis } from "@/lib/experience/formatPreAnalysisContext";
+import { mergeWrittenTextWithSecondRound } from "@/lib/experience/formatSecondRoundContext";
+import { buildRound1Snapshot } from "@/lib/experience/extractEvolutionTriggers";
+import { buildAugmentedExerciseRequest } from "@/lib/experience/generateAugmentedExercisePrompt";
 import {
   initialReflectionPhase,
   type ReflectionWorkflowPhase,
@@ -62,6 +67,7 @@ import { ROUTES } from "@/lib/routes";
 import {
   createSessionLogId,
   saveSessionLog,
+  buildSessionDataPayload,
 } from "@/lib/sessionLog/storage";
 import {
   discardRitualDraft,
@@ -121,11 +127,21 @@ export default function ReflectionScreen() {
     experienceMode,
     preAnswers,
     postAnswers,
+    currentRound,
+    isSecondRoundPrep,
+    round1Snapshot,
+    transitionAnswers,
     setPhotoUri,
     setWrittenText,
     setReflection,
     setPreAnswers,
     setPostAnswers,
+    setExperienceMode,
+    setTransitionAnswers,
+    beginSecondRound,
+    applyAugmentedExercise,
+    completeSecondRoundPrep,
+    ensureSessionExerciseId,
     startFollowUpExercise,
     reset,
   } = ritual;
@@ -150,6 +166,7 @@ export default function ReflectionScreen() {
     "ai" | "fallback" | null
   >(null);
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [loadingAugmentedExercise, setLoadingAugmentedExercise] = useState(false);
   const [notice, setNotice] = useState<{
     type: "error" | "success" | "info";
     message: string;
@@ -171,6 +188,10 @@ export default function ReflectionScreen() {
   }, [finishWork]);
 
   useEffect(() => () => cancelWork(), [cancelWork]);
+
+  useEffect(() => {
+    ensureSessionExerciseId();
+  }, [ensureSessionExerciseId]);
 
   useEffect(() => {
     void persistRitualDraft("reflection");
@@ -418,11 +439,18 @@ export default function ReflectionScreen() {
     const hasText = writtenText.trim().length >= 10;
 
     if (!supportsAiAnalysis) {
-      const mergedText = isDeep
-        ? mergeWrittenTextWithPreAnalysis(writtenText, preAnswers)
-        : hasText
-          ? writtenText.trim()
-          : undefined;
+      const mergedText =
+        currentRound === 2 && round1Snapshot
+          ? mergeWrittenTextWithSecondRound(
+              writtenText,
+              round1Snapshot,
+              transitionAnswers
+            )
+          : isDeep
+            ? mergeWrittenTextWithPreAnalysis(writtenText, preAnswers)
+            : hasText
+              ? writtenText.trim()
+              : undefined;
       const local = getLocalReflection({
         impulse,
         exercise,
@@ -485,11 +513,18 @@ export default function ReflectionScreen() {
         setPhotoSizeLabel(formatImageSize(getImageByteSize(imageBase64)));
       }
 
-      const textForApi = isDeep
-        ? mergeWrittenTextWithPreAnalysis(writtenText, preAnswers)
-        : hasText
-          ? writtenText.trim()
-          : undefined;
+      const textForApi =
+        currentRound === 2 && round1Snapshot
+          ? mergeWrittenTextWithSecondRound(
+              writtenText,
+              round1Snapshot,
+              transitionAnswers
+            )
+          : isDeep
+            ? mergeWrittenTextWithPreAnalysis(writtenText, preAnswers)
+            : hasText
+              ? writtenText.trim()
+              : undefined;
 
       const result = await withTimeout(
         analyzeArtwork({
@@ -607,7 +642,10 @@ export default function ReflectionScreen() {
 
       await recordFilEntry({
         source: "ritual",
-        summary: impulse || "Rituel créatif",
+        summary:
+          currentRound === 2
+            ? `${impulse || "Rituel créatif"} · 2e tour`
+            : impulse || "Rituel créatif",
         detail: reflection.slice(0, 280),
         metadata: {
           impulse,
@@ -638,6 +676,8 @@ export default function ReflectionScreen() {
     followUpExercise,
     writtenText,
     isDeep,
+    currentRound,
+    round1Snapshot,
   ]);
 
   function handleGoHome() {
@@ -678,9 +718,47 @@ export default function ReflectionScreen() {
       return;
     }
 
+    const logId = createSessionLogId();
+    const exerciseId = ensureSessionExerciseId();
+    const round1Media =
+      round1Snapshot?.photoUri ?? (photoUri && currentRound === 1 ? photoUri : "");
+    const round1Analysis =
+      round1Snapshot?.reflection ?? (currentRound === 1 ? reflection : "");
+    const round1OpenQuestions =
+      round1Snapshot?.openQuestions ?? (currentRound === 1 ? openQuestions : []);
+
     try {
+      const sessionData = buildSessionDataPayload(
+        {
+          exerciseId,
+          round1: {
+            media: round1Media,
+            preAnswers: round1Snapshot?.preAnswers ?? preAnswers,
+            aiAnalysis: round1Analysis,
+            postAnswers:
+              currentRound === 1 ? postAnswers : round1Snapshot?.postAnswers,
+            writtenText:
+              round1Snapshot?.writtenText ??
+              (currentRound === 1 ? writtenText.trim() || undefined : undefined),
+            openQuestions: round1Snapshot?.openQuestions ?? round1OpenQuestions,
+          },
+          ...(currentRound === 2 && round1Snapshot
+            ? {
+                round2: {
+                  media: photoUri ?? "",
+                  transitionAnswers,
+                  aiAnalysis: reflection,
+                  writtenText: writtenText.trim() || undefined,
+                  openQuestions,
+                },
+              }
+            : {}),
+        },
+        logId
+      );
+
       await saveSessionLog({
-        id: createSessionLogId(),
+        id: logId,
         createdAt: new Date().toISOString(),
         mode: "deep",
         exercise: {
@@ -690,16 +768,10 @@ export default function ReflectionScreen() {
           exercise,
           durationMinutes,
         },
-        preAnalysis: preAnswers,
-        aiReflection: {
-          reflection,
-          openQuestions,
-          source: reflectionSource ?? "fallback",
-          followUpExercise,
-        },
+        sessionData,
         postIntegration: postAnswers,
         writtenText: writtenText.trim() || undefined,
-        hasPhoto: Boolean(photoUri),
+        hasPhoto: Boolean(photoUri || round1Snapshot?.photoUri),
       });
       setWorkflowPhase("complete");
       setNotice({
@@ -731,19 +803,127 @@ export default function ReflectionScreen() {
     }
   }
 
+  function handleUpgradeToDeep() {
+    setExperienceMode("deep");
+    setWorkflowPhase("pre_analysis");
+    setNotice({
+      type: "info",
+      message: "Mode approfondi activé — trois questions d'ancrage avant l'analyse.",
+    });
+  }
+
+  function handleStartSecondRound() {
+    if (!reflection || !exercise) return;
+    void (async () => {
+      let photo = photoUri;
+      try {
+        if (photoUri) {
+          photo = await resolvePhotoDataUrl();
+        }
+      } catch {
+        /* conserve l'URI d'origine */
+      }
+
+      const snapshot = buildRound1Snapshot({
+        exercise,
+        reflection,
+        openQuestions,
+        preAnswers: isDeep ? { ...preAnswers } : undefined,
+        postAnswers:
+          isDeep && integrationAnswersComplete(postAnswers)
+            ? { ...postAnswers }
+            : undefined,
+        writtenText: writtenText.trim() || undefined,
+        photoUri: photo,
+      });
+
+      beginSecondRound(snapshot);
+      setWorkflowPhase("second_round_transition");
+      setPhotoDataUrl(null);
+      setPhotoSizeLabel(null);
+      setReflectionSource(null);
+      filRecordedRef.current = false;
+      setNotice({
+        type: "info",
+        message:
+          "2e tour — répondez aux questions flash pour préparer un exercice adapté.",
+      });
+    })();
+  }
+
+  async function handleContinueSecondRoundPrep() {
+    if (!technique || !round1Snapshot) return;
+
+    setLoadingAugmentedExercise(true);
+    setNotice({
+      type: "info",
+      message: "Génération de votre exercice augmenté…",
+    });
+
+    try {
+      const request = buildAugmentedExerciseRequest(
+        impulse,
+        technique,
+        round1Snapshot,
+        durationMinutes
+      );
+      const result = await generateAugmentedExercise(
+        impulse,
+        technique,
+        request.augmentationContext,
+        durationMinutes
+      );
+      applyAugmentedExercise(result.exercise, result.source, result.keywords);
+      completeSecondRoundPrep();
+      setNotice({
+        type: "success",
+        message:
+          result.source === "ai"
+            ? "Exercice augmenté prêt — lancez votre 2e tour."
+            : "Exercice adapté localement — lancez votre 2e tour.",
+      });
+      router.push(ROUTES.exercise);
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Impossible de préparer l'exercice augmenté. Réessayez.";
+      setNotice({ type: "error", message });
+    } finally {
+      setLoadingAugmentedExercise(false);
+    }
+  }
+
   const showPreAnalysis = isDeep && workflowPhase === "pre_analysis";
+  const showSecondRoundTransition =
+    isSecondRoundPrep && workflowPhase === "second_round_transition";
   const showCapture =
-    !isDeep || workflowPhase === "capture";
+    workflowPhase === "capture" && !showSecondRoundTransition;
   const showPostIntegration = isDeep && workflowPhase === "post_integration";
   const showComplete = isDeep && workflowPhase === "complete";
   const showDeepIntegrationCta =
-    isDeep && workflowPhase === "capture" && Boolean(reflection);
+    isDeep &&
+    workflowPhase === "capture" &&
+    Boolean(reflection) &&
+    !isSecondRoundPrep;
+  const showDeepGateway =
+    !isDeep &&
+    currentRound === 1 &&
+    workflowPhase === "capture" &&
+    !reflection &&
+    !isSecondRoundPrep;
+  const showSecondRoundCta =
+    Boolean(reflection) &&
+    currentRound === 1 &&
+    !isSecondRoundPrep &&
+    workflowPhase === "capture";
 
   const canAnalyze = supportsAiAnalysis
     ? Boolean(photoUri) || writtenText.trim().length >= 10
     : true;
   const previewUri = photoDataUrl ?? photoUri;
-  const busy = preparingPhoto || loadingReflection || ocrLoading;
+  const busy =
+    preparingPhoto || loadingReflection || ocrLoading || loadingAugmentedExercise;
   busyRef.current = busy;
 
   return (
@@ -773,6 +953,7 @@ export default function ReflectionScreen() {
               {getTechniqueLabel(technique)}
               {durationMinutes ? ` · ${durationMinutes} min` : ""}
               {isDeep ? " · parcours profond" : " · parcours express"}
+              {currentRound === 2 ? " · 2e tour" : ""}
               {!supportsAiAnalysis ? " · sans analyse IA" : ""}
             </Text>
           )}
@@ -825,8 +1006,38 @@ export default function ReflectionScreen() {
         </WorkflowStepTransition>
       )}
 
+      {showSecondRoundTransition && (
+        <WorkflowStepTransition stepKey="second_round_transition">
+          <View className="mb-2">
+            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
+              Réitération rapide · 2e tour
+            </Text>
+            <Text className="text-sand-700 text-base font-medium mb-4">
+              Refaites l&apos;exercice, puis ancrez ce qui a changé
+            </Text>
+            <SecondRoundTransitionStep
+              answers={transitionAnswers}
+              onChange={setTransitionAnswers}
+              onContinue={() => void handleContinueSecondRoundPrep()}
+              loading={loadingAugmentedExercise}
+            />
+          </View>
+        </WorkflowStepTransition>
+      )}
+
       {showCapture && (
-        <WorkflowStepTransition stepKey="capture">
+        <WorkflowStepTransition stepKey={`capture_${currentRound}`}>
+      {currentRound === 2 && (
+        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-3 mb-4">
+          <Text className="text-sage-700 text-sm leading-6">
+            <Text className="font-medium">2e tour — exercice augmenté.</Text>{" "}
+            Partagez votre nouvelle création pour une analyse tenant compte de
+            votre premier passage et de vos réponses flash.
+          </Text>
+        </View>
+      )}
+
+      {showDeepGateway && <DeepModeGatewayPrompt onUpgrade={handleUpgradeToDeep} />}
       {isWriting && (
         <View className="mb-6">
           <Text className="text-sand-700 text-base font-medium mb-2">
@@ -1013,6 +1224,16 @@ export default function ReflectionScreen() {
             <PrimaryButton
               label="Commencer cet exercice"
               onPress={handleStartFollowUp}
+              variant="secondary"
+            />
+          </View>
+        )}
+
+        {showSecondRoundCta && (
+          <View className="mb-6">
+            <PrimaryButton
+              label="Faire un 2nd tour (Réitération rapide)"
+              onPress={handleStartSecondRound}
               variant="secondary"
             />
           </View>
