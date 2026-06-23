@@ -21,7 +21,6 @@ import { useRitualStore } from "@/lib/store";
 
 type ModuleDef = {
   title: string;
-  shortTitle: string;
   icon: ModuleIconId;
   description: string;
   route: "/ping-pong" | "/color-journey" | "/nuance-finder" | "/emotion-explorer";
@@ -30,28 +29,24 @@ type ModuleDef = {
 const MODULES: ModuleDef[] = [
   {
     title: "Ping-Pong créatif",
-    shortTitle: "Ping-Pong",
     icon: "ping-pong",
     description: "Amorce rapide — quelques mots, puis l'exercice.",
     route: "/ping-pong",
   },
   {
     title: "Palette intérieure",
-    shortTitle: "Palette",
     icon: "color-journey",
     description: "Trois teintes sur la roue chromatique, puis créer.",
     route: "/color-journey",
   },
   {
     title: "Explorateur émotionnel",
-    shortTitle: "Émotions",
     icon: "emotion-explorer",
     description: "Quatre zones de ressenti, un mot précis, puis créer.",
     route: "/emotion-explorer",
   },
   {
     title: "Chercheur de Nuances",
-    shortTitle: "Nuances",
     icon: "nuance-finder",
     description: "Puzzle couleur sans IA — se détendre avant de créer.",
     route: "/nuance-finder",
@@ -174,12 +169,12 @@ export default function WelcomeScreen() {
           </Text>
         )}
 
-        <View className="flex-row flex-wrap gap-2">
-          {MODULES.map(({ shortTitle, ...mod }) =>
+        <View className="gap-3">
+          {MODULES.map((mod) =>
             isWide ? (
               <ModuleCard key={mod.route} {...mod} />
             ) : (
-              <ModuleQuickTile key={mod.route} shortTitle={shortTitle} {...mod} />
+              <ModuleQuickTile key={mod.route} {...mod} />
             )
           )}
         </View>
