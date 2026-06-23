@@ -1,15 +1,15 @@
 import { useCallback, useState } from "react";
-import { router } from "expo-router";
+import { Text } from "react-native";
+import { router, useFocusEffect } from "expo-router";
 import { AccentCard } from "@/components/ui/Card";
 import { PrimaryButton } from "@/components/ui/Button";
 import { getTechniqueLabel } from "@/constants";
 import { hydrateRitualFromDraft } from "@/lib/ritualPersistence";
 import { getRitualDraft, type RitualDraft } from "@/lib/ritualDraft";
+import { ROUTES } from "@/lib/routes";
 import { textMuted, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 import { useRitualStore } from "@/lib/store";
-import { Text } from "react-native";
-import { useFocusEffect } from "expo-router";
 
 interface RitualDraftBannerProps {
   className?: string;
@@ -29,7 +29,7 @@ export function RitualDraftBanner({ className = "mb-4" }: RitualDraftBannerProps
 
   function handleContinue() {
     hydrateRitualFromDraft(draft!);
-    router.push(draft!.step === "reflection" ? "/reflection" : "/exercise");
+    router.push(draft!.step === "reflection" ? ROUTES.reflection : ROUTES.exercise);
   }
 
   function handleDismiss() {

@@ -1,6 +1,12 @@
 import { ScrollViewStyleReset } from "expo-router/html";
 import { type PropsWithChildren } from "react";
 
+const DEFAULT_TITLE =
+  "Générateur d'Exercices d'Art-Thérapie & Rituels Créatifs | Lâcher-Prise";
+
+const DEFAULT_DESCRIPTION =
+  "Besoin de décompresser ou de libérer votre créativité ? Découvrez notre générateur gratuit d'exercices d'art-thérapie et de rituels de dessin pour retrouver le calme et le bien-être.";
+
 export default function Root({ children }: PropsWithChildren) {
   return (
     <html lang="fr" style={{ height: "100%" }}>
@@ -11,11 +17,8 @@ export default function Root({ children }: PropsWithChildren) {
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
-        <meta
-          name="description"
-          content="Art Thérapie — rituels créatifs guidés par l'IA, en douceur."
-        />
-        <title>Art Thérapie</title>
+        <meta name="description" content={DEFAULT_DESCRIPTION} />
+        <title>{DEFAULT_TITLE}</title>
         <ScrollViewStyleReset />
       </head>
       <body style={{ height: "100%", margin: 0, backgroundColor: "#FAF7F4" }}>

@@ -1,5 +1,6 @@
 import { InteractionManager } from "react-native";
 import { router } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 import {
   type ColorForImpulse,
   resolveColorLabel,
@@ -18,7 +19,7 @@ export function startRitualFromImpulse(
   store.reset();
   store.setImpulse(impulse.trim());
   store.setTechnique(technique);
-  router.push("/ritual");
+  router.push(ROUTES.ritual);
 }
 
 /** Amorce → exercice direct (technique et durée déjà choisies ou par défaut). */
@@ -63,7 +64,7 @@ export async function startExerciseFromImpulse(
 
   await new Promise<void>((resolve) => {
     InteractionManager.runAfterInteractions(() => {
-      router.replace("/exercise");
+      router.replace(ROUTES.exercise);
       resolve();
     });
   });

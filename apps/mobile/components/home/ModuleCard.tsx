@@ -5,11 +5,13 @@ import { ModuleIcon, type ModuleIconId } from "@/components/ui/ModuleIcon";
 import { textMuted, textPrimary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
+import { type ModuleAmorceRoute } from "@/lib/routes";
+
 interface ModuleCardProps {
   title: string;
   description: string;
   icon: ModuleIconId;
-  route: "/ping-pong" | "/color-journey" | "/nuance-finder" | "/emotion-explorer";
+  route: ModuleAmorceRoute;
 }
 
 export function ModuleCard({ title, description, icon, route }: ModuleCardProps) {

@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { navigateHome } from "@/lib/navigation";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
@@ -126,7 +127,7 @@ export default function PingPongScreen() {
         <View className="px-6">
           <ScreenNavBar
             backLabel="← Accueil"
-            onBack={() => router.replace("/")}
+            onBack={navigateHome}
           />
         </View>
 

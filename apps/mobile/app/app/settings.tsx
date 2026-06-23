@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Platform, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 import { SupportButton } from "@/components/SupportButton";
 import { ThemePicker } from "@/components/ThemePicker";
 import { TimerSoundPicker } from "@/components/TimerSoundPicker";
@@ -214,7 +215,7 @@ export default function SettingsScreen() {
         </View>
 
         <Pressable
-          onPress={() => router.push("/fil")}
+          onPress={() => router.push(ROUTES.fil)}
           className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
         >
           <View>
@@ -229,7 +230,7 @@ export default function SettingsScreen() {
         </Pressable>
 
         <Pressable
-          onPress={() => router.push("/privacy")}
+          onPress={() => router.push(ROUTES.privacy)}
           className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
         >
           <View>

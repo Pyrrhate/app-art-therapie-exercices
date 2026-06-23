@@ -6,6 +6,8 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { navigateHome } from "@/lib/navigation";
+import { ROUTES } from "@/lib/routes";
 import { DurationPicker } from "@/components/DurationPicker";
 import { AccentCard, ContentCard } from "@/components/ui/Card";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -50,7 +52,7 @@ export default function RitualScreen() {
       if (result.source === "fallback") {
         setOfflineMode(true);
       }
-      router.push("/exercise");
+      router.push(ROUTES.exercise);
     } catch (err) {
       const message =
         err instanceof ApiError
@@ -71,7 +73,7 @@ export default function RitualScreen() {
 
   return (
     <ScreenContainer refreshable>
-      <ScreenNavBar backLabel="← Accueil" onBack={() => router.replace("/")} />
+      <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
       <RitualDraftBanner className="mb-4" />
 

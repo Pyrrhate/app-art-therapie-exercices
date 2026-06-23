@@ -44,6 +44,7 @@ import { useRitualStore } from "@/lib/store";
 import { getTechniqueLabel, isAiAnalysisSupported } from "@/constants";
 import { getLocalReflection } from "@/lib/reflection/fallback";
 import { navigateHome } from "@/lib/navigation";
+import { ROUTES } from "@/lib/routes";
 import {
   discardRitualDraft,
   persistRitualDraft,
@@ -609,7 +610,7 @@ export default function ReflectionScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/exercise");
+      router.replace(ROUTES.exercise);
     }
   }
 
@@ -623,7 +624,7 @@ export default function ReflectionScreen() {
 
   function handleStartFollowUp() {
     startFollowUpExercise();
-    router.push("/exercise");
+    router.push(ROUTES.exercise);
   }
 
   const canAnalyze = supportsAiAnalysis
@@ -881,7 +882,7 @@ export default function ReflectionScreen() {
         <View className="gap-3 pb-8">
           <PrimaryButton
             label="Voir le Fil créatif"
-            onPress={() => router.push("/fil")}
+            onPress={() => router.push(ROUTES.fil)}
             variant="secondary"
           />
           <PrimaryButton

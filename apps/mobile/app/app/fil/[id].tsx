@@ -6,6 +6,7 @@ import {
   View,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
@@ -48,7 +49,7 @@ export default function FilDetailScreen() {
   function handleRedoExercise() {
     if (!entry || !isRitualFilEntry(entry)) return;
     restoreFromFilEntry(entry);
-    router.push("/exercise");
+    router.push(ROUTES.exercise);
   }
 
   async function handleRedoFromAmorce() {

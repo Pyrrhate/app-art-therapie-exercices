@@ -1,5 +1,6 @@
 import { Platform, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
+import { type ModuleAmorceRoute } from "@/lib/routes";
 import { HoverScale } from "@/components/emotion-explorer/HoverScale";
 import { PastekIcon, type ModuleIconId } from "@/components/ui/ModuleIcon";
 import { textMuted, textPrimary } from "@/lib/themeClasses";
@@ -9,7 +10,7 @@ interface ModuleQuickTileProps {
   title: string;
   description: string;
   icon: ModuleIconId;
-  route: "/ping-pong" | "/color-journey" | "/nuance-finder" | "/emotion-explorer";
+  route: ModuleAmorceRoute;
 }
 
 /** Hauteur minimale pour aligner la grille 2×2 (titre ×2 + description ×3). */

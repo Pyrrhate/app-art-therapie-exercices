@@ -28,38 +28,8 @@ function RootStack() {
         animation: "fade",
       }}
     >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="ritual" />
-      <Stack.Screen name="ping-pong/index" />
-      <Stack.Screen name="nuance-finder/index" />
-      <Stack.Screen
-        name="emotion-explorer/index"
-        options={{ title: "Explorateur émotionnel" }}
-      />
-      <Stack.Screen
-        name="color-journey/index"
-        options={{ title: "Palette intérieure" }}
-      />
-      <Stack.Screen name="fil/index" options={{ title: "Fil créatif" }} />
-      <Stack.Screen name="fil/[id]" />
-      <Stack.Screen name="exercise" />
-      <Stack.Screen name="reflection" />
-      <Stack.Screen
-        name="settings"
-        options={
-          Platform.OS === "web"
-            ? { presentation: "card" }
-            : { presentation: "modal" }
-        }
-      />
-      <Stack.Screen
-        name="privacy"
-        options={
-          Platform.OS === "web"
-            ? { presentation: "card" }
-            : { presentation: "modal" }
-        }
-      />
+      <Stack.Screen name="index" options={{ animation: "none" }} />
+      <Stack.Screen name="app" options={{ headerShown: false }} />
     </Stack>
   );
 }

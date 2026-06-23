@@ -1,9 +1,10 @@
 import { Platform } from "react-native";
 import { router } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 
-/** Retour à l'accueil — fiable même si l'historique de navigation est profond ou vide. */
+/** Retour à l'accueil de l'app — fiable même si l'historique est profond ou vide. */
 export function navigateHome(): void {
-  router.replace("/");
+  router.replace(ROUTES.home);
 }
 
 /** Retour arrière, ou accueil si la pile est vide (deep link, refresh, etc.). */

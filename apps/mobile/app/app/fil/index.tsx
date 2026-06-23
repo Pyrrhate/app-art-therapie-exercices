@@ -24,6 +24,7 @@ import {
   type FilSource,
 } from "@/lib/fil/types";
 import { navigateHome } from "@/lib/navigation";
+import { ROUTES } from "@/lib/routes";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -114,7 +115,7 @@ export default function FilScreen() {
             Rien ici pour l&apos;instant. Terminez un exercice ou une amorce — une trace s&apos;ajoutera toute seule.
           </Text>
           <View className="mt-6 w-full gap-3">
-            <PrimaryButton label="Préparer un exercice" onPress={() => router.push("/ritual")} />
+            <PrimaryButton label="Préparer un exercice" onPress={() => router.push(ROUTES.ritual)} />
             <PrimaryButton label="Retour à l'accueil" onPress={navigateHome} variant="ghost" />
           </View>
         </View>
@@ -183,7 +184,7 @@ export default function FilScreen() {
             return (
               <Pressable
                 key={entry.id}
-                onPress={() => router.push(`/fil/${entry.id}`)}
+                onPress={() => router.push(ROUTES.filEntry(entry.id))}
                 className={`rounded-3xl border px-5 py-4 ${panelBg(isDark)}`}
               >
                 <View className="flex-row items-center justify-between mb-2">
@@ -245,7 +246,7 @@ export default function FilScreen() {
           <View className={`gap-3 pt-6 mt-2 border-t ${isDark ? "border-sand-700" : "border-sand-200"}`}>
             <PrimaryButton
               label="Préparer un exercice"
-              onPress={() => router.push("/ritual")}
+              onPress={() => router.push(ROUTES.ritual)}
             />
             <Text className={`text-xs text-center leading-5 px-2 ${textMuted(isDark)}`}>
               Pour retirer une trace, ouvrez-la ou utilisez « Retirer du Fil » sur

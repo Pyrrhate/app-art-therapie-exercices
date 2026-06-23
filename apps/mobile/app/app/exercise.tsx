@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
+import { ROUTES } from "@/lib/routes";
 import { DurationPicker } from "@/components/DurationPicker";
 import { ExerciseKeywordChips } from "@/components/exercise/ExerciseKeywordChips";
 import { GentleTimer } from "@/components/GentleTimer";
@@ -38,7 +39,7 @@ export default function ExerciseScreen() {
     const frame = requestAnimationFrame(() => {
       const current = useRitualStore.getState().exercise?.trim();
       if (!current) {
-        router.replace("/ritual");
+        router.replace(ROUTES.ritual);
         return;
       }
       setReady(true);
@@ -58,7 +59,7 @@ export default function ExerciseScreen() {
       stickyFooter={
         <PrimaryButton
           label="J'ai terminé — capturer mon œuvre"
-          onPress={() => router.push("/reflection")}
+          onPress={() => router.push(ROUTES.reflection)}
         />
       }
     >
