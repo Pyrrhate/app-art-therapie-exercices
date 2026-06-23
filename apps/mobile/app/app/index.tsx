@@ -230,7 +230,7 @@ export default function WelcomeScreen() {
               return (
                 <Pressable
                   key={entry.id}
-                  onPress={() => router.push(`/fil/${entry.id}`)}
+                  onPress={() => router.push(ROUTES.filEntry(entry.id))}
                   className={`rounded-2xl border px-3 py-2.5 flex-row items-center gap-3 ${
                     isDark ? "border-sand-700 bg-sand-800/50" : "border-sand-200 bg-white/80"
                   }`}
