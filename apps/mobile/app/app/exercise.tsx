@@ -55,6 +55,7 @@ export default function ExerciseScreen() {
     <ScreenContainer
       variant="focus"
       refreshable
+      compactTop
       fixedHeader={<ScreenNavBar backLabel="← Rituel" />}
       stickyFooter={
         <PrimaryButton

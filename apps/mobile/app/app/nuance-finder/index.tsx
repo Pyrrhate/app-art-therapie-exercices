@@ -7,7 +7,7 @@ import { navigateHome } from "@/lib/navigation";
 
 export default function NuanceFinderScreen() {
   return (
-    <ScreenContainer scrollable refreshable contentMaxWidth={720}>
+    <ScreenContainer scrollable refreshable contentMaxWidth={720} compactTop>
       <ScreenNavBar backLabel="← Retour" onBack={navigateHome} />
 
       <PastekScreenHero

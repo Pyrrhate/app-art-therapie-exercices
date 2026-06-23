@@ -12,14 +12,15 @@ export function KofiDonateLink() {
       hitSlop={8}
       accessibilityRole="link"
       accessibilityLabel="Donate — soutenir le projet sur Ko-fi"
-      className={`rounded-full px-3 py-1.5 border ${
+      className={`self-end shrink-0 rounded-full px-3 py-1.5 border ${
         isDark ? "border-sand-600 bg-sand-900/90" : "border-sand-200 bg-white/95"
       }`}
-      style={
+      style={[
+        { alignSelf: "flex-end" },
         Platform.OS === "web"
           ? ({ backdropFilter: "blur(8px)" } as const)
-          : undefined
-      }
+          : null,
+      ]}
     >
       <Text className="text-sage-500 text-sm font-medium">Donate</Text>
     </Pressable>

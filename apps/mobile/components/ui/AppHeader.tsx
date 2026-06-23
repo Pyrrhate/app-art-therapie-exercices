@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
-import { KofiDonateLink } from "@/components/ui/KofiDonateLink";
+import { DonateRow } from "@/components/ui/DonateRow";
 import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
 import { textMuted, textPrimary } from "@/lib/themeClasses";
@@ -16,10 +16,7 @@ export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps)
 
   return (
     <View className={compact ? "mb-4" : "mb-10"}>
-      <View className="items-end mb-1" style={{ paddingTop: 5 }}>
-        <KofiDonateLink />
-      </View>
-
+      <DonateRow />
       <View className="flex-row items-center justify-between">
         <Pressable
           onPress={navigateHome}

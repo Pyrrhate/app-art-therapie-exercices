@@ -192,7 +192,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScreenContainer scrollable refreshable onRefresh={refreshHealth}>
+    <ScreenContainer scrollable refreshable onRefresh={refreshHealth} compactTop>
       <ScreenNavBar />
 
       <PastekScreenHero

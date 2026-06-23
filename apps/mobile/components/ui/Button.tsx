@@ -96,6 +96,8 @@ interface ScreenContainerProps {
   stickyFooter?: ReactNode;
   /** Barre fixe au-dessus du défilement (ex. navigation). */
   fixedHeader?: ReactNode;
+  /** Moins de marge au-dessus du contenu (écrans avec Donate + nav en tête). */
+  compactTop?: boolean;
   scrollRef?: RefObject<ScrollView>;
   contentMaxWidth?: number;
 }
@@ -122,6 +124,7 @@ export function ScreenContainer({
   titleEnd,
   heroCentered,
   heroSize,
+  compactTop = false,
 }: ScreenContainerProps) {
   const [refreshing, setRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
@@ -156,7 +159,11 @@ export function ScreenContainer({
     ) : undefined;
 
   const bgClass = screenBg(isDark, variant === "focus");
-  const paddingTop = Math.max(insets.top, Platform.OS === "web" ? 48 : 56);
+  const paddingTop = compactTop
+    ? Platform.OS === "web"
+      ? 0
+      : insets.top
+    : Math.max(insets.top, Platform.OS === "web" ? 48 : 56);
 
   const header =
     title || heroLabel ? (

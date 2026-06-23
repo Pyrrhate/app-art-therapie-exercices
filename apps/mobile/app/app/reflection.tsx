@@ -635,7 +635,7 @@ export default function ReflectionScreen() {
   busyRef.current = busy;
 
   return (
-    <ScreenContainer refreshable fixedHeader={<ScreenNavBar onBack={handleGoBack} />}>
+    <ScreenContainer refreshable fixedHeader={<ScreenNavBar onBack={handleGoBack} />} compactTop>
       <PastekScreenHero
         label="Réflexion"
         title="Capture & "

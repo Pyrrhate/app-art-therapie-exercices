@@ -94,7 +94,7 @@ export default function FilScreen() {
   }
 
   return (
-    <ScreenContainer scrollable refreshable onRefresh={load}>
+    <ScreenContainer scrollable refreshable onRefresh={load} compactTop>
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
       <PastekScreenHero

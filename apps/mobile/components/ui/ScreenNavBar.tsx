@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from "react-native";
-import { KofiDonateLink } from "@/components/ui/KofiDonateLink";
+import { DonateRow } from "@/components/ui/DonateRow";
 import { navigateBackOrHome, navigateHome } from "@/lib/navigation";
 import { textMuted } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -22,10 +22,7 @@ export function ScreenNavBar({
 
   return (
     <View className="mb-4">
-      <View className="items-end mb-1" style={{ paddingTop: 5 }}>
-        <KofiDonateLink />
-      </View>
-
+      <DonateRow />
       <View className="flex-row justify-between items-center gap-2">
         <Pressable
           onPress={onBack}

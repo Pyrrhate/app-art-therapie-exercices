@@ -103,6 +103,7 @@ export default function EmotionExplorerScreen() {
       scrollable={phase !== "quadrant"}
       refreshable={phase !== "quadrant"}
       contentMaxWidth={720}
+      compactTop
     >
       <ScreenNavBar backLabel="← Retour" onBack={handleBack} />
 

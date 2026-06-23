@@ -72,7 +72,7 @@ export default function RitualScreen() {
     : "Quel mot, idée ou couleur vous appelle aujourd'hui ? Choisissez ensuite votre technique et la durée, puis passez à l'exercice.";
 
   return (
-    <ScreenContainer refreshable>
+    <ScreenContainer refreshable compactTop>
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
       <RitualDraftBanner className="mb-4" />

@@ -10,7 +10,7 @@ const CONTACT_EMAIL = "contact@pastek-art.eu";
 
 export default function PrivacyScreen() {
   return (
-    <ScreenContainer scrollable refreshable>
+    <ScreenContainer scrollable refreshable compactTop>
       <ScreenNavBar />
 
       <PastekScreenHero

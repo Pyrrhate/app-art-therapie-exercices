@@ -91,7 +91,7 @@ export default function FilDetailScreen() {
 
   if (loading) {
     return (
-      <ScreenContainer scrollable={false}>
+      <ScreenContainer scrollable={false} compactTop>
         <ScreenNavBar backLabel="← Fil" />
         <ActivityIndicator color="#6B8F71" className="mt-12" />
       </ScreenContainer>
@@ -100,7 +100,7 @@ export default function FilDetailScreen() {
 
   if (!entry) {
     return (
-      <ScreenContainer scrollable>
+      <ScreenContainer scrollable compactTop>
         <ScreenNavBar backLabel="← Fil" />
         <Text className={`mt-8 ${textMuted(isDark)}`}>Trace introuvable.</Text>
       </ScreenContainer>
@@ -117,7 +117,7 @@ export default function FilDetailScreen() {
   const paragraphs = reflection.split(/\n\s*\n/).filter((p) => p.trim());
 
   return (
-    <ScreenContainer scrollable>
+    <ScreenContainer scrollable compactTop>
       <ScreenNavBar backLabel="← Fil" />
 
       <PastekIcon id={meta.icon} boxSize={44} size={30} className="mb-4" />

@@ -128,7 +128,7 @@ export default function ColorJourneyScreen() {
   }
 
   return (
-    <ScreenContainer scrollable refreshable contentMaxWidth={720}>
+    <ScreenContainer scrollable refreshable contentMaxWidth={720} compactTop>
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
       <PastekScreenHero

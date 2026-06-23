@@ -122,7 +122,7 @@ export default function PingPongScreen() {
   }
 
   return (
-    <ScreenContainer scrollable={false}>
+    <ScreenContainer scrollable={false} compactTop>
       <View className="flex-1 px-0">
         <View className="px-6">
           <ScreenNavBar
