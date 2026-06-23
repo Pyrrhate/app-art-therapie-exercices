@@ -55,8 +55,12 @@ async function request<T>(
         413
       );
     }
+    const contentType = response.headers.get("content-type") ?? "";
+    const hint = contentType.includes("text/html")
+      ? " Vérifiez que EXPO_PUBLIC_API_URL pointe vers api.pastek-art.eu (pas le site web)."
+      : "";
     throw new ApiError(
-      "Réponse serveur invalide.",
+      `Réponse serveur invalide.${hint}`,
       "INVALID_RESPONSE",
       response.status
     );
@@ -78,6 +82,7 @@ function isRecoverableApiError(error: unknown): boolean {
   if (!(error instanceof ApiError)) return true;
   return (
     error.code === "NETWORK_ERROR" ||
+    error.code === "INVALID_RESPONSE" ||
     error.status === 404 ||
     error.status === 503 ||
     error.status === 502

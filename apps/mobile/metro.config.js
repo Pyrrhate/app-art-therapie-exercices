@@ -36,12 +36,20 @@ require.resolve("react-native/package.json", { paths: moduleSearchPaths });
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
 
-const apiProxyTarget = (
+function normalizeApiProxyTarget(url) {
+  const trimmed = url.replace(/\/$/, "");
+  if (/^https?:\/\/(www\.)?pastek-art\.eu$/i.test(trimmed)) {
+    return "https://api.pastek-art.eu";
+  }
+  return trimmed;
+}
+
+const apiProxyTarget = normalizeApiProxyTarget(
   process.env.EXPO_PUBLIC_API_URL ??
-  (process.env.NODE_ENV === "development"
-    ? "http://localhost:3000"
-    : "https://api.pastek-art.eu")
-).replace(/\/$/, "");
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://api.pastek-art.eu")
+);
 
 const config = getDefaultConfig(projectRoot);
 

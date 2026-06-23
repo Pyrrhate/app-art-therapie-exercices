@@ -1,4 +1,4 @@
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View, type ViewStyle } from "react-native";
 import type { CustomSessionConfig } from "@/lib/custom/types";
 import {
   CUSTOM_EMOTIONS,
@@ -13,6 +13,11 @@ interface CustomExerciseFiltersProps {
   value: CustomSessionConfig;
   onChange: (patch: Partial<CustomSessionConfig>) => void;
 }
+
+const TAG_PADDING: ViewStyle = {
+  paddingHorizontal: 16,
+  paddingVertical: 10,
+};
 
 interface FilterGroupProps {
   label: string;
@@ -56,16 +61,17 @@ function FilterGroup({
               className="active:opacity-85"
             >
               <View
-                className={`rounded-full px-3.5 py-2 border ${
+                className={`rounded-full border ${
                   isSelected
                     ? "bg-sage-500 border-sage-500"
                     : `${panelBg(isDark)} border-sand-200`
                 } ${isDark && !isSelected ? "border-sand-600" : ""}`}
-                style={
+                style={[
+                  TAG_PADDING,
                   Platform.OS === "web" && !isSelected
-                    ? ({ boxShadow: "0 1px 4px rgba(62, 52, 44, 0.06)" } as const)
-                    : undefined
-                }
+                    ? { boxShadow: "0 1px 4px rgba(62, 52, 44, 0.06)" }
+                    : null,
+                ]}
               >
                 <Text
                   className={`text-sm ${
