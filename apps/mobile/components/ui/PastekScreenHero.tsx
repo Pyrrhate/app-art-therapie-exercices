@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -11,6 +11,7 @@ interface PastekScreenHeroProps {
   centered?: boolean;
   size?: "lg" | "md";
   className?: string;
+  onDescriptionPress?: () => void;
 }
 
 export function PastekScreenHero({
@@ -22,6 +23,7 @@ export function PastekScreenHero({
   centered = true,
   size = "lg",
   className = "mb-8",
+  onDescriptionPress,
 }: PastekScreenHeroProps) {
   const isDark = useIsDark();
   const titleSize = size === "lg" ? "text-4xl" : "text-3xl";
@@ -47,11 +49,26 @@ export function PastekScreenHero({
       </Text>
 
       {description ? (
-        <Text
-          className={`text-base leading-7 mt-4 max-w-lg ${centered ? "text-center" : ""} ${textSecondary(isDark)}`}
-        >
-          {description}
-        </Text>
+        onDescriptionPress ? (
+          <Pressable
+            onPress={onDescriptionPress}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Retour à l'accueil"
+          >
+            <Text
+              className={`text-base leading-7 mt-4 max-w-lg ${centered ? "text-center" : ""} ${textSecondary(isDark)}`}
+            >
+              {description}
+            </Text>
+          </Pressable>
+        ) : (
+          <Text
+            className={`text-base leading-7 mt-4 max-w-lg ${centered ? "text-center" : ""} ${textSecondary(isDark)}`}
+          >
+            {description}
+          </Text>
+        )
       ) : null}
     </View>
   );

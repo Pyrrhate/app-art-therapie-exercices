@@ -12,15 +12,15 @@ interface ModuleQuickTileProps {
   route: "/ping-pong" | "/color-journey" | "/nuance-finder" | "/emotion-explorer";
 }
 
-/** Hauteur unique pour aligner la grille 2×2 (titre ×2 + description ×3). */
-const TILE_HEIGHT = 178;
+/** Hauteur minimale pour aligner la grille 2×2 (titre ×2 + description ×3). */
+const TILE_MIN_HEIGHT = 180;
 
 const tileShellStyle = {
   flexGrow: 1,
   flexBasis: "48%" as const,
   maxWidth: "49%" as const,
   minWidth: 148,
-  height: TILE_HEIGHT,
+  minHeight: TILE_MIN_HEIGHT,
   alignSelf: "stretch" as const,
 };
 
@@ -38,7 +38,7 @@ export function ModuleQuickTile({
         isDark ? "bg-sand-800 border-sand-700" : "bg-white border-sand-100"
       }`}
       style={[
-        { height: TILE_HEIGHT },
+        { minHeight: TILE_MIN_HEIGHT },
         Platform.OS === "web" && !isDark
           ? ({ boxShadow: "0 1px 12px rgba(73, 99, 73, 0.06)" } as const)
           : undefined,

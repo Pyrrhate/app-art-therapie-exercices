@@ -13,6 +13,7 @@ import type { ModuleIconId } from "@/components/ui/ModuleIcon";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
 import { getFilEntries } from "@/lib/fil/storage";
 import { FIL_SOURCE_META, type FilEntry } from "@/lib/fil/types";
+import { navigateHome } from "@/lib/navigation";
 import { hydrateRitualFromDraft } from "@/lib/ritualPersistence";
 import { getRitualDraft, type RitualDraft } from "@/lib/ritualDraft";
 import { textMuted, textSecondary } from "@/lib/themeClasses";
@@ -104,6 +105,7 @@ export default function WelcomeScreen() {
             ? "Un parcours guidé pour amorcer votre créativité, mener un exercice en douceur, puis garder trace de vos pratiques — le tout sur cet appareil."
             : undefined
         }
+        onDescriptionPress={navigateHome}
         size={isWide ? "lg" : "md"}
         className={isWide ? "mb-6" : "mb-4"}
       />
