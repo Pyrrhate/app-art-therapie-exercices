@@ -12,11 +12,16 @@ interface ModuleQuickTileProps {
   route: "/ping-pong" | "/color-journey" | "/nuance-finder" | "/emotion-explorer";
 }
 
+/** Hauteur unique pour aligner la grille 2×2 (titre ×2 + description ×3). */
+const TILE_HEIGHT = 178;
+
 const tileShellStyle = {
   flexGrow: 1,
   flexBasis: "48%" as const,
   maxWidth: "49%" as const,
   minWidth: 148,
+  height: TILE_HEIGHT,
+  alignSelf: "stretch" as const,
 };
 
 export function ModuleQuickTile({
@@ -29,16 +34,17 @@ export function ModuleQuickTile({
 
   const tile = (
     <View
-      className={`rounded-2xl p-3.5 min-h-[152px] justify-between border ${
+      className={`rounded-2xl p-3.5 flex-1 justify-between border ${
         isDark ? "bg-sand-800 border-sand-700" : "bg-white border-sand-100"
       }`}
-      style={
+      style={[
+        { height: TILE_HEIGHT },
         Platform.OS === "web" && !isDark
           ? ({ boxShadow: "0 1px 12px rgba(73, 99, 73, 0.06)" } as const)
-          : undefined
-      }
+          : undefined,
+      ]}
     >
-      <View>
+      <View className="flex-1">
         <PastekIcon id={icon} boxSize={44} size={28} className="mb-2" />
         <Text
           className={`font-display text-[15px] leading-5 ${textPrimary(isDark)}`}
@@ -54,7 +60,7 @@ export function ModuleQuickTile({
           {description}
         </Text>
       </View>
-      <Text className={`text-xs font-medium mt-2 ${textPrimary(isDark)}`}>
+      <Text className={`text-xs font-medium pt-2 ${textPrimary(isDark)}`}>
         Commencer →
       </Text>
     </View>
