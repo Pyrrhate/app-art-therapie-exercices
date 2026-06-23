@@ -12,6 +12,13 @@ interface ModuleQuickTileProps {
   route: "/ping-pong" | "/color-journey" | "/nuance-finder" | "/emotion-explorer";
 }
 
+const tileShellStyle = {
+  flexGrow: 1,
+  flexBasis: "48%" as const,
+  maxWidth: "49%" as const,
+  minWidth: 148,
+};
+
 export function ModuleQuickTile({
   title,
   description,
@@ -22,7 +29,7 @@ export function ModuleQuickTile({
 
   const tile = (
     <View
-      className={`rounded-2xl px-4 py-4 flex-row items-start gap-4 border ${
+      className={`rounded-2xl p-3.5 min-h-[152px] justify-between border ${
         isDark ? "bg-sand-800 border-sand-700" : "bg-white border-sand-100"
       }`}
       style={
@@ -31,35 +38,34 @@ export function ModuleQuickTile({
           : undefined
       }
     >
-      <PastekIcon id={icon} boxSize={48} size={30} className="mb-0 shrink-0 mt-0.5" />
-      <View className="flex-1 min-w-0 pr-1">
+      <View>
+        <PastekIcon id={icon} boxSize={44} size={28} className="mb-2" />
         <Text
-          className={`font-display text-lg leading-snug ${textPrimary(isDark)}`}
-          style={{ letterSpacing: -0.3 }}
+          className={`font-display text-[15px] leading-5 ${textPrimary(isDark)}`}
+          style={{ letterSpacing: -0.25 }}
+          numberOfLines={2}
         >
           {title}
         </Text>
         <Text
-          className={`text-sm leading-5 mt-1.5 ${textMuted(isDark)}`}
-          numberOfLines={2}
+          className={`text-xs leading-[17px] mt-1.5 ${textMuted(isDark)}`}
+          numberOfLines={3}
         >
           {description}
         </Text>
       </View>
-      <Text className={`text-sage-500 text-lg mt-1 shrink-0 ${textMuted(isDark)}`}>
-        →
+      <Text className={`text-xs font-medium mt-2 ${textPrimary(isDark)}`}>
+        Commencer →
       </Text>
     </View>
   );
-
-  const fullWidthStyle = { width: "100%" as const };
 
   if (Platform.OS === "web") {
     return (
       <HoverScale
         onPress={() => router.push(route)}
-        hoverScale={1.01}
-        style={fullWidthStyle}
+        hoverScale={1.02}
+        style={tileShellStyle}
         accessibilityRole="button"
         accessibilityLabel={`${title}. ${description}`}
       >
@@ -71,7 +77,7 @@ export function ModuleQuickTile({
   return (
     <Pressable
       onPress={() => router.push(route)}
-      style={fullWidthStyle}
+      style={tileShellStyle}
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${description}`}
     >

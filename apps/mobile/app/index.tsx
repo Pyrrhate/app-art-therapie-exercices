@@ -169,7 +169,7 @@ export default function WelcomeScreen() {
           </Text>
         )}
 
-        <View className="gap-3">
+        <View className="flex-row flex-wrap gap-2.5">
           {MODULES.map((mod) =>
             isWide ? (
               <ModuleCard key={mod.route} {...mod} />
