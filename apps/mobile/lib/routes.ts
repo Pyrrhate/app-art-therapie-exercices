@@ -2,6 +2,8 @@
 export const APP_BASE = "/app";
 
 export const ROUTES = {
+  /** Page marketing (pastek-art.eu). */
+  landing: "/",
   home: APP_BASE,
   ritual: `${APP_BASE}/ritual`,
   custom: `${APP_BASE}/custom`,

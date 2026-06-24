@@ -18,7 +18,7 @@ export function LandingPage() {
       >
         <SemanticWeb tag="header" className="border-b border-sand-200/60 bg-sand-50/95">
           <View className="max-w-5xl mx-auto px-6 py-4 flex-row items-center gap-3">
-            <Link href={ROUTES.home} accessibilityLabel="Accéder à l'application">
+            <Link href={ROUTES.landing} accessibilityLabel="Retour à l'accueil Pastek Art">
               <View className="flex-row items-center gap-3">
                 <View
                   className="w-9 h-9 rounded-full bg-sage-500 items-center justify-center"

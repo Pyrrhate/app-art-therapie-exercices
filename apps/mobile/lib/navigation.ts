@@ -2,9 +2,14 @@ import { Platform } from "react-native";
 import { router } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 
-/** Retour à l'accueil de l'app — fiable même si l'historique est profond ou vide. */
+/** Accueil de l'app interactive (/app). */
 export function navigateHome(): void {
   router.replace(ROUTES.home);
+}
+
+/** Page d'accueil du site (pastek-art.eu) — landing SEO sur le web, app sur mobile natif. */
+export function navigateSiteHome(): void {
+  router.replace(Platform.OS === "web" ? ROUTES.landing : ROUTES.home);
 }
 
 /** Retour arrière, ou accueil si la pile est vide (deep link, refresh, etc.). */

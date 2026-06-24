@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { DonateRow } from "@/components/ui/DonateRow";
-import { navigateHome } from "@/lib/navigation";
+import { navigateSiteHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
 import { textMuted, textPrimary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -19,7 +19,7 @@ export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps)
       <DonateRow />
       <View className="flex-row items-center justify-between">
         <Pressable
-          onPress={navigateHome}
+          onPress={navigateSiteHome}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Retour à l'accueil"
