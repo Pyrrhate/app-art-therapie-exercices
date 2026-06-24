@@ -25,6 +25,7 @@ import {
   ContextQuestionnaireStep,
   preAnswersComplete,
 } from "@/components/multimodal/ContextQuestionnaireStep";
+import { AccentCard } from "@/components/ui/Card";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
@@ -177,6 +178,7 @@ export default function ReflectionScreen() {
     type: "error" | "success" | "info";
     message: string;
   } | null>(null);
+  const [upgradedFromCapture, setUpgradedFromCapture] = useState(false);
 
   const busyRef = useRef(false);
   const applyPickedFileRef = useRef<(file: File) => Promise<void>>(async () => {});
@@ -694,6 +696,20 @@ export default function ReflectionScreen() {
 
   function handleGoBack() {
     cancelWork();
+    if (workflowPhase === "pre_analysis" && upgradedFromCapture) {
+      setExperienceMode("express");
+      setUpgradedFromCapture(false);
+      setWorkflowPhase("capture");
+      return;
+    }
+    if (workflowPhase === "post_integration") {
+      setWorkflowPhase("capture");
+      return;
+    }
+    if (workflowPhase === "complete") {
+      setWorkflowPhase("post_integration");
+      return;
+    }
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -810,12 +826,9 @@ export default function ReflectionScreen() {
   }
 
   function handleUpgradeToDeep() {
+    setUpgradedFromCapture(true);
     setExperienceMode("deep");
     setWorkflowPhase("pre_analysis");
-    setNotice({
-      type: "info",
-      message: "Mode approfondi activé — trois questions d'ancrage avant l'analyse.",
-    });
   }
 
   function handleStartSecondRound() {
@@ -951,12 +964,77 @@ export default function ReflectionScreen() {
     [reflection, followUpExercise]
   );
 
+  const screenHero = useMemo(() => {
+    switch (workflowPhase) {
+      case "pre_analysis":
+        return {
+          label: "Parcours profond",
+          title: "Ancrer votre ",
+          accent: "ressenti",
+          description:
+            "Trois questions avant le miroir créatif pour ancrer ce que vous vivez.",
+        };
+      case "post_integration":
+        return {
+          label: "Parcours profond",
+          title: "Clôturer en ",
+          accent: "douceur",
+          description:
+            "Quelques pistes pour intégrer votre séance avant de la garder en mémoire.",
+        };
+      case "second_round_transition":
+        return {
+          label: "Réitération rapide",
+          title: "Préparer le ",
+          accent: "2e tour",
+          description:
+            "Répondez en flash à ce qui a changé depuis votre première création.",
+        };
+      case "complete":
+        return {
+          label: "Parcours profond",
+          title: "Séance ",
+          accent: "enregistrée",
+          description:
+            "Votre parcours complet est conservé localement dans votre journal.",
+        };
+      default:
+        return {
+          label: "Réflexion",
+          title: "Capture & ",
+          accent: "réflexion",
+          description: undefined as string | undefined,
+        };
+    }
+  }, [workflowPhase]);
+
+  const navBackLabel = useMemo(() => {
+    if (workflowPhase === "pre_analysis" && upgradedFromCapture) {
+      return "← Capture";
+    }
+    if (workflowPhase === "post_integration") {
+      return "← Réflexion";
+    }
+    if (workflowPhase === "complete") {
+      return "← Intégration";
+    }
+    return "← Retour";
+  }, [workflowPhase, upgradedFromCapture]);
+
+  const showDeepModeEncart =
+    isDeep && (workflowPhase === "pre_analysis" || workflowPhase === "post_integration");
+
   return (
-    <ScreenContainer refreshable fixedHeader={<ScreenNavBar onBack={handleGoBack} />} compactTop>
+    <ScreenContainer
+      refreshable
+      fixedHeader={<ScreenNavBar backLabel={navBackLabel} onBack={handleGoBack} />}
+      compactTop
+    >
       <PastekScreenHero
-        label="Réflexion"
-        title="Capture & "
-        accent="réflexion"
+        label={screenHero.label}
+        title={screenHero.title}
+        accent={screenHero.accent}
+        description={screenHero.description}
         centered
         size="md"
         className="mb-3"
@@ -967,8 +1045,27 @@ export default function ReflectionScreen() {
         <InlineNotice
           type={notice.type}
           message={notice.message}
-          onDismiss={() => setNotice(null)}
+          onDismiss={
+            notice.type === "error" || notice.type === "success"
+              ? () => setNotice(null)
+              : undefined
+          }
         />
+      )}
+
+      {showDeepModeEncart && (
+        <AccentCard className="mb-4 px-4 py-3">
+          <Text className="text-sage-700 text-sm font-medium">
+            {workflowPhase === "pre_analysis"
+              ? "Mode approfondi — ancrage avant l'analyse"
+              : "Mode approfondi — intégration de séance"}
+          </Text>
+          <Text className="text-sand-600 text-xs leading-5 mt-1">
+            {workflowPhase === "pre_analysis"
+              ? "Répondez aux trois questions ci-dessous, puis poursuivez vers la capture de votre création."
+              : "Prenez un instant pour noter ce qui résonne avant d'enregistrer votre séance."}
+          </Text>
+        </AccentCard>
       )}
 
       {(impulse || exercise || technique) && (
@@ -1010,12 +1107,6 @@ export default function ReflectionScreen() {
       {showPreAnalysis && (
         <WorkflowStepTransition stepKey="pre_analysis">
           <View className="mb-2">
-            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
-              Parcours profond · Ancrage
-            </Text>
-            <Text className="text-sand-700 text-base font-medium mb-4">
-              Trois questions avant le miroir créatif
-            </Text>
             <ContextQuestionnaireStep
               answers={preAnswers}
               onChange={setPreAnswers}
@@ -1025,6 +1116,7 @@ export default function ReflectionScreen() {
                 label="Continuer vers la capture"
                 onPress={() => setWorkflowPhase("capture")}
                 disabled={!preAnswersComplete(preAnswers)}
+                showArrow
               />
             </View>
           </View>
@@ -1034,12 +1126,6 @@ export default function ReflectionScreen() {
       {showSecondRoundTransition && (
         <WorkflowStepTransition stepKey="second_round_transition">
           <View className="mb-2">
-            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
-              Réitération rapide · 2e tour
-            </Text>
-            <Text className="text-sand-700 text-base font-medium mb-4">
-              Refaites l&apos;exercice, puis ancrez ce qui a changé
-            </Text>
             <SecondRoundTransitionStep
               answers={transitionAnswers}
               onChange={setTransitionAnswers}
@@ -1286,12 +1372,6 @@ export default function ReflectionScreen() {
       {showPostIntegration && (
         <WorkflowStepTransition stepKey="post_integration">
           <View className="mb-2">
-            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
-              Parcours profond · Intégration
-            </Text>
-            <Text className="text-sand-700 text-base font-medium mb-4">
-              Clôturer votre séance en douceur
-            </Text>
             <IntegrationQuestionnaireStep
               answers={postAnswers}
               onChange={setPostAnswers}
