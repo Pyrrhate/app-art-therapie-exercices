@@ -14,7 +14,6 @@ import { AccentCard, ContentCard } from "@/components/ui/Card";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
-import { RitualDraftBanner } from "@/components/ritual/RitualDraftBanner";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { TECHNIQUES, isAiAnalysisSupported } from "@/constants";
@@ -78,13 +77,6 @@ export default function RitualScreen() {
     <ScreenContainer refreshable compactTop>
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
-      <RitualDraftBanner className="mb-4" />
-
-      <ExperienceModeSelector
-        value={experienceMode}
-        onChange={setExperienceMode}
-      />
-
       <PastekScreenHero
         label="Rituel créatif"
         title="L'"
@@ -94,6 +86,11 @@ export default function RitualScreen() {
       />
 
       <RitualProgressBar current="ritual" />
+
+      <ExperienceModeSelector
+        value={experienceMode}
+        onChange={setExperienceMode}
+      />
 
       {impulsePrefilled && (
         <AccentCard className="mb-6">

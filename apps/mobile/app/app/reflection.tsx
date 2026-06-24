@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import { InlineNotice } from "@/components/InlineNotice";
 import { ZenWaitIndicator } from "@/components/ZenWaitIndicator";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
+import { ReflectionOpenQuestions } from "@/components/reflection/ReflectionOpenQuestions";
 import {
   DeepModeGatewayPrompt,
   IntegrationQuestionnaireStep,
@@ -54,6 +55,11 @@ import { recordFilEntry } from "@/lib/fil/record";
 import { useRitualStore } from "@/lib/store";
 import { getTechniqueLabel, isAiAnalysisSupported } from "@/constants";
 import { getLocalReflection } from "@/lib/reflection/fallback";
+import {
+  cleanReflectionBodyForDisplay,
+  resolveFollowUpExercise,
+  resolveOpenQuestions,
+} from "@/lib/reflection/display";
 import { mergeWrittenTextWithPreAnalysis } from "@/lib/experience/formatPreAnalysisContext";
 import { mergeWrittenTextWithSecondRound } from "@/lib/experience/formatSecondRoundContext";
 import { buildRound1Snapshot } from "@/lib/experience/extractEvolutionTriggers";
@@ -926,13 +932,32 @@ export default function ReflectionScreen() {
     preparingPhoto || loadingReflection || ocrLoading || loadingAugmentedExercise;
   busyRef.current = busy;
 
+  const displayOpenQuestions = useMemo(
+    () => (reflection ? resolveOpenQuestions(reflection, openQuestions) : []),
+    [reflection, openQuestions]
+  );
+
+  const displayReflectionBody = useMemo(() => {
+    if (!reflection) return "";
+    return cleanReflectionBodyForDisplay(
+      reflection,
+      displayOpenQuestions,
+      followUpExercise
+    );
+  }, [reflection, displayOpenQuestions, followUpExercise]);
+
+  const displayFollowUpExercise = useMemo(
+    () => (reflection ? resolveFollowUpExercise(reflection, followUpExercise) : null),
+    [reflection, followUpExercise]
+  );
+
   return (
     <ScreenContainer refreshable fixedHeader={<ScreenNavBar onBack={handleGoBack} />} compactTop>
       <PastekScreenHero
         label="Réflexion"
         title="Capture & "
         accent="réflexion"
-        centered={false}
+        centered
         size="md"
         className="mb-3"
       />
@@ -1188,38 +1213,46 @@ export default function ReflectionScreen() {
         </View>
 
         {reflection && (
-          <View className="bg-white rounded-2xl border border-sand-200 px-5 py-6 mb-6">
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-sand-400 text-xs uppercase tracking-wider">
-                Miroir créatif
-              </Text>
-              {reflectionSource === "fallback" && (
-                <Text className="text-amber-600 text-xs font-medium">
-                  {supportsAiAnalysis ? "Mode secours" : "Sans analyse IA"}
+          <View className="mb-6 gap-4">
+            <View className="bg-white rounded-2xl border border-sand-200 px-5 py-6">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-sand-400 text-xs uppercase tracking-wider">
+                  Miroir créatif
                 </Text>
-              )}
-              {reflectionSource === "ai" && (
-                <Text className="text-sage-500 text-xs font-medium">
-                  Analyse IA
+                {reflectionSource === "fallback" && (
+                  <Text className="text-amber-600 text-xs font-medium">
+                    {supportsAiAnalysis ? "Mode secours" : "Sans analyse IA"}
+                  </Text>
+                )}
+                {reflectionSource === "ai" && (
+                  <Text className="text-sage-500 text-xs font-medium">
+                    Analyse IA
+                  </Text>
+                )}
+              </View>
+              {displayReflectionBody ? (
+                <ProgressiveReflection reflection={displayReflectionBody} />
+              ) : (
+                <Text className="text-sand-600 text-sm leading-6">
+                  Votre réflexion est prête — explorez les invitations ci-dessous.
                 </Text>
               )}
             </View>
-            <ProgressiveReflection reflection={reflection} />
-            {openQuestions.map((q, i) => (
-              <Text key={i} className="text-sand-500 text-sm leading-6 mb-2">
-                · {q}
-              </Text>
-            ))}
+
+            <ReflectionOpenQuestions questions={displayOpenQuestions} />
           </View>
         )}
 
-        {followUpExercise && !showDeepIntegrationCta && (
-          <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-5 mb-6">
-            <Text className="text-sage-700 text-sm font-medium mb-2">
+        {displayFollowUpExercise && !showDeepIntegrationCta && (
+          <View className="bg-white rounded-2xl border border-sage-200 px-5 py-5 mb-6">
+            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
               Poursuivre la création
             </Text>
+            <Text className="text-sand-700 text-sm font-medium mb-2">
+              Un nouvel exercice pour vous
+            </Text>
             <Text className="text-sand-600 text-sm leading-6 mb-4">
-              {followUpExercise}
+              {displayFollowUpExercise}
             </Text>
             <PrimaryButton
               label="Commencer cet exercice"

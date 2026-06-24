@@ -238,12 +238,23 @@ export function ScreenContainer({
   if (scrollable) {
     return (
       <View className={`flex-1 ${bgClass}`} style={webScrollShell}>
+        {fixedHeader ? (
+          <View
+            style={{
+              paddingHorizontal: 24,
+              paddingTop,
+              paddingBottom: 4,
+            }}
+          >
+            <View style={webShellStyle}>{fixedHeader}</View>
+          </View>
+        ) : null}
         <ScrollView
           ref={scrollRef}
           style={webScrollShell}
           contentContainerStyle={{
             paddingHorizontal: 24,
-            paddingTop,
+            paddingTop: fixedHeader ? 0 : paddingTop,
             paddingBottom: Math.max(insets.bottom, Platform.OS === "web" ? 56 : 32),
           }}
           keyboardShouldPersistTaps="handled"
