@@ -11,6 +11,7 @@ export const ROUTES = {
   reflection: `${APP_BASE}/reflection`,
   settings: `${APP_BASE}/settings`,
   privacy: `${APP_BASE}/privacy`,
+  changelog: `${APP_BASE}/maj`,
   fil: `${APP_BASE}/fil`,
   filEntry: (id: string) => `${APP_BASE}/fil/${id}`,
   pingPong: `${APP_BASE}/ping-pong`,

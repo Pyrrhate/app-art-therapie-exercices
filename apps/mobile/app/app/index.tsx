@@ -273,6 +273,9 @@ export default function WelcomeScreen() {
           <Pressable onPress={() => router.push(ROUTES.settings)} hitSlop={8}>
             <Text className={`text-sm ${textMuted(isDark)}`}>Paramètres</Text>
           </Pressable>
+          <Pressable onPress={() => router.push(ROUTES.changelog)} hitSlop={8}>
+            <Text className={`text-sm ${textMuted(isDark)}`}>Mises à jour</Text>
+          </Pressable>
           <Pressable onPress={() => router.push(ROUTES.privacy)} hitSlop={8}>
             <Text className={`text-sm ${textMuted(isDark)}`}>Confidentialité</Text>
           </Pressable>

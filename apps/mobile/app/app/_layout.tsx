@@ -46,6 +46,14 @@ export default function AppStackLayout() {
             : { presentation: "modal" }
         }
       />
+      <Stack.Screen
+        name="maj"
+        options={
+          Platform.OS === "web"
+            ? { presentation: "card" }
+            : { presentation: "modal" }
+        }
+      />
     </Stack>
   );
 }

@@ -20,7 +20,7 @@ export function LandingHero() {
           tag="h1"
           className="font-display text-3xl md:text-4xl lg:text-[2.6rem] leading-tight text-sand-900 mb-6"
         >
-          Liberez votre esprit par le geste : Générateur d'exercices d'art-thérapie en
+          Libérez votre esprit par le geste : Générateur d'exercices d'art-thérapie en
           ligne
         </SemanticWeb>
 

@@ -12,7 +12,8 @@
     { "source": "/exercise", "destination": "/app/exercise", "permanent": true },
     { "source": "/reflection", "destination": "/app/reflection", "permanent": true },
     { "source": "/settings", "destination": "/app/settings", "permanent": true },
-    { "source": "/privacy", "destination": "/app/privacy", "permanent": true }
+    { "source": "/privacy", "destination": "/app/privacy", "permanent": true },
+    { "source": "/maj", "destination": "/app/maj", "permanent": true }
   ],
   "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }
