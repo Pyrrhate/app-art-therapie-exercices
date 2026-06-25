@@ -29,6 +29,8 @@ function RootStack() {
       }}
     >
       <Stack.Screen name="index" options={{ animation: "none" }} />
+      <Stack.Screen name="exemples/index" options={{ animation: "none" }} />
+      <Stack.Screen name="exemples/exemple-001" options={{ animation: "none" }} />
       <Stack.Screen name="fil/index" options={{ animation: "none" }} />
       <Stack.Screen name="fil/[id]" options={{ animation: "none" }} />
       <Stack.Screen name="app" options={{ headerShown: false }} />
