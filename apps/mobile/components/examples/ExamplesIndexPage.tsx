@@ -22,8 +22,7 @@ export function ExamplesIndexPage({ examples }: ExamplesIndexPageProps) {
       <SemanticWeb tag="p" className="text-sand-700 text-base md:text-lg leading-8 mb-10">
         Parcourez des parcours réels du générateur Pastek Art : impulsion, consigne
         personnalisée, création et réflexion bienveillante. Idéal pour comprendre l'outil
-        avant de se lancer — ou pour s'inspirer en longue traîne (peinture, stress,
-        lâcher-prise, couleurs douces…).
+        avant de vous lancer — ou pour voir concrètement ce qu'un rituel peut offrir.
       </SemanticWeb>
 
       <View className="gap-4">

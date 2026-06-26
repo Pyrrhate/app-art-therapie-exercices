@@ -4,7 +4,7 @@ import type { PastekExample } from "@/lib/examples/types";
 export const EXEMPLE_001: PastekExample = {
   slug: "exemple-001",
   title: "Paysage chaud en peinture",
-  subtitle: "De l'impulsion « rose beige et fuchsia » au miroir créatif",
+  subtitle: "De l'impulsion « rose beige avec accent fuchsia et vert » au miroir créatif",
   seoTitle:
     "Exemple d'exercice d'art-thérapie en peinture — paysage rose-beige et fuchsia | Pastek Art",
   seoDescription:
