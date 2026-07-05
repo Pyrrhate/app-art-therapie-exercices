@@ -112,7 +112,7 @@ function tryServePublicFile(req, res) {
 
   const ext = path.extname(filePath).toLowerCase();
   const types = {
-    ".xml": "application/xml; charset=utf-8",
+    ".xml": "text/xml; charset=utf-8",
     ".txt": "text/plain; charset=utf-8",
     ".ico": "image/x-icon",
   };

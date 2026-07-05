@@ -7,19 +7,6 @@
   "cleanUrls": true,
   "headers": [
     {
-      "source": "/sitemap.xml",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/xml; charset=utf-8"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, must-revalidate"
-        }
-      ]
-    },
-    {
       "source": "/robots.txt",
       "headers": [
         {
@@ -30,6 +17,12 @@
     }
   ],
   "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.pastek-art.eu" }],
+      "destination": "https://pastek-art.eu/:path*",
+      "permanent": true
+    },
     { "source": "/fil", "destination": "/app/fil", "permanent": true },
     { "source": "/fil/:id", "destination": "/app/fil/:id", "permanent": true },
     { "source": "/ritual", "destination": "/app/ritual", "permanent": true },
@@ -40,6 +33,7 @@
     { "source": "/maj", "destination": "/app/maj", "permanent": true }
   ],
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "handle": "filesystem" },
     { "source": "/((?!.*\\.).*)", "destination": "/" }
   ]
