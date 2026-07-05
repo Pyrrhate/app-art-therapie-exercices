@@ -45,7 +45,9 @@
     { "source": "/maj", "destination": "/app/maj", "permanent": true }
   ],
   "rewrites": [
-    { "handle": "filesystem" },
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/((?!.*\\.).*)",
+      "destination": "/"
+    }
   ]
 }
