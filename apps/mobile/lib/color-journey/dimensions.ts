@@ -1,19 +1,34 @@
-/** Trois dimensions — une teinte par tour, guidées par la théorie des couleurs. */
+/** Cinq dimensions — une teinte par tour, guidées par théories couleur et psychologie. */
 export const COLOR_JOURNEY_DIMENSIONS = [
   {
     id: "anchor",
     title: "Ancrage",
     subtitle: "Votre première teinte, librement choisie",
+    theoryLabel: "Intuition chromatique",
   },
   {
-    id: "energy",
-    title: "Résonance",
-    subtitle: "La complémentaire — opposée sur le cercle",
+    id: "complement",
+    title: "Complémentaire",
+    subtitle: "L'opposée sur le cercle — tension vivifiante",
+    theoryLabel: "Contraste complémentaire (Itten)",
   },
   {
-    id: "harmony",
-    title: "Harmonie",
-    subtitle: "La troisième teinte qui unit la palette",
+    id: "analogous",
+    title: "Analogues",
+    subtitle: "Voisinage harmonique sur la roue",
+    theoryLabel: "Harmonie analogue",
+  },
+  {
+    id: "split",
+    title: "Split-complémentaire",
+    subtitle: "Contraste modéré, palette nuancée",
+    theoryLabel: "Split-complémentaire",
+  },
+  {
+    id: "triadic",
+    title: "Triade & équilibre",
+    subtitle: "Troisième pôle pour unir la palette",
+    theoryLabel: "Triade + psychologie des couleurs",
   },
 ] as const;
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { ChromaticWheel } from "@/components/color-journey/ChromaticWheel";
+import { ColorProposalCard } from "@/components/color-journey/ColorProposalCard";
 import { ColorSwatch } from "@/components/color-journey/ColorSwatch";
 import { JourneyProgress } from "@/components/color-journey/JourneyProgress";
 import { ReflectionPanel } from "@/components/color-journey/ReflectionPanel";
@@ -21,6 +22,7 @@ import {
   buildReflection,
   buildSynthesis,
   getTurnGuidance,
+  getTurnProposals,
 } from "@/lib/color-journey/theory";
 import { ApiError } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
@@ -40,6 +42,7 @@ export default function ColorJourneyScreen() {
   const filRecordedRef = useRef(false);
 
   const guidance = getTurnGuidance(turn, history);
+  const proposals = getTurnProposals(turn, history);
   const canExitEarly = history.length >= 2;
 
   function handleConfirmHex(hex: string) {
@@ -112,7 +115,7 @@ export default function ColorJourneyScreen() {
     filRecordedRef.current = true;
     void recordFilEntry({
       source: "color-journey",
-      summary: "Palette intérieure — 3 teintes",
+      summary: "Palette intérieure — 5 teintes",
       detail: synthesis.summary.slice(0, 200),
       metadata: { colors: paletteHexes, impulse: synthesis.suggestedImpulse },
     });
@@ -133,9 +136,9 @@ export default function ColorJourneyScreen() {
 
       <PastekScreenHero
         label="Palette intérieure"
-        title="Trois teintes "
+        title="Cinq teintes "
         accent="sur la roue"
-        description="Choisissez vos couleurs sur le cercle chromatique — complémentaire, triade : la théorie guide, vous décidez."
+        description="Complémentaire, analogues, split, triade — plusieurs théories couleur et psychologie des couleurs guident chaque tour."
         className="mb-4"
       />
 
@@ -163,6 +166,21 @@ export default function ColorJourneyScreen() {
                 highlightSpread={guidance.highlightSpread}
                 onConfirm={handleConfirmHex}
               />
+
+              {proposals.length > 0 && (
+                <View className="mt-4">
+                  <Text className="text-sand-500 text-xs uppercase tracking-wider mb-2 px-1">
+                    Combinaisons suggérées
+                  </Text>
+                  {proposals.map((proposal) => (
+                    <ColorProposalCard
+                      key={proposal.hex}
+                      proposal={proposal}
+                      onPress={() => handleConfirmHex(proposal.hex)}
+                    />
+                  ))}
+                </View>
+              )}
 
               {canExitEarly && (
                 <View className="mt-4 mb-2">

@@ -7,8 +7,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { router } from "expo-router";
-import { navigateHome } from "@/lib/navigation";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
@@ -17,11 +15,25 @@ import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { recordFilEntry } from "@/lib/fil/record";
 import { startRitualFromImpulse } from "@/lib/fil/bridges";
 import { showAlert } from "@/lib/alert";
-import { getFallbackPingPongWord } from "@/lib/ping-pong/fallback";
-import { PING_PONG_MAX_TURNS, type PingPongTurn } from "@/lib/ping-pong/types";
+import { getFallbackPingPongReply } from "@/lib/ping-pong/fallback";
+import {
+  PING_PONG_TOTAL_STEPS,
+  PING_PONG_USER_TURNS,
+  type PingPongTurn,
+} from "@/lib/ping-pong/types";
+import { navigateHome } from "@/lib/navigation";
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function turnToWords(turn: PingPongTurn): string[] {
+  if (turn.from === "user") return [turn.word];
+  return [turn.logicalWord ?? turn.word, turn.suggestedWord ?? ""].filter(Boolean);
+}
+
+function buildHistory(turns: PingPongTurn[]): string[] {
+  return turns.flatMap(turnToWords);
 }
 
 export default function PingPongScreen() {
@@ -35,9 +47,10 @@ export default function PingPongScreen() {
   const [usingLocalWords, setUsingLocalWords] = useState(false);
 
   const userTurnCount = turns.filter((t) => t.from === "user").length;
-  const canPlay = !finished && userTurnCount < PING_PONG_MAX_TURNS;
+  const currentStep = finished ? PING_PONG_TOTAL_STEPS : turns.length + 1;
+  const canPlay = !finished && userTurnCount < PING_PONG_USER_TURNS;
   const canExitToExercise = turns.length >= 1;
-  const chain = turns.map((t) => t.word).join("  →  ");
+  const chain = buildHistory(turns).join("  →  ");
 
   function recordPingPongFil() {
     if (filRecordedRef.current || !chain.trim()) return;
@@ -64,32 +77,44 @@ export default function PingPongScreen() {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
   }
 
-  function appendPartnerWord(word: string, history: string[]) {
-    const partnerWord = getFallbackPingPongWord(word, history);
+  function appendPartnerReply(word: string, history: string[]) {
+    const reply = getFallbackPingPongReply(word, history);
     setTurns((prev) => [
       ...prev,
-      { id: makeId(), word: partnerWord, from: "ai" },
+      {
+        id: makeId(),
+        word: reply.logicalWord,
+        from: "ai",
+        logicalWord: reply.logicalWord,
+        suggestedWord: reply.suggestedWord,
+      },
     ]);
     scrollToEnd();
   }
 
-  async function fetchPartnerWord(word: string, history: string[]) {
+  async function fetchPartnerReply(word: string, history: string[]) {
     setLoading(true);
     try {
       const result = await fetchPingPongWord(word, history);
       setUsingLocalWords(false);
       setTurns((prev) => [
         ...prev,
-        { id: makeId(), word: result.word, from: "ai" },
+        {
+          id: makeId(),
+          word: result.logicalWord,
+          from: "ai",
+          logicalWord: result.logicalWord,
+          suggestedWord: result.suggestedWord,
+        },
       ]);
       scrollToEnd();
     } catch (error) {
       setUsingLocalWords(true);
-      appendPartnerWord(word, history);
+      appendPartnerReply(word, history);
       if (!(error instanceof ApiError)) {
         showAlert(
           "Suggestion indisponible",
-          "Un mot local prend le relais — vous pouvez continuer l'amorce."
+          "Des mots locaux prennent le relais — vous pouvez continuer l'amorce."
         );
       }
     } finally {
@@ -106,40 +131,77 @@ export default function PingPongScreen() {
     const nextTurns = [...turns, userTurn];
     setTurns(nextTurns);
 
-    const history = nextTurns.slice(0, -1).map((t) => t.word);
+    const history = buildHistory(turns);
 
-    if (userTurnCount + 1 >= PING_PONG_MAX_TURNS) {
+    if (userTurnCount + 1 >= PING_PONG_USER_TURNS) {
       setFinished(true);
       scrollToEnd();
       return;
     }
 
     if (useAiSuggestions) {
-      await fetchPartnerWord(word, history);
+      await fetchPartnerReply(word, history);
     } else {
-      appendPartnerWord(word, history);
+      appendPartnerReply(word, history);
     }
   }
 
-  return (
-    <ScreenContainer scrollable={false} compactTop>
-      <View className="flex-1 px-0">
-        <View className="px-6">
-          <ScreenNavBar
-            backLabel="← Accueil"
-            onBack={navigateHome}
-          />
-        </View>
+  const stickyFooter = !finished && (canPlay || canExitToExercise) ? (
+      <View className="gap-3">
+        {canPlay && (
+          <>
+            <View className="flex-row items-center gap-3">
+              <TextInput
+                value={input}
+                onChangeText={setInput}
+                placeholder="Un mot…"
+                placeholderTextColor="#B8A090"
+                onSubmitEditing={handleSubmit}
+                returnKeyType="send"
+                editable={!loading}
+                className="flex-1 bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base"
+              />
+              <Pressable
+                onPress={handleSubmit}
+                disabled={!input.trim() || loading}
+                className={`rounded-2xl px-4 py-3 ${input.trim() && !loading ? "bg-sage-500" : "bg-sand-200"}`}
+              >
+                <Text className="text-white font-medium">→</Text>
+              </Pressable>
+            </View>
+            <Text className="text-sand-400 text-xs text-center">
+              Étape {currentStep} / {PING_PONG_TOTAL_STEPS}
+              {currentStep % 2 === 1 ? " · votre tour" : " · réponse IA"}
+            </Text>
+          </>
+        )}
 
-        <View className="px-6 mb-4">
+        {canExitToExercise && (
+          <PrimaryButton
+            label="Passer à l'exercice"
+            onPress={handleCreateFromJourney}
+            variant="ghost"
+            align="center"
+          />
+        )}
+      </View>
+    ) : null;
+
+  return (
+    <ScreenContainer
+      compactTop
+      scrollRef={scrollRef}
+      fixedHeader={
+        <View>
+          <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
           <PastekScreenHero
             label="Ping-Pong créatif"
             title="Laissez les mots "
             accent="danser"
-            description={`Amorce rapide — 2 à 3 minutes pour faire émerger une impulsion, puis passer à l'exercice. ${PING_PONG_MAX_TURNS} envois suffisent.`}
+            description="5 étapes en alternance : vous, puis l'IA (mot logique + idée suggérée), et ainsi de suite."
             className="mb-3"
           />
-          <View className="flex-row items-center gap-2 mt-3">
+          <View className="flex-row items-center gap-2 mt-1 mb-2">
             <Pressable
               onPress={() => {
                 setUseAiSuggestions((value) => !value);
@@ -166,114 +228,79 @@ export default function PingPongScreen() {
             )}
           </View>
         </View>
+      }
+      stickyFooter={stickyFooter}
+    >
+      <View className="gap-3 pb-2">
+        {turns.length === 0 && (
+          <View className="bg-white/80 rounded-2xl border border-dashed border-sand-300 px-5 py-8 items-center">
+            <Text className="text-sand-400 text-center leading-6">
+              Tapez un premier mot — un arbre, une couleur, un ressenti…
+              L&apos;IA répondra par un mot logique et une idée suggérée.
+            </Text>
+          </View>
+        )}
 
-        <ScrollView
-          ref={scrollRef}
-          className="flex-1 px-6"
-          contentContainerStyle={{ paddingBottom: 24, gap: 12 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          {turns.length === 0 && (
-            <View className="bg-white/80 rounded-2xl border border-dashed border-sand-300 px-5 py-8 items-center">
-              <Text className="text-sand-400 text-center leading-6">
-                Tapez un premier mot — un arbre, une couleur, un ressenti… Puis
-                passez à l'exercice quand l'impulsion est là.
-              </Text>
-            </View>
-          )}
-
-          {turns.map((turn, index) => (
-            <View
-              key={turn.id}
-              className={`max-w-[85%] ${turn.from === "user" ? "self-end" : "self-start"}`}
-            >
-              <View
-                className={`rounded-2xl px-4 py-3 ${
-                  turn.from === "user"
-                    ? "bg-sage-500"
-                    : "bg-white border border-sand-200"
-                }`}
-              >
-                <Text
-                  className={`text-lg font-light tracking-wide ${
-                    turn.from === "user" ? "text-white" : "text-sand-700"
-                  }`}
-                >
+        {turns.map((turn, index) => (
+          <View
+            key={turn.id}
+            className={`max-w-[90%] ${turn.from === "user" ? "self-end" : "self-start"}`}
+          >
+            {turn.from === "ai" ? (
+              <View className="bg-white border border-sand-200 rounded-2xl px-4 py-3">
+                <Text className="text-sage-600 text-[10px] uppercase tracking-wider mb-2">
+                  Mot logique · idée suggérée
+                </Text>
+                <Text className="text-sand-800 text-lg font-light tracking-wide">
+                  {turn.logicalWord ?? turn.word}
+                  {(turn.suggestedWord ?? "").length > 0 && (
+                    <>
+                      <Text className="text-sand-300"> · </Text>
+                      <Text className="text-sage-700">{turn.suggestedWord}</Text>
+                    </>
+                  )}
+                </Text>
+              </View>
+            ) : (
+              <View className="rounded-2xl px-4 py-3 bg-sage-500">
+                <Text className="text-white text-lg font-light tracking-wide">
                   {turn.word}
                 </Text>
               </View>
-              {index < turns.length - 1 && turn.from === "ai" && (
-                <Text className="text-sand-300 text-center text-xs mt-2">↓</Text>
-              )}
-            </View>
-          ))}
-
-          {loading && (
-            <View className="self-start bg-white border border-sand-200 rounded-2xl px-4 py-3">
-              <ActivityIndicator color="#6B8F71" />
-            </View>
-          )}
-
-          {finished && (
-            <>
-              <View className="bg-white rounded-2xl border border-sage-500/30 px-5 py-5 mt-4">
-                <Text className="text-sand-700 font-medium mb-2">
-                  Votre cheminement
-                </Text>
-                <Text className="text-sand-600 text-sm leading-6">{chain}</Text>
-              </View>
-
-              <CreativeBridge
-                title="Votre impulsion est prête"
-                subtitle="Transformez cette chaîne de mots en matière, couleur ou geste — l'exercice vous attend."
-                actions={[
-                  {
-                    label: "Passer à l'exercice",
-                    onPress: handleCreateFromJourney,
-                    variant: "primary",
-                  },
-                ]}
-              />
-            </>
-          )}
-        </ScrollView>
-
-        {!finished && (canPlay || canExitToExercise) && (
-          <View className="px-6 pt-3 pb-6 border-t border-sand-200 bg-sand-50 gap-3">
-            {canExitToExercise && !finished && (
-              <PrimaryButton
-                label="Passer à l'exercice"
-                onPress={handleCreateFromJourney}
-              />
             )}
-
-            {canPlay && (
-              <>
-                <View className="flex-row items-center gap-3">
-                  <TextInput
-                    value={input}
-                    onChangeText={setInput}
-                    placeholder="Un mot…"
-                    placeholderTextColor="#B8A090"
-                    onSubmitEditing={handleSubmit}
-                    returnKeyType="send"
-                    editable={!loading}
-                    className="flex-1 bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base"
-                  />
-                  <Pressable
-                    onPress={handleSubmit}
-                    disabled={!input.trim() || loading}
-                    className={`rounded-2xl px-4 py-3 ${input.trim() && !loading ? "bg-sage-500" : "bg-sand-200"}`}
-                  >
-                    <Text className="text-white font-medium">→</Text>
-                  </Pressable>
-                </View>
-                <Text className="text-sand-400 text-xs text-center">
-                  Tour {userTurnCount + 1} / {PING_PONG_MAX_TURNS}
-                </Text>
-              </>
+            {index < turns.length - 1 && (
+              <Text className="text-sand-300 text-center text-xs mt-2">↓</Text>
             )}
           </View>
+        ))}
+
+        {loading && (
+          <View className="self-start bg-white border border-sand-200 rounded-2xl px-4 py-3">
+            <ActivityIndicator color="#6B8F71" />
+          </View>
+        )}
+
+        {finished && (
+          <>
+            <View className="bg-white rounded-2xl border border-sage-500/30 px-5 py-5 mt-2">
+              <Text className="text-sand-700 font-medium mb-2">
+                Votre cheminement
+              </Text>
+              <Text className="text-sand-600 text-sm leading-6">{chain}</Text>
+            </View>
+
+            <CreativeBridge
+              title="Votre impulsion est prête"
+              subtitle="Transformez cette chaîne de mots en matière, couleur ou geste — l'exercice vous attend."
+              actions={[
+                {
+                  label: "Passer à l'exercice",
+                  onPress: handleCreateFromJourney,
+                  variant: "primary",
+                },
+              ]}
+            />
+          </>
         )}
       </View>
     </ScreenContainer>

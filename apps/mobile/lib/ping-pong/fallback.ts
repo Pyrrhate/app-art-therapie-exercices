@@ -44,6 +44,20 @@ function normalize(word: string): string {
     .trim();
 }
 
+function pickUnused(pool: string[], used: Set<string>): string {
+  for (const candidate of pool) {
+    if (!used.has(normalize(candidate))) {
+      return candidate;
+    }
+  }
+  for (const candidate of POETIC_WORDS) {
+    if (!used.has(normalize(candidate))) {
+      return candidate;
+    }
+  }
+  return "souffle";
+}
+
 export function getFallbackPingPongWord(
   userWord: string,
   history: string[]
@@ -57,17 +71,27 @@ export function getFallbackPingPongWord(
     Object.entries(ASSOCIATIONS).find(([k]) => key.includes(k))?.[1] ??
     POETIC_WORDS;
 
-  for (const candidate of pool) {
-    if (!used.has(normalize(candidate))) {
-      return candidate;
-    }
-  }
+  return pickUnused(pool, used);
+}
 
-  for (const candidate of POETIC_WORDS) {
-    if (!used.has(normalize(candidate))) {
-      return candidate;
-    }
-  }
+export function getFallbackPingPongReply(
+  userWord: string,
+  history: string[]
+): { logicalWord: string; suggestedWord: string } {
+  const used = new Set(
+    [...history, userWord].map((w) => normalize(w)).filter(Boolean)
+  );
+  const logicalWord = getFallbackPingPongWord(userWord, history);
+  used.add(normalize(logicalWord));
 
-  return "souffle";
+  const humanWords = history.filter((_, i) => i % 2 === 0);
+  const previousHuman = humanWords[humanWords.length - 1] ?? userWord;
+  const bridgePool = [
+    ...POETIC_WORDS,
+    ...(ASSOCIATIONS[normalize(logicalWord)] ?? []),
+    ...(ASSOCIATIONS[normalize(previousHuman)] ?? []),
+  ];
+  const suggestedWord = pickUnused(bridgePool, used);
+
+  return { logicalWord, suggestedWord };
 }

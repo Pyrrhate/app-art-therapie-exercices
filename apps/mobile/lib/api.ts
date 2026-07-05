@@ -2,6 +2,7 @@ import { getApiUrl } from "./config";
 import { getSupabaseClient } from "./supabase/client";
 import { useAuthStore } from "./auth/store";
 import { getFallbackExercise, getFallbackAugmentedExercise } from "./ritual/fallback";
+import { getFallbackPingPongReply } from "./ping-pong/fallback";
 import type {
   ArtisticTechnique,
   ExerciseResponse,
@@ -218,17 +219,40 @@ export async function checkHealth(): Promise<{
   }
 }
 
+type PingPongApiPayload = {
+  logicalWord?: string;
+  suggestedWord?: string;
+  /** Ancien format API (un seul mot) */
+  word?: string;
+  source?: "ai" | "fallback";
+};
+
 export async function fetchPingPongWord(
   word: string,
   history: string[]
-): Promise<{ word: string; source: "ai" | "fallback" }> {
-  return request<{ word: string; source: "ai" | "fallback" }>(
-    "/api/ping-pong",
-    {
-      method: "POST",
-      body: JSON.stringify({ word, history }),
-    }
-  );
+): Promise<{ logicalWord: string; suggestedWord: string; source: "ai" | "fallback" }> {
+  const data = await request<PingPongApiPayload>("/api/ping-pong", {
+    method: "POST",
+    body: JSON.stringify({ word, history }),
+  });
+
+  const logicalWord = data.logicalWord?.trim() || data.word?.trim();
+  const suggestedWord = data.suggestedWord?.trim();
+
+  if (logicalWord && suggestedWord) {
+    return {
+      logicalWord,
+      suggestedWord,
+      source: data.source ?? "ai",
+    };
+  }
+
+  const fallback = getFallbackPingPongReply(word, history);
+  return {
+    logicalWord: logicalWord || fallback.logicalWord,
+    suggestedWord: suggestedWord || fallback.suggestedWord,
+    source: data.source ?? (logicalWord ? "ai" : "fallback"),
+  };
 }
 
 export { ApiError, getApiUrl };

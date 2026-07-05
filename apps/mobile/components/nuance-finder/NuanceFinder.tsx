@@ -47,6 +47,7 @@ interface NuanceCellViewProps {
   cellSize: number;
   revealed: boolean;
   waveDelayMs: number;
+  celebrationDelayMs: number;
   pebbled: boolean;
   onReveal: (id: string) => void;
   onTogglePebble: (id: string) => void;
@@ -57,12 +58,14 @@ function NuanceCellView({
   cellSize,
   revealed,
   waveDelayMs,
+  celebrationDelayMs,
   pebbled,
   onReveal,
   onTogglePebble,
 }: NuanceCellViewProps) {
   const opacity = useSharedValue(revealed ? 1 : 0);
   const scale = useSharedValue(revealed ? 1 : cell.isSource ? 0.75 : 0.88);
+  const borderRadius = Math.max(4, Math.round(cellSize * 0.1));
 
   useEffect(() => {
     if (revealed) {
@@ -77,12 +80,23 @@ function NuanceCellView({
     }
   }, [revealed, waveDelayMs, cell.isSource, opacity, scale]);
 
+  useEffect(() => {
+    if (celebrationDelayMs < 0 || !revealed) return;
+    scale.value = withDelay(
+      celebrationDelayMs,
+      withSpring(1.1, { damping: 8, stiffness: 220, mass: 0.55 })
+    );
+    const settle = setTimeout(() => {
+      scale.value = withSpring(1, { damping: 12, stiffness: 180 });
+    }, celebrationDelayMs + 220);
+    return () => clearTimeout(settle);
+  }, [celebrationDelayMs, revealed, scale]);
+
   const colorStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ scale: scale.value }],
   }));
 
-  const borderRadius = 16;
   const showLotusIcon = revealed && cell.kind === "lotus";
 
   return (
@@ -160,7 +174,14 @@ export function NuanceFinder() {
   const [waveDelays, setWaveDelays] = useState<Record<string, number>>({});
   const [pebbles, setPebbles] = useState<Record<string, boolean>>({});
   const [foundLotusCount, setFoundLotusCount] = useState(0);
+  const [celebrationDelays, setCelebrationDelays] = useState<
+    Record<string, number>
+  >({});
   const filRecordedRef = useRef(false);
+  const completionTriggeredRef = useRef(false);
+
+  const gridPulse = useSharedValue(1);
+  const titleScale = useSharedValue(1);
 
   useEffect(
     () => () => {
@@ -171,6 +192,35 @@ export function NuanceFinder() {
 
   const revealedCount = flatCells.filter((c) => revealed[c.id]).length;
   const harmonyFound = revealedCount >= flatCells.length;
+
+  const gridPulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: gridPulse.value }],
+  }));
+
+  const titleAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: titleScale.value }],
+  }));
+
+  useEffect(() => {
+    if (!harmonyFound || completionTriggeredRef.current) return;
+    completionTriggeredRef.current = true;
+
+    const center = (GRID_SIZE - 1) / 2;
+    const delays: Record<string, number> = {};
+    for (const cell of flatCells) {
+      const distance = Math.hypot(cell.row - center, cell.col - center);
+      delays[cell.id] = Math.round(distance * 55);
+    }
+    setCelebrationDelays(delays);
+
+    gridPulse.value = withSpring(1.035, { damping: 9, stiffness: 130 });
+    titleScale.value = withSpring(1.06, { damping: 10, stiffness: 150 });
+    const settle = setTimeout(() => {
+      gridPulse.value = withSpring(1, { damping: 14, stiffness: 180 });
+      titleScale.value = withSpring(1, { damping: 14, stiffness: 180 });
+    }, 600);
+    return () => clearTimeout(settle);
+  }, [harmonyFound, flatCells, gridPulse, titleScale]);
 
   const revealedColorItems = useMemo((): ColorForImpulse[] => {
     const items: ColorForImpulse[] = [];
@@ -270,6 +320,7 @@ export function NuanceFinder() {
 
   function handleRestart() {
     filRecordedRef.current = false;
+    completionTriggeredRef.current = false;
     lotusTimers.current.forEach(clearTimeout);
     lotusTimers.current = [];
     setGameSeed(Date.now());
@@ -277,6 +328,9 @@ export function NuanceFinder() {
     setWaveDelays({});
     setPebbles({});
     setFoundLotusCount(0);
+    setCelebrationDelays({});
+    gridPulse.value = 1;
+    titleScale.value = 1;
   }
 
   return (
@@ -304,11 +358,17 @@ export function NuanceFinder() {
         </View>
       </View>
 
-      <View
+      <Animated.View
         className={`self-center rounded-3xl border p-3 mb-5 ${
-          isDark ? "bg-sand-800/60 border-sand-700" : "bg-white/60 border-sand-200"
+          harmonyFound
+            ? isDark
+              ? "border-sage-500 bg-sand-800/60"
+              : "border-sage-400 bg-white/60"
+            : isDark
+              ? "bg-sand-800/60 border-sand-700"
+              : "bg-white/60 border-sand-200"
         }`}
-        style={!isDark ? gridCardShadow : undefined}
+        style={[!isDark ? gridCardShadow : undefined, gridPulseStyle]}
       >
         <View
           style={{
@@ -325,22 +385,23 @@ export function NuanceFinder() {
               cellSize={cellSize}
               revealed={Boolean(revealed[cell.id])}
               waveDelayMs={waveDelays[cell.id] ?? 0}
+              celebrationDelayMs={celebrationDelays[cell.id] ?? -1}
               pebbled={Boolean(pebbles[cell.id])}
               onReveal={handleReveal}
               onTogglePebble={handleTogglePebble}
             />
           ))}
         </View>
-      </View>
+      </Animated.View>
 
       {harmonyFound ? (
         <View className="gap-4 mb-6 items-center">
-          <Text
+          <Animated.Text
             className={`font-display text-2xl text-center ${textPrimary(isDark)}`}
-            style={{ letterSpacing: -0.3 }}
+            style={[{ letterSpacing: -0.3 }, titleAnimStyle]}
           >
             Harmonie trouvée
-          </Text>
+          </Animated.Text>
           {foundLotusCount > 0 && (
             <View className="flex-row items-center justify-center gap-1.5">
               <Text className={`text-sm text-center ${textMuted(isDark)}`}>

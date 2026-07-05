@@ -35,7 +35,7 @@ export function hslToHex(h: number, s: number, l: number): string {
   const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
   const m = light - c / 2;
   let r = 0;
-  let g =  0;
+  let g = 0;
   let b = 0;
   if (hue < 60) {
     r = c;
@@ -84,6 +84,15 @@ export function complementaryHue(hue: number): number {
   return (hue + 180) % 360;
 }
 
+export function analogousHues(hue: number, spread = 30): [number, number] {
+  return [(hue - spread + 360) % 360, (hue + spread) % 360];
+}
+
+export function splitComplementaryHues(hue: number): [number, number] {
+  const complement = complementaryHue(hue);
+  return [(complement - 30 + 360) % 360, (complement + 30) % 360];
+}
+
 export function triadicHues(hue: number): [number, number] {
   return [(hue + 120) % 360, (hue + 240) % 360];
 }
@@ -107,9 +116,10 @@ export function getTurnGuidance(turn: number, history: ColorChoice[]): TurnGuida
   if (turn === 1) {
     return {
       title: dim.title,
-      subtitle: "Choisissez librement une teinte sur la roue — votre point d'ancrage.",
+      subtitle:
+        "Choisissez librement une teinte — votre point d'ancrage émotionnel sur la roue.",
       theory:
-        "Sur le cercle chromatique, chaque teinte porte une qualité propre. Commencez par celle qui vous attire sans justification.",
+        "En psychologie des couleurs, le premier choix révèle souvent l'état intérieur du moment : chaleur, retrait, énergie ou douceur.",
       highlightHues: [],
       highlightSpread: 0,
     };
@@ -117,27 +127,75 @@ export function getTurnGuidance(turn: number, history: ColorChoice[]): TurnGuida
 
   const anchor = hexToHsl(history[0]!.hex);
   const complement = complementaryHue(anchor.h);
+  const [anaLeft, anaRight] = analogousHues(anchor.h, 28);
+  const [splitA, splitB] = splitComplementaryHues(anchor.h);
 
   if (turn === 2) {
     return {
       title: dim.title,
-      subtitle: "La complémentaire fait résonner votre ancrage — teintes opposées sur la roue.",
-      theory: `Votre ${history[0]!.label} trouve son écho à l'opposé du cercle chromatique (~180°). Cette tension crée de la vivacité sans rupture.`,
+      subtitle: "Teinte opposée (~180°) — le contraste complémentaire réveille la palette.",
+      theory: `Face à ${history[0]!.label}, la complémentaire crée une vibration visuelle : l'œil perçoit d'abord la relation entre les deux pôles.`,
       highlightHues: [complement],
-      highlightSpread: 28,
+      highlightSpread: 26,
     };
   }
 
-  const second = hexToHsl(history[1]!.hex);
+  if (turn === 3) {
+    return {
+      title: dim.title,
+      subtitle: "Deux voisins harmoniques — douceur et continuité chromatique.",
+      theory:
+        "L'harmonie analogue apaise : les teintes proches sur la roue évoquent calme, cohérence et enveloppement — utile quand on cherche du réconfort.",
+      highlightHues: [anaLeft, anaRight, anchor.h],
+      highlightSpread: 22,
+    };
+  }
+
+  if (turn === 4) {
+    return {
+      title: dim.title,
+      subtitle: "Split-complémentaire — contraste nuancé sans rupture brutale.",
+      theory:
+        "Entre tension et douceur : deux teintes voisines de l'opposé modèrent la complémentaire pure, pour une palette plus subtile et expressive.",
+      highlightHues: [splitA, splitB],
+      highlightSpread: 24,
+    };
+  }
+
+  const second = history[1] ? hexToHsl(history[1].hex) : anchor;
   const third = pickTriadicHue(anchor.h, second.h);
+  const warmHue = anchor.h < 180 ? anchor.h : complementaryHue(anchor.h);
+  const coolHue = complementaryHue(warmHue);
 
   return {
     title: dim.title,
-    subtitle: "Une troisième teinte pour unir la palette — triade ou voisinage harmonique.",
-    theory: `Après ancrage et complémentaire, une teinte triadique (${Math.round(third)}°) ou voisine équilibre l'ensemble sans l'aplatir.`,
-    highlightHues: [third, (third + 30) % 360, (third - 30 + 360) % 360],
-    highlightSpread: 22,
+    subtitle: "Triade ou équilibre chaud/froid — la palette se referme.",
+    theory: `La triade (${Math.round(third)}°) ou le contraste chaud/froid équilibre l'ensemble. Cinq teintes forment un petit langage coloré unique.`,
+    highlightHues: [third, warmHue, coolHue],
+    highlightSpread: 20,
   };
+}
+
+export function getTurnProposals(
+  turn: number,
+  history: ColorChoice[],
+  preset: LightnessPreset = "moyen"
+): ColorProposal[] {
+  if (turn === 1) return [];
+
+  const guidance = getTurnGuidance(turn, history);
+  const hues = guidance.highlightHues.slice(0, 3);
+
+  return hues.map((hue, index) => {
+    const hex = hexFromHue(hue, preset);
+    const label = hexToColorLabel(hex);
+    const dim = getDimensionForTurn(turn);
+    return {
+      hex,
+      label,
+      hint: `${dim.theoryLabel} · option ${index + 1}`,
+    };
+  });
 }
 
 export function proposalFromSelection(
@@ -153,30 +211,28 @@ export function proposalFromSelection(
   };
 }
 
+const PSYCHOLOGY_BY_TURN: Record<number, string> = {
+  1: "Le premier choix chromatique oriente l'atmosphère de la création — accueillez-le comme un point de départ, pas une étiquette.",
+  2: "La complémentaire réveille : elle peut exprimer un élan, une contradiction intérieure ou une envie de contraste.",
+  3: "Les analogues apaisent et rapprochent : on sent souvent une continuité, une douceur ou une mélancolie colorée.",
+  4: "Le split-complémentaire nuance la tension : assez de contraste pour tenir l'attention, assez de proximité pour rester harmonieux.",
+  5: "Votre palette devient un système : chaque teinte modère ou amplifie les autres — un langage intérieur prêt pour l'exercice.",
+};
+
 export function buildReflection(
   turn: number,
   chosen: ColorProposal,
   history: ColorChoice[]
 ): JourneyReflection {
-  const dim = getDimensionForTurn(turn);
   const guidance = getTurnGuidance(turn, history);
-
-  let psychology = "";
-  if (turn === 1) {
-    psychology =
-      "Le premier choix chromatique oriente souvent l'atmosphère de la création — accueillez-le comme un point de départ, pas une étiquette.";
-  } else if (turn === 2) {
-    psychology = `Face à ${history[0]?.label}, ${chosen.label} apporte une réponse contrastée : l'œil perçoit d'abord la relation entre les deux.`;
-  } else {
-    psychology = `Vos trois teintes forment un petit système : chaque nuance modère ou amplifie les autres.`;
-  }
+  const psychology = PSYCHOLOGY_BY_TURN[turn] ?? PSYCHOLOGY_BY_TURN[5]!;
 
   return {
     reflection: `${chosen.label} rejoint votre palette — laissez cette teinte résonner un instant.`,
     psychology,
     theory: guidance.theory,
     question:
-      turn < 3
+      turn < 5
         ? "Où sentez-vous cette couleur dans votre corps ou votre humeur ?"
         : undefined,
     turn,
@@ -187,9 +243,11 @@ export function buildReflection(
 export function buildSynthesis(history: ColorChoice[]): JourneySynthesis {
   const labels = history.map((h) => h.label).join(", ");
   const relations =
-    history.length >= 3
-      ? "Ancrage, complémentaire et harmonie triadique tissent une palette cohérente."
-      : "Deux teintes déjà suffisent pour une impulsion — vous pouvez continuer ou passer à l'exercice.";
+    history.length >= 5
+      ? "Complémentaire, analogues, split et triade tissent une palette riche et personnelle."
+      : history.length >= 3
+        ? "Plusieurs schémas chromatiques se répondent déjà — vous pouvez continuer ou passer à l'exercice."
+        : "Deux teintes suffisent pour une impulsion — vous pouvez continuer ou passer à l'exercice.";
 
   return {
     summary: `${relations} Votre palette : ${labels}.`,
