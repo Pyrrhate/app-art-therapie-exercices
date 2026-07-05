@@ -5,6 +5,7 @@ import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { enableScreens } from "react-native-screens";
 import { ThemeRoot } from "@/components/ThemeRoot";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { WebErrorBoundary } from "@/components/WebErrorBoundary";
 import { THEME_COLORS, useThemeStore } from "@/lib/themeStore";
 
@@ -31,8 +32,11 @@ function RootStack() {
       <Stack.Screen name="index" options={{ animation: "none" }} />
       <Stack.Screen name="exemples/index" options={{ animation: "none" }} />
       <Stack.Screen name="exemples/exemple-001" options={{ animation: "none" }} />
+      <Stack.Screen name="exemples/exemple-002" options={{ animation: "none" }} />
+      <Stack.Screen name="exemples/exemple-004" options={{ animation: "none" }} />
       <Stack.Screen name="fil/index" options={{ animation: "none" }} />
       <Stack.Screen name="fil/[id]" options={{ animation: "none" }} />
+      <Stack.Screen name="auth/callback" options={{ animation: "none" }} />
       <Stack.Screen name="app" options={{ headerShown: false }} />
     </Stack>
   );
@@ -43,7 +47,9 @@ export default function RootLayout() {
     <WebErrorBoundary>
       <SafeAreaProvider>
         <ThemeRoot>
-          <RootStack />
+          <AuthProvider>
+            <RootStack />
+          </AuthProvider>
         </ThemeRoot>
       </SafeAreaProvider>
     </WebErrorBoundary>

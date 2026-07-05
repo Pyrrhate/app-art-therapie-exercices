@@ -39,6 +39,14 @@ export default function AppStackLayout() {
         }
       />
       <Stack.Screen
+        name="premium-cloud"
+        options={
+          Platform.OS === "web"
+            ? { presentation: "card" }
+            : { presentation: "modal" }
+        }
+      />
+      <Stack.Screen
         name="privacy"
         options={
           Platform.OS === "web"

@@ -1,6 +1,12 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { FilConversionCTA } from "@/components/fil/FilConversionCTA";
+import {
+  LaunchWaitlistCard,
+  PremiumCreditsBadge,
+} from "@/components/auth/LaunchWaitlistCard";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
@@ -25,6 +31,8 @@ import {
 } from "@/lib/fil/types";
 import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
+import { useAuthLoading, useAuthStore, useIsAuthenticated, useUserProfile } from "@/lib/auth/store";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -39,16 +47,31 @@ const FILTER_SOURCES: Array<{ id: FilSource | "all"; label: string }> = [
 
 export default function FilScreen() {
   const isDark = useIsDark();
+  const isAuthenticated = useIsAuthenticated();
+  const authLoading = useAuthLoading();
+  const lastSyncCount = useAuthStore((s) => s.lastSyncCount);
+  const profile = useUserProfile();
+  const email = useAuthStore((s) => s.user?.email);
+  const showConversionCta =
+    isSupabaseConfigured() && !authLoading && !isAuthenticated;
   const [entries, setEntries] = useState<FilEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<FilSource | "all">("all");
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setEntries(await getFilEntries());
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setAuthModalOpen(false);
+      void load();
+    }
+  }, [isAuthenticated, lastSyncCount, load]);
 
   useFocusEffect(
     useCallback(() => {
@@ -114,6 +137,11 @@ export default function FilScreen() {
           <Text className={`text-center leading-6 ${textSecondary(isDark)}`}>
             Rien ici pour l&apos;instant. Terminez un exercice ou une amorce — une trace s&apos;ajoutera toute seule.
           </Text>
+          {showConversionCta ? (
+            <View className="mt-6 w-full">
+              <FilConversionCTA onPress={() => setAuthModalOpen(true)} />
+            </View>
+          ) : null}
           <View className="mt-6 w-full gap-3">
             <PrimaryButton label="Préparer un exercice" onPress={() => router.push(ROUTES.ritual)} />
             <PrimaryButton label="Retour à l'accueil" onPress={navigateHome} variant="ghost" />
@@ -121,6 +149,27 @@ export default function FilScreen() {
         </View>
       ) : (
         <View className="gap-3 pb-6">
+          {isAuthenticated ? (
+            <View
+              className={`rounded-2xl border px-4 py-3 mb-1 gap-1 ${
+                isDark
+                  ? "border-sage-600/40 bg-sage-700/20"
+                  : "border-sage-100 bg-sage-50"
+              }`}
+            >
+              <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
+                {lastSyncCount && lastSyncCount > 0
+                  ? `${lastSyncCount} trace${lastSyncCount > 1 ? "s" : ""} sauvegardée${lastSyncCount > 1 ? "s" : ""} dans le cloud.`
+                  : "Votre Fil est lié à votre compte — les nouvelles traces se synchronisent automatiquement."}
+              </Text>
+              {profile ? <PremiumCreditsBadge profile={profile} /> : null}
+            </View>
+          ) : null}
+
+          {isAuthenticated && profile ? (
+            <LaunchWaitlistCard profile={profile} email={email} />
+          ) : null}
+
           {nearLimit ? (
             <View className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-1">
               <Text className="text-amber-800 text-sm leading-5">
@@ -176,70 +225,74 @@ export default function FilScreen() {
             </Text>
           ) : null}
 
-          {filtered.map((entry) => {
+          {filtered.map((entry, index) => {
             const meta = FIL_SOURCE_META[entry.source];
             const preview =
               entry.metadata?.reflection?.slice(0, 120) ??
               entry.detail?.slice(0, 120);
             return (
-              <Pressable
-                key={entry.id}
-                onPress={() => router.push(ROUTES.filEntry(entry.id))}
-                className={`rounded-3xl border px-5 py-4 ${panelBg(isDark)}`}
-              >
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text className={`text-xs ${textMuted(isDark)}`}>
-                    {formatSessionDate(entry.createdAt)}
-                  </Text>
-                  <View className="flex-row items-center gap-2">
-                    <PastekIcon
-                      id={meta.icon}
-                      boxSize={24}
-                      size={14}
-                      className="mb-0"
-                    />
-                    <Text className={`text-xs ${textMuted(isDark)}`}>
-                      {meta.label}
-                      {isRitualFilEntry(entry) ? " · fiche complète" : ""}
-                    </Text>
-                  </View>
-                </View>
-                <Text className={`font-medium text-base mb-1 ${textPrimary(isDark)}`}>
-                  {entry.summary}
-                </Text>
-                {preview ? (
-                  <Text
-                    className={`text-sm leading-6 ${textSecondary(isDark)}`}
-                    numberOfLines={3}
-                  >
-                    {preview}
-                    {preview.length >= 120 ? "…" : ""}
-                  </Text>
-                ) : null}
-                {entry.metadata?.colors?.length ? (
-                  <View className="flex-row flex-wrap gap-2 mt-3">
-                    {entry.metadata.colors.slice(0, 6).map((hex) => (
-                      <View
-                        key={hex}
-                        className={`w-6 h-6 rounded-full border ${isDark ? "border-sand-600" : "border-sand-200"}`}
-                        style={{ backgroundColor: hex }}
-                      />
-                    ))}
-                  </View>
-                ) : null}
+              <View key={entry.id} className="gap-3">
                 <Pressable
-                  onPress={(e) => {
-                    e.stopPropagation?.();
-                    void handleDeleteEntry(entry);
-                  }}
-                  hitSlop={8}
-                  className="mt-3 self-end"
+                  onPress={() => router.push(ROUTES.filEntry(entry.id))}
+                  className={`rounded-3xl border px-5 py-4 ${panelBg(isDark)}`}
                 >
-                  <Text className={`text-xs ${textMuted(isDark)}`}>
-                    Retirer du Fil
+                  <View className="flex-row items-center justify-between mb-2">
+                    <Text className={`text-xs ${textMuted(isDark)}`}>
+                      {formatSessionDate(entry.createdAt)}
+                    </Text>
+                    <View className="flex-row items-center gap-2">
+                      <PastekIcon
+                        id={meta.icon}
+                        boxSize={24}
+                        size={14}
+                        className="mb-0"
+                      />
+                      <Text className={`text-xs ${textMuted(isDark)}`}>
+                        {meta.label}
+                        {isRitualFilEntry(entry) ? " · fiche complète" : ""}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className={`font-medium text-base mb-1 ${textPrimary(isDark)}`}>
+                    {entry.summary}
                   </Text>
+                  {preview ? (
+                    <Text
+                      className={`text-sm leading-6 ${textSecondary(isDark)}`}
+                      numberOfLines={3}
+                    >
+                      {preview}
+                      {preview.length >= 120 ? "…" : ""}
+                    </Text>
+                  ) : null}
+                  {entry.metadata?.colors?.length ? (
+                    <View className="flex-row flex-wrap gap-2 mt-3">
+                      {entry.metadata.colors.slice(0, 6).map((hex) => (
+                        <View
+                          key={hex}
+                          className={`w-6 h-6 rounded-full border ${isDark ? "border-sand-600" : "border-sand-200"}`}
+                          style={{ backgroundColor: hex }}
+                        />
+                      ))}
+                    </View>
+                  ) : null}
+                  <Pressable
+                    onPress={(e) => {
+                      e.stopPropagation?.();
+                      void handleDeleteEntry(entry);
+                    }}
+                    hitSlop={8}
+                    className="mt-3 self-end"
+                  >
+                    <Text className={`text-xs ${textMuted(isDark)}`}>
+                      Retirer du Fil
+                    </Text>
+                  </Pressable>
                 </Pressable>
-              </Pressable>
+                {showConversionCta && index === 0 ? (
+                  <FilConversionCTA onPress={() => setAuthModalOpen(true)} />
+                ) : null}
+              </View>
             );
           })}
 
@@ -260,6 +313,11 @@ export default function FilScreen() {
           </View>
         </View>
       )}
+
+      <AuthModal
+        visible={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
     </ScreenContainer>
   );
 }

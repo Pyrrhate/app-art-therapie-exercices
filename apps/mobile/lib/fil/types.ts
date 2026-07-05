@@ -33,6 +33,9 @@ export interface FilEntry {
   detail?: string;
   metadata?: FilMetadata;
   createdAt: string;
+  /** true après envoi réussi vers Supabase creative_threads */
+  synced?: boolean;
+  syncedAt?: string;
 }
 
 export const FIL_SOURCE_META: Record<

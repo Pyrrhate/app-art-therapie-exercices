@@ -1,4 +1,6 @@
 import { getApiUrl } from "./config";
+import { getSupabaseClient } from "./supabase/client";
+import { useAuthStore } from "./auth/store";
 import { getFallbackExercise, getFallbackAugmentedExercise } from "./ritual/fallback";
 import type {
   ArtisticTechnique,
@@ -7,6 +9,16 @@ import type {
 } from "./types";
 
 const API_URL = getApiUrl();
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return {};
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.access_token) return {};
+  return { Authorization: `Bearer ${session.access_token}` };
+}
 
 class ApiError extends Error {
   constructor(
@@ -26,6 +38,7 @@ async function request<T>(
   const url = `${API_URL.replace(/\/$/, "")}${path}`;
   const method = (options.method ?? "GET").toUpperCase();
   const headers: Record<string, string> = {
+    ...(await getAuthHeaders()),
     ...(options.headers as Record<string, string> | undefined),
   };
 
@@ -73,6 +86,10 @@ async function request<T>(
       body.code,
       response.status
     );
+  }
+
+  if (response.headers.has("X-Premium-Sessions-Remaining")) {
+    void useAuthStore.getState().refreshProfile();
   }
 
   return data as T;

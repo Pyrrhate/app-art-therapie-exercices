@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getAIProvider } from "@/lib/ai";
+import { withFreemiumAI } from "@/lib/ai/with-freemium";
 import { artisticTechniqueSchema } from "@/lib/techniques";
 import {
   corsHeaders,
@@ -58,12 +58,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    const provider = getAIProvider();
-    const result = await provider.generateExercise(parsed.data);
+    const { result, extraHeaders } = await withFreemiumAI(request, (provider) =>
+      provider.generateExercise(parsed.data)
+    );
 
     return jsonResponse(result, request, {
       headers: {
         "X-RateLimit-Remaining": String(rateLimit.remaining),
+        ...extraHeaders,
       },
     });
   } catch (error) {

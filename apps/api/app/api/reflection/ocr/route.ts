@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getAIProvider } from "@/lib/ai";
+import { withFreemiumAI } from "@/lib/ai/with-freemium";
 import {
   corsHeaders,
   errorResponse,
@@ -58,20 +58,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const provider = getAIProvider();
-    if (typeof provider.transcribeHandwriting !== "function") {
-      return errorResponse(
-        request,
-        { error: "OCR indisponible.", code: "AI_NOT_CONFIGURED" },
-        503
-      );
-    }
-
-    const result = await provider.transcribeHandwriting(parsed.data.imageBase64);
+    const { result, extraHeaders } = await withFreemiumAI(request, (provider) => {
+      if (typeof provider.transcribeHandwriting !== "function") {
+        throw new Error("OCR indisponible");
+      }
+      return provider.transcribeHandwriting(parsed.data.imageBase64);
+    });
 
     return jsonResponse(result, request, {
       headers: {
         "X-RateLimit-Remaining": String(rateLimit.remaining),
+        ...extraHeaders,
       },
     });
   } catch {

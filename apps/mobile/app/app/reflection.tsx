@@ -648,7 +648,7 @@ export default function ReflectionScreen() {
         /* conserve l'URI d'origine si la compression échoue */
       }
 
-      await recordFilEntry({
+      const entry = await recordFilEntry({
         source: "ritual",
         summary:
           currentRound === 2
@@ -667,6 +667,13 @@ export default function ReflectionScreen() {
           followUpExercise: followUpExercise ?? undefined,
         },
       });
+
+      if (storedPhotoUri?.startsWith("data:")) {
+        const { tryUploadArtworkToCloud } = await import(
+          "@/lib/integrations/upload"
+        );
+        void tryUploadArtworkToCloud(storedPhotoUri, entry.id);
+      }
       await discardRitualDraft();
       setNotice({
         type: "success",

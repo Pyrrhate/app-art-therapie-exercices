@@ -1,7 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/constants";
 import type { SavedSession } from "@/lib/types";
+import { syncLocalHistoryToCloud } from "./sync";
 import type { FilEntry } from "./types";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const MAX_ENTRIES = 80;
 export const FIL_MAX_ENTRIES = MAX_ENTRIES;
@@ -36,7 +38,22 @@ export async function addFilEntry(
   const existing = await getFilEntriesRaw();
   const next = [full, ...existing].slice(0, MAX_ENTRIES);
   await AsyncStorage.setItem(STORAGE_KEYS.creativeFil, JSON.stringify(next));
+  void maybeSyncNewEntry();
   return full;
+}
+
+async function maybeSyncNewEntry(): Promise<void> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return;
+  try {
+    await syncLocalHistoryToCloud();
+  } catch {
+    /* retry au prochain focus / INITIAL_SESSION */
+  }
 }
 
 async function getFilEntriesRaw(): Promise<FilEntry[]> {
