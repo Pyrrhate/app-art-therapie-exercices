@@ -32,6 +32,11 @@ export default function MarketingHomeScreen() {
         <meta property="og:type" content="website" />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://pastek-art.eu/" />
+        <link
+          rel="sitemap"
+          type="application/xml"
+          href="https://pastek-art.eu/sitemap.xml"
+        />
       </Head>
       <LandingPage />
     </>

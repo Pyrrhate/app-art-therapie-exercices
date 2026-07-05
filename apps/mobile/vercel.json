@@ -5,6 +5,30 @@
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/robots.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        }
+      ]
+    }
+  ],
   "redirects": [
     { "source": "/fil", "destination": "/app/fil", "permanent": true },
     { "source": "/fil/:id", "destination": "/app/fil/:id", "permanent": true },
@@ -16,9 +40,7 @@
     { "source": "/maj", "destination": "/app/maj", "permanent": true }
   ],
   "rewrites": [
-    {
-      "source": "/((?!sitemap\\.xml|robots\\.txt|favicon\\.ico).*)",
-      "destination": "/"
-    }
+    { "handle": "filesystem" },
+    { "source": "/((?!.*\\.).*)", "destination": "/" }
   ]
 }
