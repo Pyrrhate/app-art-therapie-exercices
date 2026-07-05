@@ -1,9 +1,11 @@
+const fs = require("fs");
 const path = require("path");
 const Module = require("module");
 const { resolve } = require("metro-resolver");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 
 const projectRoot = __dirname;
+const publicDir = path.join(projectRoot, "public");
 const workspaceRoot = path.resolve(projectRoot, "../..");
 const mobileNodeModules = path.resolve(projectRoot, "node_modules");
 const workspaceNodeModules = path.resolve(workspaceRoot, "node_modules");
@@ -93,12 +95,42 @@ const apiProxy = createProxyMiddleware({
   changeOrigin: true,
 });
 
+function tryServePublicFile(req, res) {
+  const pathname = req.url?.split("?")[0];
+  if (!pathname || pathname.includes("..")) return false;
+
+  const relative = pathname.replace(/^\//, "");
+  if (!relative) return false;
+
+  const filePath = path.join(publicDir, relative);
+  if (!filePath.startsWith(publicDir) || !fs.existsSync(filePath)) {
+    return false;
+  }
+
+  const stat = fs.statSync(filePath);
+  if (!stat.isFile()) return false;
+
+  const ext = path.extname(filePath).toLowerCase();
+  const types = {
+    ".xml": "application/xml; charset=utf-8",
+    ".txt": "text/plain; charset=utf-8",
+    ".ico": "image/x-icon",
+  };
+
+  res.setHeader("Content-Type", types[ext] ?? "application/octet-stream");
+  res.end(fs.readFileSync(filePath));
+  return true;
+}
+
 config.server = {
   ...config.server,
   enhanceMiddleware: (middleware) => {
     return (req, res, next) => {
       if (req.url?.startsWith("/api/")) {
         return apiProxy(req, res, next);
+      }
+      if (tryServePublicFile(req, res)) {
+        return;
       }
       return middleware(req, res, next);
     };

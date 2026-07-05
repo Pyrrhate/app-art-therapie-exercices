@@ -62,6 +62,7 @@ export default function AppStackLayout() {
             : { presentation: "modal" }
         }
       />
+      <Stack.Screen name="+not-found" />
     </Stack>
   );
 }
