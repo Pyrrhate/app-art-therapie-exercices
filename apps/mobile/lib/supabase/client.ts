@@ -1,25 +1,49 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { Platform } from "react-native";
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? "";
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? "";
+import {
+  ensureSupabaseConfigured,
+  getSupabaseCredentials,
+  resetSupabaseRemoteConfig,
+} from "./config";
 
 let client: SupabaseClient | null = null;
+let clientKey = "";
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(supabaseUrl && supabaseAnonKey);
+  const { url, anonKey } = getSupabaseCredentials();
+  return Boolean(url && anonKey);
+}
+
+export async function initSupabaseClient(): Promise<boolean> {
+  await ensureSupabaseConfigured();
+  if (isSupabaseConfigured()) {
+    client = null;
+    clientKey = "";
+  }
+  return isSupabaseConfigured();
+}
+
+export function resetSupabaseClient(): void {
+  client = null;
+  clientKey = "";
+  resetSupabaseRemoteConfig();
 }
 
 export function getSupabaseClient(): SupabaseClient | null {
-  if (!isSupabaseConfigured()) return null;
-  if (!client) {
-    client = createClient(supabaseUrl, supabaseAnonKey, {
+  const { url, anonKey } = getSupabaseCredentials();
+  if (!url || !anonKey) return null;
+
+  const cacheKey = `${url}|${anonKey}`;
+  if (!client || clientKey !== cacheKey) {
+    client = createClient(url, anonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: Platform.OS === "web",
       },
     });
+    clientKey = cacheKey;
   }
+
   return client;
 }

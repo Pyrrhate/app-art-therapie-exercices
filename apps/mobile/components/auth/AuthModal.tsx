@@ -14,7 +14,10 @@ import { PREMIUM_SIGNUP_CREDITS } from "@art-therapie/shared";
 import { showAlert } from "@/lib/alert";
 import { signInWithMagicLink, signInWithOAuth } from "@/lib/supabase/auth";
 import { formatAuthError } from "@/lib/supabase/errors";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
+import {
+  initSupabaseClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/client";
 import { textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -32,13 +35,19 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
   const [step, setStep] = useState<Step>("form");
   const [busy, setBusy] = useState<"email" | "google" | "azure" | null>(null);
 
+  const [ready, setReady] = useState(isSupabaseConfigured());
+
   useEffect(() => {
     if (!visible) {
       setStep("form");
       setEmail("");
       setBusy(null);
+      return;
     }
-  }, [visible]);
+    if (!ready) {
+      void initSupabaseClient().then(setReady);
+    }
+  }, [visible, ready]);
 
   async function handleMagicLink() {
     const trimmed = email.trim();
@@ -71,9 +80,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
     }
   }
 
-  if (!isSupabaseConfigured()) {
-    return null;
-  }
+  if (!visible) return null;
 
   const cardBg = isDark ? "bg-sand-800 border-sand-700" : "bg-sand-50 border-sage-100";
 
@@ -131,6 +138,12 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
               </View>
             ) : (
               <View className="gap-4">
+                {!ready ? (
+                  <View className="items-center py-6">
+                    <ActivityIndicator color="#496349" />
+                  </View>
+                ) : (
+                  <>
                 <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
                   Connexion sans mot de passe. Vos traces restent sur l&apos;appareil
                   jusqu&apos;à la première synchronisation.
@@ -193,6 +206,8 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                   Gratuit · sans carte bancaire · {PREMIUM_SIGNUP_CREDITS}{" "}
                   générations Premium offertes
                 </Text>
+                  </>
+                )}
               </View>
             )}
           </Pressable>

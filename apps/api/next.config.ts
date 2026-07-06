@@ -1,9 +1,10 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
-/** API serverless — pas de pages statiques. */
+/** API serverless — monorepo : tracer depuis la racine du dépôt. */
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  output: "standalone",
+  outputFileTracingRoot: path.join(__dirname, "../.."),
 };
 
 export default nextConfig;

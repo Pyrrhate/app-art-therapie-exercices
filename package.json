@@ -31,6 +31,14 @@
     "node": "22.x"
   },
   "overrides": {
+    "@art-therapie/api": {
+      "react": "18.3.1",
+      "react-dom": "18.3.1"
+    },
+    "@art-therapie/mobile": {
+      "react": "18.3.1",
+      "react-dom": "18.3.1"
+    },
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "nativewind": "4.1.23",

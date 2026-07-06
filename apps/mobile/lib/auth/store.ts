@@ -2,7 +2,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { fetchUserProfile, type UserProfile } from "@/lib/auth/profile";
 import { syncLocalHistoryToCloud } from "@/lib/fil/sync";
-import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { getSupabaseClient, initSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { createSessionFromAuthUrl } from "@/lib/supabase/sessionFromUrl";
 import { getInitialAuthCallbackUrl, parseAuthCallbackUrl } from "@/lib/supabase/redirect";
 import * as Linking from "expo-linking";
@@ -79,39 +79,48 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     set({ initialized: true });
 
-    if (!isSupabaseConfigured()) {
-      set({ loading: false, session: null, user: null, profile: null });
-      return () => undefined;
-    }
-
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      set({ loading: false });
-      return () => undefined;
-    }
-
     let active = true;
+    let subscription: { subscription: { unsubscribe: () => void } } | null =
+      null;
+    const linkingSub = Linking.addEventListener("url", ({ url }) => {
+      void get().handleAuthUrl(url);
+    });
 
     void (async () => {
+      await initSupabaseClient();
+
+      if (!active) return;
+
+      if (!isSupabaseConfigured()) {
+        set({ loading: false, session: null, user: null, profile: null });
+        return;
+      }
+
       const initialUrl = await getInitialAuthCallbackUrl();
       if (initialUrl) {
         await get().handleAuthUrl(initialUrl);
       }
 
+      const supabase = getSupabaseClient();
+      if (!supabase || !active) {
+        set({ loading: false });
+        return;
+      }
+
       const { data } = await supabase.auth.getSession();
       if (!active) return;
+
       set({
         session: data.session,
         user: data.session?.user ?? null,
         loading: false,
       });
+
       if (data.session?.user) {
         await loadProfile(data.session.user.id, set);
       }
-    })();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      const sub = supabase.auth.onAuthStateChange((event, session) => {
         set({
           session,
           user: session?.user ?? null,
@@ -130,16 +139,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         ) {
           void runCloudSync(set);
         }
-      }
-    );
-
-    const linkingSub = Linking.addEventListener("url", ({ url }) => {
-      void get().handleAuthUrl(url);
-    });
+      });
+      subscription = sub.data;
+    })();
 
     return () => {
       active = false;
-      subscription.subscription.unsubscribe();
+      subscription?.subscription.unsubscribe();
       linkingSub.remove();
     };
   },

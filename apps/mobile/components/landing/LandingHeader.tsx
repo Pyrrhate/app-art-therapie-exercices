@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
+import { AuthNavButton } from "@/components/auth/AuthNavButton";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ROUTES } from "@/lib/routes";
 
@@ -42,31 +43,34 @@ export function LandingHeader({
           </View>
         </Link>
 
-        {navItems.length > 0 ? (
-          <SemanticWeb
-            tag="nav"
-            aria-label="Navigation principale"
-            className="flex-row items-center gap-4"
-          >
-            {navItems.map((item) => {
-              const isActive = activeHref === item.href;
-              if (isActive) {
+        <View className="flex-row items-center gap-4">
+          {navItems.length > 0 ? (
+            <SemanticWeb
+              tag="nav"
+              aria-label="Navigation principale"
+              className="flex-row items-center gap-4"
+            >
+              {navItems.map((item) => {
+                const isActive = activeHref === item.href;
+                if (isActive) {
+                  return (
+                    <Text key={item.href} className="text-sand-600 text-sm font-medium">
+                      {item.label}
+                    </Text>
+                  );
+                }
                 return (
-                  <Text key={item.href} className="text-sand-600 text-sm font-medium">
-                    {item.label}
-                  </Text>
+                  <Link key={item.href} href={item.href} asChild>
+                    <Pressable hitSlop={8}>
+                      <Text className="text-sage-600 text-sm font-medium">{item.label}</Text>
+                    </Pressable>
+                  </Link>
                 );
-              }
-              return (
-                <Link key={item.href} href={item.href} asChild>
-                  <Pressable hitSlop={8}>
-                    <Text className="text-sage-600 text-sm font-medium">{item.label}</Text>
-                  </Pressable>
-                </Link>
-              );
-            })}
-          </SemanticWeb>
-        ) : null}
+              })}
+            </SemanticWeb>
+          ) : null}
+          <AuthNavButton />
+        </View>
       </View>
     </SemanticWeb>
   );

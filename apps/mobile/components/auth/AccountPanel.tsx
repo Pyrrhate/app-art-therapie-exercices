@@ -12,7 +12,10 @@ import {
   useUserProfile,
 } from "@/lib/auth/store";
 import { signOut } from "@/lib/supabase/auth";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
+import {
+  initSupabaseClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/client";
 import { PREMIUM_SIGNUP_CREDITS } from "@art-therapie/shared";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -29,19 +32,41 @@ export function AccountPanel({ className = "" }: AccountPanelProps) {
   const profile = useUserProfile();
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const [authOpen, setAuthOpen] = useState(false);
+  const [configReady, setConfigReady] = useState(isSupabaseConfigured());
+  const [checkingConfig, setCheckingConfig] = useState(!isSupabaseConfigured());
 
   useEffect(() => {
-    if (isAuthenticated) {
-      void refreshProfile();
-    }
-  }, [isAuthenticated, refreshProfile]);
+    if (configReady) return;
+    void (async () => {
+      const ok = await initSupabaseClient();
+      setConfigReady(ok);
+      setCheckingConfig(false);
+    })();
+  }, [configReady]);
 
-  if (!isSupabaseConfigured()) {
+  async function retryConfig() {
+    setCheckingConfig(true);
+    const ok = await initSupabaseClient();
+    setConfigReady(ok);
+    setCheckingConfig(false);
+  }
+
+  if (!configReady) {
     return (
-      <View className={`rounded-3xl border px-5 py-4 ${panelBg(isDark)} ${className}`}>
+      <View className={`rounded-3xl border px-5 py-4 gap-3 ${panelBg(isDark)} ${className}`}>
         <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-          Compte cloud non configuré (variables Supabase manquantes).
+          {checkingConfig
+            ? "Connexion au service compte…"
+            : "Le service compte n'est pas encore disponible. Vérifiez que l'API expose SUPABASE_URL et SUPABASE_ANON_KEY, ou créez un fichier apps/mobile/.env à partir de .env.example."}
         </Text>
+        {!checkingConfig ? (
+          <PrimaryButton
+            label="Réessayer"
+            onPress={() => void retryConfig()}
+            variant="ghost"
+            align="start"
+          />
+        ) : null}
       </View>
     );
   }

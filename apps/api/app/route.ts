@@ -7,8 +7,12 @@ export function GET() {
     name: "Art Thérapie API",
     routes: [
       "GET /api/health",
+      "GET /api/config/public",
+      "GET /api/auth/bootstrap",
       "POST /api/exercise/generate",
       "POST /api/reflection/analyze",
+      "POST /api/reflection/ocr",
+      "POST /api/ping-pong",
     ],
   });
 }
