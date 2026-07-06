@@ -67,6 +67,7 @@ export class MistralProvider implements AIProvider {
       return {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
+        source: "fallback" as const,
       };
     }
 
@@ -97,13 +98,14 @@ export class MistralProvider implements AIProvider {
         };
       }
 
-      return getFallbackExercise(input);
+      return { ...getFallbackExercise(input), source: "fallback" as const };
     } catch (error) {
       console.warn("[Mistral generateExercise]", error);
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
+        source: "fallback" as const,
       };
     }
   }

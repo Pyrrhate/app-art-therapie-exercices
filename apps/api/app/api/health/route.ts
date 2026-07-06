@@ -5,7 +5,12 @@ export async function OPTIONS(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const hasToken = Boolean(process.env.HF_TOKEN?.trim());
+  const hasHfToken = Boolean(process.env.HF_TOKEN?.trim());
+  const hasMistralKey = Boolean(process.env.MISTRAL_API_KEY?.trim());
+  const hasSupabase = Boolean(
+    process.env.SUPABASE_URL?.trim() &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  );
   const textModel =
     process.env.HF_TEXT_MODEL ?? "meta-llama/Llama-3.1-8B-Instruct";
   const visionModel =
@@ -15,12 +20,17 @@ export async function GET(request: Request) {
     {
       status: "ok",
       provider: process.env.AI_PROVIDER ?? "huggingface",
-      aiConfigured: hasToken,
+      aiConfigured: hasHfToken,
+      mistralConfigured: hasMistralKey,
+      supabaseConfigured: hasSupabase,
       textModel,
       visionModel,
+      mistralTextModel: process.env.MISTRAL_TEXT_MODEL ?? "mistral-small-latest",
       reflectionPipeline: "warm-v2",
-      aiHint: hasToken
-        ? undefined
+      aiHint: hasHfToken
+        ? hasMistralKey
+          ? undefined
+          : "Ajoutez MISTRAL_API_KEY pour les 3 crédits Premium (Mistral)."
         : "Configurez HF_TOKEN sur Vercel pour activer l'IA (sinon mode secours).",
       timestamp: new Date().toISOString(),
     },

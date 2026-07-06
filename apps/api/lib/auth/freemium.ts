@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { PREMIUM_SIGNUP_CREDITS } from "@art-therapie/shared";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "@/lib/supabase/admin";
 
 export type UserTier = "free" | "premium";
@@ -97,6 +98,11 @@ export async function resolveFreemiumContext(
   const admin = getSupabaseAdmin();
   if (!admin) return ANONYMOUS;
 
+  const ensured = await ensureUserProfile(user.id, user.email ?? "");
+  if (ensured) {
+    return contextFromProfile(user.id, ensured.tier, ensured.balance);
+  }
+
   const { data: profile, error: profileError } = await admin
     .from("users")
     .select("tier, premium_sessions_balance")
@@ -114,6 +120,53 @@ export async function resolveFreemiumContext(
       : 0;
 
   return contextFromProfile(user.id, tier, balance);
+}
+
+/** Crée le profil applicatif si le trigger SQL n'a pas encore tourné. */
+async function ensureUserProfile(
+  userId: string,
+  email: string
+): Promise<{ tier: UserTier; balance: number } | null> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+
+  const { data: existing } = await admin
+    .from("users")
+    .select("tier, premium_sessions_balance")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (existing) {
+    return {
+      tier: existing.tier === "premium" ? "premium" : "free",
+      balance: Math.max(0, existing.premium_sessions_balance ?? 0),
+    };
+  }
+
+  const { error: insertError } = await admin.from("users").insert({
+    id: userId,
+    email: email || "",
+    tier: "free",
+    premium_sessions_balance: PREMIUM_SIGNUP_CREDITS,
+  });
+
+  if (insertError && insertError.code !== "23505") {
+    console.warn("[freemium] ensure profile", insertError.message);
+    return null;
+  }
+
+  const { data: created } = await admin
+    .from("users")
+    .select("tier, premium_sessions_balance")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!created) return null;
+
+  return {
+    tier: created.tier === "premium" ? "premium" : "free",
+    balance: Math.max(0, created.premium_sessions_balance ?? 0),
+  };
 }
 
 /** Consomme une session premium offerte (utilisateurs free uniquement). */

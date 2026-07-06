@@ -61,7 +61,8 @@ export function AccountPanel({ className = "" }: AccountPanelProps) {
               {email ?? "Compte actif"}
             </Text>
             <Text className={`text-xs leading-5 ${textMuted(isDark)}`}>
-              Votre Fil créatif se synchronise avec le cloud.
+              Votre Fil créatif se synchronise avec le cloud. Connectez Drive ou
+              OneDrive dans Sauvegarde personnelle pour archiver vos œuvres.
             </Text>
             {profile ? <PremiumCreditsBadge profile={profile} /> : null}
             <PrimaryButton

@@ -31,7 +31,7 @@ export async function uploadArtworkToCloud(input: {
   };
 }
 
-/** Upload silencieux après sauvegarde d'une œuvre (Premium + cloud connecté). */
+/** Upload silencieux après sauvegarde d'une œuvre (compte + cloud connecté). */
 export async function tryUploadArtworkToCloud(
   imageBase64: string | undefined,
   filEntryId?: string

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { resolveFreemiumContext } from "@/lib/auth/freemium";
+import { requireAuthenticatedUser } from "@/lib/auth/require-user";
 import {
   errorResponse,
   handleOptions,
@@ -20,26 +20,11 @@ export async function OPTIONS(request: Request) {
   return handleOptions(request);
 }
 
-/** Upload une œuvre vers le cloud personnel connecté (Premium BYOC). */
+/** Upload une œuvre vers le cloud personnel connecté (compte requis). */
 export async function POST(request: Request) {
-  const ctx = await resolveFreemiumContext(request);
-  if (!ctx.userId) {
-    return errorResponse(
-      request,
-      { error: "Non authentifié.", code: "VALIDATION_ERROR" },
-      401
-    );
-  }
-  if (ctx.tier !== "premium") {
-    return errorResponse(
-      request,
-      {
-        error: "Upload cloud réservé aux abonnés Premium.",
-        code: "VALIDATION_ERROR",
-      },
-      403
-    );
-  }
+  const auth = await requireAuthenticatedUser(request);
+  if ("error" in auth) return auth.error;
+  const { ctx } = auth;
 
   let body: unknown;
   try {
@@ -73,7 +58,7 @@ export async function POST(request: Request) {
       request,
       {
         error:
-          "Aucun cloud connecté ou upload impossible. Vérifiez Premium Cloud Sync.",
+          "Aucun cloud connecté ou upload impossible. Connectez Drive ou OneDrive dans Réglages.",
         code: "AI_NOT_CONFIGURED",
       },
       503

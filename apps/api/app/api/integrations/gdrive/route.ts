@@ -1,4 +1,4 @@
-import { resolveFreemiumContext } from "@/lib/auth/freemium";
+import { requireAuthenticatedUser } from "@/lib/auth/require-user";
 import {
   errorResponse,
   handleOptions,
@@ -17,23 +17,7 @@ import {
 import type { CloudConnectResponse, CloudIntegrationStatus } from "@/lib/integrations/types";
 
 async function requireAuth(request: Request) {
-  const ctx = await resolveFreemiumContext(request);
-  if (!ctx.userId) {
-    return { error: errorResponse(request, { error: "Non authentifié.", code: "VALIDATION_ERROR" }, 401) };
-  }
-  if (ctx.tier !== "premium") {
-    return {
-      error: errorResponse(
-        request,
-        {
-          error: "Premium Cloud Sync réservé aux abonnés Premium.",
-          code: "VALIDATION_ERROR",
-        },
-        403
-      ),
-    };
-  }
-  return { ctx: { ...ctx, userId: ctx.userId } };
+  return requireAuthenticatedUser(request);
 }
 
 export async function OPTIONS(request: Request) {

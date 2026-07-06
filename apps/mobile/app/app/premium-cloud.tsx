@@ -6,7 +6,7 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { showAlert } from "@/lib/alert";
-import { useIsAuthenticated, useUserProfile } from "@/lib/auth/store";
+import { useIsAuthenticated } from "@/lib/auth/store";
 import {
   connectCloudProvider,
   disconnectCloudProvider,
@@ -21,9 +21,7 @@ import { useIsDark } from "@/lib/themeStore";
 export default function PremiumCloudScreen() {
   const isDark = useIsDark();
   const isAuthenticated = useIsAuthenticated();
-  const profile = useUserProfile();
   const params = useLocalSearchParams<{ connected?: string }>();
-  const isPremium = profile?.tier === "premium";
 
   const [googleStatus, setGoogleStatus] =
     useState<CloudIntegrationStatus | null>(null);
@@ -33,14 +31,14 @@ export default function PremiumCloudScreen() {
     useState<CloudProviderId | null>(null);
 
   const load = useCallback(async () => {
-    if (!isAuthenticated || !isPremium) return;
+    if (!isAuthenticated) return;
     const [google, onedrive] = await Promise.all([
       fetchCloudIntegrationStatus("google_drive"),
       fetchCloudIntegrationStatus("onedrive"),
     ]);
     setGoogleStatus(google);
     setOnedriveStatus(onedrive);
-  }, [isAuthenticated, isPremium]);
+  }, [isAuthenticated]);
 
   useFocusEffect(
     useCallback(() => {
@@ -92,17 +90,18 @@ export default function PremiumCloudScreen() {
       />
 
       <PastekScreenHero
-        label="Premium"
-        title="Cloud Sync "
-        accent="personnel"
-        description="Vos photos d'œuvres restent dans votre Google Drive ou OneDrive — Pastek Art n'héberge pas vos images lourdes."
+        label="Compte"
+        title="Sauvegarde "
+        accent="personnelle"
+        description="Vos photos d'œuvres sont copiées dans votre Google Drive ou OneDrive — Pastek Art n'héberge pas vos images lourdes."
         className="mb-6"
       />
 
       {!isAuthenticated ? (
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-            Connectez-vous pour accéder à la synchronisation cloud personnelle.
+            Créez un compte gratuit dans Réglages pour connecter votre cloud
+            personnel et sauvegarder automatiquement vos œuvres.
           </Text>
           <View className="mt-4">
             <PrimaryButton
@@ -111,27 +110,12 @@ export default function PremiumCloudScreen() {
             />
           </View>
         </View>
-      ) : !isPremium ? (
-        <View className={`rounded-3xl border px-5 py-5 gap-3 ${panelBg(isDark)}`}>
-          <Text className={`font-medium ${textPrimary(isDark)}`}>
-            Réservé aux abonnés Premium
-          </Text>
-          <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-            Bring Your Own Cloud permet de stocker vos créations directement
-            dans votre espace Google ou Microsoft. Inscrivez-vous à l&apos;alerte
-            lancement dans Réglages si vos crédits offerts sont épuisés.
-          </Text>
-          <PrimaryButton
-            label="Retour aux Réglages"
-            onPress={() => router.push(ROUTES.settings)}
-            variant="ghost"
-          />
-        </View>
       ) : (
         <View className="gap-4 pb-8">
           <Text className={`text-xs leading-5 px-1 ${textMuted(isDark)}`}>
-            Les métadonnées du Fil restent sur Pastek Art ; seuls les fichiers
-            image volumineux sont envoyés vers votre cloud.
+            Les métadonnées du Fil restent synchronisées sur Pastek Art ; les
+            fichiers image volumineux partent vers votre espace cloud après
+            chaque exercice terminé.
           </Text>
 
           <CloudProviderToggle

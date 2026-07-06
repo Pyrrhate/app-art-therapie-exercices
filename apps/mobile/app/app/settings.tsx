@@ -217,12 +217,10 @@ export default function SettingsScreen() {
           >
             <View className="flex-1 pr-3">
               <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-                Premium Cloud Sync
+                Sauvegarde Drive / OneDrive
               </Text>
               <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-                {userProfile?.tier === "premium"
-                  ? "Google Drive & OneDrive — vos images restent chez vous"
-                  : "Réservé Premium — connectez Google Drive ou OneDrive"}
+                Connectez votre cloud pour archiver automatiquement vos œuvres
               </Text>
             </View>
             <Text className="text-sage-500 text-lg">→</Text>
