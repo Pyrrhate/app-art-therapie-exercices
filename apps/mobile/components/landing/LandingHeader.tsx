@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { AuthNavButton } from "@/components/auth/AuthNavButton";
+import { PastekLogoIcon } from "@/components/brand/PastekBrandImage";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ROUTES } from "@/lib/routes";
 
@@ -29,14 +30,7 @@ export function LandingHeader({
       <View className={`${maxW} mx-auto px-6 py-4 flex-row items-center justify-between gap-4`}>
         <Link href={ROUTES.landing} accessibilityLabel="Retour à l'accueil Pastek Art">
           <View className="flex-row items-center gap-3">
-            <View
-              className="w-9 h-9 rounded-full bg-sage-500 items-center justify-center"
-              accessibilityLabel="Logo Pastek Art"
-            >
-              <SemanticWeb tag="p" className="text-white font-display text-lg leading-none">
-                p
-              </SemanticWeb>
-            </View>
+            <PastekLogoIcon size={36} accessibilityLabel="Logo Pastek Art" />
             <SemanticWeb tag="p" className="font-display text-lg text-sand-900">
               Pastek Art
             </SemanticWeb>

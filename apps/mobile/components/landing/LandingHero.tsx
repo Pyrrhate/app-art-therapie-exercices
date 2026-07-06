@@ -1,5 +1,6 @@
 import { Platform, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
+import { PastekMascot } from "@/components/brand/PastekBrandImage";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ROUTES } from "@/lib/routes";
 
@@ -16,6 +17,10 @@ export function LandingHero() {
       aria-label="Présentation du générateur d'art-thérapie"
     >
       <View className="max-w-3xl mx-auto px-6 py-14 md:py-20">
+        <View className="items-center mb-8 md:mb-10">
+          <PastekMascot size={Platform.OS === "web" ? 220 : 180} />
+        </View>
+
         <SemanticWeb
           tag="h1"
           className="font-display text-3xl md:text-4xl lg:text-[2.6rem] leading-tight text-sand-900 mb-6"

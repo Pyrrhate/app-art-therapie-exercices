@@ -7,10 +7,12 @@ export async function OPTIONS(request: Request) {
 export async function GET(request: Request) {
   const hasHfToken = Boolean(process.env.HF_TOKEN?.trim());
   const hasMistralKey = Boolean(process.env.MISTRAL_API_KEY?.trim());
-  const hasSupabase = Boolean(
-    process.env.SUPABASE_URL?.trim() &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  const hasSupabaseUrl = Boolean(process.env.SUPABASE_URL?.trim());
+  const hasSupabaseAnon = Boolean(process.env.SUPABASE_ANON_KEY?.trim());
+  const hasSupabaseServiceRole = Boolean(
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
   );
+  const hasSupabase = hasSupabaseUrl && hasSupabaseServiceRole;
   const textModel =
     process.env.HF_TEXT_MODEL ?? "meta-llama/Llama-3.1-8B-Instruct";
   const visionModel =
@@ -23,6 +25,10 @@ export async function GET(request: Request) {
       aiConfigured: hasHfToken,
       mistralConfigured: hasMistralKey,
       supabaseConfigured: hasSupabase,
+      supabaseUrlConfigured: hasSupabaseUrl,
+      supabaseAnonConfigured: hasSupabaseAnon,
+      supabaseServiceRoleConfigured: hasSupabaseServiceRole,
+      supabasePublicConfigured: hasSupabaseUrl && hasSupabaseAnon,
       textModel,
       visionModel,
       mistralTextModel: process.env.MISTRAL_TEXT_MODEL ?? "mistral-small-latest",

@@ -35,7 +35,13 @@ export async function signInWithOAuth(
   if (Platform.OS === "web") {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo },
+      options: {
+        redirectTo,
+        queryParams:
+          provider === "google"
+            ? { access_type: "offline", prompt: "select_account" }
+            : undefined,
+      },
     });
     if (error) throw error;
     return;

@@ -1,5 +1,31 @@
 import * as QueryParams from "expo-auth-session/build/QueryParams";
-import { getSupabaseClient } from "./client";
+import { Platform } from "react-native";
+import { getSupabaseClient, initSupabaseClient } from "./client";
+
+function parseUrlParams(url: string): Record<string, string> {
+  const out: Record<string, string> = {};
+
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.forEach((value, key) => {
+      out[key] = value;
+    });
+
+    const hash = parsed.hash.replace(/^#/, "");
+    if (hash) {
+      const hashQuery = hash.includes("?") ? hash.split("?").pop()! : hash;
+      new URLSearchParams(hashQuery).forEach((value, key) => {
+        out[key] = value;
+      });
+    }
+  } catch {
+    // Fallback expo-auth-session (deep links natifs)
+    const { params: queryParams } = QueryParams.getQueryParams(url);
+    Object.assign(out, queryParams);
+  }
+
+  return out;
+}
 
 function parseHashParams(url: string): Record<string, string> {
   const hashIndex = url.indexOf("#");
@@ -15,6 +41,10 @@ function parseHashParams(url: string): Record<string, string> {
   return out;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /** Échange le code PKCE ou les tokens présents dans l'URL de callback. */
 export async function createSessionFromAuthUrl(url: string): Promise<boolean> {
   const supabase = getSupabaseClient();
@@ -22,10 +52,16 @@ export async function createSessionFromAuthUrl(url: string): Promise<boolean> {
 
   const { params: queryParams, errorCode } = QueryParams.getQueryParams(url);
   const hashParams = parseHashParams(url);
-  const params = { ...queryParams, ...hashParams };
+  const webParams = Platform.OS === "web" ? parseUrlParams(url) : {};
+  const params = { ...queryParams, ...hashParams, ...webParams };
 
   if (errorCode) {
     throw new Error(errorCode);
+  }
+
+  const oauthError = params.error_description ?? params.error;
+  if (oauthError) {
+    throw new Error(oauthError);
   }
 
   const code = params.code;
@@ -50,4 +86,50 @@ export async function createSessionFromAuthUrl(url: string): Promise<boolean> {
     data: { session },
   } = await supabase.auth.getSession();
   return Boolean(session);
+}
+
+/**
+ * Callback OAuth / magic link — attend la config Supabase puis la session.
+ * (Sur le web, la config peut arriver via GET /api/config/public.)
+ */
+export async function completeAuthFromCallbackUrl(
+  url: string
+): Promise<boolean> {
+  const configured = await initSupabaseClient();
+  if (!configured) {
+    throw new Error(
+      "Service compte indisponible. Réessayez dans un instant."
+    );
+  }
+
+  const supabase = getSupabaseClient();
+  if (!supabase) return false;
+
+  if (url) {
+    try {
+      const connected = await createSessionFromAuthUrl(url);
+      if (connected) return true;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message.toLowerCase() : "";
+      if (
+        !message.includes("already") &&
+        !message.includes("flow state") &&
+        !message.includes("code verifier")
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  // detectSessionInUrl peut finir l'échange PKCE de façon asynchrone
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session) return true;
+    await sleep(attempt < 3 ? 100 : 250);
+  }
+
+  return false;
 }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { router } from "expo-router";
-import { createSessionFromAuthUrl } from "@/lib/supabase/sessionFromUrl";
-import { getSupabaseClient } from "@/lib/supabase/client";
+import { completeAuthFromCallbackUrl } from "@/lib/supabase/sessionFromUrl";
+import { formatAuthError } from "@/lib/supabase/errors";
 import { showAlert } from "@/lib/alert";
 import { screenBg, textMuted } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -16,27 +16,17 @@ export default function AuthCallbackScreen() {
     let active = true;
 
     void (async () => {
-      let connected = false;
       try {
         const href =
           typeof window !== "undefined" ? window.location.href : "";
-        if (href) {
-          connected = await createSessionFromAuthUrl(href);
-          if (!connected) {
-            const supabase = getSupabaseClient();
-            const { data } = await supabase?.auth.getSession() ?? {
-              data: { session: null },
-            };
-            connected = Boolean(data.session);
-          }
-        }
+        const connected = await completeAuthFromCallbackUrl(href);
 
         if (!connected) {
           if (active) {
             setFailed(true);
             showAlert(
               "Connexion",
-              "Le lien a expiré ou est invalide. Demandez un nouveau lien magique."
+              "La connexion n'a pas abouti. Réessayez avec Google ou demandez un nouveau lien magique."
             );
           }
           return;
@@ -47,7 +37,7 @@ export default function AuthCallbackScreen() {
           setFailed(true);
           showAlert(
             "Connexion impossible",
-            error instanceof Error ? error.message : "Réessayez dans un instant."
+            formatAuthError(error)
           );
         }
         return;
@@ -69,7 +59,7 @@ export default function AuthCallbackScreen() {
         className={`flex-1 items-center justify-center px-8 ${screenBg(isDark)}`}
       >
         <Text className={`text-sm text-center leading-6 ${textMuted(isDark)}`}>
-          Retournez aux Réglages pour demander un nouveau lien de connexion.
+          Retournez aux Réglages pour vous reconnecter.
         </Text>
       </View>
     );
