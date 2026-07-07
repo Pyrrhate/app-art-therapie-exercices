@@ -2,10 +2,20 @@ import * as Linking from "expo-linking";
 import { makeRedirectUri } from "expo-auth-session";
 import { Platform } from "react-native";
 
+function canonicalWebOrigin(): string {
+  if (typeof window === "undefined") return "";
+
+  const { protocol, hostname, origin } = window.location;
+  if (hostname === "www.pastek-art.eu") {
+    return `${protocol}//pastek-art.eu`;
+  }
+  return origin;
+}
+
 /** URL de retour OAuth / Magic Link (web, iOS, Android). */
 export function getAuthRedirectUri(): string {
   if (Platform.OS === "web" && typeof window !== "undefined") {
-    return `${window.location.origin}/auth/callback`;
+    return `${canonicalWebOrigin()}/auth/callback`;
   }
 
   return makeRedirectUri({

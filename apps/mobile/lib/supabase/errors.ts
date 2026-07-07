@@ -26,5 +26,14 @@ export function formatAuthError(
     return `${label} n'est pas activé dans votre projet Supabase.\n\nDashboard → Authentication → Providers → activez-le.\n\nEn attendant, utilisez le lien magique par email.`;
   }
 
+  const lower = raw.toLowerCase();
+  if (
+    lower.includes("code verifier") ||
+    lower.includes("flow state") ||
+    lower.includes("invalid flow state")
+  ) {
+    return "La session Google a expiré pendant la redirection.\n\nRéessayez depuis https://pastek-art.eu (sans www), puis sélectionnez à nouveau votre compte Google.";
+  }
+
   return raw;
 }
