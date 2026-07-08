@@ -25,6 +25,8 @@ jobs:
 
       - name: Lint API
         run: npm run lint --workspace=@art-therapie/api --if-present
+        env:
+          CI: true
 
       - name: Test
         run: npm run test
