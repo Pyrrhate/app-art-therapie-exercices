@@ -1,0 +1,282 @@
+.page {
+  min-height: 100vh;
+  background: #faf7f4;
+  color: #4a433c;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.5;
+}
+
+.shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #3d4f3f;
+}
+
+.subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  color: #7a7268;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e4ddd4;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.cardLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b8f71;
+  margin-bottom: 0.35rem;
+}
+
+.cardValue {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #3d4f3f;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: #6b8f71;
+}
+
+.filters select {
+  min-width: 160px;
+  border: 1px solid #ddd5cb;
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  background: #fff;
+  color: #4a433c;
+  font: inherit;
+}
+
+.filters button,
+.button,
+.logoutButton {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.1rem;
+  background: #6b8f71;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.logoutButton {
+  background: transparent;
+  color: #6b8f71;
+  border: 1px solid #c9d8cb;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e4ddd4;
+  border-radius: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f0ebe4;
+  vertical-align: top;
+}
+
+.table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b8f71;
+  background: #f7f4f0;
+}
+
+.ratingBadge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.rating3 {
+  background: #edf5ee;
+  color: #3d5c42;
+}
+
+.rating2 {
+  background: #f3f7ef;
+  color: #4f634f;
+}
+
+.rating1 {
+  background: #faf0ee;
+  color: #7a4f4a;
+}
+
+.muted {
+  color: #9a9188;
+  font-size: 0.82rem;
+}
+
+.comment {
+  margin-top: 0.35rem;
+  font-style: italic;
+  color: #6d645b;
+}
+
+.details summary {
+  cursor: pointer;
+  color: #6b8f71;
+  font-size: 0.85rem;
+}
+
+.details pre {
+  margin: 0.5rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: #5c554d;
+}
+
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: #8a8278;
+}
+
+.loginCard {
+  max-width: 420px;
+  margin: 4rem auto;
+  background: #fff;
+  border: 1px solid #e4ddd4;
+  border-radius: 1.25rem;
+  padding: 2rem;
+}
+
+.loginCard h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  color: #3d4f3f;
+}
+
+.loginCard p {
+  margin: 0 0 1.25rem;
+  color: #7a7268;
+  font-size: 0.95rem;
+}
+
+.loginCard label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  color: #6b8f71;
+}
+
+.loginCard input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ddd5cb;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+  margin-bottom: 1rem;
+}
+
+.error {
+  color: #9b4d45;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.versionList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.versionChip {
+  background: #fff;
+  border: 1px solid #d8e3d9;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  color: #4f634f;
+}
+
+.nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.navLink,
+.navActive {
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.navLink {
+  color: #6b8f71;
+  border: 1px solid #d8e3d9;
+  background: #fff;
+}
+
+.navActive {
+  color: #fff;
+  background: #6b8f71;
+}
+
+.note {
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+  color: #8a8278;
+}

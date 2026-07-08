@@ -58,11 +58,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const { result, extraHeaders } = await withFreemiumAI(request, (provider) => {
-      if (typeof provider.transcribeHandwriting !== "function") {
-        throw new Error("OCR indisponible");
-      }
-      return provider.transcribeHandwriting(parsed.data.imageBase64);
+    const { result, extraHeaders } = await withFreemiumAI(request, {
+      eventType: "reflection_ocr",
+      run: (provider) => {
+        if (typeof provider.transcribeHandwriting !== "function") {
+          throw new Error("OCR indisponible");
+        }
+        return provider.transcribeHandwriting(parsed.data.imageBase64);
+      },
     });
 
     return jsonResponse(result, request, {

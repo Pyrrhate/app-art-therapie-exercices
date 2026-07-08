@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { generatePingPongWord } from "@/lib/ai/ping-pong";
+import { recordAiUsageEvent } from "@/lib/admin/record-usage";
+import { resolveFreemiumContext } from "@/lib/auth/freemium";
 import {
   errorResponse,
   handleOptions,
@@ -55,7 +57,16 @@ export async function POST(request: Request) {
   }
 
   try {
+    const ctx = await resolveFreemiumContext(request);
     const result = await generatePingPongWord(parsed.data);
+
+    recordAiUsageEvent({
+      eventType: "ping_pong",
+      userId: ctx.userId,
+      source: result.source === "ai" ? "ai" : "fallback",
+      provider: "huggingface",
+    });
+
     return jsonResponse(result, request, {
       headers: { "X-RateLimit-Remaining": String(rateLimit.remaining) },
     });

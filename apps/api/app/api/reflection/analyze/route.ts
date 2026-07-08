@@ -73,9 +73,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const { result, extraHeaders } = await withFreemiumAI(request, (provider) =>
-      provider.analyzeArtwork(parsed.data)
-    );
+    const { result, extraHeaders } = await withFreemiumAI(request, {
+      eventType: "reflection_analyze",
+      run: (provider) => provider.analyzeArtwork(parsed.data),
+    });
 
     return jsonResponse(result, request, {
       headers: {

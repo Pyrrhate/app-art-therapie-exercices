@@ -13,6 +13,9 @@ export function GET() {
       "POST /api/reflection/analyze",
       "POST /api/reflection/ocr",
       "POST /api/ping-pong",
+      "POST /api/feedback",
+      "GET /admin",
+      "GET /admin/feedback",
     ],
   });
 }

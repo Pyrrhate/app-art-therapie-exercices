@@ -58,9 +58,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { result, extraHeaders } = await withFreemiumAI(request, (provider) =>
-      provider.generateExercise(parsed.data)
-    );
+    const { result, extraHeaders } = await withFreemiumAI(request, {
+      eventType: parsed.data.augmentationContext
+        ? "exercise_augment"
+        : "exercise_generate",
+      run: (provider) => provider.generateExercise(parsed.data),
+    });
 
     return jsonResponse(result, request, {
       headers: {
