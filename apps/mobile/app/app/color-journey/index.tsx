@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
+import { AmorceOutcomePanel } from "@/components/amorce/AmorceOutcomePanel";
 import { ChromaticWheel } from "@/components/color-journey/ChromaticWheel";
 import { ColorProposalCard } from "@/components/color-journey/ColorProposalCard";
 import { ColorSwatch } from "@/components/color-journey/ColorSwatch";
 import { JourneyProgress } from "@/components/color-journey/JourneyProgress";
 import { ReflectionPanel } from "@/components/color-journey/ReflectionPanel";
-import { CreativeBridge } from "@/components/fil/CreativeBridge";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import {
+  buildPaletteAugmentationContext,
+  buildPaletteImpulse,
   COLOR_JOURNEY_TURN_COUNT,
   getDimensionForTurn,
   type ColorChoice,
@@ -24,9 +26,7 @@ import {
   getTurnGuidance,
   getTurnProposals,
 } from "@/lib/color-journey/theory";
-import { ApiError } from "@/lib/api";
-import { showAlert } from "@/lib/alert";
-import { startExerciseFromImpulse } from "@/lib/fil/bridges";
+import { fetchColorJourneyMirror } from "@/lib/api";
 import { recordFilEntry } from "@/lib/fil/record";
 import { navigateHome } from "@/lib/navigation";
 
@@ -38,12 +38,16 @@ export default function ColorJourneyScreen() {
     null
   );
   const [synthesis, setSynthesis] = useState<JourneySynthesis | null>(null);
-  const [startingExercise, setStartingExercise] = useState(false);
+  const [mirrorLoading, setMirrorLoading] = useState(false);
+  const [synthesisLoading, setSynthesisLoading] = useState(false);
   const filRecordedRef = useRef(false);
+  const filPartialRef = useRef(false);
 
   const guidance = getTurnGuidance(turn, history);
   const proposals = getTurnProposals(turn, history);
   const canExitEarly = history.length >= 2;
+  const augmentationContext = buildPaletteAugmentationContext(history);
+  const impulse = buildPaletteImpulse(history);
 
   function handleConfirmHex(hex: string) {
     const proposal = {
@@ -66,12 +70,32 @@ export default function ColorJourneyScreen() {
     setPhase("reflecting");
 
     if (turn >= COLOR_JOURNEY_TURN_COUNT) {
-      setSynthesis(buildSynthesis(nextHistory));
+      void finalizeSynthesis(nextHistory);
+    }
+  }
+
+  async function finalizeSynthesis(nextHistory: ColorChoice[]) {
+    setSynthesisLoading(true);
+    const fallback = buildSynthesis(nextHistory);
+    try {
+      const result = await fetchColorJourneyMirror({
+        mode: "synthesis",
+        history: nextHistory,
+      });
+      setSynthesis({
+        ...fallback,
+        summary: result.mirror,
+        source: result.source,
+      });
+    } catch {
+      setSynthesis(fallback);
+    } finally {
+      setSynthesisLoading(false);
     }
   }
 
   function handleContinueAfterReflection() {
-    if (turn >= COLOR_JOURNEY_TURN_COUNT && synthesis) {
+    if (turn >= COLOR_JOURNEY_TURN_COUNT) {
       setPhase("complete");
       return;
     }
@@ -80,42 +104,47 @@ export default function ColorJourneyScreen() {
     setPhase("choosing");
   }
 
-  function buildImpulseFromHistory(choices: ColorChoice[]): string {
-    const labels = choices.map((c) => c.label).join(", ");
-    return `Palette intérieure : ${labels}`;
-  }
-
-  async function handleStartExercise(impulse: string) {
-    if (startingExercise || !impulse.trim()) return;
-    setStartingExercise(true);
+  async function handleRequestMirror() {
+    if (!lastReflection || mirrorLoading) return;
+    setMirrorLoading(true);
     try {
-      await startExerciseFromImpulse(impulse, "painting");
-    } catch (error) {
-      showAlert(
-        "Impossible de continuer",
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Une erreur est survenue. Réessayez dans un instant."
+      const result = await fetchColorJourneyMirror({
+        mode: "turn",
+        turn: lastReflection.turn,
+        chosen: {
+          hex: lastReflection.chosen.hex,
+          label: lastReflection.chosen.label,
+          dimensionId: getDimensionForTurn(lastReflection.turn).id,
+        },
+        history,
+      });
+      setLastReflection((prev) =>
+        prev ? { ...prev, aiMirror: result.mirror } : prev
       );
     } finally {
-      setStartingExercise(false);
+      setMirrorLoading(false);
     }
   }
 
-  function handleEarlyExitToExercise() {
-    void handleStartExercise(buildImpulseFromHistory(history));
-  }
-
   const paletteHexes = history.map((h) => h.hex);
+
+  useEffect(() => {
+    if (history.length < 2 || filPartialRef.current) return;
+    filPartialRef.current = true;
+    void recordFilEntry({
+      source: "color-journey",
+      summary: `Palette intérieure — ${history.length} teinte${history.length > 1 ? "s" : ""}`,
+      detail: buildPaletteImpulse(history).slice(0, 200),
+      metadata: { colors: paletteHexes, impulse: buildPaletteImpulse(history) },
+    });
+  }, [history, paletteHexes]);
 
   useEffect(() => {
     if (phase !== "complete" || !synthesis || filRecordedRef.current) return;
     filRecordedRef.current = true;
     void recordFilEntry({
       source: "color-journey",
-      summary: "Palette intérieure — 5 teintes",
+      summary: "Palette intérieure — parcours complet",
       detail: synthesis.summary.slice(0, 200),
       metadata: { colors: paletteHexes, impulse: synthesis.suggestedImpulse },
     });
@@ -123,11 +152,14 @@ export default function ColorJourneyScreen() {
 
   function handleRestart() {
     filRecordedRef.current = false;
+    filPartialRef.current = false;
     setPhase("choosing");
     setTurn(1);
     setHistory([]);
     setLastReflection(null);
     setSynthesis(null);
+    setMirrorLoading(false);
+    setSynthesisLoading(false);
   }
 
   return (
@@ -136,9 +168,9 @@ export default function ColorJourneyScreen() {
 
       <PastekScreenHero
         label="Palette intérieure"
-        title="Cinq teintes "
+        title="Trois teintes "
         accent="sur la roue"
-        description="Complémentaire, analogues, split, triade — plusieurs théories couleur et psychologie des couleurs guident chaque tour."
+        description="Ancrage, complémentaire et équilibre — théorie couleur et miroir créatif optionnel guident chaque tour."
         className="mb-4"
       />
 
@@ -183,12 +215,10 @@ export default function ColorJourneyScreen() {
               )}
 
               {canExitEarly && (
-                <View className="mt-4 mb-2">
-                  <PrimaryButton
-                    label="Passer à l'exercice avec mes teintes"
-                    onPress={handleEarlyExitToExercise}
-                    variant="ghost"
-                    disabled={startingExercise}
+                <View className="mt-4">
+                  <AmorceOutcomePanel
+                    impulse={impulse}
+                    augmentationContext={augmentationContext}
                   />
                 </View>
               )}
@@ -197,22 +227,27 @@ export default function ColorJourneyScreen() {
 
           {phase === "reflecting" && lastReflection && (
             <>
-              <ReflectionPanel data={lastReflection} />
+              <ReflectionPanel
+                data={lastReflection}
+                onRequestMirror={handleRequestMirror}
+                mirrorLoading={mirrorLoading}
+              />
               <PrimaryButton
                 label={
                   turn >= COLOR_JOURNEY_TURN_COUNT
-                    ? "Voir ma palette"
+                    ? synthesisLoading
+                      ? "Préparation du miroir…"
+                      : "Voir ma palette"
                     : "Teinte suivante"
                 }
                 onPress={handleContinueAfterReflection}
+                disabled={synthesisLoading}
               />
               {canExitEarly && turn < COLOR_JOURNEY_TURN_COUNT && (
-                <View className="mt-2 mb-2">
-                  <PrimaryButton
-                    label="Passer à l'exercice avec mes teintes"
-                    onPress={handleEarlyExitToExercise}
-                    variant="ghost"
-                    disabled={startingExercise}
+                <View className="mt-4">
+                  <AmorceOutcomePanel
+                    impulse={impulse}
+                    augmentationContext={augmentationContext}
                   />
                 </View>
               )}
@@ -245,6 +280,9 @@ export default function ColorJourneyScreen() {
             <Text className="text-sand-700 text-base leading-7">
               {synthesis.summary}
             </Text>
+            {synthesis.source === "ai" ? (
+              <Text className="text-sage-500 text-xs mt-2">Miroir personnalisé</Text>
+            ) : null}
           </View>
 
           <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-4 mb-4">
@@ -256,27 +294,10 @@ export default function ColorJourneyScreen() {
             </Text>
           </View>
 
-          <CreativeBridge
-            title="Votre impulsion est prête"
-            subtitle="Vos teintes deviennent une impulsion pour peindre ou explorer en technique mixte."
-            actions={[
-              {
-                label: startingExercise
-                  ? "Préparation…"
-                  : "Passer à l'exercice",
-                onPress: () =>
-                  void handleStartExercise(synthesis.suggestedImpulse),
-                variant: "primary",
-                disabled: startingExercise,
-              },
-            ]}
+          <AmorceOutcomePanel
+            impulse={synthesis.suggestedImpulse}
+            augmentationContext={buildPaletteAugmentationContext(history)}
           />
-
-          {startingExercise && (
-            <View className="mt-3 items-center">
-              <ActivityIndicator color="#6B8F71" />
-            </View>
-          )}
 
           <View className="mt-4">
             <PrimaryButton
@@ -285,6 +306,12 @@ export default function ColorJourneyScreen() {
               variant="ghost"
             />
           </View>
+        </View>
+      )}
+
+      {synthesisLoading && phase === "reflecting" && (
+        <View className="mt-3 items-center">
+          <ActivityIndicator color="#6B8F71" />
         </View>
       )}
     </ScreenContainer>

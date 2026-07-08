@@ -87,9 +87,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     dateLabel: "juin 2026",
     title: "Amorces créatives",
     highlights: [
-      "Palette intérieure : roue chromatique et trois teintes guidées par l'IA.",
+      "Palette intérieure : trois teintes, miroir chromatique IA optionnel.",
       "Ping-Pong créatif : amorce rapide en quelques mots.",
-      "Chercheur de Nuances : puzzle couleur sans IA pour se détendre avant de créer.",
+      "Chercheur de Nuances : lotus élémentaires et pont rituel ou exercice.",
     ],
   },
   {

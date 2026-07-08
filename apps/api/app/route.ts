@@ -14,6 +14,7 @@ export function GET() {
       "POST /api/reflection/ocr",
       "POST /api/ping-pong",
       "POST /api/feedback",
+      "POST /api/color-journey/mirror",
       "GET /admin",
       "GET /admin/feedback",
     ],

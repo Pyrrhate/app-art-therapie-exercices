@@ -3,7 +3,7 @@ import {
   PRIMARY_SOURCES,
   type SourcePoint,
 } from "./colors";
-import { getLotusZoneIds, LOTUS_SOURCE } from "./elements";
+import { getLotusZoneIds, LOTUS_ELEMENT_KINDS, LOTUS_SOURCE } from "./elements";
 import type { NuanceCell, NuanceGrid, NuanceLotus } from "./types";
 
 export const GRID_SIZE = 8;
@@ -56,7 +56,7 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
 
   const used = new Set(primaries.map((p) => cellId(p.row, p.col)));
   const lotusPositions = pickUniquePositions(LOTUS_COUNT, rng, used);
-  const lotuses: NuanceLotus[] = lotusPositions.map(({ row, col }) => {
+  const lotuses: NuanceLotus[] = lotusPositions.map(({ row, col }, index) => {
     const id = cellId(row, col);
     used.add(id);
     return {
@@ -64,6 +64,7 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
       row,
       col,
       zoneIds: getLotusZoneIds(row, col, GRID_SIZE, 2),
+      elementKind: LOTUS_ELEMENT_KINDS[index % LOTUS_ELEMENT_KINDS.length]!,
     };
   });
 
@@ -84,6 +85,7 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
       const special = sourceAt.get(id);
 
       if (special === "lotus") {
+        const lotus = lotuses.find((l) => l.id === id)!;
         rowCells.push({
           id,
           row,
@@ -92,6 +94,7 @@ export function createNuanceGrid(seed = Date.now()): NuanceGrid {
           isSource: true,
           revealColor: LOTUS_SOURCE.hex,
           source: null,
+          elementKind: lotus.elementKind,
         });
       } else if (special === "primary") {
         const prim = primaries.find((p) => p.row === row && p.col === col)!;

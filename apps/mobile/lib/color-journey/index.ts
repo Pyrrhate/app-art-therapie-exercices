@@ -4,6 +4,11 @@ export {
   getDimensionForTurn,
 } from "./dimensions";
 
+export {
+  buildPaletteAugmentationContext,
+  buildPaletteImpulse,
+} from "./build-context";
+
 export type {
   ColorChoice,
   ColorJourneyPhase,

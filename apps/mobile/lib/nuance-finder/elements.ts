@@ -48,6 +48,16 @@ export const LOTUS_SOURCE = {
   rgb: { r: 245, g: 230, b: 240 },
 };
 
+/** Qualités invitées quand un lotus-élément est découvert. */
+export const ELEMENT_QUALITIES: Record<ElementKind, string> = {
+  earth: "ancrage, matière, lenteur",
+  fire: "élan, chaleur, transformation",
+  water: "fluidité, profondeur, intuition",
+  air: "légèreté, souffle, espace",
+};
+
+export const LOTUS_ELEMENT_KINDS: ElementKind[] = ["earth", "fire", "water"];
+
 export const ELEMENT_VISUALS: Record<
   ElementKind,
   { icon: string; label: string; ringColors: [string, string, string, string] }

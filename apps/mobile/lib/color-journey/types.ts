@@ -17,6 +17,7 @@ export interface JourneyReflection {
   question?: string;
   turn: number;
   chosen: ColorProposal;
+  aiMirror?: string;
 }
 
 export interface JourneySynthesis {

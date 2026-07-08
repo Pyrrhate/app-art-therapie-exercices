@@ -13,12 +13,14 @@ import type { RitualDuration } from "@/constants";
 
 export function startRitualFromImpulse(
   impulse: string,
-  technique: ArtisticTechnique = "mixed_media"
+  technique: ArtisticTechnique = "mixed_media",
+  durationMinutes: RitualDuration = 15
 ): void {
   const store = useRitualStore.getState();
   store.reset();
   store.setImpulse(impulse.trim());
   store.setTechnique(technique);
+  store.setDurationMinutes(durationMinutes);
   router.push(ROUTES.ritual);
 }
 
@@ -26,7 +28,8 @@ export function startRitualFromImpulse(
 export async function startExerciseFromImpulse(
   impulse: string,
   technique: ArtisticTechnique = "mixed_media",
-  durationMinutes?: RitualDuration
+  durationMinutes?: RitualDuration,
+  augmentationContext?: string
 ): Promise<void> {
   const trimmed = impulse.trim();
   if (!trimmed) {
@@ -42,7 +45,12 @@ export async function startExerciseFromImpulse(
 
   let result: ExerciseResponse;
   try {
-    result = await generateExercise(trimmed, technique, minutes);
+    result = await generateExercise(
+      trimmed,
+      technique,
+      minutes,
+      augmentationContext
+    );
   } catch {
     result = getFallbackExercise(trimmed, technique, minutes);
   }

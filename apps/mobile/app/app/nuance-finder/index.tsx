@@ -14,7 +14,7 @@ export default function NuanceFinderScreen() {
         label="Le Chercheur de Nuances"
         title={"Affiner le regard,\n"}
         accent="puis créer"
-        description="Une autre façon d'aborder la couleur — un jeu visuel procédural sans IA. Une grille 8×8 pour découvrir les teintes à votre rythme, prélude à la création. Pas de score, pas de chrono."
+        description="Découvrez terre, feu et eau cachés dans la grille — nommez votre harmonie, puis choisissez rituel ou exercice."
         className="mb-8"
       />
 

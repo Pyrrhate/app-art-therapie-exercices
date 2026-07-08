@@ -38,7 +38,7 @@ const MODULES: ModuleDef[] = [
   {
     title: "Palette intérieure",
     icon: "color-journey",
-    description: "Trois teintes sur la roue chromatique, puis créer.",
+    description: "Trois teintes sur la roue, miroir IA optionnel, puis créer.",
     route: ROUTES.colorJourney,
   },
   {

@@ -21,6 +21,7 @@ export interface NuanceLotus {
   row: number;
   col: number;
   zoneIds: string[];
+  elementKind: ElementKind;
 }
 
 export interface NuanceGrid {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Platform,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   useWindowDimensions,
@@ -14,10 +15,15 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { PrimaryButton } from "@/components/ui/Button";
+import { AmorceOutcomePanel } from "@/components/amorce/AmorceOutcomePanel";
 import { LotusMark, PastekIcon } from "@/components/ui/ModuleIcon";
 import { recordFilEntry } from "@/lib/fil/record";
 import type { ColorForImpulse } from "@/lib/color-names";
-import { LOTUS_SOURCE } from "@/lib/nuance-finder/elements";
+import { LOTUS_SOURCE, ELEMENT_QUALITIES, ELEMENT_VISUALS, type ElementKind } from "@/lib/nuance-finder/elements";
+import {
+  buildNuanceAugmentationContext,
+  buildNuanceImpulse,
+} from "@/lib/nuance-finder/context";
 import {
   createNuanceGrid,
   findCell,
@@ -29,7 +35,6 @@ import {
 import type { NuanceCell } from "@/lib/nuance-finder/types";
 import { textMuted, textPrimary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
-import { startRitualFromColors } from "@/lib/fil/bridges";
 
 const UNREVEALED_COLOR = "#EEF0E6";
 const LOTUS_WAVE_MS = 85;
@@ -98,6 +103,8 @@ function NuanceCellView({
   }));
 
   const showLotusIcon = revealed && cell.kind === "lotus";
+  const elementVisual =
+    cell.elementKind && revealed ? ELEMENT_VISUALS[cell.elementKind] : null;
 
   return (
     <TouchableOpacity
@@ -140,7 +147,14 @@ function NuanceCellView({
           </View>
         )}
 
-        {showLotusIcon && (
+        {showLotusIcon && elementVisual && (
+          <View className="absolute inset-0 items-center justify-center">
+            <Text style={{ fontSize: Math.max(14, cellSize * 0.34) }}>
+              {elementVisual.icon}
+            </Text>
+          </View>
+        )}
+        {showLotusIcon && !elementVisual && (
           <View className="absolute inset-0 items-center justify-center">
             <PastekIcon
               id="lotus"
@@ -174,6 +188,9 @@ export function NuanceFinder() {
   const [waveDelays, setWaveDelays] = useState<Record<string, number>>({});
   const [pebbles, setPebbles] = useState<Record<string, boolean>>({});
   const [foundLotusCount, setFoundLotusCount] = useState(0);
+  const [discoveredElements, setDiscoveredElements] = useState<ElementKind[]>([]);
+  const [lastElementHint, setLastElementHint] = useState<string | null>(null);
+  const [harmonyName, setHarmonyName] = useState("");
   const [celebrationDelays, setCelebrationDelays] = useState<
     Record<string, number>
   >({});
@@ -241,6 +258,16 @@ export function NuanceFinder() {
     return items.slice(0, 5);
   }, [flatCells, revealed]);
 
+  const canContinue = revealedCount >= 6;
+  const impulse = buildNuanceImpulse(revealedColorItems, harmonyName);
+  const augmentationContext = buildNuanceAugmentationContext({
+    colors: revealedColorItems,
+    harmonyName,
+    discoveredElements,
+    revealedCount,
+    totalCells: flatCells.length,
+  });
+
   function recordNuanceFil() {
     if (filRecordedRef.current) return;
     filRecordedRef.current = true;
@@ -260,15 +287,18 @@ export function NuanceFinder() {
     if (revealedCount >= 6) recordNuanceFil();
   }, [revealedCount, foundLotusCount, flatCells.length, revealedColorItems]);
 
-  function handlePasserAExercice() {
-    recordNuanceFil();
-    startRitualFromColors(revealedColorItems, "Harmonie chromatique");
-  }
-
   const triggerLotusWave = useCallback(
     (lotusId: string) => {
       const lotus = findLotus(grid, lotusId);
       if (!lotus) return;
+
+      setDiscoveredElements((prev) =>
+        prev.includes(lotus.elementKind) ? prev : [...prev, lotus.elementKind]
+      );
+      const visual = ELEMENT_VISUALS[lotus.elementKind];
+      setLastElementHint(
+        `${visual.icon} Lotus ${visual.label} — ${ELEMENT_QUALITIES[lotus.elementKind]}`
+      );
 
       lotusTimers.current.forEach(clearTimeout);
       lotusTimers.current = [];
@@ -328,6 +358,9 @@ export function NuanceFinder() {
     setWaveDelays({});
     setPebbles({});
     setFoundLotusCount(0);
+    setDiscoveredElements([]);
+    setLastElementHint(null);
+    setHarmonyName("");
     setCelebrationDelays({});
     gridPulse.value = 1;
     titleScale.value = 1;
@@ -347,6 +380,7 @@ export function NuanceFinder() {
             className={`text-[13px] leading-6 text-center ${textMuted(isDark)}`}
           >
             Touchez les cases pour révéler les teintes. {LOTUS_COUNT} lotus
+            élémentaires
           </Text>
           <LotusMark size={16} />
           <Text
@@ -357,6 +391,14 @@ export function NuanceFinder() {
           </Text>
         </View>
       </View>
+
+      {lastElementHint ? (
+        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-3 mb-4">
+          <Text className={`text-sm text-center leading-6 ${textMuted(isDark)}`}>
+            {lastElementHint}
+          </Text>
+        </View>
+      ) : null}
 
       <Animated.View
         className={`self-center rounded-3xl border p-3 mb-5 ${
@@ -395,24 +437,36 @@ export function NuanceFinder() {
       </Animated.View>
 
       {harmonyFound ? (
-        <View className="gap-4 mb-6 items-center">
+        <View className="gap-3 mb-4">
           <Animated.Text
             className={`font-display text-2xl text-center ${textPrimary(isDark)}`}
             style={[{ letterSpacing: -0.3 }, titleAnimStyle]}
           >
             Harmonie trouvée
           </Animated.Text>
-          {foundLotusCount > 0 && (
-            <View className="flex-row items-center justify-center gap-1.5">
-              <Text className={`text-sm text-center ${textMuted(isDark)}`}>
-                {foundLotusCount} lotus
-              </Text>
-              <LotusMark size={14} />
-              <Text className={`text-sm text-center ${textMuted(isDark)}`}>
-                découverts
-              </Text>
-            </View>
-          )}
+          <Text className={`text-sm text-center ${textMuted(isDark)}`}>
+            Donnez un nom à cette harmonie (optionnel)
+          </Text>
+          <TextInput
+            className={`rounded-2xl border px-4 py-3 text-base ${
+              isDark
+                ? "bg-sand-800 border-sand-600 text-sand-100"
+                : "bg-white border-sand-200 text-sand-800"
+            }`}
+            placeholder="Ex. Brume du matin, Élan doux…"
+            placeholderTextColor="#A89F91"
+            value={harmonyName}
+            onChangeText={setHarmonyName}
+          />
+        </View>
+      ) : null}
+
+      {canContinue ? (
+        <View className="mb-4">
+          <AmorceOutcomePanel
+            impulse={impulse}
+            augmentationContext={augmentationContext}
+          />
         </View>
       ) : null}
 
@@ -421,19 +475,12 @@ export function NuanceFinder() {
           {revealedCount} / {flatCells.length} teintes révélées
         </Text>
 
-        <View className="flex-row flex-wrap items-center gap-3">
-          <PrimaryButton
-            label="Nouvelle grille"
-            onPress={handleRestart}
-            variant="ghost"
-            align="start"
-          />
-          <PrimaryButton
-            label="Passer à l'exercice"
-            onPress={handlePasserAExercice}
-            align="start"
-          />
-        </View>
+        <PrimaryButton
+          label="Nouvelle grille"
+          onPress={handleRestart}
+          variant="ghost"
+          align="start"
+        />
       </View>
     </View>
   );

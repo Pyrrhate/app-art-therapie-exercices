@@ -3,6 +3,7 @@ import { getSupabaseClient } from "./supabase/client";
 import { useAuthStore } from "./auth/store";
 import { getFallbackExercise, getFallbackAugmentedExercise } from "./ritual/fallback";
 import { getFallbackPingPongReply } from "./ping-pong/fallback";
+import { buildLocalColorMirror } from "./color-journey/mirror-fallback";
 import type {
   ArtisticTechnique,
   ExerciseResponse,
@@ -276,6 +277,28 @@ export async function fetchPingPongWord(
     suggestedWord: suggestedWord || fallback.suggestedWord,
     source: data.source ?? (logicalWord ? "ai" : "fallback"),
   };
+}
+
+export async function fetchColorJourneyMirror(payload: {
+  mode: "turn" | "synthesis";
+  turn?: number;
+  chosen?: { hex: string; label: string; dimensionId: string };
+  history: Array<{ hex: string; label: string; dimensionId: string }>;
+}): Promise<{ mirror: string; source: "ai" | "fallback" }> {
+  try {
+    return await request<{ mirror: string; source: "ai" | "fallback" }>(
+      "/api/color-journey/mirror",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  } catch {
+    return {
+      mirror: buildLocalColorMirror(payload),
+      source: "fallback",
+    };
+  }
 }
 
 export { ApiError, getApiUrl };
