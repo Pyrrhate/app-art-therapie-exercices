@@ -14,17 +14,16 @@ import {
   buildVisionObservationPrompt,
   buildWarmReflectionPrompt,
   buildWarmReflectionRetryPrompt,
+  EXERCISE_SYSTEM,
   looksLikeColdDescription,
   looksLikeTooBriefReflection,
   parseExerciseFromAi,
   parseReflectionFromAi,
+  WARM_REFLECTION_SYSTEM,
   type ReflectionPromptContext,
 } from "./prompts";
 
 const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
-
-const WARM_REFLECTION_SYSTEM =
-  "Tu es un·e art-thérapeute francophone. Vouvoiement, ton chaleureux et profond. Tu rédiges 3 à 4 paragraphes qui accueillent couleurs, formes, émotions et geste créatif sans jargon clinique ni catalogue froid.";
 
 interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -78,7 +77,7 @@ export class MistralProvider implements AIProvider {
         preferredDuration ?? 15,
         input.augmentationContext
       );
-      const raw = await this.callText(prompt);
+      const raw = await this.callText(prompt, { systemPrompt: EXERCISE_SYSTEM });
       const parsed = parseExerciseFromAi(raw, preferredDuration);
 
       if (parsed) {

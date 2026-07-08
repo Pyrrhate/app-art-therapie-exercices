@@ -14,10 +14,12 @@ import {
   buildVisionObservationPrompt,
   buildWarmReflectionPrompt,
   buildWarmReflectionRetryPrompt,
+  EXERCISE_SYSTEM,
   looksLikeColdDescription,
   looksLikeTooBriefReflection,
   parseExerciseFromAi,
   parseReflectionFromAi,
+  WARM_REFLECTION_SYSTEM,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -46,9 +48,6 @@ const VISION_MODEL_FALLBACKS = [
   "zai-org/GLM-4.5V",
   "CohereLabs/aya-vision-32b:cohere",
 ];
-
-const WARM_REFLECTION_SYSTEM =
-  "Tu es un·e art-thérapeute francophone. Vouvoiement, ton chaleureux et profond. Tu rédiges 3 à 4 paragraphes qui accueillent couleurs, formes, émotions et geste créatif sans jargon clinique ni catalogue froid.";
 
 /** Modèles Hub sans provider Inference live — le routeur renvoie HTTP 400. */
 const DEPRECATED_VISION_MODEL_RE =
@@ -186,7 +185,9 @@ export class HuggingFaceProvider implements AIProvider {
         preferredDuration ?? 15,
         input.augmentationContext
       );
-      const raw = await this.callTextModel(prompt);
+      const raw = await this.callTextModel(prompt, {
+        systemPrompt: EXERCISE_SYSTEM,
+      });
       const parsed = parseExerciseFromAi(raw, preferredDuration);
 
       if (parsed) {
