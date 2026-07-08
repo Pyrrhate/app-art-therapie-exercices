@@ -186,6 +186,29 @@ export async function transcribeHandwriting(
   );
 }
 
+export type ReflectionFeedbackPayload = {
+  rating: 1 | 2 | 3;
+  comment?: string | null;
+  ai_response_text: string;
+  prompt_version: string;
+  session_id: string;
+};
+
+/** Envoie un retour sur la réflexion IA — ne lève jamais (évite de bloquer l'UI). */
+export async function submitReflectionFeedback(
+  payload: ReflectionFeedbackPayload
+): Promise<boolean> {
+  try {
+    await request<{ ok: true }>("/api/feedback", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function checkHealth(): Promise<{
   ok: boolean;
   provider?: string;

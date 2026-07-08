@@ -14,6 +14,7 @@ import { InlineNotice } from "@/components/InlineNotice";
 import { ZenWaitIndicator } from "@/components/ZenWaitIndicator";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
 import { ReflectionOpenQuestions } from "@/components/reflection/ReflectionOpenQuestions";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 import {
   DeepModeGatewayPrompt,
   IntegrationQuestionnaireStep,
@@ -151,6 +152,7 @@ export default function ReflectionScreen() {
     ensureSessionExerciseId,
     startFollowUpExercise,
     reset,
+    sessionExerciseId,
   } = ritual;
 
   const isDeep = experienceMode === "deep";
@@ -1333,6 +1335,13 @@ export default function ReflectionScreen() {
             </View>
 
             <ReflectionOpenQuestions questions={displayOpenQuestions} />
+
+            {reflectionSource === "ai" && sessionExerciseId ? (
+              <FeedbackWidget
+                sessionId={sessionExerciseId}
+                aiResponseText={displayReflectionBody || reflection}
+              />
+            ) : null}
           </View>
         )}
 
