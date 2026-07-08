@@ -1259,26 +1259,32 @@ export default function ReflectionScreen() {
         </Text>
 
         <View className="gap-3 mb-6">
-          <PrimaryButton
-            label={
-              isWriting
-                ? "Photographier mon écriture"
-                : "Photographier mon œuvre"
-            }
-            onPress={handleTakePhoto}
-            variant="secondary"
-            disabled={busy}
-          />
-          <PrimaryButton
-            label={
-              Platform.OS === "web"
-                ? "Choisir une photo (Bureau…)"
-                : "Choisir depuis la galerie"
-            }
-            onPress={handlePickFromGallery}
-            variant="ghost"
-            disabled={busy}
-          />
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <PrimaryButton
+                label={
+                  isWriting
+                    ? "Photographier mon écriture"
+                    : "Photographier mon œuvre"
+                }
+                onPress={handleTakePhoto}
+                variant="secondary"
+                disabled={busy}
+              />
+            </View>
+            <View className="flex-1">
+              <PrimaryButton
+                label={
+                  Platform.OS === "web"
+                    ? "Choisir une photo (Bureau…)"
+                    : "Choisir depuis la galerie"
+                }
+                onPress={handlePickFromGallery}
+                variant="ghost"
+                disabled={busy}
+              />
+            </View>
+          </View>
           {isWriting && photoUri && (
             <PrimaryButton
               label={
@@ -1418,17 +1424,21 @@ export default function ReflectionScreen() {
       )}
 
         {(!isDeep || showComplete) && (
-        <View className="gap-3 pb-8">
-          <PrimaryButton
-            label="Voir le Fil créatif"
-            onPress={() => router.push(ROUTES.fil)}
-            variant="secondary"
-          />
-          <PrimaryButton
-            label="Nouveau rituel"
-            onPress={handleGoHome}
-            variant="ghost"
-          />
+        <View className="flex-row gap-3 pb-8">
+          <View className="flex-1">
+            <PrimaryButton
+              label="Voir le Fil créatif"
+              onPress={() => router.push(ROUTES.fil)}
+              variant="secondary"
+            />
+          </View>
+          <View className="flex-1">
+            <PrimaryButton
+              label="Nouveau rituel"
+              onPress={handleGoHome}
+              variant="ghost"
+            />
+          </View>
         </View>
         )}
     </ScreenContainer>
