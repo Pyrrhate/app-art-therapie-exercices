@@ -28,6 +28,13 @@ export function formatAuthError(
 
   const lower = raw.toLowerCase();
   if (
+    lower.includes("no api key found") ||
+    lower.includes("invalid api key")
+  ) {
+    return "Clé Supabase invalide ou incomplète.\n\nDans Vercel (projet API), recopiez la clé anon complète depuis Supabase → Project Settings → API (elle commence par eyJhbGci...).";
+  }
+
+  if (
     lower.includes("code verifier") ||
     lower.includes("flow state") ||
     lower.includes("invalid flow state")

@@ -1,3 +1,4 @@
+import { isValidSupabasePublicConfig } from "@art-therapie/shared";
 import { handleOptions, jsonResponse } from "@/lib/cors";
 
 export async function OPTIONS(request: Request) {
@@ -11,6 +12,16 @@ export async function GET(request: Request) {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     return jsonResponse({ configured: false }, request);
+  }
+
+  if (!isValidSupabasePublicConfig(supabaseUrl, supabaseAnonKey)) {
+    return jsonResponse(
+      {
+        configured: false,
+        reason: "invalid_anon_key",
+      },
+      request
+    );
   }
 
   return jsonResponse(

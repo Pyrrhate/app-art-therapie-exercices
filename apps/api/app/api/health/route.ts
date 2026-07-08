@@ -1,3 +1,4 @@
+import { isValidSupabaseAnonKey, isValidSupabaseUrl } from "@art-therapie/shared";
 import { jsonResponse, handleOptions } from "@/lib/cors";
 
 export async function OPTIONS(request: Request) {
@@ -7,8 +8,10 @@ export async function OPTIONS(request: Request) {
 export async function GET(request: Request) {
   const hasHfToken = Boolean(process.env.HF_TOKEN?.trim());
   const hasMistralKey = Boolean(process.env.MISTRAL_API_KEY?.trim());
-  const hasSupabaseUrl = Boolean(process.env.SUPABASE_URL?.trim());
-  const hasSupabaseAnon = Boolean(process.env.SUPABASE_ANON_KEY?.trim());
+  const supabaseUrl = process.env.SUPABASE_URL?.trim() ?? "";
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY?.trim() ?? "";
+  const hasSupabaseUrl = isValidSupabaseUrl(supabaseUrl);
+  const hasSupabaseAnon = isValidSupabaseAnonKey(supabaseAnonKey);
   const hasSupabaseServiceRole = Boolean(
     process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
   );
@@ -29,6 +32,7 @@ export async function GET(request: Request) {
       supabaseAnonConfigured: hasSupabaseAnon,
       supabaseServiceRoleConfigured: hasSupabaseServiceRole,
       supabasePublicConfigured: hasSupabaseUrl && hasSupabaseAnon,
+      supabaseAnonValid: hasSupabaseAnon,
       textModel,
       visionModel,
       mistralTextModel: process.env.MISTRAL_TEXT_MODEL ?? "mistral-small-latest",

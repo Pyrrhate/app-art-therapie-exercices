@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { isValidSupabasePublicConfig } from "@art-therapie/shared";
 import {
   ensureSupabaseConfigured,
   getSupabaseCredentials,
@@ -37,11 +38,16 @@ export function resetSupabaseClient(): void {
 
 export function getSupabaseClient(): SupabaseClient | null {
   const { url, anonKey } = getSupabaseCredentials();
-  if (!url || !anonKey) return null;
+  if (!isValidSupabasePublicConfig(url, anonKey)) return null;
 
   const cacheKey = `${url}|${anonKey}`;
   if (!client || clientKey !== cacheKey) {
     client = createClient(url, anonKey, {
+      global: {
+        headers: {
+          apikey: anonKey,
+        },
+      },
       auth: {
         storage: getAuthStorage(),
         flowType: "pkce",

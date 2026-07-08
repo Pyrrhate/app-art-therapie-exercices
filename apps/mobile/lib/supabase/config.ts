@@ -1,9 +1,15 @@
 import Constants from "expo-constants";
+import { isValidSupabasePublicConfig } from "@art-therapie/shared";
 import { getApiUrl } from "@/lib/config";
 
 type ExtraConfig = {
   supabaseUrl?: string;
   supabaseAnonKey?: string;
+};
+
+type CredentialPair = {
+  url: string;
+  anonKey: string;
 };
 
 const REMOTE_CONFIG_KEY = "pastek.supabase.public";
@@ -16,7 +22,7 @@ function readExtra(): ExtraConfig {
   return (Constants.expoConfig?.extra ?? {}) as ExtraConfig;
 }
 
-function readCachedRemoteConfig(): { url: string; anonKey: string } {
+function readCachedRemoteConfig(): CredentialPair {
   if (typeof window === "undefined") return { url: "", anonKey: "" };
 
   try {
@@ -46,25 +52,36 @@ function writeCachedRemoteConfig(url: string, anonKey: string): void {
   }
 }
 
-export function getSupabaseCredentials(): {
-  url: string;
-  anonKey: string;
-} {
+function pickValidCredentials(
+  ...candidates: Array<CredentialPair | undefined>
+): CredentialPair {
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const url = candidate.url.trim();
+    const anonKey = candidate.anonKey.trim();
+    if (isValidSupabasePublicConfig(url, anonKey)) {
+      return { url, anonKey };
+    }
+  }
+  return { url: "", anonKey: "" };
+}
+
+export function getSupabaseCredentials(): CredentialPair {
   const extra = readExtra();
   const cached = readCachedRemoteConfig();
 
-  return {
-    url:
-      process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ||
-      extra.supabaseUrl?.trim() ||
-      remoteUrl ||
-      cached.url,
-    anonKey:
-      process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
-      extra.supabaseAnonKey?.trim() ||
-      remoteAnonKey ||
-      cached.anonKey,
-  };
+  return pickValidCredentials(
+    {
+      url: process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? "",
+      anonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? "",
+    },
+    {
+      url: extra.supabaseUrl?.trim() ?? "",
+      anonKey: extra.supabaseAnonKey?.trim() ?? "",
+    },
+    { url: remoteUrl, anonKey: remoteAnonKey },
+    cached
+  );
 }
 
 /** Charge l'URL Supabase depuis l'API si les variables Expo ne sont pas en build. */
@@ -85,17 +102,26 @@ export async function ensureSupabaseConfigured(): Promise<boolean> {
           configured?: boolean;
           supabaseUrl?: string;
           supabaseAnonKey?: string;
+          reason?: string;
         };
 
         if (
           data.configured &&
           data.supabaseUrl?.trim() &&
-          data.supabaseAnonKey?.trim()
+          data.supabaseAnonKey?.trim() &&
+          isValidSupabasePublicConfig(
+            data.supabaseUrl.trim(),
+            data.supabaseAnonKey.trim()
+          )
         ) {
           remoteUrl = data.supabaseUrl.trim();
           remoteAnonKey = data.supabaseAnonKey.trim();
           writeCachedRemoteConfig(remoteUrl, remoteAnonKey);
           return true;
+        }
+
+        if (data.reason === "invalid_anon_key") {
+          console.warn("[supabase] anon key invalide côté API");
         }
       } catch (error) {
         console.warn("[supabase] remote config", error);
