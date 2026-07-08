@@ -6,6 +6,8 @@ type ExtraConfig = {
   supabaseAnonKey?: string;
 };
 
+const REMOTE_CONFIG_KEY = "pastek.supabase.public";
+
 let remoteUrl = "";
 let remoteAnonKey = "";
 let remoteFetch: Promise<boolean> | null = null;
@@ -14,20 +16,54 @@ function readExtra(): ExtraConfig {
   return (Constants.expoConfig?.extra ?? {}) as ExtraConfig;
 }
 
+function readCachedRemoteConfig(): { url: string; anonKey: string } {
+  if (typeof window === "undefined") return { url: "", anonKey: "" };
+
+  try {
+    const raw = sessionStorage.getItem(REMOTE_CONFIG_KEY);
+    if (!raw) return { url: "", anonKey: "" };
+
+    const data = JSON.parse(raw) as { url?: string; anonKey?: string };
+    return {
+      url: data.url?.trim() ?? "",
+      anonKey: data.anonKey?.trim() ?? "",
+    };
+  } catch {
+    return { url: "", anonKey: "" };
+  }
+}
+
+function writeCachedRemoteConfig(url: string, anonKey: string): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      REMOTE_CONFIG_KEY,
+      JSON.stringify({ url, anonKey })
+    );
+  } catch {
+    // quota / mode privé
+  }
+}
+
 export function getSupabaseCredentials(): {
   url: string;
   anonKey: string;
 } {
   const extra = readExtra();
+  const cached = readCachedRemoteConfig();
+
   return {
     url:
       process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ||
       extra.supabaseUrl?.trim() ||
-      remoteUrl,
+      remoteUrl ||
+      cached.url,
     anonKey:
       process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
       extra.supabaseAnonKey?.trim() ||
-      remoteAnonKey,
+      remoteAnonKey ||
+      cached.anonKey,
   };
 }
 
@@ -58,6 +94,7 @@ export async function ensureSupabaseConfigured(): Promise<boolean> {
         ) {
           remoteUrl = data.supabaseUrl.trim();
           remoteAnonKey = data.supabaseAnonKey.trim();
+          writeCachedRemoteConfig(remoteUrl, remoteAnonKey);
           return true;
         }
       } catch (error) {
@@ -74,4 +111,12 @@ export function resetSupabaseRemoteConfig(): void {
   remoteUrl = "";
   remoteAnonKey = "";
   remoteFetch = null;
+
+  if (typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem(REMOTE_CONFIG_KEY);
+    } catch {
+      // ignore
+    }
+  }
 }

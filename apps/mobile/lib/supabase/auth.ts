@@ -1,7 +1,7 @@
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
-import { getSupabaseClient } from "./client";
-import { getAuthRedirectUri } from "./redirect";
+import { getSupabaseClient, initSupabaseClient } from "./client";
+import { ensureCanonicalWebOrigin, getAuthRedirectUri } from "./redirect";
 import { createSessionFromAuthUrl } from "./sessionFromUrl";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -25,6 +25,15 @@ export async function signInWithMagicLink(email: string): Promise<void> {
 export async function signInWithOAuth(
   provider: "google" | "azure"
 ): Promise<void> {
+  if (Platform.OS === "web" && !ensureCanonicalWebOrigin()) {
+    return;
+  }
+
+  const configured = await initSupabaseClient();
+  if (!configured) {
+    throw new Error("Supabase n'est pas configuré.");
+  }
+
   const supabase = getSupabaseClient();
   if (!supabase) {
     throw new Error("Supabase n'est pas configuré.");

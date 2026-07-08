@@ -3,6 +3,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { router } from "expo-router";
 import { completeAuthFromCallbackUrl } from "@/lib/supabase/sessionFromUrl";
 import { formatAuthError } from "@/lib/supabase/errors";
+import { ensureCanonicalWebOrigin } from "@/lib/supabase/redirect";
 import { showAlert } from "@/lib/alert";
 import { screenBg, textMuted } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -17,6 +18,8 @@ export default function AuthCallbackScreen() {
 
     void (async () => {
       try {
+        if (!ensureCanonicalWebOrigin()) return;
+
         const href =
           typeof window !== "undefined" ? window.location.href : "";
         const connected = await completeAuthFromCallbackUrl(href);

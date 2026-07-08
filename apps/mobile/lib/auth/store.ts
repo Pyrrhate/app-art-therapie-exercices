@@ -6,6 +6,7 @@ import { getSupabaseClient, initSupabaseClient, isSupabaseConfigured } from "@/l
 import { createSessionFromAuthUrl } from "@/lib/supabase/sessionFromUrl";
 import { getInitialAuthCallbackUrl, parseAuthCallbackUrl } from "@/lib/supabase/redirect";
 import * as Linking from "expo-linking";
+import { Platform } from "react-native";
 
 interface AuthStore {
   session: Session | null;
@@ -96,9 +97,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         return;
       }
 
-      const initialUrl = await getInitialAuthCallbackUrl();
-      if (initialUrl) {
-        await get().handleAuthUrl(initialUrl);
+      const onWebAuthCallback =
+        Platform.OS === "web" &&
+        typeof window !== "undefined" &&
+        window.location.pathname.includes("/auth/callback");
+
+      if (!onWebAuthCallback) {
+        const initialUrl = await getInitialAuthCallbackUrl();
+        if (initialUrl) {
+          await get().handleAuthUrl(initialUrl);
+        }
       }
 
       const supabase = getSupabaseClient();

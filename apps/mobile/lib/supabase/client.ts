@@ -26,10 +26,6 @@ export function isSupabaseConfigured(): boolean {
 
 export async function initSupabaseClient(): Promise<boolean> {
   await ensureSupabaseConfigured();
-  if (isSupabaseConfigured()) {
-    client = null;
-    clientKey = "";
-  }
   return isSupabaseConfigured();
 }
 

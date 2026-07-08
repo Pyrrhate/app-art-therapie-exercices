@@ -19,7 +19,6 @@ function parseUrlParams(url: string): Record<string, string> {
       });
     }
   } catch {
-    // Fallback expo-auth-session (deep links natifs)
     const { params: queryParams } = QueryParams.getQueryParams(url);
     Object.assign(out, queryParams);
   }
@@ -41,15 +40,7 @@ function parseHashParams(url: string): Record<string, string> {
   return out;
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/** Échange le code PKCE ou les tokens présents dans l'URL de callback. */
-export async function createSessionFromAuthUrl(url: string): Promise<boolean> {
-  const supabase = getSupabaseClient();
-  if (!supabase) return false;
-
+function readAuthParams(url: string): Record<string, string> {
   const { params: queryParams, errorCode } = QueryParams.getQueryParams(url);
   const hashParams = parseHashParams(url);
   const webParams = Platform.OS === "web" ? parseUrlParams(url) : {};
@@ -63,6 +54,16 @@ export async function createSessionFromAuthUrl(url: string): Promise<boolean> {
   if (oauthError) {
     throw new Error(oauthError);
   }
+
+  return params;
+}
+
+/** Échange le code PKCE ou les tokens présents dans l'URL de callback (natif). */
+export async function createSessionFromAuthUrl(url: string): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return false;
+
+  const params = readAuthParams(url);
 
   const code = params.code;
   if (code) {
@@ -105,31 +106,22 @@ export async function completeAuthFromCallbackUrl(
   const supabase = getSupabaseClient();
   if (!supabase) return false;
 
-  if (url) {
-    try {
-      const connected = await createSessionFromAuthUrl(url);
-      if (connected) return true;
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message.toLowerCase() : "";
-      if (
-        !message.includes("already") &&
-        !message.includes("flow state") &&
-        !message.includes("code verifier")
-      ) {
-        throw error;
-      }
-    }
-  }
+  if (Platform.OS === "web") {
+    const { error } = await supabase.auth.initialize();
+    if (error) throw error;
 
-  // detectSessionInUrl peut finir l'échange PKCE de façon asynchrone
-  for (let attempt = 0; attempt < 8; attempt += 1) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (session) return true;
-    await sleep(attempt < 3 ? 100 : 250);
+    return Boolean(session);
   }
 
-  return false;
+  if (url) {
+    return createSessionFromAuthUrl(url);
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return Boolean(session);
 }
