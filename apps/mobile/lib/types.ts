@@ -66,4 +66,8 @@ export interface RitualState {
   isExerciseAugmented: boolean;
   sessionExerciseId: string;
   customSessionConfig: CustomSessionConfig;
+  /** Contexte chromatique amont (palette, harmonie) pour la réflexion IA. */
+  colorContext: string | null;
+  /** Hex de la palette explorée — affichage Fil et réutilisation. */
+  paletteColors: string[];
 }

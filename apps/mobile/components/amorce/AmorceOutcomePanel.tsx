@@ -8,6 +8,7 @@ import type { RitualDuration } from "@/constants";
 import {
   startExerciseFromImpulse,
   startRitualFromImpulse,
+  type ColorBridgeHints,
 } from "@/lib/fil/bridges";
 import type { ArtisticTechnique } from "@/lib/types";
 import { showAlert } from "@/lib/alert";
@@ -16,12 +17,14 @@ import { ApiError } from "@/lib/api";
 interface AmorceOutcomePanelProps {
   impulse: string;
   augmentationContext?: string;
+  colorHints?: ColorBridgeHints;
   disabled?: boolean;
 }
 
 export function AmorceOutcomePanel({
   impulse,
   augmentationContext,
+  colorHints,
   disabled = false,
 }: AmorceOutcomePanelProps) {
   const [technique, setTechnique] = useState<ArtisticTechnique | null>(
@@ -32,6 +35,11 @@ export function AmorceOutcomePanel({
 
   const trimmed = impulse.trim();
   const isDisabled = disabled || busy || !trimmed || !technique;
+  const bridgeColorHints: ColorBridgeHints | undefined =
+    colorHints ??
+    (augmentationContext?.trim()
+      ? { colorContext: augmentationContext.trim() }
+      : undefined);
 
   async function handleExercise() {
     if (!technique || !trimmed) return;
@@ -41,7 +49,8 @@ export function AmorceOutcomePanel({
         trimmed,
         technique,
         duration,
-        augmentationContext
+        augmentationContext,
+        bridgeColorHints
       );
     } catch (error) {
       showAlert(
@@ -59,7 +68,7 @@ export function AmorceOutcomePanel({
 
   function handleRitual() {
     if (!technique || !trimmed) return;
-    startRitualFromImpulse(trimmed, technique, duration);
+    startRitualFromImpulse(trimmed, technique, duration, bridgeColorHints);
   }
 
   return (

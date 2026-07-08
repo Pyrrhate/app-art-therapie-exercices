@@ -157,6 +157,7 @@ export class MistralProvider implements AIProvider {
         exercise: input.exercise,
         writtenText: writtenText || undefined,
         durationMinutes: input.durationMinutes,
+        colorContext: input.colorContext,
       };
 
       let warmRaw = await this.callText(buildWarmReflectionPrompt(promptCtx), {

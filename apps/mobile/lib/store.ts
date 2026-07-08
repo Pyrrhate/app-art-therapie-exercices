@@ -14,6 +14,7 @@ import { EMPTY_USER_ANSWERS } from "@/lib/multimodal/types";
 import type { CustomSessionConfig } from "@/lib/custom/types";
 import { EMPTY_CUSTOM_SESSION_CONFIG } from "@/lib/custom/types";
 import type { FilEntry } from "./fil/types";
+import { buildColorContextFromMetadata } from "./fil/nuancier";
 
 interface RitualStore extends RitualState {
   setImpulse: (impulse: string) => void;
@@ -52,6 +53,7 @@ interface RitualStore extends RitualState {
   completeSecondRoundPrep: () => void;
   ensureSessionExerciseId: () => string;
   setCustomSessionConfig: (patch: Partial<CustomSessionConfig>) => void;
+  setColorContext: (colorContext: string | null, paletteColors?: string[]) => void;
   reset: () => void;
 }
 
@@ -78,6 +80,8 @@ const initialState: RitualState = {
   isExerciseAugmented: false,
   sessionExerciseId: "",
   customSessionConfig: { ...EMPTY_CUSTOM_SESSION_CONFIG },
+  colorContext: null,
+  paletteColors: [],
 };
 
 export const useRitualStore = create<RitualStore>((set, get) => ({
@@ -156,6 +160,11 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
     set((state) => ({
       customSessionConfig: { ...state.customSessionConfig, ...patch },
     })),
+  setColorContext: (colorContext, paletteColors) =>
+    set({
+      colorContext,
+      paletteColors: paletteColors ?? get().paletteColors,
+    }),
   setReflection: (reflection, openQuestions, followUpExercise) =>
     set({
       reflection: sanitizeAiDisplayText(reflection),
@@ -199,6 +208,8 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
         : null,
       writtenText: m.writtenText ?? "",
       exerciseSource: null,
+      colorContext: buildColorContextFromMetadata(m) ?? null,
+      paletteColors: m.colors ?? [],
     });
   },
   restoreFromSession: (session) =>

@@ -21,6 +21,8 @@ export async function persistRitualDraft(step: RitualDraftStep): Promise<void> {
     step,
     photoUri: state.photoUri,
     writtenText: state.writtenText,
+    colorContext: state.colorContext,
+    paletteColors: state.paletteColors.length ? state.paletteColors : undefined,
     updatedAt: new Date().toISOString(),
   };
 
@@ -44,4 +46,7 @@ export function hydrateRitualFromDraft(draft: RitualDraft): void {
   );
   if (draft.photoUri) store.setPhotoUri(draft.photoUri);
   if (draft.writtenText) store.setWrittenText(draft.writtenText);
+  if (draft.colorContext || draft.paletteColors?.length) {
+    store.setColorContext(draft.colorContext ?? null, draft.paletteColors);
+  }
 }

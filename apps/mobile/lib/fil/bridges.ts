@@ -11,16 +11,32 @@ import { useRitualStore } from "@/lib/store";
 import type { ArtisticTechnique, ExerciseResponse } from "@/lib/types";
 import type { RitualDuration } from "@/constants";
 
+export interface ColorBridgeHints {
+  colorContext?: string;
+  paletteColors?: string[];
+}
+
+function applyColorHints(hints?: ColorBridgeHints): void {
+  if (!hints?.colorContext?.trim() && !hints?.paletteColors?.length) return;
+  const store = useRitualStore.getState();
+  store.setColorContext(
+    hints.colorContext?.trim() ?? null,
+    hints.paletteColors
+  );
+}
+
 export function startRitualFromImpulse(
   impulse: string,
   technique: ArtisticTechnique = "mixed_media",
-  durationMinutes: RitualDuration = 15
+  durationMinutes: RitualDuration = 15,
+  colorHints?: ColorBridgeHints
 ): void {
   const store = useRitualStore.getState();
   store.reset();
   store.setImpulse(impulse.trim());
   store.setTechnique(technique);
   store.setDurationMinutes(durationMinutes);
+  applyColorHints(colorHints);
   router.push(ROUTES.ritual);
 }
 
@@ -29,7 +45,8 @@ export async function startExerciseFromImpulse(
   impulse: string,
   technique: ArtisticTechnique = "mixed_media",
   durationMinutes?: RitualDuration,
-  augmentationContext?: string
+  augmentationContext?: string,
+  colorHints?: ColorBridgeHints
 ): Promise<void> {
   const trimmed = impulse.trim();
   if (!trimmed) {
@@ -42,6 +59,7 @@ export async function startExerciseFromImpulse(
   store.setTechnique(technique);
   const minutes = durationMinutes ?? 15;
   store.setDurationMinutes(minutes);
+  applyColorHints(colorHints);
 
   let result: ExerciseResponse;
   try {
@@ -80,7 +98,8 @@ export async function startExerciseFromImpulse(
 
 export function startRitualFromColors(
   colors: ColorForImpulse[],
-  label = "Nuancier"
+  label = "Nuancier",
+  colorContext?: string
 ): void {
   const names = [
     ...new Set(colors.filter(Boolean).map((c) => resolveColorLabel(c))),
@@ -89,5 +108,11 @@ export function startRitualFromColors(
     names.length > 0
       ? `${label} : ${names.join(", ")}`
       : `${label} du moment`;
-  startRitualFromImpulse(impulse, "painting");
+  const hexes = colors
+    .map((c) => (typeof c === "string" ? c : c.hex))
+    .filter(Boolean);
+  startRitualFromImpulse(impulse, "painting", 15, {
+    colorContext,
+    paletteColors: hexes,
+  });
 }

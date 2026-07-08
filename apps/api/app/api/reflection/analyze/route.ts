@@ -28,6 +28,7 @@ const bodySchema = z
     durationMinutes: z
       .union([z.literal(15), z.literal(30), z.literal(45)])
       .optional(),
+    colorContext: z.string().min(10).max(2000).optional(),
   })
   .refine(
     (data) =>

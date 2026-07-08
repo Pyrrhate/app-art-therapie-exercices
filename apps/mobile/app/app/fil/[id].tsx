@@ -11,7 +11,7 @@ import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
-import { formatSessionDate, getTechniqueLabel } from "@/constants";
+import { formatSessionDate, getTechniqueLabel, type RitualDuration } from "@/constants";
 import { deleteFilEntry, getFilEntryById } from "@/lib/fil/storage";
 import { confirmDeleteFilEntry } from "@/lib/fil/deleteConfirm";
 import {
@@ -20,6 +20,10 @@ import {
   type FilEntry,
 } from "@/lib/fil/types";
 import { startExerciseFromImpulse } from "@/lib/fil/bridges";
+import {
+  buildColorContextFromMetadata,
+  isNuancierFilEntry,
+} from "@/lib/fil/nuancier";
 import { showAlert } from "@/lib/alert";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { exportFilRitualPdf } from "@/lib/sessionExport";
@@ -53,10 +57,40 @@ export default function FilDetailScreen() {
   }
 
   async function handleRedoFromAmorce() {
-    const m = entry?.metadata;
-    if (!m?.impulse || !m.technique) return;
+    const meta = entry?.metadata;
+    if (!meta?.impulse) return;
+    const technique = meta.technique ?? "painting";
+    const colorContext = buildColorContextFromMetadata(meta);
     try {
-      await startExerciseFromImpulse(m.impulse, m.technique);
+      await startExerciseFromImpulse(
+        meta.impulse,
+        technique,
+        meta.durationMinutes as RitualDuration | undefined,
+        colorContext,
+        {
+          colorContext,
+          paletteColors: meta.colors,
+        }
+      );
+    } catch (error) {
+      showAlert(
+        "Impossible de continuer",
+        error instanceof Error ? error.message : "Réessayez dans un instant."
+      );
+    }
+  }
+
+  async function handleReuseNuancier() {
+    const meta = entry?.metadata;
+    if (!meta) return;
+    const impulse =
+      meta.impulse ?? entry?.summary ?? "Harmonie chromatique";
+    const colorContext = buildColorContextFromMetadata(meta);
+    try {
+      await startExerciseFromImpulse(impulse, "painting", 15, colorContext, {
+        colorContext,
+        paletteColors: meta.colors,
+      });
     } catch (error) {
       showAlert(
         "Impossible de continuer",
@@ -109,6 +143,7 @@ export default function FilDetailScreen() {
 
   const meta = FIL_SOURCE_META[entry.source];
   const ritual = isRitualFilEntry(entry);
+  const nuancier = isNuancierFilEntry(entry);
   const m = entry.metadata;
   const exercise = m?.exercise ? sanitizeAiDisplayText(m.exercise) : "";
   const reflection = m?.reflection
@@ -189,6 +224,23 @@ export default function FilDetailScreen() {
         </View>
       ) : null}
 
+      {m?.colorMirror ? (
+        <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
+          <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
+            Lecture chromatique
+          </Text>
+          <Text className={`text-base leading-7 italic ${textSecondary(isDark)}`}>
+            {sanitizeAiDisplayText(m.colorMirror)}
+          </Text>
+        </View>
+      ) : null}
+
+      {m?.harmonyName ? (
+        <Text className={`text-sm mb-4 ${textSecondary(isDark)}`}>
+          Harmonie : {m.harmonyName}
+        </Text>
+      ) : null}
+
       {m?.colors?.length ? (
         <View className="flex-row flex-wrap gap-2 mb-6">
           {m.colors.map((hex) => (
@@ -208,7 +260,13 @@ export default function FilDetailScreen() {
             onPress={handleRedoExercise}
           />
         )}
-        {!ritual && m?.impulse && m.technique && (
+        {!ritual && nuancier && m?.impulse && (
+          <PrimaryButton
+            label="Créer avec ce nuancier"
+            onPress={() => void handleReuseNuancier()}
+          />
+        )}
+        {!ritual && !nuancier && m?.impulse && m.technique && (
           <PrimaryButton
             label="Passer à l'exercice"
             onPress={() => void handleRedoFromAmorce()}

@@ -14,6 +14,8 @@ export interface RitualDraft {
   step: RitualDraftStep;
   photoUri?: string | null;
   writtenText?: string;
+  colorContext?: string | null;
+  paletteColors?: string[];
   updatedAt: string;
 }
 

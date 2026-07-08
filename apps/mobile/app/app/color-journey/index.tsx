@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { AmorceOutcomePanel } from "@/components/amorce/AmorceOutcomePanel";
 import { ChromaticWheel } from "@/components/color-journey/ChromaticWheel";
@@ -28,6 +28,7 @@ import {
 } from "@/lib/color-journey/theory";
 import { fetchColorJourneyMirror } from "@/lib/api";
 import { recordFilEntry } from "@/lib/fil/record";
+import { colorsToFilMetadata } from "@/lib/fil/nuancier";
 import { navigateHome } from "@/lib/navigation";
 
 export default function ColorJourneyScreen() {
@@ -127,28 +128,52 @@ export default function ColorJourneyScreen() {
   }
 
   const paletteHexes = history.map((h) => h.hex);
+  const colorHints = useMemo(
+    () => ({
+      colorContext: augmentationContext,
+      paletteColors: paletteHexes,
+    }),
+    [augmentationContext, paletteHexes]
+  );
 
   useEffect(() => {
     if (history.length < 2 || filPartialRef.current) return;
     filPartialRef.current = true;
+    const paletteMeta = colorsToFilMetadata(
+      history.map((h) => ({ hex: h.hex, label: h.label }))
+    );
     void recordFilEntry({
       source: "color-journey",
       summary: `Palette intérieure — ${history.length} teinte${history.length > 1 ? "s" : ""}`,
       detail: buildPaletteImpulse(history).slice(0, 200),
-      metadata: { colors: paletteHexes, impulse: buildPaletteImpulse(history) },
+      metadata: {
+        ...paletteMeta,
+        impulse: buildPaletteImpulse(history),
+        colorContext: buildPaletteAugmentationContext(history),
+        paletteSource: "color-journey",
+      },
     });
   }, [history, paletteHexes]);
 
   useEffect(() => {
     if (phase !== "complete" || !synthesis || filRecordedRef.current) return;
     filRecordedRef.current = true;
+    const paletteMeta = colorsToFilMetadata(
+      history.map((h) => ({ hex: h.hex, label: h.label }))
+    );
     void recordFilEntry({
       source: "color-journey",
       summary: "Palette intérieure — parcours complet",
       detail: synthesis.summary.slice(0, 200),
-      metadata: { colors: paletteHexes, impulse: synthesis.suggestedImpulse },
+      metadata: {
+        ...paletteMeta,
+        impulse: synthesis.suggestedImpulse,
+        colorContext: buildPaletteAugmentationContext(history),
+        colorMirror: synthesis.source === "ai" ? synthesis.summary : undefined,
+        paletteSource: "color-journey",
+      },
     });
-  }, [phase, synthesis, paletteHexes]);
+  }, [phase, synthesis, paletteHexes, history]);
 
   function handleRestart() {
     filRecordedRef.current = false;
@@ -219,6 +244,7 @@ export default function ColorJourneyScreen() {
                   <AmorceOutcomePanel
                     impulse={impulse}
                     augmentationContext={augmentationContext}
+                    colorHints={colorHints}
                   />
                 </View>
               )}
@@ -248,6 +274,7 @@ export default function ColorJourneyScreen() {
                   <AmorceOutcomePanel
                     impulse={impulse}
                     augmentationContext={augmentationContext}
+                    colorHints={colorHints}
                   />
                 </View>
               )}
@@ -297,6 +324,10 @@ export default function ColorJourneyScreen() {
           <AmorceOutcomePanel
             impulse={synthesis.suggestedImpulse}
             augmentationContext={buildPaletteAugmentationContext(history)}
+            colorHints={{
+              colorContext: buildPaletteAugmentationContext(history),
+              paletteColors: paletteHexes,
+            }}
           />
 
           <View className="mt-4">

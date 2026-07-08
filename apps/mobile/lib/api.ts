@@ -4,6 +4,7 @@ import { useAuthStore } from "./auth/store";
 import { getFallbackExercise, getFallbackAugmentedExercise } from "./ritual/fallback";
 import { getFallbackPingPongReply } from "./ping-pong/fallback";
 import { buildLocalColorMirror } from "./color-journey/mirror-fallback";
+import { buildLocalNuanceMirror } from "./nuance-finder/mirror-fallback";
 import type {
   ArtisticTechnique,
   ExerciseResponse,
@@ -168,6 +169,7 @@ export async function analyzeArtwork(context: {
   exercise?: string;
   durationMinutes?: number;
   writtenText?: string;
+  colorContext?: string;
 }): Promise<ReflectionResponse> {
   return request<ReflectionResponse>("/api/reflection/analyze", {
     method: "POST",
@@ -296,6 +298,29 @@ export async function fetchColorJourneyMirror(payload: {
   } catch {
     return {
       mirror: buildLocalColorMirror(payload),
+      source: "fallback",
+    };
+  }
+}
+
+export async function fetchNuanceMirror(payload: {
+  colors: Array<{ hex: string; label: string }>;
+  harmonyName?: string;
+  discoveredElements?: string[];
+  revealedCount: number;
+  totalCells: number;
+}): Promise<{ mirror: string; source: "ai" | "fallback" }> {
+  try {
+    return await request<{ mirror: string; source: "ai" | "fallback" }>(
+      "/api/nuances/mirror",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  } catch {
+    return {
+      mirror: buildLocalNuanceMirror(payload),
       source: "fallback",
     };
   }

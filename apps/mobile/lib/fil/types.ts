@@ -12,6 +12,12 @@ export type FilSource =
 
 export interface FilMetadata {
   colors?: string[];
+  paletteLabels?: string[];
+  harmonyName?: string;
+  discoveredElements?: string[];
+  colorMirror?: string;
+  colorContext?: string;
+  paletteSource?: "nuances" | "color-journey";
   impulse?: string;
   technique?: ArtisticTechnique;
   /** Anciennes traces mandala (module abandonné). */

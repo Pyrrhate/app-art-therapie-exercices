@@ -89,6 +89,8 @@ export interface ReflectionPromptContext {
   exercise?: string;
   writtenText?: string;
   durationMinutes?: number;
+  /** Parcours chromatique amont (palette, harmonie nuances). */
+  colorContext?: string;
 }
 
 function formatReflectionContext(ctx: ReflectionPromptContext): string {
@@ -106,6 +108,9 @@ function formatReflectionContext(ctx: ReflectionPromptContext): string {
       : null,
     ctx.visualNotes
       ? `Observations visuelles (usage interne — ne pas recopier en liste) :\n${ctx.visualNotes.trim()}`
+      : null,
+    ctx.colorContext
+      ? `Parcours chromatique exploré avant la création (tisser un lien doux avec l'œuvre si pertinent — au conditionnel) :\n${ctx.colorContext.slice(0, 1500)}`
       : null,
   ].filter(Boolean);
   return lines.join("\n\n");

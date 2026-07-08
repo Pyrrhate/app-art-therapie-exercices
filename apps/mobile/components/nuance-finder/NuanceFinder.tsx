@@ -18,7 +18,12 @@ import { PrimaryButton } from "@/components/ui/Button";
 import { AmorceOutcomePanel } from "@/components/amorce/AmorceOutcomePanel";
 import { LotusMark, PastekIcon } from "@/components/ui/ModuleIcon";
 import { recordFilEntry } from "@/lib/fil/record";
-import type { ColorForImpulse } from "@/lib/color-names";
+import {
+  colorsToFilMetadata,
+  elementKindsToLabels,
+} from "@/lib/fil/nuancier";
+import { fetchNuanceMirror } from "@/lib/api";
+import { resolveColorLabel, type ColorForImpulse } from "@/lib/color-names";
 import { LOTUS_SOURCE, ELEMENT_QUALITIES, ELEMENT_VISUALS, type ElementKind } from "@/lib/nuance-finder/elements";
 import {
   buildNuanceAugmentationContext,
@@ -196,6 +201,8 @@ export function NuanceFinder() {
   >({});
   const filRecordedRef = useRef(false);
   const completionTriggeredRef = useRef(false);
+  const [harmonyMirror, setHarmonyMirror] = useState<string | null>(null);
+  const [mirrorLoading, setMirrorLoading] = useState(false);
 
   const gridPulse = useSharedValue(1);
   const titleScale = useSharedValue(1);
@@ -268,24 +275,69 @@ export function NuanceFinder() {
     totalCells: flatCells.length,
   });
 
-  function recordNuanceFil() {
+  function recordNuanceFil(mirrorText?: string) {
     if (filRecordedRef.current) return;
     filRecordedRef.current = true;
+    const paletteMeta = colorsToFilMetadata(revealedColorItems);
     void recordFilEntry({
       source: "nuances",
-      summary: "Harmonie chromatique trouvée",
+      summary: harmonyName.trim()
+        ? `Harmonie : ${harmonyName.trim()}`
+        : "Harmonie chromatique trouvée",
       detail: `${flatCells.length} cases · ${foundLotusCount} lotus`,
       metadata: {
-        colors: revealedColorItems.map((c) =>
-          typeof c === "string" ? c : c.hex
-        ),
+        ...paletteMeta,
+        harmonyName: harmonyName.trim() || undefined,
+        discoveredElements: elementKindsToLabels(discoveredElements),
+        colorContext: augmentationContext,
+        colorMirror: mirrorText,
+        paletteSource: "nuances",
+        impulse,
       },
     });
   }
 
   useEffect(() => {
-    if (revealedCount >= 6) recordNuanceFil();
-  }, [revealedCount, foundLotusCount, flatCells.length, revealedColorItems]);
+    if (!canContinue) return;
+
+    let cancelled = false;
+    const colors = revealedColorItems.map((c) => ({
+      hex: typeof c === "string" ? c : c.hex,
+      label: resolveColorLabel(c),
+    }));
+
+    void (async () => {
+      setMirrorLoading(true);
+      try {
+        const result = await fetchNuanceMirror({
+          colors,
+          harmonyName: harmonyName.trim() || undefined,
+          discoveredElements: elementKindsToLabels(discoveredElements),
+          revealedCount,
+          totalCells: flatCells.length,
+        });
+        if (cancelled) return;
+        setHarmonyMirror(result.mirror);
+        recordNuanceFil(result.mirror);
+      } finally {
+        if (!cancelled) setMirrorLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    canContinue,
+    revealedCount,
+    flatCells.length,
+    harmonyName,
+    discoveredElements,
+    revealedColorItems,
+    augmentationContext,
+    impulse,
+    foundLotusCount,
+  ]);
 
   const triggerLotusWave = useCallback(
     (lotusId: string) => {
@@ -351,6 +403,8 @@ export function NuanceFinder() {
   function handleRestart() {
     filRecordedRef.current = false;
     completionTriggeredRef.current = false;
+    setHarmonyMirror(null);
+    setMirrorLoading(false);
     lotusTimers.current.forEach(clearTimeout);
     lotusTimers.current = [];
     setGameSeed(Date.now());
@@ -462,10 +516,38 @@ export function NuanceFinder() {
       ) : null}
 
       {canContinue ? (
-        <View className="mb-4">
+        <View className="mb-4 gap-4">
+          {harmonyMirror || mirrorLoading ? (
+            <View
+              className={`rounded-2xl border px-4 py-4 ${
+                isDark
+                  ? "bg-sand-800/60 border-sage-600"
+                  : "bg-sage-50/90 border-sage-100"
+              }`}
+            >
+              <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
+                Lecture de l&apos;harmonie
+              </Text>
+              {mirrorLoading && !harmonyMirror ? (
+                <Text className={`text-sm italic ${textMuted(isDark)}`}>
+                  Le miroir chromatique se forme…
+                </Text>
+              ) : (
+                <Text className={`text-sm leading-6 ${textPrimary(isDark)}`}>
+                  {harmonyMirror}
+                </Text>
+              )}
+            </View>
+          ) : null}
           <AmorceOutcomePanel
             impulse={impulse}
             augmentationContext={augmentationContext}
+            colorHints={{
+              colorContext: augmentationContext,
+              paletteColors: revealedColorItems.map((c) =>
+                typeof c === "string" ? c : c.hex
+              ),
+            }}
           />
         </View>
       ) : null}

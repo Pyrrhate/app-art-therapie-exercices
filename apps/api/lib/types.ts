@@ -26,6 +26,8 @@ export interface ReflectionRequest {
   durationMinutes?: number;
   /** Texte saisi ou issu de l'OCR (écriture). */
   writtenText?: string;
+  /** Palette ou harmonie explorée avant le rituel (nuancier, palette intérieure). */
+  colorContext?: string;
 }
 
 export interface ReflectionResponse {

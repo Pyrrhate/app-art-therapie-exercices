@@ -153,6 +153,8 @@ export default function ReflectionScreen() {
     startFollowUpExercise,
     reset,
     sessionExerciseId,
+    colorContext,
+    paletteColors,
   } = ritual;
 
   const isDeep = experienceMode === "deep";
@@ -544,6 +546,7 @@ export default function ReflectionScreen() {
           exercise,
           durationMinutes,
           writtenText: textForApi,
+          colorContext: colorContext ?? undefined,
         }),
         90_000
       );
@@ -667,6 +670,8 @@ export default function ReflectionScreen() {
           openQuestions: openQuestions.length ? openQuestions : undefined,
           writtenText: writtenText.trim() || undefined,
           followUpExercise: followUpExercise ?? undefined,
+          ...(paletteColors.length ? { colors: paletteColors } : {}),
+          ...(colorContext ? { colorContext } : {}),
         },
       });
 
@@ -695,6 +700,8 @@ export default function ReflectionScreen() {
     isDeep,
     currentRound,
     round1Snapshot,
+    colorContext,
+    paletteColors,
   ]);
 
   function handleGoHome() {
