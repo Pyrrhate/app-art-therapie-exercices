@@ -1,5 +1,5 @@
 import Constants from "expo-constants";
-import { isValidSupabasePublicConfig } from "@art-therapie/shared";
+import { isValidSupabasePublicConfig, isValidSupabaseUrl } from "@art-therapie/shared";
 import { getApiUrl } from "@/lib/config";
 
 type ExtraConfig = {
@@ -85,7 +85,15 @@ export function getSupabaseCredentials(): CredentialPair {
 }
 
 /** Charge l'URL Supabase depuis l'API si les variables Expo ne sont pas en build. */
-export async function ensureSupabaseConfigured(): Promise<boolean> {
+export async function ensureSupabaseConfigured(
+  forceRefresh = false
+): Promise<boolean> {
+  if (forceRefresh) {
+    remoteFetch = null;
+    remoteUrl = "";
+    remoteAnonKey = "";
+  }
+
   const { url, anonKey } = getSupabaseCredentials();
   if (url && anonKey) return true;
 
@@ -131,6 +139,74 @@ export async function ensureSupabaseConfigured(): Promise<boolean> {
   }
 
   return remoteFetch;
+}
+
+export type SupabaseConfigIssue =
+  | "ok"
+  | "missing_api"
+  | "api_unreachable"
+  | "not_configured"
+  | "invalid_anon_key"
+  | "invalid_url"
+  | "invalid_expo_env";
+
+/** Diagnostic lisible pour l'UI (Réglages / connexion). */
+export async function diagnoseSupabaseConfigIssue(): Promise<SupabaseConfigIssue> {
+  const apiBase = getApiUrl().replace(/\/$/, "");
+  if (!apiBase) return "missing_api";
+
+  const expoUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ?? "";
+  const expoKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? "";
+  if (expoUrl || expoKey) {
+    if (!isValidSupabasePublicConfig(expoUrl, expoKey)) {
+      return "invalid_expo_env";
+    }
+  }
+
+  try {
+    const response = await fetch(`${apiBase}/api/config/public`);
+    if (!response.ok) return "api_unreachable";
+
+    const data = (await response.json()) as {
+      configured?: boolean;
+      supabaseUrl?: string;
+      supabaseAnonKey?: string;
+      reason?: string;
+    };
+
+    if (data.configured) return "ok";
+    if (data.reason === "invalid_anon_key") return "invalid_anon_key";
+
+    const url = data.supabaseUrl?.trim() ?? "";
+    const key = data.supabaseAnonKey?.trim() ?? "";
+    if (url && !isValidSupabaseUrl(url)) return "invalid_url";
+    if (url && key && !isValidSupabasePublicConfig(url, key)) {
+      return "invalid_anon_key";
+    }
+
+    return "not_configured";
+  } catch {
+    return "api_unreachable";
+  }
+}
+
+export function supabaseConfigIssueMessage(issue: SupabaseConfigIssue): string {
+  switch (issue) {
+    case "invalid_anon_key":
+      return "La clé Supabase anon sur Vercel est invalide ou incomplète. Recopiez la clé anon complète depuis Supabase → Project Settings → API (elle commence par eyJhbGci...), puis redéployez l'API.";
+    case "invalid_expo_env":
+      return "Les variables EXPO_PUBLIC_SUPABASE_* du site web sont incorrectes. Utilisez l'URL *.supabase.co et la clé anon complète, ou laissez-les vides pour charger via l'API.";
+    case "invalid_url":
+      return "SUPABASE_URL sur Vercel doit être l'URL du projet Supabase (https://xxxx.supabase.co), pas l'URL de l'API Pastek.";
+    case "api_unreachable":
+      return "Impossible de joindre l'API. Vérifiez EXPO_PUBLIC_API_URL (https://api.pastek-art.eu) et le déploiement Vercel API.";
+    case "missing_api":
+      return "URL API non configurée. Définissez EXPO_PUBLIC_API_URL=https://api.pastek-art.eu sur le projet web Vercel.";
+    case "not_configured":
+      return "L'API ne publie pas encore Supabase. Ajoutez SUPABASE_URL et SUPABASE_ANON_KEY sur le projet Vercel API, puis redéployez.";
+    default:
+      return "Configuration compte indisponible.";
+  }
 }
 
 export function resetSupabaseRemoteConfig(): void {

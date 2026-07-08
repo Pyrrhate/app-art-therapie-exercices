@@ -13,8 +13,10 @@ import {
 } from "@/lib/auth/store";
 import { signOut } from "@/lib/supabase/auth";
 import {
+  diagnoseSupabaseConfigIssue,
   initSupabaseClient,
   isSupabaseConfigured,
+  supabaseConfigIssueMessage,
 } from "@/lib/supabase/client";
 import { PREMIUM_SIGNUP_CREDITS } from "@art-therapie/shared";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
@@ -34,11 +36,16 @@ export function AccountPanel({ className = "" }: AccountPanelProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [configReady, setConfigReady] = useState(isSupabaseConfigured());
   const [checkingConfig, setCheckingConfig] = useState(!isSupabaseConfigured());
+  const [configError, setConfigError] = useState("");
 
   useEffect(() => {
     if (configReady) return;
     void (async () => {
       const ok = await initSupabaseClient();
+      if (!ok) {
+        const issue = await diagnoseSupabaseConfigIssue();
+        setConfigError(supabaseConfigIssueMessage(issue));
+      }
       setConfigReady(ok);
       setCheckingConfig(false);
     })();
@@ -46,7 +53,12 @@ export function AccountPanel({ className = "" }: AccountPanelProps) {
 
   async function retryConfig() {
     setCheckingConfig(true);
-    const ok = await initSupabaseClient();
+    setConfigError("");
+    const ok = await initSupabaseClient(true);
+    if (!ok) {
+      const issue = await diagnoseSupabaseConfigIssue();
+      setConfigError(supabaseConfigIssueMessage(issue));
+    }
     setConfigReady(ok);
     setCheckingConfig(false);
   }
@@ -57,7 +69,8 @@ export function AccountPanel({ className = "" }: AccountPanelProps) {
         <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
           {checkingConfig
             ? "Connexion au service compte…"
-            : "Le service compte n'est pas encore disponible. Vérifiez que l'API expose SUPABASE_URL et SUPABASE_ANON_KEY, ou créez un fichier apps/mobile/.env à partir de .env.example."}
+            : configError ||
+              "Le service compte n'est pas encore disponible. Vérifiez la configuration Supabase sur Vercel API."}
         </Text>
         {!checkingConfig ? (
           <PrimaryButton

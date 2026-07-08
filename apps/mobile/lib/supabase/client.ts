@@ -8,6 +8,12 @@ import {
   resetSupabaseRemoteConfig,
 } from "./config";
 
+export {
+  diagnoseSupabaseConfigIssue,
+  supabaseConfigIssueMessage,
+} from "./config";
+export type { SupabaseConfigIssue } from "./config";
+
 function getAuthStorage():
   | typeof AsyncStorage
   | Pick<Storage, "getItem" | "setItem" | "removeItem"> {
@@ -25,8 +31,15 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(url && anonKey);
 }
 
-export async function initSupabaseClient(): Promise<boolean> {
-  await ensureSupabaseConfigured();
+export async function initSupabaseClient(
+  forceRefresh = false
+): Promise<boolean> {
+  if (forceRefresh) {
+    client = null;
+    clientKey = "";
+    resetSupabaseRemoteConfig();
+  }
+  await ensureSupabaseConfigured(forceRefresh);
   return isSupabaseConfigured();
 }
 
