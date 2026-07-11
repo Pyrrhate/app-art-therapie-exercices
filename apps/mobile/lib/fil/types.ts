@@ -52,7 +52,7 @@ export const FIL_SOURCE_META: Record<
   mandala: { label: "Mandala", icon: "mandala" },
   nuances: { label: "Nuances", icon: "nuance-finder" },
   "ping-pong": { label: "Ping-Pong", icon: "ping-pong" },
-  "color-journey": { label: "Palette intérieure", icon: "color-journey" },
+  "color-journey": { label: "Assistant palette", icon: "color-journey" },
   "emotion-explorer": { label: "Explorateur émotionnel", icon: "emotion-explorer" },
   "zen-garden": { label: "Jardin zen", icon: "zen-garden" },
 };

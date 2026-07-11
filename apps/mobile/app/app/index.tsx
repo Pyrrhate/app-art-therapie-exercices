@@ -36,9 +36,9 @@ const MODULES: ModuleDef[] = [
     route: ROUTES.pingPong,
   },
   {
-    title: "Palette intérieure",
+    title: "Assistant palette",
     icon: "color-journey",
-    description: "Trois teintes sur la roue, miroir IA optionnel, puis créer.",
+    description: "Primaires, secondaires, tertiaires — palette peinture RYB.",
     route: ROUTES.colorJourney,
   },
   {

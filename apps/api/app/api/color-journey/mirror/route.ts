@@ -12,6 +12,8 @@ const choiceSchema = z.object({
   hex: z.string().min(4).max(16),
   label: z.string().min(1).max(80),
   dimensionId: z.string().min(1).max(32),
+  mixRecipe: z.string().max(300).optional(),
+  paintId: z.string().max(32).optional(),
 });
 
 const bodySchema = z

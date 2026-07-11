@@ -23,10 +23,18 @@ export function ReflectionPanel({
       <Text className="text-sand-700 text-base leading-7 mb-3">
         {data.aiMirror ?? data.reflection}
       </Text>
-      {!data.aiMirror && data.reflection !== data.psychology ? (
+      {!data.aiMirror && data.psychology !== data.reflection ? (
         <Text className="text-sand-500 text-sm leading-6 mb-2">
           {data.psychology}
         </Text>
+      ) : null}
+      {data.mixRecipe ? (
+        <View className="bg-sage-50 rounded-xl px-3 py-2 mb-2">
+          <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
+            Recette de mélange
+          </Text>
+          <Text className="text-sand-600 text-sm leading-5">{data.mixRecipe}</Text>
+        </View>
       ) : null}
       <Text className="text-sand-400 text-sm leading-6 italic mb-2">
         {data.theory}
@@ -39,7 +47,7 @@ export function ReflectionPanel({
       {onRequestMirror && !data.aiMirror ? (
         <View className="mt-4">
           <PrimaryButton
-            label={mirrorLoading ? "Miroir en cours…" : "Approfondir avec un miroir"}
+            label={mirrorLoading ? "Conseil en cours…" : "Conseil peinture personnalisé"}
             onPress={onRequestMirror}
             variant="ghost"
             disabled={mirrorLoading}
@@ -48,7 +56,7 @@ export function ReflectionPanel({
         </View>
       ) : null}
       {data.aiMirror ? (
-        <Text className="text-sage-500 text-xs mt-3">Miroir personnalisé</Text>
+        <Text className="text-sage-500 text-xs mt-3">Conseil personnalisé</Text>
       ) : null}
     </View>
   );

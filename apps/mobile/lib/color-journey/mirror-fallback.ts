@@ -1,7 +1,12 @@
+import { getDimensionLabel } from "./painting-theory";
+
 const DIMENSION_LABELS: Record<string, string> = {
-  anchor: "Ancrage",
-  complement: "Complémentaire",
-  closure: "Équilibre",
+  primary: "Primaire",
+  secondary: "Secondaire",
+  tertiary: "Tertiaire",
+  anchor: "Primaire",
+  complement: "Secondaire",
+  closure: "Tertiaire",
 };
 
 export function buildLocalColorMirror(payload: {
@@ -13,12 +18,13 @@ export function buildLocalColorMirror(payload: {
 
   if (payload.mode === "synthesis") {
     return labels
-      ? `Votre trio chromatique (${labels}) forme un langage intérieur singulier — laissez ces teintes guider votre geste.`
-      : "Votre palette est prête à devenir geste — accueillez ce qui émerge.";
+      ? `Votre palette peinture (${labels}) est prête — primaire pour les masses, secondaire pour l'équilibre, tertiaire pour les accents.`
+      : "Votre palette est prête — testez chaque teinte sur une bande d'essai avant de peindre.";
   }
 
   const chosen = payload.chosen?.label ?? "cette teinte";
-  const dim =
-    DIMENSION_LABELS[payload.chosen?.dimensionId ?? ""] ?? "ce tour";
-  return `${chosen} rejoint votre parcours (${dim}) — observez ce que cette couleur éveille en vous.`;
+  const dim = getDimensionLabel(payload.chosen?.dimensionId ?? "");
+  return `${chosen} (${dim}) rejoint votre palette — pensez au ratio 60·30·10 selon le rôle de chaque teinte.`;
 }
+
+export { DIMENSION_LABELS };

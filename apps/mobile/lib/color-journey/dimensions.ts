@@ -1,22 +1,22 @@
-/** Trois dimensions — une teinte par tour, guidées par théories couleur. */
+/** Trois étapes — palette peinture RYB (primaire → secondaire → tertiaire). */
 export const COLOR_JOURNEY_DIMENSIONS = [
   {
-    id: "anchor",
-    title: "Ancrage",
-    subtitle: "Votre première teinte, librement choisie",
-    theoryLabel: "Intuition chromatique",
+    id: "primary",
+    title: "Couleur primaire",
+    subtitle: "Votre teinte dominante — rouge, jaune ou bleu",
+    theoryLabel: "Primaires RYB (peinture)",
   },
   {
-    id: "complement",
-    title: "Complémentaire",
-    subtitle: "L'opposée sur le cercle — tension vivifiante",
-    theoryLabel: "Contraste complémentaire (Itten)",
+    id: "secondary",
+    title: "Couleur secondaire",
+    subtitle: "Obtenue en mélangeant deux primaires",
+    theoryLabel: "Orange, vert ou violet",
   },
   {
-    id: "closure",
-    title: "Équilibre",
-    subtitle: "Une teinte pour refermer votre palette",
-    theoryLabel: "Triade & équilibre chaud/froid",
+    id: "tertiary",
+    title: "Couleur tertiaire",
+    subtitle: "Nuance d'accord entre votre primaire et secondaire",
+    theoryLabel: "Tertiaires (ex. rouge-orange, bleu-vert)",
   },
 ] as const;
 

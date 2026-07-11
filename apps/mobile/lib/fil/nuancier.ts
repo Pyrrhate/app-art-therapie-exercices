@@ -16,7 +16,7 @@ export function buildColorContextFromMetadata(
 
   const lines: string[] = [];
   if (metadata.paletteSource === "color-journey") {
-    lines.push("Palette intérieure Pastek Art.");
+    lines.push("Assistant palette peinture Pastek Art (RYB).");
   } else if (metadata.paletteSource === "nuances") {
     lines.push("Chercheur de Nuances Pastek Art.");
   }

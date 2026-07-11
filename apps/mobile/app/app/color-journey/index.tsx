@@ -22,10 +22,12 @@ import {
 import { hexToColorLabel } from "@/lib/color-names";
 import {
   buildReflection,
+  buildProposalFromWheel,
   buildSynthesis,
   getTurnGuidance,
   getTurnProposals,
 } from "@/lib/color-journey/theory";
+import type { ColorProposal } from "@/lib/color-journey/types";
 import { fetchColorJourneyMirror } from "@/lib/api";
 import { recordFilEntry } from "@/lib/fil/record";
 import { colorsToFilMetadata } from "@/lib/fil/nuancier";
@@ -50,18 +52,14 @@ export default function ColorJourneyScreen() {
   const augmentationContext = buildPaletteAugmentationContext(history);
   const impulse = buildPaletteImpulse(history);
 
-  function handleConfirmHex(hex: string) {
-    const proposal = {
-      hex,
-      label: hexToColorLabel(hex),
-      hint: "",
-    };
-
+  function handleConfirmChoice(proposal: ColorProposal) {
     const dimensionId = getDimensionForTurn(turn).id;
     const choice: ColorChoice = {
-      hex,
+      hex: proposal.hex,
       label: proposal.label,
       dimensionId,
+      mixRecipe: proposal.mixRecipe,
+      paintId: proposal.paintId,
     };
     const nextHistory = [...history, choice];
     setHistory(nextHistory);
@@ -73,6 +71,11 @@ export default function ColorJourneyScreen() {
     if (turn >= COLOR_JOURNEY_TURN_COUNT) {
       void finalizeSynthesis(nextHistory);
     }
+  }
+
+  function handleConfirmHex(hex: string) {
+    const proposal = buildProposalFromWheel(turn, hex, history);
+    handleConfirmChoice({ ...proposal, hex, label: hexToColorLabel(hex) });
   }
 
   async function finalizeSynthesis(nextHistory: ColorChoice[]) {
@@ -116,6 +119,7 @@ export default function ColorJourneyScreen() {
           hex: lastReflection.chosen.hex,
           label: lastReflection.chosen.label,
           dimensionId: getDimensionForTurn(lastReflection.turn).id,
+          mixRecipe: lastReflection.mixRecipe,
         },
         history,
       });
@@ -144,7 +148,7 @@ export default function ColorJourneyScreen() {
     );
     void recordFilEntry({
       source: "color-journey",
-      summary: `Palette intérieure — ${history.length} teinte${history.length > 1 ? "s" : ""}`,
+      summary: `Assistant palette — ${history.length} teinte${history.length > 1 ? "s" : ""}`,
       detail: buildPaletteImpulse(history).slice(0, 200),
       metadata: {
         ...paletteMeta,
@@ -163,7 +167,7 @@ export default function ColorJourneyScreen() {
     );
     void recordFilEntry({
       source: "color-journey",
-      summary: "Palette intérieure — parcours complet",
+      summary: "Assistant palette — parcours complet",
       detail: synthesis.summary.slice(0, 200),
       metadata: {
         ...paletteMeta,
@@ -192,10 +196,10 @@ export default function ColorJourneyScreen() {
       <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
 
       <PastekScreenHero
-        label="Palette intérieure"
-        title="Trois teintes "
-        accent="sur la roue"
-        description="Ancrage, complémentaire et équilibre — théorie couleur et miroir créatif optionnel guident chaque tour."
+        label="Assistant palette"
+        title="Construisez votre "
+        accent="palette peinture"
+        description="Primaires, secondaires et tertiaires — théorie RYB et recettes de mélange pour le dessin et la peinture."
         className="mb-4"
       />
 
@@ -227,13 +231,17 @@ export default function ColorJourneyScreen() {
               {proposals.length > 0 && (
                 <View className="mt-4">
                   <Text className="text-sand-500 text-xs uppercase tracking-wider mb-2 px-1">
-                    Combinaisons suggérées
+                    {turn === 1
+                      ? "Couleurs primaires RYB"
+                      : turn === 2
+                        ? "Secondaires — mélanges de primaires"
+                        : "Tertiaires — nuances d'accord"}
                   </Text>
                   {proposals.map((proposal) => (
                     <ColorProposalCard
-                      key={proposal.hex}
+                      key={proposal.hex + proposal.label}
                       proposal={proposal}
-                      onPress={() => handleConfirmHex(proposal.hex)}
+                      onPress={() => handleConfirmChoice(proposal)}
                     />
                   ))}
                 </View>
@@ -264,7 +272,7 @@ export default function ColorJourneyScreen() {
                     ? synthesisLoading
                       ? "Préparation du miroir…"
                       : "Voir ma palette"
-                    : "Teinte suivante"
+                    : "Couleur suivante"
                 }
                 onPress={handleContinueAfterReflection}
                 disabled={synthesisLoading}
@@ -292,14 +300,17 @@ export default function ColorJourneyScreen() {
 
           <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-4">
             <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-              Votre palette intérieure
+              Votre palette peinture
             </Text>
             <View className="flex-row flex-wrap gap-3 mb-4">
-              {history.map((choice) => (
+              {history.map((choice, index) => (
                 <View key={choice.hex + choice.label} className="items-center">
                   <ColorSwatch hex={choice.hex} size={40} className="mb-1" />
-                  <Text className="text-sand-500 text-xs text-center max-w-[72px]">
+                  <Text className="text-sand-500 text-xs text-center max-w-[80px]">
                     {choice.label}
+                  </Text>
+                  <Text className="text-sand-400 text-[10px] text-center capitalize">
+                    {getDimensionForTurn(index + 1).title.split(" ").pop()}
                   </Text>
                 </View>
               ))}
@@ -308,7 +319,7 @@ export default function ColorJourneyScreen() {
               {synthesis.summary}
             </Text>
             {synthesis.source === "ai" ? (
-              <Text className="text-sage-500 text-xs mt-2">Miroir personnalisé</Text>
+              <Text className="text-sage-500 text-xs mt-2">Conseil peinture personnalisé</Text>
             ) : null}
           </View>
 

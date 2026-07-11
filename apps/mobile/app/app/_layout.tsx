@@ -24,7 +24,7 @@ export default function AppStackLayout() {
       />
       <Stack.Screen
         name="color-journey/index"
-        options={{ title: "Palette intérieure" }}
+        options={{ title: "Assistant palette" }}
       />
       <Stack.Screen name="fil/index" options={{ title: "Fil créatif" }} />
       <Stack.Screen name="fil/[id]" />

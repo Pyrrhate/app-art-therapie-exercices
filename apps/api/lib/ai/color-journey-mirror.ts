@@ -1,8 +1,18 @@
 export interface ColorMirrorInput {
   mode: "turn" | "synthesis";
   turn?: number;
-  chosen?: { hex: string; label: string; dimensionId: string };
-  history: Array<{ hex: string; label: string; dimensionId: string }>;
+  chosen?: {
+    hex: string;
+    label: string;
+    dimensionId: string;
+    mixRecipe?: string;
+  };
+  history: Array<{
+    hex: string;
+    label: string;
+    dimensionId: string;
+    mixRecipe?: string;
+  }>;
 }
 
 export interface ColorMirrorResponse {
@@ -13,9 +23,12 @@ export interface ColorMirrorResponse {
 const HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions";
 
 const DIMENSION_LABELS: Record<string, string> = {
-  anchor: "Ancrage",
-  complement: "Complémentaire",
-  closure: "Équilibre",
+  primary: "Primaire",
+  secondary: "Secondaire",
+  tertiary: "Tertiaire",
+  anchor: "Primaire",
+  complement: "Secondaire",
+  closure: "Tertiaire",
 };
 
 function buildFallbackMirror(input: ColorMirrorInput): string {
@@ -23,48 +36,50 @@ function buildFallbackMirror(input: ColorMirrorInput): string {
 
   if (input.mode === "synthesis") {
     return labels
-      ? `Votre trio chromatique (${labels}) forme un langage intérieur singulier — laissez ces teintes guider votre geste sans chercher le « beau » résultat.`
-      : "Votre palette est prête à devenir geste — accueillez ce qui émerge sans viser la perfection.";
+      ? `Votre palette peinture (${labels}) est prête — primaire pour les masses, secondaire pour l'équilibre, tertiaire pour les accents.`
+      : "Votre palette est prête — testez chaque teinte sur une bande d'essai avant de peindre.";
   }
 
   const chosen = input.chosen?.label ?? "cette teinte";
-  const dim = DIMENSION_LABELS[input.chosen?.dimensionId ?? ""] ?? "ce tour";
-  return `${chosen} rejoint votre parcours (${dim}) — observez ce que cette couleur éveille en vous, sans l'interpréter comme une étiquette.`;
+  const dim = DIMENSION_LABELS[input.chosen?.dimensionId ?? ""] ?? "cette étape";
+  return `${chosen} (${dim}) rejoint votre palette — pensez au ratio 60·30·10 selon le rôle de chaque teinte.`;
 }
 
 function buildPrompt(input: ColorMirrorInput): string {
   const historyLines = input.history
     .map((h, i) => {
       const dim = DIMENSION_LABELS[h.dimensionId] ?? h.dimensionId;
-      return `Tour ${i + 1} (${dim}) : ${h.label} (${h.hex})`;
+      const recipe = h.mixRecipe ? ` · ${h.mixRecipe}` : "";
+      return `${dim} : ${h.label} (${h.hex})${recipe}`;
     })
     .join("\n");
 
   if (input.mode === "synthesis") {
-    return `Tu es un miroir créatif bienveillant dans une app d'art-thérapie francophone.
+    return `Tu es un assistant palette peinture dans une app d'art-thérapie francophone (théorie RYB).
 
-Palette choisie :
+Palette construite :
 ${historyLines}
 
-Rédige 2 à 3 phrases courtes (max 70 mots) qui :
-- accueillent la palette sans diagnostic psychologique
-- évoquent symbolique et geste au conditionnel (« peut », « pourrait »)
-- invitent doucement vers un exercice créatif
+Rédige 2 à 3 phrases courtes (max 75 mots) qui :
+- expliquent comment utiliser chaque teinte (masses, équilibre, accents)
+- rappellent le ratio 60 % primaire · 30 % secondaire · 10 % tertiaire
+- invitent vers un exercice de peinture ou dessin couleur
 
-Vouvoiement. Pas de markdown. Pas de liste.`;
+Ton pratique et encourageant. Vouvoiement. Pas de markdown. Pas de liste.`;
   }
 
   const chosen = input.chosen!;
   const dim = DIMENSION_LABELS[chosen.dimensionId] ?? chosen.dimensionId;
+  const recipe = chosen.mixRecipe ? `\nRecette : ${chosen.mixRecipe}` : "";
 
-  return `Tu es un miroir créatif bienveillant dans une app d'art-thérapie francophone.
+  return `Tu es un assistant palette peinture dans une app d'art-thérapie francophone.
 
-Historique :
+Palette en cours :
 ${historyLines}
 
-Dernier choix (tour ${input.turn ?? "?"}, ${dim}) : ${chosen.label} (${chosen.hex})
+Dernier choix (${dim}) : ${chosen.label} (${chosen.hex})${recipe}
 
-Rédige 2 phrases courtes (max 45 mots) qui accueillent ce choix sans interpréter cliniquement. Symbolique au conditionnel. Vouvoiement. Pas de markdown.`;
+Rédige 2 phrases courtes (max 50 mots) avec un conseil pratique de peinture (mélange, proportion, geste). Vouvoiement. Pas de markdown.`;
 }
 
 export async function generateColorJourneyMirror(
@@ -93,11 +108,11 @@ export async function generateColorJourneyMirror(
           {
             role: "system",
             content:
-              "Tu rédiges des miroirs créatifs courts en français. Ton chaleureux, jamais clinique. Au conditionnel pour la symbolique.",
+              "Tu rédiges des conseils courts sur la palette peinture en français. Pratique, jamais clinique. Théorie RYB.",
           },
           { role: "user", content: buildPrompt(input) },
         ],
-        max_tokens: 160,
+        max_tokens: 180,
         temperature: 0.75,
       }),
       signal: AbortSignal.timeout(35_000),

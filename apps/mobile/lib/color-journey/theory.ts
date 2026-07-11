@@ -1,6 +1,16 @@
 import { hexToColorLabel } from "@/lib/color-names";
 import { hexToRgb, rgbToHex } from "@/lib/nuance-finder/colors";
 import { COLOR_JOURNEY_TURN_COUNT, getDimensionForTurn } from "./dimensions";
+import {
+  getSecondariesForPrimary,
+  inferPrimaryFromHue,
+  mixSecondaryHex,
+  mixTertiaryHex,
+  RYB_PRIMARIES,
+  tertiaryLabel,
+  type PaintPrimaryId,
+  type PaintSecondaryId,
+} from "./painting-theory";
 import type { ColorChoice, ColorProposal, JourneyReflection, JourneySynthesis } from "./types";
 
 export interface Hsl {
@@ -75,31 +85,48 @@ export function hexFromHue(hue: number, preset: LightnessPreset = "moyen"): stri
   return hslToHex(hue, 0.72, LIGHTNESS_VALUES[preset]);
 }
 
+export function inferPrimaryFromHex(hex: string): PaintPrimaryId {
+  const normalized = hex.toUpperCase();
+  const match = RYB_PRIMARIES.find((p) => p.hex.toUpperCase() === normalized);
+  if (match) return match.id as PaintPrimaryId;
+  return inferPrimaryFromHue(hexToHsl(hex).h);
+}
+
+function resolvePrimaryId(history: ColorChoice[]): PaintPrimaryId {
+  const first = history[0];
+  if (first?.paintId && ["red", "yellow", "blue"].includes(first.paintId)) {
+    return first.paintId as PaintPrimaryId;
+  }
+  return first ? inferPrimaryFromHex(first.hex) : "red";
+}
+
 function hueDistance(a: number, b: number): number {
   const diff = Math.abs(a - b) % 360;
   return diff > 180 ? 360 - diff : diff;
 }
 
-export function complementaryHue(hue: number): number {
-  return (hue + 180) % 360;
-}
-
-export function analogousHues(hue: number, spread = 30): [number, number] {
-  return [(hue - spread + 360) % 360, (hue + spread) % 360];
-}
-
-export function splitComplementaryHues(hue: number): [number, number] {
-  const complement = complementaryHue(hue);
-  return [(complement - 30 + 360) % 360, (complement + 30) % 360];
-}
-
-export function triadicHues(hue: number): [number, number] {
-  return [(hue + 120) % 360, (hue + 240) % 360];
-}
-
-export function pickTriadicHue(anchorHue: number, secondHue: number): number {
-  const [a, b] = triadicHues(anchorHue);
-  return hueDistance(a, secondHue) >= hueDistance(b, secondHue) ? a : b;
+function resolveSecondaryId(history: ColorChoice[]): PaintSecondaryId | null {
+  const second = history[1];
+  if (
+    second?.paintId &&
+    ["orange", "green", "violet"].includes(second.paintId)
+  ) {
+    return second.paintId as PaintSecondaryId;
+  }
+  if (!second) return null;
+  const primaryId = resolvePrimaryId(history);
+  const candidates = getSecondariesForPrimary(primaryId);
+  const hsl = hexToHsl(second.hex);
+  let best = candidates[0]!;
+  let bestDist = Infinity;
+  for (const candidate of candidates) {
+    const dist = hueDistance(hsl.h, hexToHsl(mixSecondaryHex(candidate)).h);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = candidate;
+    }
+  }
+  return best.id;
 }
 
 export interface TurnGuidance {
@@ -117,47 +144,47 @@ export function getTurnGuidance(turn: number, history: ColorChoice[]): TurnGuida
     return {
       title: dim.title,
       subtitle:
-        "Choisissez librement une teinte — votre point d'ancrage émotionnel sur la roue.",
+        "Choisissez votre couleur primaire dominante — rouge, jaune ou bleu. C'est la base de votre palette peinture.",
       theory:
-        "En psychologie des couleurs, le premier choix révèle souvent l'état intérieur du moment : chaleur, retrait, énergie ou douceur.",
-      highlightHues: [],
-      highlightSpread: 0,
+        "En peinture (modèle RYB), les trois primaires ne se mélangent pas entre elles : elles servent de point de départ pour créer toutes les autres teintes.",
+      highlightHues: RYB_PRIMARIES.map((p) => p.hue),
+      highlightSpread: 22,
     };
   }
 
-  const anchor = hexToHsl(history[0]!.hex);
-  const complement = complementaryHue(anchor.h);
+  const primaryId = resolvePrimaryId(history);
+  const primary = RYB_PRIMARIES.find((p) => p.id === primaryId)!;
 
   if (turn === 2) {
+    const secondaries = getSecondariesForPrimary(primaryId);
     return {
       title: dim.title,
-      subtitle: "Teinte opposée (~180°) — le contraste complémentaire réveille la palette.",
-      theory: `Face à ${history[0]!.label}, la complémentaire crée une vibration visuelle : l'œil perçoit d'abord la relation entre les deux pôles.`,
-      highlightHues: [complement],
-      highlightSpread: 26,
+      subtitle: `Mélangez deux primaires pour obtenir une secondaire complémentaire à votre ${primary.label.toLowerCase()}.`,
+      theory: `Les secondaires (orange, vert, violet) naissent du mélange de deux primaires. Face au ${primary.label.toLowerCase()}, choisissez ${secondaries.map((s) => s.label.toLowerCase()).join(" ou ")}.`,
+      highlightHues: secondaries.map((s) => {
+        const hex = mixSecondaryHex(s);
+        return hexToHsl(hex).h;
+      }),
+      highlightSpread: 24,
     };
   }
 
-  if (turn === 3) {
-    const second = history[1] ? hexToHsl(history[1].hex) : anchor;
-    const third = pickTriadicHue(anchor.h, second.h);
-    const warmHue = anchor.h < 180 ? anchor.h : complementaryHue(anchor.h);
-    const coolHue = complementaryHue(warmHue);
-
-    return {
-      title: dim.title,
-      subtitle: "Triade ou équilibre chaud/froid — la palette se referme.",
-      theory: `La triade (${Math.round(third)}°) ou le contraste chaud/froid équilibre l'ensemble. Trois teintes forment un petit langage coloré unique.`,
-      highlightHues: [third, warmHue, coolHue],
-      highlightSpread: 20,
-    };
+  const secondaryId = resolveSecondaryId(history);
+  const highlights: number[] = [primary.hue];
+  if (secondaryId) {
+    highlights.push(
+      hexToHsl(mixTertiaryHex(primaryId, secondaryId, "primary")).h,
+      hexToHsl(mixTertiaryHex(primaryId, secondaryId, "secondary")).h
+    );
   }
 
   return {
     title: dim.title,
-    subtitle: "Choisissez une teinte pour refermer votre palette.",
-    theory: "Chaque teinte modère ou amplifie les autres — un langage intérieur prêt pour l'exercice.",
-    highlightHues: [anchor.h],
+    subtitle:
+      "Une teinte tertiaire entre votre primaire et secondaire — idéale pour ombres, accents et transitions.",
+    theory:
+      "Les tertiaires (rouge-orange, jaune-vert, bleu-violet…) enrichissent la palette sans la surcharger. Pensez ratio 60 % primaire · 30 % secondaire · 10 % tertiaire.",
+    highlightHues: highlights,
     highlightSpread: 18,
   };
 }
@@ -165,23 +192,53 @@ export function getTurnGuidance(turn: number, history: ColorChoice[]): TurnGuida
 export function getTurnProposals(
   turn: number,
   history: ColorChoice[],
-  preset: LightnessPreset = "moyen"
+  _preset: LightnessPreset = "moyen"
 ): ColorProposal[] {
-  if (turn === 1) return [];
+  if (turn === 1) {
+    return RYB_PRIMARIES.map((p) => ({
+      hex: p.hex,
+      label: p.label,
+      hint: "Primaire RYB — teinte pure",
+      paintId: p.id,
+    }));
+  }
 
-  const guidance = getTurnGuidance(turn, history);
-  const hues = guidance.highlightHues.slice(0, 3);
+  if (turn === 2) {
+    const primaryId = resolvePrimaryId(history);
+    return getSecondariesForPrimary(primaryId).map((secondary) => ({
+      hex: mixSecondaryHex(secondary),
+      label: secondary.label,
+      hint: secondary.recipe.parts,
+      mixRecipe: secondary.recipe.description,
+      paintId: secondary.id,
+    }));
+  }
 
-  return hues.map((hue, index) => {
-    const hex = hexFromHue(hue, preset);
-    const label = hexToColorLabel(hex);
-    const dim = getDimensionForTurn(turn);
-    return {
-      hex,
-      label,
-      hint: `${dim.theoryLabel} · option ${index + 1}`,
-    };
-  });
+  if (turn === 3 && history.length >= 2) {
+    const primaryId = resolvePrimaryId(history);
+    const secondaryId = resolveSecondaryId(history);
+    if (!secondaryId) return [];
+
+    return (["primary", "secondary"] as const).map((bias) => {
+      const hex = mixTertiaryHex(primaryId, secondaryId, bias);
+      const label = tertiaryLabel(primaryId, secondaryId, bias);
+      const primaryLabel =
+        RYB_PRIMARIES.find((p) => p.id === primaryId)!.label.toLowerCase();
+      const secondaryLabel = secondaryId;
+      return {
+        hex,
+        label: label.charAt(0).toUpperCase() + label.slice(1),
+        hint:
+          bias === "primary"
+            ? `Proche du ${primaryLabel} — ombres et profondeur`
+            : `Proche du ${secondaryLabel} — accents et lumières`,
+        mixRecipe: `Mélange ${primaryLabel} + ${secondaryLabel} (${bias === "primary" ? "dominante primaire" : "dominante secondaire"})`,
+        paintId: `tertiary-${bias}`,
+      };
+    });
+  }
+
+  return [];
 }
 
 export function proposalFromSelection(
@@ -197,17 +254,67 @@ export function proposalFromSelection(
   };
 }
 
-const BODY_QUESTIONS = [
-  "Où sentez-vous cette couleur dans votre corps ou votre humeur ?",
-  "Si cette teinte était un geste, serait-il lent ou vif ?",
-  "Quel souvenir ou quelle sensation cette couleur évoque-t-elle, même vaguement ?",
-  "Cette teinte vous attire ou vous repousse — que cela dit-il de votre moment présent ?",
-];
+export function buildProposalFromWheel(
+  turn: number,
+  hex: string,
+  history: ColorChoice[]
+): ColorProposal {
+  const label = hexToColorLabel(hex);
 
-const PSYCHOLOGY_BY_TURN: Record<number, string> = {
-  1: "Le premier choix chromatique oriente l'atmosphère de la création — accueillez-le comme un point de départ, pas une étiquette.",
-  2: "La complémentaire réveille : elle peut exprimer un élan, une contradiction intérieure ou une envie de contraste.",
-  3: "Votre palette devient un système : chaque teinte modère ou amplifie les autres — un langage intérieur prêt pour l'exercice.",
+  if (turn === 1) {
+    const paintId = inferPrimaryFromHex(hex);
+    const primary = RYB_PRIMARIES.find((p) => p.id === paintId)!;
+    return {
+      hex,
+      label,
+      hint: `Proche du ${primary.label.toLowerCase()} — primaire RYB`,
+      paintId,
+    };
+  }
+
+  if (turn === 2) {
+    const primaryId = resolvePrimaryId(history);
+    const proposals = getTurnProposals(2, history);
+    const hsl = hexToHsl(hex);
+    let closest = proposals[0]!;
+    let bestDist = Infinity;
+    for (const p of proposals) {
+      const dist = hueDistance(hsl.h, hexToHsl(p.hex).h);
+      if (dist < bestDist) {
+        bestDist = dist;
+        closest = p;
+      }
+    }
+    return {
+      hex,
+      label,
+      hint: closest.hint,
+      mixRecipe: closest.mixRecipe,
+      paintId: closest.paintId,
+    };
+  }
+
+  const proposals = getTurnProposals(3, history);
+  const closest = proposals[0];
+  return {
+    hex,
+    label,
+    hint: closest?.hint ?? "Tertiaire — nuance d'accord",
+    mixRecipe: closest?.mixRecipe,
+    paintId: closest?.paintId ?? "tertiary-custom",
+  };
+}
+
+const PAINTING_TIPS: Record<number, string> = {
+  1: "Utilisez cette primaire pour les grandes masses (~60 % de la surface).",
+  2: "La secondaire équilibre la primaire — réservée aux zones médianes (~30 %).",
+  3: "La tertiaire sert aux accents, contours et détails (~10 %).",
+};
+
+const PRACTICAL_QUESTIONS: Record<number, string> = {
+  1: "Testez la teinte sur une bande d'essai avant de couvrir la toile.",
+  2: "Mélangez sur la palette avec un couteau — pas directement sur le papier.",
+  3: "Un peu de blanc adoucit la tertiaire sans la désaturer entièrement.",
 };
 
 export function buildReflection(
@@ -216,17 +323,18 @@ export function buildReflection(
   history: ColorChoice[]
 ): JourneyReflection {
   const guidance = getTurnGuidance(turn, history);
-  const psychology = PSYCHOLOGY_BY_TURN[turn] ?? PSYCHOLOGY_BY_TURN[3]!;
+  const practical = PAINTING_TIPS[turn] ?? PAINTING_TIPS[3]!;
   const question =
-    turn < COLOR_JOURNEY_TURN_COUNT
-      ? BODY_QUESTIONS[(turn + history.length) % BODY_QUESTIONS.length]
+    turn <= COLOR_JOURNEY_TURN_COUNT
+      ? PRACTICAL_QUESTIONS[turn]
       : undefined;
 
   return {
-    reflection: `${chosen.label} rejoint votre palette — laissez cette teinte résonner un instant.`,
-    psychology,
+    reflection: `${chosen.label} rejoint votre palette — ${practical.toLowerCase()}`,
+    psychology: practical,
     theory: guidance.theory,
     question,
+    mixRecipe: chosen.mixRecipe ?? chosen.hint,
     turn,
     chosen,
   };
@@ -234,17 +342,29 @@ export function buildReflection(
 
 export function buildSynthesis(history: ColorChoice[]): JourneySynthesis {
   const labels = history.map((h) => h.label).join(", ");
+
   const relations =
     history.length >= COLOR_JOURNEY_TURN_COUNT
-      ? "Ancrage, complémentaire et équilibre tissent une palette personnelle."
+      ? `Primaire, secondaire et tertiaire forment une palette peinture équilibrée (ratio 60·30·10).`
       : history.length >= 2
-        ? "Deux teintes suffisent pour une impulsion — vous pouvez continuer ou passer à l'exercice."
-        : "Une première teinte pose l'ancrage — poursuivez ou passez à l'exercice.";
+        ? "Primaire et secondaire suffisent pour démarrer — vous pouvez ajouter une tertiaire ou passer à l'exercice."
+        : "Une primaire pose la base — poursuivez pour construire votre palette.";
 
   return {
     summary: `${relations} Votre palette : ${labels}.`,
-    suggestedImpulse: `Palette intérieure : ${labels}`,
+    suggestedImpulse: `Palette peinture : ${labels}`,
     palette: history,
     source: "fallback",
   };
+}
+
+export function buildPaletteUsageGuide(history: ColorChoice[]): string {
+  if (history.length === 0) return "";
+  const lines = history.map((choice, index) => {
+    const role = getDimensionForTurn(index + 1).title;
+    const ratio = index === 0 ? "60 %" : index === 1 ? "30 %" : "10 %";
+    const recipe = choice.mixRecipe ? ` · ${choice.mixRecipe}` : "";
+    return `${role} (${ratio}) : ${choice.label} (${choice.hex})${recipe}`;
+  });
+  return lines.join("\n");
 }

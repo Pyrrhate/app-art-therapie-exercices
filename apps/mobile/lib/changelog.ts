@@ -13,6 +13,16 @@ export type ChangelogEntry = {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "assistant-palette",
+    dateLabel: "juillet 2026",
+    title: "Assistant palette peinture",
+    highlights: [
+      "L'ancienne Palette intérieure devient un assistant RYB : primaires, secondaires, tertiaires.",
+      "Recettes de mélange et ratio 60·30·10 pour le dessin et la peinture.",
+      "Conseils peinture personnalisés par IA à chaque étape.",
+    ],
+  },
+  {
     id: "express-profond",
     dateLabel: "juin 2026",
     title: "Parcours Express & Profond",
