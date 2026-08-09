@@ -47,7 +47,7 @@ function buildFallbackMirror(input: ColorMirrorInput): string {
 
 function buildPrompt(input: ColorMirrorInput): string {
   const historyLines = input.history
-    .map((h, i) => {
+    .map((h) => {
       const dim = DIMENSION_LABELS[h.dimensionId] ?? h.dimensionId;
       const recipe = h.mixRecipe ? ` · ${h.mixRecipe}` : "";
       return `${dim} : ${h.label} (${h.hex})${recipe}`;

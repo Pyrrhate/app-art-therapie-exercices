@@ -179,8 +179,7 @@ export async function consumePremiumSession(userId: string): Promise<number | nu
 }
 
 export function freemiumResponseHeaders(
-  ctx: FreemiumContext,
-  _balanceAfter?: number | null
+  ctx: FreemiumContext
 ): Record<string, string> {
   return {
     "X-Llm-Tier": ctx.usePremiumLlm ? "premium" : "free",
