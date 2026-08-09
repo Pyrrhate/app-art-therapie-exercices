@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { withFreemiumAI } from "@/lib/ai/with-freemium";
+import { byokBodySchema } from "@/lib/ai/byok";
 import { promptOverridesSchema } from "@/lib/ai/prompt-overrides";
 import { artisticTechniqueSchema } from "@/lib/techniques";
 import {
@@ -16,6 +17,7 @@ const bodySchema = z.object({
   durationMinutes: z.union([z.literal(15), z.literal(30), z.literal(45)]).optional(),
   augmentationContext: z.string().min(20).max(8000).optional(),
   promptOverrides: promptOverridesSchema,
+  byok: byokBodySchema,
 });
 
 export async function OPTIONS(request: Request) {
@@ -59,14 +61,16 @@ export async function POST(request: Request) {
     );
   }
 
+  const { byok, ...exerciseInput } = parsed.data;
+
   try {
-    // BYOK : si X-Custom-AI-Provider + X-Custom-AI-Key → clé client (jamais stockée).
-    // Sinon freemium Hugging Face / Mistral serveur.
+    // BYOK : corps `byok` ou headers X-Custom-AI-* (clé jamais stockée).
     const { result, extraHeaders } = await withFreemiumAI(request, {
       eventType: parsed.data.augmentationContext
         ? "exercise_augment"
         : "exercise_generate",
-      run: (provider) => provider.generateExercise(parsed.data),
+      byokFromBody: byok,
+      run: (provider) => provider.generateExercise(exerciseInput),
     });
 
     return jsonResponse(result, request, {

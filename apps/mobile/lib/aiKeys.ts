@@ -40,16 +40,27 @@ async function secureSet(key: string, value: string): Promise<void> {
     await AsyncStorage.setItem(key, value);
     return;
   }
-  await SecureStore.setItemAsync(key, value, {
-    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-  });
+  try {
+    await SecureStore.setItemAsync(key, value, {
+      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    });
+  } catch {
+    // SecureStore indisponible (simulateur, restriction) — filet AsyncStorage
+    await AsyncStorage.setItem(key, value);
+  }
 }
 
 async function secureGet(key: string): Promise<string | null> {
   if (Platform.OS === "web") {
     return AsyncStorage.getItem(key);
   }
-  return SecureStore.getItemAsync(key);
+  try {
+    const fromSecure = await SecureStore.getItemAsync(key);
+    if (fromSecure) return fromSecure;
+  } catch {
+    /* lire AsyncStorage ci-dessous */
+  }
+  return AsyncStorage.getItem(key);
 }
 
 async function secureDelete(key: string): Promise<void> {
@@ -57,7 +68,12 @@ async function secureDelete(key: string): Promise<void> {
     await AsyncStorage.removeItem(key);
     return;
   }
-  await SecureStore.deleteItemAsync(key);
+  try {
+    await SecureStore.deleteItemAsync(key);
+  } catch {
+    /* ignorer */
+  }
+  await AsyncStorage.removeItem(key);
 }
 
 /** Enregistre une clé API localement (jamais sur le serveur Pastek). */

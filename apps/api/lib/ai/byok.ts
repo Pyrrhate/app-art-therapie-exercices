@@ -1,7 +1,8 @@
 /**
- * Extraction BYOK depuis les headers HTTP.
+ * Extraction BYOK depuis headers HTTP et/ou corps JSON.
  * La clé n'est jamais loguée ni persistée — usage mémoire uniquement.
  */
+import { z } from "zod";
 import type { AIProvider } from "../types";
 import { AnthropicProvider } from "./anthropic";
 import { MistralProvider } from "./mistral";
@@ -23,29 +24,34 @@ const VALID_PROVIDERS = new Set<ByokProviderId>([
   "openai",
 ]);
 
+/** Schéma pour `byok` dans le corps JSON (plus fiable que les headers custom). */
+export const byokBodySchema = z
+  .object({
+    provider: z.enum(["mistral", "anthropic", "openai"]),
+    apiKey: z.string().min(8).max(500),
+  })
+  .optional();
+
 function headerValue(request: Request, name: string): string | null {
   return request.headers.get(name)?.trim() || null;
 }
 
-/**
- * Lit les headers BYOK. Retourne null si absents ou invalides.
- * Ne logue jamais la clé.
- */
-export function extractByokCredentials(
-  request: Request
+function normalizeCredentials(
+  providerRaw: string | null | undefined,
+  apiKeyRaw: string | null | undefined
 ): ByokCredentials | null {
-  const providerRaw = headerValue(request, BYOK_PROVIDER_HEADER)?.toLowerCase();
-  const apiKey = headerValue(request, BYOK_KEY_HEADER);
+  const provider = providerRaw?.trim().toLowerCase();
+  const apiKey = apiKeyRaw?.trim();
 
-  if (!providerRaw && !apiKey) return null;
+  if (!provider && !apiKey) return null;
 
-  if (!providerRaw || !apiKey) {
-    console.warn("[byok] headers incomplets (provider ou clé manquant)");
+  if (!provider || !apiKey) {
+    console.warn("[byok] credentials incomplets (provider ou clé manquant)");
     return null;
   }
 
-  if (!VALID_PROVIDERS.has(providerRaw as ByokProviderId)) {
-    console.warn("[byok] provider inconnu:", providerRaw);
+  if (!VALID_PROVIDERS.has(provider as ByokProviderId)) {
+    console.warn("[byok] provider inconnu");
     return null;
   }
 
@@ -55,9 +61,38 @@ export function extractByokCredentials(
   }
 
   return {
-    provider: providerRaw as ByokProviderId,
+    provider: provider as ByokProviderId,
     apiKey,
   };
+}
+
+/**
+ * Lit les headers BYOK. Retourne null si absents ou invalides.
+ * Ne logue jamais la clé.
+ */
+export function extractByokCredentials(
+  request: Request
+): ByokCredentials | null {
+  return normalizeCredentials(
+    headerValue(request, BYOK_PROVIDER_HEADER),
+    headerValue(request, BYOK_KEY_HEADER)
+  );
+}
+
+/** Lit un objet `{ provider, apiKey }` déjà parsé depuis le corps JSON. */
+export function byokFromBody(
+  value: { provider?: string; apiKey?: string } | null | undefined
+): ByokCredentials | null {
+  if (!value) return null;
+  return normalizeCredentials(value.provider, value.apiKey);
+}
+
+/** Priorité : corps JSON (fiable) puis headers. */
+export function resolveByokCredentials(
+  request: Request,
+  bodyByok?: { provider?: string; apiKey?: string } | null
+): ByokCredentials | null {
+  return byokFromBody(bodyByok) ?? extractByokCredentials(request);
 }
 
 /** Instancie un provider éphémère avec la clé client (pas de cache). */

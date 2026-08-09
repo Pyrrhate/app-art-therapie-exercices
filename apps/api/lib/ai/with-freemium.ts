@@ -9,7 +9,8 @@ import type { AiUsageEventType } from "@/lib/admin/usage-types";
 import type { AiUsageProvider } from "@/lib/admin/record-usage";
 import {
   createByokProvider,
-  extractByokCredentials,
+  resolveByokCredentials,
+  type ByokCredentials,
   type ByokProviderId,
 } from "./byok";
 import { getAIProviderForFreemium } from "./router";
@@ -23,6 +24,8 @@ interface FreemiumAiResult<T> {
 interface WithFreemiumAIOptions<T> {
   eventType: AiUsageEventType;
   run: (provider: AIProvider, ctx: FreemiumContext) => Promise<T>;
+  /** Credentials BYOK issus du corps JSON (prioritaires sur les headers). */
+  byokFromBody?: { provider?: string; apiKey?: string } | null;
 }
 
 function usageProviderLabel(
@@ -37,7 +40,7 @@ function usageProviderLabel(
 
 /**
  * Exécute un appel IA avec priorité BYOK :
- * 1. Headers X-Custom-AI-* → provider éphémère (clé client, jamais stockée)
+ * 1. Corps JSON `byok` ou headers X-Custom-AI-* → provider éphémère
  * 2. Sinon freemium (Mistral crédits / Hugging Face)
  * 3. Les providers gèrent leur propre fallback local
  */
@@ -46,13 +49,32 @@ export async function withFreemiumAI<T extends { source?: string }>(
   options: WithFreemiumAIOptions<T>
 ): Promise<FreemiumAiResult<T>> {
   const ctx = await resolveFreemiumContext(request);
-  const byok = extractByokCredentials(request);
+  const byok: ByokCredentials | null = resolveByokCredentials(
+    request,
+    options.byokFromBody
+  );
+
+  if (byok) {
+    console.info("[byok] relay actif:", byok.provider);
+  }
 
   const provider = byok
     ? createByokProvider(byok)
     : getAIProviderForFreemium(ctx.usePremiumLlm);
 
   const result = await options.run(provider, ctx);
+
+  if (byok && result.source === "fallback") {
+    console.warn(
+      "[byok] provider",
+      byok.provider,
+      "a renvoyé un fallback (clé invalide, quota ou réponse non exploitable)"
+    );
+    const withNote = result as T & { fallbackNote?: string };
+    if (!withNote.fallbackNote) {
+      withNote.fallbackNote = `Votre clé ${byok.provider} n’a pas pu générer la réponse (clé invalide, quota dépassé ou format inattendu). Exercice guidé local affiché.`;
+    }
+  }
 
   recordAiUsageEvent({
     eventType: options.eventType,
@@ -79,6 +101,9 @@ export async function withFreemiumAI<T extends { source?: string }>(
   if (byok) {
     extraHeaders["X-Llm-Tier"] = "byok";
     extraHeaders["X-Byok-Provider"] = byok.provider;
+    if (result.source === "fallback") {
+      extraHeaders["X-Byok-Fallback"] = "1";
+    }
   }
 
   return { result, extraHeaders };

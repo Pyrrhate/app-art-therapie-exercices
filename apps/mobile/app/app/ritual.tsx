@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Text,
@@ -17,8 +17,10 @@ import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { TECHNIQUES, isAiAnalysisSupported } from "@/constants";
+import { resolveByokCredentials } from "@/lib/aiKeys";
 import { ApiError, generateExercise } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
+import { localExerciseBannerMessage } from "@/lib/localExerciseBanner";
 import { useRitualStore } from "@/lib/store";
 
 export default function RitualScreen() {
@@ -27,6 +29,7 @@ export default function RitualScreen() {
     technique,
     durationMinutes,
     experienceMode,
+    exerciseFallbackNote,
     setImpulse,
     setTechnique,
     setDurationMinutes,
@@ -37,6 +40,17 @@ export default function RitualScreen() {
   const [loading, setLoading] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [byokConfigured, setByokConfigured] = useState(false);
+
+  useEffect(() => {
+    if (!offlineMode) {
+      setByokConfigured(false);
+      return;
+    }
+    void resolveByokCredentials()
+      .then((c) => setByokConfigured(Boolean(c)))
+      .catch(() => setByokConfigured(false));
+  }, [offlineMode]);
 
   async function handleContinue() {
     if (!impulse.trim() || !technique) return;
@@ -50,7 +64,7 @@ export default function RitualScreen() {
         technique,
         durationMinutes
       );
-      setExercise(result.exercise, durationMinutes, result.source, result.keywords);
+      setExercise(result.exercise, durationMinutes, result.source, result.keywords, result.fallbackNote);
       if (result.source === "fallback") {
         setOfflineMode(true);
       }
@@ -103,7 +117,10 @@ export default function RitualScreen() {
 
       {offlineMode && (
         <Text className="text-amber-700 text-xs mb-3 leading-5">
-          Mode local actif — exercice guidé hors ligne.
+          {localExerciseBannerMessage({
+            fallbackNote: exerciseFallbackNote,
+            byokConfigured,
+          })}
         </Text>
       )}
 

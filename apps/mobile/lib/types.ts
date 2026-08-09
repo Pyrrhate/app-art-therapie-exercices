@@ -18,6 +18,8 @@ export interface ExerciseResponse {
   durationMinutes: RitualDuration;
   source: "ai" | "fallback";
   keywords: string[];
+  /** Présent si une clé perso (BYOK) a échoué — message UX. */
+  fallbackNote?: string;
 }
 
 export interface ReflectionResponse {
@@ -48,6 +50,8 @@ export interface RitualState {
   technique: import("@art-therapie/shared").ArtisticTechnique | null;
   exercise: string;
   exerciseSource: "ai" | "fallback" | null;
+  /** Message UX si fallback après tentative BYOK (sinon null). */
+  exerciseFallbackNote: string | null;
   exerciseKeywords: string[];
   durationMinutes: RitualDuration;
   photoUri: string | null;

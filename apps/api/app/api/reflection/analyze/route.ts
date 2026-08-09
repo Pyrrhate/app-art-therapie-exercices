@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { withFreemiumAI } from "@/lib/ai/with-freemium";
+import { byokBodySchema } from "@/lib/ai/byok";
 import { promptOverridesSchema } from "@/lib/ai/prompt-overrides";
 import { artisticTechniqueSchema } from "@/lib/techniques";
 import {
@@ -31,6 +32,7 @@ const bodySchema = z
       .optional(),
     colorContext: z.string().min(10).max(2000).optional(),
     promptOverrides: promptOverridesSchema,
+    byok: byokBodySchema,
   })
   .refine(
     (data) =>
@@ -76,9 +78,12 @@ export async function POST(request: Request) {
       );
     }
 
+    const { byok, ...analyzeInput } = parsed.data;
+
     const { result, extraHeaders } = await withFreemiumAI(request, {
       eventType: "reflection_analyze",
-      run: (provider) => provider.analyzeArtwork(parsed.data),
+      byokFromBody: byok,
+      run: (provider) => provider.analyzeArtwork(analyzeInput),
     });
 
     return jsonResponse(result, request, {

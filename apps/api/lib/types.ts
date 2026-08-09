@@ -17,6 +17,8 @@ export interface ExerciseResponse {
   durationMinutes: number;
   source: "ai" | "fallback";
   keywords: string[];
+  /** Présent si BYOK a été tenté mais a échoué (message UX côté client). */
+  fallbackNote?: string;
 }
 
 export interface ReflectionRequest {

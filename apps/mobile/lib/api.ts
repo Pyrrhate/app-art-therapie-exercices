@@ -52,19 +52,43 @@ async function getByokHeaders(
   }
 }
 
-/** Ajoute promptOverrides au corps JSON si des overrides locaux existent. */
-async function withPromptOverrides(
+/**
+ * Enrichit le corps JSON : promptOverrides + byok (clé dans le body).
+ * Le body BYOK est plus fiable que les headers custom (proxies / CORS).
+ */
+async function enrichAiRequestBody(
   path: string,
   body: Record<string, unknown>
 ): Promise<Record<string, unknown>> {
   if (!isByokEnabledPath(path)) return body;
+
+  let next = body;
+
   try {
     const overrides = await getPromptOverrides();
-    if (Object.keys(overrides).length === 0) return body;
-    return { ...body, promptOverrides: overrides };
+    if (Object.keys(overrides).length > 0) {
+      next = { ...next, promptOverrides: overrides };
+    }
   } catch {
-    return body;
+    /* overrides optionnels */
   }
+
+  try {
+    const credentials = await resolveByokCredentials();
+    if (credentials) {
+      next = {
+        ...next,
+        byok: {
+          provider: credentials.provider,
+          apiKey: credentials.key,
+        },
+      };
+    }
+  } catch {
+    /* BYOK optionnel */
+  }
+
+  return next;
 }
 
 class ApiError extends Error {
@@ -104,7 +128,7 @@ async function request<T>(
   ) {
     try {
       const parsed = JSON.parse(body) as Record<string, unknown>;
-      body = JSON.stringify(await withPromptOverrides(path, parsed));
+      body = JSON.stringify(await enrichAiRequestBody(path, parsed));
     } catch {
       /* corps non-JSON — laisser tel quel */
     }
@@ -175,6 +199,8 @@ export async function generateExercise(
   durationMinutes?: number,
   augmentationContext?: string
 ): Promise<ExerciseResponse> {
+  const byokActive = Boolean(await resolveByokCredentials().catch(() => null));
+
   try {
     return await request<ExerciseResponse>("/api/exercise/generate", {
       method: "POST",
@@ -186,6 +212,10 @@ export async function generateExercise(
       }),
     });
   } catch (error) {
+    // Avec une clé perso, ne pas masquer l'erreur derrière un exercice local silencieux
+    if (byokActive) {
+      throw error;
+    }
     if (isRecoverableApiError(error)) {
       return getFallbackExercise(impulse, technique, durationMinutes);
     }
@@ -199,6 +229,8 @@ export async function generateAugmentedExercise(
   augmentationContext: string,
   durationMinutes?: number
 ): Promise<ExerciseResponse> {
+  const byokActive = Boolean(await resolveByokCredentials().catch(() => null));
+
   try {
     return await request<ExerciseResponse>("/api/exercise/generate", {
       method: "POST",
@@ -210,6 +242,9 @@ export async function generateAugmentedExercise(
       }),
     });
   } catch (error) {
+    if (byokActive) {
+      throw error;
+    }
     if (isRecoverableApiError(error)) {
       return getFallbackAugmentedExercise(
         impulse,

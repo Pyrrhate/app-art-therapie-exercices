@@ -24,7 +24,8 @@ interface RitualStore extends RitualState {
     exercise: string,
     durationMinutes?: number,
     source?: "ai" | "fallback" | null,
-    keywords?: string[]
+    keywords?: string[],
+    fallbackNote?: string | null
   ) => void;
   setPhotoUri: (uri: string | null) => void;
   setWrittenText: (writtenText: string) => void;
@@ -48,7 +49,8 @@ interface RitualStore extends RitualState {
   applyAugmentedExercise: (
     exercise: string,
     source: "ai" | "fallback",
-    keywords?: string[]
+    keywords?: string[],
+    fallbackNote?: string | null
   ) => void;
   completeSecondRoundPrep: () => void;
   ensureSessionExerciseId: () => string;
@@ -62,6 +64,7 @@ const initialState: RitualState = {
   technique: null,
   exercise: "",
   exerciseSource: null,
+  exerciseFallbackNote: null,
   exerciseKeywords: [],
   durationMinutes: 15,
   photoUri: null,
@@ -89,7 +92,7 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
   setImpulse: (impulse) => set({ impulse }),
   setTechnique: (technique) => set({ technique }),
   setDurationMinutes: (durationMinutes) => set({ durationMinutes }),
-  setExercise: (exercise, durationMinutes, source, keywords) => {
+  setExercise: (exercise, durationMinutes, source, keywords, fallbackNote) => {
     const technique = get().technique;
     const impulse = get().impulse;
     const exerciseText = sanitizeAiDisplayText(exercise);
@@ -104,6 +107,10 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       durationMinutes: durationMinutes ?? get().durationMinutes,
       exerciseKeywords: resolved,
       ...(source !== undefined ? { exerciseSource: source } : {}),
+      exerciseFallbackNote:
+        source === "fallback"
+          ? fallbackNote?.trim() || null
+          : null,
     });
   },
   setPhotoUri: (photoUri) => set({ photoUri }),
@@ -139,7 +146,7 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       followUpExercise: null,
       writtenText: "",
     }),
-  applyAugmentedExercise: (exercise, source, keywords) => {
+  applyAugmentedExercise: (exercise, source, keywords, fallbackNote) => {
     const state = get();
     const exerciseText = sanitizeAiDisplayText(exercise);
     set({
@@ -151,6 +158,8 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
         keywords
       ),
       exerciseSource: source,
+      exerciseFallbackNote:
+        source === "fallback" ? fallbackNote?.trim() || null : null,
       isExerciseAugmented: true,
       isSecondRoundPrep: false,
     });
@@ -186,6 +195,7 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       photoUri: null,
       writtenText: "",
       exerciseSource: null,
+      exerciseFallbackNote: null,
     });
   },
   restoreFromFilEntry: (entry) => {
@@ -208,6 +218,7 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
         : null,
       writtenText: m.writtenText ?? "",
       exerciseSource: null,
+      exerciseFallbackNote: null,
       colorContext: buildColorContextFromMetadata(m) ?? null,
       paletteColors: m.colors ?? [],
     });
@@ -227,6 +238,7 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
         : null,
       writtenText: session.writtenText ?? "",
       exerciseSource: null,
+      exerciseFallbackNote: null,
     }),
   reset: () => {
     void AsyncStorage.removeItem(STORAGE_KEYS.ritualDraft);

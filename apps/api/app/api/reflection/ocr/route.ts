@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { withFreemiumAI } from "@/lib/ai/with-freemium";
+import { byokBodySchema } from "@/lib/ai/byok";
 import { promptOverridesSchema } from "@/lib/ai/prompt-overrides";
 import {
   corsHeaders,
@@ -19,6 +20,7 @@ const bodySchema = z.object({
       message: "Image trop lourde (maximum 3 Mo environ).",
     }),
   promptOverrides: promptOverridesSchema,
+  byok: byokBodySchema,
 });
 
 export async function OPTIONS(request: Request) {
@@ -60,14 +62,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const { byok, imageBase64, promptOverrides } = parsed.data;
+
     const { result, extraHeaders } = await withFreemiumAI(request, {
       eventType: "reflection_ocr",
+      byokFromBody: byok,
       run: (provider) => {
         if (typeof provider.transcribeHandwriting !== "function") {
           throw new Error("OCR indisponible");
         }
-        return provider.transcribeHandwriting(parsed.data.imageBase64, {
-          promptOverrides: parsed.data.promptOverrides,
+        return provider.transcribeHandwriting(imageBase64, {
+          promptOverrides,
         });
       },
     });

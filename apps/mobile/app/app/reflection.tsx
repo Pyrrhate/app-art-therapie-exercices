@@ -908,7 +908,12 @@ export default function ReflectionScreen() {
         request.augmentationContext,
         durationMinutes
       );
-      applyAugmentedExercise(result.exercise, result.source, result.keywords);
+      applyAugmentedExercise(
+        result.exercise,
+        result.source,
+        result.keywords,
+        result.fallbackNote
+      );
       completeSecondRoundPrep();
       setNotice({
         type: "success",

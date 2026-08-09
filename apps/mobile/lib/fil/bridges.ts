@@ -81,7 +81,8 @@ export async function startExerciseFromImpulse(
     result.exercise,
     minutes,
     result.source,
-    result.keywords
+    result.keywords,
+    result.fallbackNote
   );
 
   if (!useRitualStore.getState().exercise?.trim()) {

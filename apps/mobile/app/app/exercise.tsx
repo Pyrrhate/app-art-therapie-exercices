@@ -11,6 +11,8 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
+import { resolveByokCredentials } from "@/lib/aiKeys";
+import { localExerciseBannerMessage } from "@/lib/localExerciseBanner";
 import { getTimerSound } from "@/lib/preferences";
 import { persistRitualDraft } from "@/lib/ritualPersistence";
 import type { TimerSoundId } from "@/lib/sounds";
@@ -22,6 +24,7 @@ export default function ExerciseScreen() {
   const impulse = useRitualStore((s) => s.impulse);
   const technique = useRitualStore((s) => s.technique);
   const exerciseSource = useRitualStore((s) => s.exerciseSource);
+  const exerciseFallbackNote = useRitualStore((s) => s.exerciseFallbackNote);
   const exerciseKeywords = useRitualStore((s) => s.exerciseKeywords);
   const currentRound = useRitualStore((s) => s.currentRound);
   const isExerciseAugmented = useRitualStore((s) => s.isExerciseAugmented);
@@ -29,10 +32,21 @@ export default function ExerciseScreen() {
   const setDurationMinutes = useRitualStore((s) => s.setDurationMinutes);
   const [completionSound, setCompletionSound] = useState<TimerSoundId>("gong");
   const [ready, setReady] = useState(false);
+  const [byokConfigured, setByokConfigured] = useState(false);
 
   useEffect(() => {
     getTimerSound().then(setCompletionSound);
   }, []);
+
+  useEffect(() => {
+    if (exerciseSource !== "fallback") {
+      setByokConfigured(false);
+      return;
+    }
+    void resolveByokCredentials()
+      .then((c) => setByokConfigured(Boolean(c)))
+      .catch(() => setByokConfigured(false));
+  }, [exerciseSource]);
 
   useEffect(() => {
     void persistRitualDraft("exercise");
@@ -53,6 +67,11 @@ export default function ExerciseScreen() {
   if (!ready || !exercise?.trim()) {
     return null;
   }
+
+  const fallbackBanner = localExerciseBannerMessage({
+    fallbackNote: exerciseFallbackNote,
+    byokConfigured,
+  });
 
   return (
     <ScreenContainer
@@ -85,7 +104,7 @@ export default function ExerciseScreen() {
       {exerciseSource === "fallback" && (
         <View className="bg-sage-50 rounded-2xl border border-sage-100 px-3 py-2 mb-3">
           <Text className="text-sage-700 text-xs leading-5">
-            Mode local actif — exercice guidé hors ligne.
+            {fallbackBanner}
           </Text>
         </View>
       )}

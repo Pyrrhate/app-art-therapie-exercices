@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { router } from "expo-router";
 import {
@@ -10,6 +10,7 @@ import { AccentCard } from "@/components/ui/Card";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
+import { resolveByokCredentials } from "@/lib/aiKeys";
 import { ApiError } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
 import {
@@ -17,6 +18,7 @@ import {
   isCustomSessionComplete,
 } from "@/lib/custom";
 import { EMPTY_INTEGRATION_ANSWERS, EMPTY_SECOND_ROUND_ANSWERS } from "@/lib/experience/types";
+import { localExerciseBannerMessage } from "@/lib/localExerciseBanner";
 import { navigateHome } from "@/lib/navigation";
 import { EMPTY_USER_ANSWERS } from "@/lib/multimodal/types";
 import { ROUTES } from "@/lib/routes";
@@ -26,6 +28,7 @@ export default function CustomWorkspaceScreen() {
   const {
     customSessionConfig,
     durationMinutes,
+    exerciseFallbackNote,
     setCustomSessionConfig,
     setImpulse,
     setTechnique,
@@ -36,6 +39,17 @@ export default function CustomWorkspaceScreen() {
   const [loading, setLoading] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [byokConfigured, setByokConfigured] = useState(false);
+
+  useEffect(() => {
+    if (!offlineMode) {
+      setByokConfigured(false);
+      return;
+    }
+    void resolveByokCredentials()
+      .then((c) => setByokConfigured(Boolean(c)))
+      .catch(() => setByokConfigured(false));
+  }, [offlineMode]);
 
   const canGenerate = isCustomSessionComplete(customSessionConfig);
 
@@ -58,6 +72,7 @@ export default function CustomWorkspaceScreen() {
       followUpExercise: null,
       writtenText: "",
       exerciseSource: null,
+      exerciseFallbackNote: null,
       preAnswers: { ...EMPTY_USER_ANSWERS },
       postAnswers: { ...EMPTY_INTEGRATION_ANSWERS },
     });
@@ -75,7 +90,8 @@ export default function CustomWorkspaceScreen() {
         result.exercise,
         result.durationMinutes,
         result.source,
-        result.keywords
+        result.keywords,
+        result.fallbackNote
       );
 
       if (result.source === "fallback") {
@@ -109,7 +125,10 @@ export default function CustomWorkspaceScreen() {
 
       {offlineMode && (
         <Text className="text-amber-700 text-xs mb-3 leading-5">
-          Mode local actif — exercice guidé hors ligne.
+          {localExerciseBannerMessage({
+            fallbackNote: exerciseFallbackNote,
+            byokConfigured,
+          })}
         </Text>
       )}
 
