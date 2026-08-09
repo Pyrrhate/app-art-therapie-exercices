@@ -23,16 +23,21 @@ import {
   type ReflectionPromptContext,
 } from "./prompts";
 
-const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
+const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
+const ANTHROPIC_VERSION = "2023-06-01";
 
-interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
-}
-
-function toDataImageUrl(imageBase64: string): string {
-  if (imageBase64.startsWith("data:")) return imageBase64;
-  return `data:image/jpeg;base64,${imageBase64.replace(/^data:image\/\w+;base64,/, "")}`;
+function stripDataUrl(imageBase64: string): {
+  mediaType: string;
+  data: string;
+} {
+  const match = imageBase64.match(/^data:(image\/[\w+.-]+);base64,(.+)$/i);
+  if (match) {
+    return { mediaType: match[1]!, data: match[2]! };
+  }
+  return {
+    mediaType: "image/jpeg",
+    data: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+  };
 }
 
 function ensureVouvoiementQuestion(question: string): string {
@@ -46,36 +51,36 @@ function ensureVouvoiementQuestion(question: string): string {
     .replace(/\btes\b/gi, "vos");
 }
 
-/** Provider premium — API Mistral (texte + vision Pixtral). */
-export type MistralProviderOptions = {
-  /** Clé fournie par le client (BYOK) — jamais loguée. */
+export type AnthropicProviderOptions = {
+  /** Clé BYOK — jamais loguée. */
   apiKey?: string;
   textModel?: string;
   visionModel?: string;
 };
 
-export class MistralProvider implements AIProvider {
+/** Provider BYOK Anthropic (Messages API — texte + vision). */
+export class AnthropicProvider implements AIProvider {
   private apiKey: string;
   private textModel: string;
   private visionModel: string;
 
-  constructor(options: MistralProviderOptions = {}) {
+  constructor(options: AnthropicProviderOptions = {}) {
     this.apiKey =
-      options.apiKey?.trim() || process.env.MISTRAL_API_KEY?.trim() || "";
+      options.apiKey?.trim() || process.env.ANTHROPIC_API_KEY?.trim() || "";
     this.textModel =
       options.textModel ??
-      process.env.MISTRAL_TEXT_MODEL ??
-      "mistral-small-latest";
+      process.env.ANTHROPIC_TEXT_MODEL ??
+      "claude-3-5-haiku-latest";
     this.visionModel =
       options.visionModel ??
-      process.env.MISTRAL_VISION_MODEL ??
-      "pixtral-12b-2409";
+      process.env.ANTHROPIC_VISION_MODEL ??
+      "claude-3-5-sonnet-latest";
   }
 
   async generateExercise(input: ExerciseRequest): Promise<ExerciseResponse> {
     const preferredDuration = input.durationMinutes;
     if (!this.apiKey) {
-      console.warn("[MistralProvider] MISTRAL_API_KEY manquant — fallback");
+      console.warn("[AnthropicProvider] clé manquante — fallback");
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
@@ -91,7 +96,7 @@ export class MistralProvider implements AIProvider {
         preferredDuration ?? 15,
         input.augmentationContext
       );
-      const raw = await this.callText(prompt, { systemPrompt: EXERCISE_SYSTEM });
+      const raw = await this.callText(prompt, { system: EXERCISE_SYSTEM });
       const parsed = parseExerciseFromAi(raw, preferredDuration);
 
       if (parsed) {
@@ -113,7 +118,7 @@ export class MistralProvider implements AIProvider {
 
       return { ...getFallbackExercise(input), source: "fallback" as const };
     } catch (error) {
-      console.warn("[Mistral generateExercise]", error);
+      console.warn("[Anthropic generateExercise]", error);
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
@@ -126,7 +131,11 @@ export class MistralProvider implements AIProvider {
   async analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse> {
     if (input.technique && !isAiAnalysisSupported(input.technique)) {
       const fallback = getFallbackReflection(input);
-      return { ...fallback, source: "fallback", analysisNote: "Technique sans analyse IA." };
+      return {
+        ...fallback,
+        source: "fallback",
+        analysisNote: "Technique sans analyse IA.",
+      };
     }
 
     if (!this.apiKey) {
@@ -134,7 +143,7 @@ export class MistralProvider implements AIProvider {
       return {
         ...fallback,
         source: "fallback",
-        analysisNote: "MISTRAL_API_KEY non configuré.",
+        analysisNote: "Clé Anthropic absente.",
       };
     }
 
@@ -177,7 +186,7 @@ export class MistralProvider implements AIProvider {
       let warmRaw = await this.callText(buildWarmReflectionPrompt(promptCtx), {
         temperature: 0.82,
         maxTokens: 950,
-        systemPrompt: WARM_REFLECTION_SYSTEM,
+        system: WARM_REFLECTION_SYSTEM,
       });
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -189,7 +198,11 @@ export class MistralProvider implements AIProvider {
       if (needsRetry && parsed?.reflection) {
         warmRaw = await this.callText(
           buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
-          { temperature: 0.78, maxTokens: 950, systemPrompt: WARM_REFLECTION_SYSTEM }
+          {
+            temperature: 0.78,
+            maxTokens: 950,
+            system: WARM_REFLECTION_SYSTEM,
+          }
         );
         parsed = parseReflectionFromAi(warmRaw);
       }
@@ -207,12 +220,16 @@ export class MistralProvider implements AIProvider {
         };
       }
 
-      throw new Error("Réponse Mistral non exploitable");
+      throw new Error("Réponse Anthropic non exploitable");
     } catch (error) {
-      const note = error instanceof Error ? error.message : "Erreur Mistral";
-      console.warn("[Mistral analyzeArtwork]", error);
+      const note = error instanceof Error ? error.message : "Erreur Anthropic";
+      console.warn("[Anthropic analyzeArtwork]", error);
       const fallback = getFallbackReflection(input);
-      return { ...fallback, source: "fallback", analysisNote: note.slice(0, 400) };
+      return {
+        ...fallback,
+        source: "fallback",
+        analysisNote: note.slice(0, 400),
+      };
     }
   }
 
@@ -222,70 +239,90 @@ export class MistralProvider implements AIProvider {
     if (!this.apiKey) return { text: "", source: "fallback" };
 
     try {
-      const text = await this.callVision(imageBase64, buildHandwritingOcrPrompt());
+      const text = await this.callVision(
+        imageBase64,
+        buildHandwritingOcrPrompt()
+      );
       return { text: text.trim(), source: "ai" };
     } catch (error) {
-      console.warn("[Mistral transcribeHandwriting]", error);
+      console.warn("[Anthropic transcribeHandwriting]", error);
       return { text: "", source: "fallback" };
     }
   }
 
   private async callText(
     prompt: string,
-    options?: { temperature?: number; maxTokens?: number; systemPrompt?: string }
+    options?: { temperature?: number; maxTokens?: number; system?: string }
   ): Promise<string> {
-    const messages: ChatMessage[] = [];
-    if (options?.systemPrompt) {
-      messages.push({ role: "system", content: options.systemPrompt });
-    }
-    messages.push({ role: "user", content: prompt });
-    return this.chat(messages, this.textModel, options);
+    return this.messages({
+      model: this.textModel,
+      system: options?.system,
+      maxTokens: options?.maxTokens ?? 512,
+      temperature: options?.temperature ?? 0.7,
+      content: [{ type: "text", text: prompt }],
+    });
   }
 
   private async callVision(imageBase64: string, prompt: string): Promise<string> {
-    const messages: ChatMessage[] = [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: prompt },
-          { type: "image_url", image_url: { url: toDataImageUrl(imageBase64) } },
-        ],
-      },
-    ];
-    return this.chat(messages, this.visionModel, { maxTokens: 1024, temperature: 0.4 });
+    const { mediaType, data } = stripDataUrl(imageBase64);
+    return this.messages({
+      model: this.visionModel,
+      maxTokens: 1024,
+      temperature: 0.4,
+      content: [
+        {
+          type: "image",
+          source: { type: "base64", media_type: mediaType, data },
+        },
+        { type: "text", text: prompt },
+      ],
+    });
   }
 
-  private async chat(
-    messages: ChatMessage[],
-    model: string,
-    options?: { temperature?: number; maxTokens?: number }
-  ): Promise<string> {
-    const response = await fetch(MISTRAL_CHAT_URL, {
+  private async messages(params: {
+    model: string;
+    system?: string;
+    maxTokens: number;
+    temperature: number;
+    content: Array<Record<string, unknown>>;
+  }): Promise<string> {
+    const body: Record<string, unknown> = {
+      model: params.model,
+      max_tokens: params.maxTokens,
+      temperature: params.temperature,
+      messages: [{ role: "user", content: params.content }],
+    };
+    if (params.system) body.system = params.system;
+
+    const response = await fetch(ANTHROPIC_MESSAGES_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${this.apiKey}`,
+        "x-api-key": this.apiKey,
+        "anthropic-version": ANTHROPIC_VERSION,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        max_tokens: options?.maxTokens ?? 512,
-        temperature: options?.temperature ?? 0.7,
-      }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(90_000),
     });
 
     const rawBody = await response.text();
     if (!response.ok) {
-      console.warn(`[Mistral chat] ${response.status}:`, rawBody.slice(0, 400));
-      throw new Error(`Mistral HTTP ${response.status}`);
+      console.warn(
+        `[Anthropic messages] ${response.status}:`,
+        rawBody.slice(0, 400)
+      );
+      throw new Error(`Anthropic HTTP ${response.status}`);
     }
 
     const data = JSON.parse(rawBody) as {
-      choices?: Array<{ message?: { content?: string } }>;
+      content?: Array<{ type?: string; text?: string }>;
     };
-    const content = data.choices?.[0]?.message?.content?.trim();
-    if (!content) throw new Error("Mistral: réponse vide");
-    return content;
+    const text = data.content
+      ?.filter((block) => block.type === "text" && block.text)
+      .map((block) => block.text)
+      .join("\n")
+      .trim();
+    if (!text) throw new Error("Anthropic: réponse vide");
+    return text;
   }
 }

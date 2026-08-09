@@ -12,6 +12,7 @@ export const ROUTES = {
   exercise: `${APP_BASE}/exercise`,
   reflection: `${APP_BASE}/reflection`,
   settings: `${APP_BASE}/settings`,
+  aiEngines: `${APP_BASE}/settings/ai-engines`,
   premiumCloud: `${APP_BASE}/premium-cloud`,
   privacy: `${APP_BASE}/privacy`,
   changelog: `${APP_BASE}/maj`,

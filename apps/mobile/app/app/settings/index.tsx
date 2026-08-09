@@ -227,6 +227,21 @@ export default function SettingsScreen() {
           </Pressable>
         ) : null}
 
+        <Pressable
+          onPress={() => router.push(ROUTES.aiEngines)}
+          className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
+        >
+          <View className="flex-1 pr-3">
+            <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
+              Moteurs IA (clé personnelle)
+            </Text>
+            <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
+              Mistral, Claude ou OpenAI — clé stockée uniquement sur cet appareil
+            </Text>
+          </View>
+          <Text className="text-sage-500 text-lg">→</Text>
+        </Pressable>
+
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
             Apparence

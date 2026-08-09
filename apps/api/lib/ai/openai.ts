@@ -23,11 +23,13 @@ import {
   type ReflectionPromptContext,
 } from "./prompts";
 
-const MISTRAL_CHAT_URL = "https://api.mistral.ai/v1/chat/completions";
+const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
 interface ChatMessage {
   role: "system" | "user" | "assistant";
-  content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
+  content:
+    | string
+    | Array<{ type: string; text?: string; image_url?: { url: string } }>;
 }
 
 function toDataImageUrl(imageBase64: string): string {
@@ -46,36 +48,32 @@ function ensureVouvoiementQuestion(question: string): string {
     .replace(/\btes\b/gi, "vos");
 }
 
-/** Provider premium — API Mistral (texte + vision Pixtral). */
-export type MistralProviderOptions = {
-  /** Clé fournie par le client (BYOK) — jamais loguée. */
+export type OpenAIProviderOptions = {
+  /** Clé BYOK — jamais loguée. */
   apiKey?: string;
   textModel?: string;
   visionModel?: string;
 };
 
-export class MistralProvider implements AIProvider {
+/** Provider BYOK OpenAI (chat completions + vision). */
+export class OpenAIProvider implements AIProvider {
   private apiKey: string;
   private textModel: string;
   private visionModel: string;
 
-  constructor(options: MistralProviderOptions = {}) {
+  constructor(options: OpenAIProviderOptions = {}) {
     this.apiKey =
-      options.apiKey?.trim() || process.env.MISTRAL_API_KEY?.trim() || "";
+      options.apiKey?.trim() || process.env.OPENAI_API_KEY?.trim() || "";
     this.textModel =
-      options.textModel ??
-      process.env.MISTRAL_TEXT_MODEL ??
-      "mistral-small-latest";
+      options.textModel ?? process.env.OPENAI_TEXT_MODEL ?? "gpt-4o-mini";
     this.visionModel =
-      options.visionModel ??
-      process.env.MISTRAL_VISION_MODEL ??
-      "pixtral-12b-2409";
+      options.visionModel ?? process.env.OPENAI_VISION_MODEL ?? "gpt-4o";
   }
 
   async generateExercise(input: ExerciseRequest): Promise<ExerciseResponse> {
     const preferredDuration = input.durationMinutes;
     if (!this.apiKey) {
-      console.warn("[MistralProvider] MISTRAL_API_KEY manquant — fallback");
+      console.warn("[OpenAIProvider] clé manquante — fallback");
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
@@ -113,7 +111,7 @@ export class MistralProvider implements AIProvider {
 
       return { ...getFallbackExercise(input), source: "fallback" as const };
     } catch (error) {
-      console.warn("[Mistral generateExercise]", error);
+      console.warn("[OpenAI generateExercise]", error);
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
@@ -126,7 +124,11 @@ export class MistralProvider implements AIProvider {
   async analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse> {
     if (input.technique && !isAiAnalysisSupported(input.technique)) {
       const fallback = getFallbackReflection(input);
-      return { ...fallback, source: "fallback", analysisNote: "Technique sans analyse IA." };
+      return {
+        ...fallback,
+        source: "fallback",
+        analysisNote: "Technique sans analyse IA.",
+      };
     }
 
     if (!this.apiKey) {
@@ -134,7 +136,7 @@ export class MistralProvider implements AIProvider {
       return {
         ...fallback,
         source: "fallback",
-        analysisNote: "MISTRAL_API_KEY non configuré.",
+        analysisNote: "Clé OpenAI absente.",
       };
     }
 
@@ -189,7 +191,11 @@ export class MistralProvider implements AIProvider {
       if (needsRetry && parsed?.reflection) {
         warmRaw = await this.callText(
           buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
-          { temperature: 0.78, maxTokens: 950, systemPrompt: WARM_REFLECTION_SYSTEM }
+          {
+            temperature: 0.78,
+            maxTokens: 950,
+            systemPrompt: WARM_REFLECTION_SYSTEM,
+          }
         );
         parsed = parseReflectionFromAi(warmRaw);
       }
@@ -207,12 +213,16 @@ export class MistralProvider implements AIProvider {
         };
       }
 
-      throw new Error("Réponse Mistral non exploitable");
+      throw new Error("Réponse OpenAI non exploitable");
     } catch (error) {
-      const note = error instanceof Error ? error.message : "Erreur Mistral";
-      console.warn("[Mistral analyzeArtwork]", error);
+      const note = error instanceof Error ? error.message : "Erreur OpenAI";
+      console.warn("[OpenAI analyzeArtwork]", error);
       const fallback = getFallbackReflection(input);
-      return { ...fallback, source: "fallback", analysisNote: note.slice(0, 400) };
+      return {
+        ...fallback,
+        source: "fallback",
+        analysisNote: note.slice(0, 400),
+      };
     }
   }
 
@@ -222,10 +232,13 @@ export class MistralProvider implements AIProvider {
     if (!this.apiKey) return { text: "", source: "fallback" };
 
     try {
-      const text = await this.callVision(imageBase64, buildHandwritingOcrPrompt());
+      const text = await this.callVision(
+        imageBase64,
+        buildHandwritingOcrPrompt()
+      );
       return { text: text.trim(), source: "ai" };
     } catch (error) {
-      console.warn("[Mistral transcribeHandwriting]", error);
+      console.warn("[OpenAI transcribeHandwriting]", error);
       return { text: "", source: "fallback" };
     }
   }
@@ -252,7 +265,10 @@ export class MistralProvider implements AIProvider {
         ],
       },
     ];
-    return this.chat(messages, this.visionModel, { maxTokens: 1024, temperature: 0.4 });
+    return this.chat(messages, this.visionModel, {
+      maxTokens: 1024,
+      temperature: 0.4,
+    });
   }
 
   private async chat(
@@ -260,7 +276,7 @@ export class MistralProvider implements AIProvider {
     model: string,
     options?: { temperature?: number; maxTokens?: number }
   ): Promise<string> {
-    const response = await fetch(MISTRAL_CHAT_URL, {
+    const response = await fetch(OPENAI_CHAT_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
@@ -277,15 +293,15 @@ export class MistralProvider implements AIProvider {
 
     const rawBody = await response.text();
     if (!response.ok) {
-      console.warn(`[Mistral chat] ${response.status}:`, rawBody.slice(0, 400));
-      throw new Error(`Mistral HTTP ${response.status}`);
+      console.warn(`[OpenAI chat] ${response.status}:`, rawBody.slice(0, 400));
+      throw new Error(`OpenAI HTTP ${response.status}`);
     }
 
     const data = JSON.parse(rawBody) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
     const content = data.choices?.[0]?.message?.content?.trim();
-    if (!content) throw new Error("Mistral: réponse vide");
+    if (!content) throw new Error("OpenAI: réponse vide");
     return content;
   }
 }

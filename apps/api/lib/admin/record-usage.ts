@@ -2,7 +2,12 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { AiUsageEventType } from "./usage-types";
 
 export type AiUsageSource = "ai" | "fallback";
-export type AiUsageProvider = "huggingface" | "mistral" | "local";
+export type AiUsageProvider =
+  | "huggingface"
+  | "mistral"
+  | "openai"
+  | "anthropic"
+  | "local";
 
 export interface RecordAiUsageInput {
   eventType: AiUsageEventType;

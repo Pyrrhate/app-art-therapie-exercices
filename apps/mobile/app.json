@@ -37,7 +37,8 @@
           "photosPermission": "L'application accède à vos photos pour capturer votre création.",
           "cameraPermission": "L'application utilise la caméra pour photographier votre œuvre."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

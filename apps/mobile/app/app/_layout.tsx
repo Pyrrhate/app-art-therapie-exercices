@@ -31,11 +31,19 @@ export default function AppStackLayout() {
       <Stack.Screen name="exercise" />
       <Stack.Screen name="reflection" />
       <Stack.Screen
-        name="settings"
+        name="settings/index"
         options={
           Platform.OS === "web"
             ? { presentation: "card" }
             : { presentation: "modal" }
+        }
+      />
+      <Stack.Screen
+        name="settings/ai-engines"
+        options={
+          Platform.OS === "web"
+            ? { presentation: "card", title: "Moteurs IA" }
+            : { presentation: "modal", title: "Moteurs IA" }
         }
       />
       <Stack.Screen

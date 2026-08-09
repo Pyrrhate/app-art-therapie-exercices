@@ -58,6 +58,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    // BYOK : si X-Custom-AI-Provider + X-Custom-AI-Key → clé client (jamais stockée).
+    // Sinon freemium Hugging Face / Mistral serveur.
     const { result, extraHeaders } = await withFreemiumAI(request, {
       eventType: parsed.data.augmentationContext
         ? "exercise_augment"

@@ -1,6 +1,12 @@
 import { getApiUrl } from "./config";
 import { getSupabaseClient } from "./supabase/client";
 import { useAuthStore } from "./auth/store";
+import { resolveByokCredentials } from "./aiKeys";
+import {
+  BYOK_KEY_HEADER,
+  BYOK_PROVIDER_HEADER,
+  isByokEnabledPath,
+} from "./byok-headers";
 import { getFallbackExercise, getFallbackAugmentedExercise } from "./ritual/fallback";
 import { getFallbackPingPongReply } from "./ping-pong/fallback";
 import { buildLocalColorMirror } from "./color-journey/mirror-fallback";
@@ -23,6 +29,28 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   return { Authorization: `Bearer ${session.access_token}` };
 }
 
+/**
+ * Injecte la clé BYOK locale si présente.
+ * Ne logue jamais la clé. Retourne {} si aucune clé configurée.
+ */
+async function getByokHeaders(
+  path: string
+): Promise<Record<string, string>> {
+  if (!isByokEnabledPath(path)) return {};
+
+  try {
+    const credentials = await resolveByokCredentials();
+    if (!credentials) return {};
+    return {
+      [BYOK_PROVIDER_HEADER]: credentials.provider,
+      [BYOK_KEY_HEADER]: credentials.key,
+    };
+  } catch {
+    // Stockage indisponible — continuer sans BYOK
+    return {};
+  }
+}
+
 class ApiError extends Error {
   constructor(
     message: string,
@@ -42,6 +70,7 @@ async function request<T>(
   const method = (options.method ?? "GET").toUpperCase();
   const headers: Record<string, string> = {
     ...(await getAuthHeaders()),
+    ...(await getByokHeaders(path)),
     ...(options.headers as Record<string, string> | undefined),
   };
 
