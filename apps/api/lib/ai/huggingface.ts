@@ -1,3 +1,4 @@
+import { resolvePromptText } from "@art-therapie/shared";
 import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
 import { isAiAnalysisSupported } from "../techniques";
@@ -14,12 +15,10 @@ import {
   buildVisionObservationPrompt,
   buildWarmReflectionPrompt,
   buildWarmReflectionRetryPrompt,
-  EXERCISE_SYSTEM,
   looksLikeColdDescription,
   looksLikeTooBriefReflection,
   parseExerciseFromAi,
   parseReflectionFromAi,
-  WARM_REFLECTION_SYSTEM,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -186,7 +185,10 @@ export class HuggingFaceProvider implements AIProvider {
         input.augmentationContext
       );
       const raw = await this.callTextModel(prompt, {
-        systemPrompt: EXERCISE_SYSTEM,
+        systemPrompt: resolvePromptText(
+          "exercise_system",
+          input.promptOverrides
+        ),
       });
       const parsed = parseExerciseFromAi(raw, preferredDuration);
 
@@ -251,14 +253,18 @@ export class HuggingFaceProvider implements AIProvider {
       if (input.imageBase64) {
         visualNotes = await this.callVisionModel(
           input.imageBase64,
-          buildVisionObservationPrompt(isWriting, input.exercise)
+          buildVisionObservationPrompt(
+            isWriting,
+            input.exercise,
+            input.promptOverrides
+          )
         );
 
         if (isWriting && writtenText.length < 20) {
           try {
             const ocr = await this.callVisionModel(
               input.imageBase64,
-              buildHandwritingOcrPrompt()
+              buildHandwritingOcrPrompt(input.promptOverrides)
             );
             const transcribed = ocr.trim();
             if (transcribed.length > 5) {
@@ -282,7 +288,14 @@ export class HuggingFaceProvider implements AIProvider {
 
       let warmRaw = await this.callTextModel(
         buildWarmReflectionPrompt(promptCtx),
-        { temperature: 0.82, maxTokens: 950, systemPrompt: WARM_REFLECTION_SYSTEM }
+        {
+          temperature: 0.82,
+          maxTokens: 950,
+          systemPrompt: resolvePromptText(
+            "reflection_system",
+            input.promptOverrides
+          ),
+        }
       );
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -295,7 +308,14 @@ export class HuggingFaceProvider implements AIProvider {
         console.warn("[HF analyzeArtwork] reformulation (ton ou longueur)");
         warmRaw = await this.callTextModel(
           buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
-          { temperature: 0.78, maxTokens: 950, systemPrompt: WARM_REFLECTION_SYSTEM }
+          {
+            temperature: 0.78,
+            maxTokens: 950,
+            systemPrompt: resolvePromptText(
+              "reflection_system",
+              input.promptOverrides
+            ),
+          }
         );
         parsed = parseReflectionFromAi(warmRaw);
       }
@@ -336,7 +356,8 @@ export class HuggingFaceProvider implements AIProvider {
   }
 
   async transcribeHandwriting(
-    imageBase64: string
+    imageBase64: string,
+    options?: { promptOverrides?: import("@art-therapie/shared").PromptOverrides }
   ): Promise<{ text: string; source: "ai" | "fallback" }> {
     if (!this.token) {
       return { text: "", source: "fallback" };
@@ -345,7 +366,7 @@ export class HuggingFaceProvider implements AIProvider {
     try {
       const text = await this.callVisionModel(
         imageBase64,
-        buildHandwritingOcrPrompt()
+        buildHandwritingOcrPrompt(options?.promptOverrides)
       );
       return { text: text.trim(), source: "ai" };
     } catch (error) {

@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/constants";
 import { removeAllAiKeys } from "@/lib/aiKeys";
+import { clearAllPromptOverrides } from "@/lib/promptOverrides";
 import { clearFilEntries } from "@/lib/fil/storage";
 import { clearRitualDraft } from "@/lib/ritualDraft";
 import { setThemePreference, setTimerSound } from "@/lib/preferences";
@@ -29,6 +30,7 @@ export async function clearAllLocalData(): Promise<void> {
 
   await AsyncStorage.multiRemove([...new Set(keys)]);
   await removeAllAiKeys();
+  await clearAllPromptOverrides();
 
   await setThemePreference("light");
   await setTimerSound("gong");

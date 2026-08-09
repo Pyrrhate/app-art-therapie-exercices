@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { withFreemiumAI } from "@/lib/ai/with-freemium";
+import { promptOverridesSchema } from "@/lib/ai/prompt-overrides";
 import {
   corsHeaders,
   errorResponse,
@@ -17,6 +18,7 @@ const bodySchema = z.object({
     .max(MAX_IMAGE_BASE64_CHARS, {
       message: "Image trop lourde (maximum 3 Mo environ).",
     }),
+  promptOverrides: promptOverridesSchema,
 });
 
 export async function OPTIONS(request: Request) {
@@ -64,7 +66,9 @@ export async function POST(request: Request) {
         if (typeof provider.transcribeHandwriting !== "function") {
           throw new Error("OCR indisponible");
         }
-        return provider.transcribeHandwriting(parsed.data.imageBase64);
+        return provider.transcribeHandwriting(parsed.data.imageBase64, {
+          promptOverrides: parsed.data.promptOverrides,
+        });
       },
     });
 

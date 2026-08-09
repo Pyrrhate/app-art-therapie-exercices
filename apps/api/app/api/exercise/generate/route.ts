@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { withFreemiumAI } from "@/lib/ai/with-freemium";
+import { promptOverridesSchema } from "@/lib/ai/prompt-overrides";
 import { artisticTechniqueSchema } from "@/lib/techniques";
 import {
   corsHeaders,
@@ -14,6 +15,7 @@ const bodySchema = z.object({
   technique: artisticTechniqueSchema,
   durationMinutes: z.union([z.literal(15), z.literal(30), z.literal(45)]).optional(),
   augmentationContext: z.string().min(20).max(8000).optional(),
+  promptOverrides: promptOverridesSchema,
 });
 
 export async function OPTIONS(request: Request) {

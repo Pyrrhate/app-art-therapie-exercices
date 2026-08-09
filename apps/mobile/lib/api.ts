@@ -7,6 +7,7 @@ import {
   BYOK_PROVIDER_HEADER,
   isByokEnabledPath,
 } from "./byok-headers";
+import { getPromptOverrides } from "./promptOverrides";
 import { getFallbackExercise, getFallbackAugmentedExercise } from "./ritual/fallback";
 import { getFallbackPingPongReply } from "./ping-pong/fallback";
 import { buildLocalColorMirror } from "./color-journey/mirror-fallback";
@@ -51,6 +52,21 @@ async function getByokHeaders(
   }
 }
 
+/** Ajoute promptOverrides au corps JSON si des overrides locaux existent. */
+async function withPromptOverrides(
+  path: string,
+  body: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  if (!isByokEnabledPath(path)) return body;
+  try {
+    const overrides = await getPromptOverrides();
+    if (Object.keys(overrides).length === 0) return body;
+    return { ...body, promptOverrides: overrides };
+  } catch {
+    return body;
+  }
+}
+
 class ApiError extends Error {
   constructor(
     message: string,
@@ -79,9 +95,24 @@ async function request<T>(
     headers["Content-Type"] = "application/json";
   }
 
+  let body = options.body;
+  if (
+    typeof body === "string" &&
+    method !== "GET" &&
+    method !== "HEAD" &&
+    isByokEnabledPath(path)
+  ) {
+    try {
+      const parsed = JSON.parse(body) as Record<string, unknown>;
+      body = JSON.stringify(await withPromptOverrides(path, parsed));
+    } catch {
+      /* corps non-JSON — laisser tel quel */
+    }
+  }
+
   let response: Response;
   try {
-    response = await fetch(url, { ...options, method, headers });
+    response = await fetch(url, { ...options, method, headers, body });
   } catch {
     throw new ApiError(
       "Impossible de joindre le serveur. Vérifiez l'URL API et votre connexion.",

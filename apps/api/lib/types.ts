@@ -1,4 +1,5 @@
 export type { ArtisticTechnique } from "@art-therapie/shared";
+import type { PromptOverrides } from "@art-therapie/shared";
 
 export interface ExerciseRequest {
   impulse: string;
@@ -7,6 +8,8 @@ export interface ExerciseRequest {
   durationMinutes?: number;
   /** Prompt d'augmentation pour le 2e tour (remplace le prompt standard). */
   augmentationContext?: string;
+  /** Overrides locaux des prompts système (BYOP — jamais stockés serveur). */
+  promptOverrides?: PromptOverrides;
 }
 
 export interface ExerciseResponse {
@@ -28,6 +31,8 @@ export interface ReflectionRequest {
   writtenText?: string;
   /** Palette ou harmonie explorée avant le rituel (nuancier, palette intérieure). */
   colorContext?: string;
+  /** Overrides locaux des prompts système (BYOP — jamais stockés serveur). */
+  promptOverrides?: PromptOverrides;
 }
 
 export interface ReflectionResponse {
@@ -44,10 +49,18 @@ export interface HandwritingOcrResponse {
   source: "ai" | "fallback";
 }
 
+export interface HandwritingOcrRequest {
+  imageBase64: string;
+  promptOverrides?: PromptOverrides;
+}
+
 export interface AIProvider {
   generateExercise(input: ExerciseRequest): Promise<ExerciseResponse>;
   analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse>;
-  transcribeHandwriting(imageBase64: string): Promise<HandwritingOcrResponse>;
+  transcribeHandwriting(
+    imageBase64: string,
+    options?: { promptOverrides?: PromptOverrides }
+  ): Promise<HandwritingOcrResponse>;
 }
 
 export interface ApiErrorBody {

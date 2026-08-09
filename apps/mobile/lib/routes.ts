@@ -13,6 +13,7 @@ export const ROUTES = {
   reflection: `${APP_BASE}/reflection`,
   settings: `${APP_BASE}/settings`,
   aiEngines: `${APP_BASE}/settings/ai-engines`,
+  prompts: `${APP_BASE}/settings/prompts`,
   premiumCloud: `${APP_BASE}/premium-cloud`,
   privacy: `${APP_BASE}/privacy`,
   changelog: `${APP_BASE}/maj`,

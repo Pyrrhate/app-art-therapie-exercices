@@ -47,6 +47,14 @@ export default function AppStackLayout() {
         }
       />
       <Stack.Screen
+        name="settings/prompts"
+        options={
+          Platform.OS === "web"
+            ? { presentation: "card", title: "Prompts IA" }
+            : { presentation: "modal", title: "Prompts IA" }
+        }
+      />
+      <Stack.Screen
         name="premium-cloud"
         options={
           Platform.OS === "web"

@@ -1,3 +1,4 @@
+import { resolvePromptText } from "@art-therapie/shared";
 import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
 import { isAiAnalysisSupported } from "../techniques";
@@ -14,12 +15,10 @@ import {
   buildVisionObservationPrompt,
   buildWarmReflectionPrompt,
   buildWarmReflectionRetryPrompt,
-  EXERCISE_SYSTEM,
   looksLikeColdDescription,
   looksLikeTooBriefReflection,
   parseExerciseFromAi,
   parseReflectionFromAi,
-  WARM_REFLECTION_SYSTEM,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -96,7 +95,9 @@ export class AnthropicProvider implements AIProvider {
         preferredDuration ?? 15,
         input.augmentationContext
       );
-      const raw = await this.callText(prompt, { system: EXERCISE_SYSTEM });
+      const raw = await this.callText(prompt, {
+        system: resolvePromptText("exercise_system", input.promptOverrides),
+      });
       const parsed = parseExerciseFromAi(raw, preferredDuration);
 
       if (parsed) {
@@ -156,14 +157,18 @@ export class AnthropicProvider implements AIProvider {
       if (input.imageBase64) {
         visualNotes = await this.callVision(
           input.imageBase64,
-          buildVisionObservationPrompt(isWriting, input.exercise)
+          buildVisionObservationPrompt(
+            isWriting,
+            input.exercise,
+            input.promptOverrides
+          )
         );
 
         if (isWriting && writtenText.length < 20) {
           try {
             const ocr = await this.callVision(
               input.imageBase64,
-              buildHandwritingOcrPrompt()
+              buildHandwritingOcrPrompt(input.promptOverrides)
             );
             const transcribed = ocr.trim();
             if (transcribed.length > 5) writtenText = transcribed;
@@ -186,7 +191,7 @@ export class AnthropicProvider implements AIProvider {
       let warmRaw = await this.callText(buildWarmReflectionPrompt(promptCtx), {
         temperature: 0.82,
         maxTokens: 950,
-        system: WARM_REFLECTION_SYSTEM,
+        system: resolvePromptText("reflection_system", input.promptOverrides),
       });
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -201,7 +206,10 @@ export class AnthropicProvider implements AIProvider {
           {
             temperature: 0.78,
             maxTokens: 950,
-            system: WARM_REFLECTION_SYSTEM,
+            system: resolvePromptText(
+              "reflection_system",
+              input.promptOverrides
+            ),
           }
         );
         parsed = parseReflectionFromAi(warmRaw);
@@ -234,14 +242,15 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async transcribeHandwriting(
-    imageBase64: string
+    imageBase64: string,
+    options?: { promptOverrides?: import("@art-therapie/shared").PromptOverrides }
   ): Promise<{ text: string; source: "ai" | "fallback" }> {
     if (!this.apiKey) return { text: "", source: "fallback" };
 
     try {
       const text = await this.callVision(
         imageBase64,
-        buildHandwritingOcrPrompt()
+        buildHandwritingOcrPrompt(options?.promptOverrides)
       );
       return { text: text.trim(), source: "ai" };
     } catch (error) {

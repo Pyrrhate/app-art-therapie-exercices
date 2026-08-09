@@ -1,31 +1,16 @@
+import {
+  resolvePromptText,
+  type PromptOverrides,
+} from "@art-therapie/shared";
 import { sanitizeExerciseKeywords } from "../exercise-keywords";
 import { TECHNIQUE_LABELS } from "../techniques";
 import type { ArtisticTechnique } from "../types";
 
-/** Rôle et règles stables — passé en message system côté providers texte. */
-export const EXERCISE_SYSTEM = `Vous êtes un facilitateur en art-thérapie bienveillant. Votre rôle est de générer une consigne créative simple, inspirante et organique.
+/** @deprecated Préférer resolvePromptText("exercise_system") */
+export const EXERCISE_SYSTEM = resolvePromptText("exercise_system");
 
-RÈGLES STRICTES :
-1. Ton : chaleureux, encourageant et ouvert — vouvoiement doux (« vous »).
-2. Format : un exercice clair qui aide à démarrer sans bloquer l'imagination.
-3. Longueur : maximum 120 mots pour la consigne (champ exercise).
-4. Psychologie : pas de diagnostic ni d'interprétation psychologique — restez sur le geste, la matière et l'exploration de l'impulsion.
-5. keywords : 3 à 5 courtes expressions (2 à 4 mots chacune) — jamais un mot isolé coupé d'une phrase (ex. « Ce qui nourrit », « Lumière douce », pas « nourriture » seul). Inclure l'axe créatif de l'impulsion.
-
-Répondez UNIQUEMENT en JSON valide, sans markdown ni texte autour.`;
-
-/** Rôle du miroir créatif — message system pour la réflexion. */
-export const WARM_REFLECTION_SYSTEM = `Vous êtes un miroir créatif et bienveillant dans une application d'art-thérapie francophone.
-
-DIRECTIVES DE POSTURE (LE JUSTE MILIEU) :
-1. Accueil inconditionnel : il est fréquent (et positif) que la création s'éloigne de la consigne générée — valorisez cette liberté. Le processus compte plus que le résultat esthétique.
-2. Symbolique douce : évoquez la symbolique des couleurs et des formes observées de manière ouverte et au conditionnel (ex. « Ces teintes chaudes peuvent évoquer une certaine énergie »).
-3. Limites strictes : jamais de critique d'art (pas de « beau » ou de « technique ratée ») ; jamais de diagnostic psychologique clinique.
-4. Conseil créatif : proposez des variantes matérielles ou conceptuelles pour prolonger l'état de flow.
-
-Vouvoiement (« vous »), ton chaleureux — ni clinique, ni professoral, ni catalogue froid.
-Structure : 3 ou 4 paragraphes courts (50 à 70 mots chacun), séparés par des sauts de ligne doubles.
-Répondez UNIQUEMENT en JSON valide, sans markdown.`;
+/** @deprecated Préférer resolvePromptText("reflection_system") */
+export const WARM_REFLECTION_SYSTEM = resolvePromptText("reflection_system");
 
 export function buildExercisePrompt(
   impulse: string,
@@ -52,7 +37,8 @@ FORMAT DE RÉPONSE ATTENDU :
 
 export function buildVisionObservationPrompt(
   isWriting = false,
-  exercise?: string
+  exercise?: string,
+  overrides?: PromptOverrides | null
 ): string {
   const writingField = isWriting
     ? ',"texte_manuscrit":"transcription approximative ou vide"'
@@ -60,15 +46,8 @@ export function buildVisionObservationPrompt(
   const exerciseBlock = exercise?.trim()
     ? `\n\nConsigne d'exercice que l'utilisateur·rice devait suivre — évaluez factuellement si l'image semble correspondre (sans juger la qualité) :\n« ${exercise.trim().slice(0, 900)} »`
     : "";
-  return `Vous êtes un expert en observation formelle d'œuvres d'art. Analysez l'image fournie de manière purement descriptive et objective.
-
-RÈGLES STRICTES :
-1. Décrivez les couleurs dominantes (température, saturation, contrastes).
-2. Observez les formes (géométriques, organiques, anguleuses, douces) et l'occupation de l'espace (dense, aéré).
-3. Décrivez la dynamique du geste (fluide, nerveux, contrôlé, hachuré) et la matière perçue si visible.
-4. NE FAITES AUCUNE interprétation psychologique, médicale ou émotionnelle clinique. Restez factuel.
-5. Si l'image contient des visages humains reconnaissables ou du texte manuscrit sensible, ignorez-les et concentrez-vous sur l'aspect abstrait et formel.
-6. Ne décrivez que ce qui est réellement visible — n'inventez pas d'éléments absents.${exerciseBlock}
+  const base = resolvePromptText("vision_observation", overrides);
+  return `${base}${exerciseBlock}
 
 Répondez UNIQUEMENT en JSON valide, en français :
 {"couleurs":"teintes dominantes et contrastes réellement visibles","formes_et_composition":"formes, composition et occupation de l'espace observées","geste_et_energie":"geste, ligne, intensité du trait ou du geste perçus","matiere":"textures ou medium perçu","accord_exercice":"fort|partiel|faible|incertain|sans_exercice — lien factuel entre l'image et la consigne si fournie"${writingField}}
@@ -76,10 +55,10 @@ Répondez UNIQUEMENT en JSON valide, en français :
 Notes : description interne pour alimenter un miroir créatif — pas d'adresse à l'auteur·rice.`;
 }
 
-export function buildHandwritingOcrPrompt(): string {
-  return `Transcris fidèlement le texte manuscrit visible dans cette image, en français si possible.
-Retourne UNIQUEMENT le texte transcrit, sans commentaire ni guillemets.
-Si aucun texte lisible : retournez une chaîne vide.`;
+export function buildHandwritingOcrPrompt(
+  overrides?: PromptOverrides | null
+): string {
+  return resolvePromptText("handwriting_ocr", overrides);
 }
 
 export interface ReflectionPromptContext {
