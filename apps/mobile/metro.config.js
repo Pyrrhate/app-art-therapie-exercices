@@ -11,6 +11,32 @@ const mobileNodeModules = path.resolve(projectRoot, "node_modules");
 const workspaceNodeModules = path.resolve(workspaceRoot, "node_modules");
 const moduleSearchPaths = [mobileNodeModules, workspaceNodeModules];
 
+/** Charge .env pour le proxy Metro (Expo ne les injecte pas toujours ici). */
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return;
+  const text = fs.readFileSync(filePath, "utf8");
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const eq = line.indexOf("=");
+    if (eq <= 0) continue;
+    const key = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
+
+loadEnvFile(path.join(projectRoot, ".env"));
+loadEnvFile(path.join(projectRoot, ".env.local"));
+
 /** NativeWind/css-interop charge react-native au chargement du config. */
 const originalNodeModulePaths = Module._nodeModulePaths;
 Module._nodeModulePaths = function (from) {
@@ -46,12 +72,13 @@ function normalizeApiProxyTarget(url) {
   return trimmed;
 }
 
+const PRODUCTION_API = "https://api.pastek-art.eu";
+
 const apiProxyTarget = normalizeApiProxyTarget(
-  process.env.EXPO_PUBLIC_API_URL ??
-    (process.env.NODE_ENV === "development"
-      ? "http://localhost:3000"
-      : "https://api.pastek-art.eu")
+  process.env.EXPO_PUBLIC_API_URL?.trim() || PRODUCTION_API
 );
+
+console.log(`[metro] API proxy → ${apiProxyTarget}`);
 
 const config = getDefaultConfig(projectRoot);
 
@@ -93,6 +120,23 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
 const apiProxy = createProxyMiddleware({
   target: apiProxyTarget,
   changeOrigin: true,
+  secure: true,
+  on: {
+    error(err, _req, res) {
+      console.error("[metro] API proxy error:", err.message);
+      if (res && !res.headersSent && typeof res.writeHead === "function") {
+        res.writeHead(502, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            error:
+              "Proxy API indisponible. Vérifiez EXPO_PUBLIC_API_URL et le déploiement.",
+            code: "PROXY_ERROR",
+            target: apiProxyTarget,
+          })
+        );
+      }
+    },
+  },
 });
 
 function tryServePublicFile(req, res) {

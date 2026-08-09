@@ -38,9 +38,7 @@ export async function GET(request: Request) {
       mistralTextModel: process.env.MISTRAL_TEXT_MODEL ?? "mistral-small-latest",
       reflectionPipeline: "warm-v2",
       aiHint: hasHfToken
-        ? hasMistralKey
-          ? undefined
-          : "Ajoutez MISTRAL_API_KEY pour les 3 crédits Premium (Mistral)."
+        ? undefined
         : "Configurez HF_TOKEN sur Vercel pour activer l'IA (sinon mode secours).",
       timestamp: new Date().toISOString(),
     },

@@ -1,5 +1,4 @@
 import { Platform, Pressable, Text, View } from "react-native";
-import { PREMIUM_SIGNUP_CREDITS } from "@art-therapie/shared";
 import { textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -36,8 +35,8 @@ export function FilConversionCTA({ onPress }: FilConversionCTAProps) {
           Vos créations sont actuellement stockées uniquement sur cet appareil.
         </Text>
         <Text className={`text-sm leading-6 mb-4 ${textSecondary(isDark)}`}>
-          Créez un compte gratuit pour les sécuriser et recevez{" "}
-          {PREMIUM_SIGNUP_CREDITS} générations Premium offertes.
+          Créez un compte gratuit pour les sécuriser et connecter votre Drive
+          personnel (Google, Microsoft…).
         </Text>
         <View className="self-start rounded-full bg-sage-500 px-5 py-2.5">
           <Text className="text-white text-sm font-semibold tracking-wide">

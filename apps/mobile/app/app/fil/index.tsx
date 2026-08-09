@@ -3,10 +3,6 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { FilConversionCTA } from "@/components/fil/FilConversionCTA";
-import {
-  LaunchWaitlistCard,
-  PremiumCreditsBadge,
-} from "@/components/auth/LaunchWaitlistCard";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
@@ -31,7 +27,7 @@ import {
 } from "@/lib/fil/types";
 import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
-import { useAuthLoading, useAuthStore, useIsAuthenticated, useUserProfile } from "@/lib/auth/store";
+import { useAuthLoading, useAuthStore, useIsAuthenticated } from "@/lib/auth/store";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -50,8 +46,6 @@ export default function FilScreen() {
   const isAuthenticated = useIsAuthenticated();
   const authLoading = useAuthLoading();
   const lastSyncCount = useAuthStore((s) => s.lastSyncCount);
-  const profile = useUserProfile();
-  const email = useAuthStore((s) => s.user?.email);
   const showConversionCta =
     isSupabaseConfigured() && !authLoading && !isAuthenticated;
   const [entries, setEntries] = useState<FilEntry[]>([]);
@@ -162,12 +156,7 @@ export default function FilScreen() {
                   ? `${lastSyncCount} trace${lastSyncCount > 1 ? "s" : ""} sauvegardée${lastSyncCount > 1 ? "s" : ""} dans le cloud.`
                   : "Votre Fil est lié à votre compte — les nouvelles traces se synchronisent automatiquement."}
               </Text>
-              {profile ? <PremiumCreditsBadge profile={profile} /> : null}
             </View>
-          ) : null}
-
-          {isAuthenticated && profile ? (
-            <LaunchWaitlistCard profile={profile} email={email} />
           ) : null}
 
           {nearLimit ? (

@@ -1,6 +1,5 @@
 import { getApiUrl } from "./config";
 import { getSupabaseClient } from "./supabase/client";
-import { useAuthStore } from "./auth/store";
 import { resolveByokCredentials } from "./aiKeys";
 import {
   BYOK_KEY_HEADER,
@@ -17,8 +16,6 @@ import type {
   ExerciseResponse,
   ReflectionResponse,
 } from "./types";
-
-const API_URL = getApiUrl();
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const supabase = getSupabaseClient();
@@ -106,7 +103,8 @@ async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_URL.replace(/\/$/, "")}${path}`;
+  const base = getApiUrl().replace(/\/$/, "");
+  const url = `${base}${path}`;
   const method = (options.method ?? "GET").toUpperCase();
   const headers: Record<string, string> = {
     ...(await getAuthHeaders()),
@@ -138,8 +136,12 @@ async function request<T>(
   try {
     response = await fetch(url, { ...options, method, headers, body });
   } catch {
+    const hint =
+      base === ""
+        ? " Relancez Expo (`npx expo start --web --clear`) pour réactiver le proxy API."
+        : ` URL tentée : ${url.split("?")[0]}`;
     throw new ApiError(
-      "Impossible de joindre le serveur. Vérifiez l'URL API et votre connexion.",
+      `Impossible de joindre le serveur.${hint}`,
       "NETWORK_ERROR"
     );
   }
@@ -173,10 +175,6 @@ async function request<T>(
       body.code,
       response.status
     );
-  }
-
-  if (response.headers.has("X-Premium-Sessions-Remaining")) {
-    void useAuthStore.getState().refreshProfile();
   }
 
   return data as T;

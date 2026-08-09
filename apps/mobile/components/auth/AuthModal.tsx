@@ -10,7 +10,6 @@ import {
   View,
 } from "react-native";
 import { PrimaryButton } from "@/components/ui/Button";
-import { PREMIUM_SIGNUP_CREDITS } from "@art-therapie/shared";
 import { showAlert } from "@/lib/alert";
 import { signInWithMagicLink, signInWithOAuth } from "@/lib/supabase/auth";
 import { formatAuthError } from "@/lib/supabase/errors";
@@ -130,10 +129,6 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                   sur cet appareil pour activer votre compte et synchroniser
                   votre historique.
                 </Text>
-                <Text className={`text-xs leading-5 ${textMuted(isDark)}`}>
-                  Vous recevez {PREMIUM_SIGNUP_CREDITS} générations Premium
-                  offertes à la création du compte.
-                </Text>
                 <PrimaryButton label="Fermer" onPress={onClose} variant="ghost" />
               </View>
             ) : (
@@ -203,8 +198,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                 </View>
 
                 <Text className={`text-xs text-center leading-5 ${textMuted(isDark)}`}>
-                  Gratuit · sans carte bancaire · {PREMIUM_SIGNUP_CREDITS}{" "}
-                  générations Premium offertes
+                  Gratuit · sans carte bancaire · sans engagement
                 </Text>
                   </>
                 )}

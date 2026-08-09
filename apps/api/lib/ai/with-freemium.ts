@@ -1,5 +1,4 @@
 import {
-  consumePremiumSession,
   freemiumResponseHeaders,
   resolveFreemiumContext,
   type FreemiumContext,
@@ -41,7 +40,7 @@ function usageProviderLabel(
 /**
  * Exécute un appel IA avec priorité BYOK :
  * 1. Corps JSON `byok` ou headers X-Custom-AI-* → provider éphémère
- * 2. Sinon freemium (Mistral crédits / Hugging Face)
+ * 2. Sinon freemium (HF gratuit / Mistral si tier premium)
  * 3. Les providers gèrent leur propre fallback local
  */
 export async function withFreemiumAI<T extends { source?: string }>(
@@ -83,19 +82,8 @@ export async function withFreemiumAI<T extends { source?: string }>(
     provider: usageProviderLabel(byok?.provider ?? null, ctx.usePremiumLlm),
   });
 
-  // BYOK : pas de consommation des crédits Premium Pastek
-  let balanceAfter: number | null = null;
-  if (
-    !byok &&
-    ctx.decrementBalanceOnSuccess &&
-    ctx.userId &&
-    result.source === "ai"
-  ) {
-    balanceAfter = await consumePremiumSession(ctx.userId);
-  }
-
   const extraHeaders: Record<string, string> = {
-    ...freemiumResponseHeaders(ctx, balanceAfter),
+    ...freemiumResponseHeaders(ctx),
   };
 
   if (byok) {

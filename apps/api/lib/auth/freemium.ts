@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { PREMIUM_SIGNUP_CREDITS } from "@art-therapie/shared";
 import { getSupabaseAdmin, isSupabaseAdminConfigured } from "@/lib/supabase/admin";
 
 export type UserTier = "free" | "premium";
@@ -40,6 +39,9 @@ function contextFromProfile(
   tier: UserTier,
   balance: number
 ): FreemiumContext {
+  // Site gratuit : plus de crédits « Premium ». Le LLM serveur premium
+  // (Mistral) reste réservé au tier premium futur ; le free passe par HF
+  // (ou BYOK côté client).
   if (tier === "premium") {
     return {
       userId,
@@ -50,20 +52,10 @@ function contextFromProfile(
     };
   }
 
-  if (balance > 0) {
-    return {
-      userId,
-      tier: "free",
-      premiumSessionsBalance: balance,
-      usePremiumLlm: true,
-      decrementBalanceOnSuccess: true,
-    };
-  }
-
   return {
     userId,
     tier: "free",
-    premiumSessionsBalance: 0,
+    premiumSessionsBalance: balance,
     usePremiumLlm: false,
     decrementBalanceOnSuccess: false,
   };
@@ -147,7 +139,7 @@ async function ensureUserProfile(
     id: userId,
     email: email || "",
     tier: "free",
-    premium_sessions_balance: PREMIUM_SIGNUP_CREDITS,
+    premium_sessions_balance: 0,
   });
 
   if (insertError && insertError.code !== "23505") {
@@ -188,21 +180,9 @@ export async function consumePremiumSession(userId: string): Promise<number | nu
 
 export function freemiumResponseHeaders(
   ctx: FreemiumContext,
-  balanceAfter?: number | null
+  _balanceAfter?: number | null
 ): Record<string, string> {
-  const headers: Record<string, string> = {
+  return {
     "X-Llm-Tier": ctx.usePremiumLlm ? "premium" : "free",
   };
-
-  if (ctx.userId) {
-    const remaining =
-      balanceAfter !== undefined && balanceAfter !== null
-        ? balanceAfter
-        : ctx.premiumSessionsBalance;
-    headers["X-Premium-Sessions-Remaining"] = String(
-      ctx.tier === "premium" ? "unlimited" : remaining
-    );
-  }
-
-  return headers;
 }

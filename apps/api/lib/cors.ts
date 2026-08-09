@@ -13,8 +13,22 @@ function isLocalDevOrigin(origin: string): boolean {
   return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
 }
 
+/** Expo sur téléphone / LAN (ex. http://192.168.x.x:8081). */
+function isPrivateLanOrigin(origin: string): boolean {
+  try {
+    const { hostname } = new URL(origin);
+    return /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hostname);
+  } catch {
+    return false;
+  }
+}
+
 function isAllowedOrigin(origin: string): boolean {
-  if (ALLOWED_ORIGINS.includes(origin) || isLocalDevOrigin(origin)) {
+  if (
+    ALLOWED_ORIGINS.includes(origin) ||
+    isLocalDevOrigin(origin) ||
+    isPrivateLanOrigin(origin)
+  ) {
     return true;
   }
 

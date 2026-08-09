@@ -44,13 +44,12 @@ export async function sendLaunchWaitlistConfirmation(
 ): Promise<boolean> {
   return sendTransactionalEmail({
     to: email,
-    subject: "Pastek Art — vous serez prévenu·e au lancement Premium",
+    subject: "Pastek Art — confirmation d'inscription à l'alerte",
     html: `
       <div style="font-family: Georgia, serif; color: #3E342C; max-width: 520px; line-height: 1.6;">
         <p style="color: #496349; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">Pastek Art</p>
         <h1 style="font-size: 22px; font-weight: normal;">Merci pour votre confiance</h1>
-        <p>Vos 3 générations Premium offertes sont utilisées — l'expérience standard reste disponible gratuitement sur votre appareil.</p>
-        <p>Nous vous écrirons <strong>un seul email</strong> lors du lancement officiel de Pastek Art Premium.</p>
+        <p>Pastek Art reste gratuit. Nous vous écrirons <strong>un seul email</strong> si de nouvelles options cloud ou compte voient le jour.</p>
         <p style="font-size: 13px; color: #7A6558;">À bientôt,<br/>L'équipe Pastek Art</p>
       </div>
     `,
