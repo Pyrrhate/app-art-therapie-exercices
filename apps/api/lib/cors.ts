@@ -66,6 +66,7 @@ export function corsHeaders(origin: string | null): HeadersInit {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers":
       "Content-Type, Authorization, X-Custom-AI-Provider, X-Custom-AI-Key",
+    "Access-Control-Max-Age": "86400",
   };
 }
 
@@ -94,10 +95,18 @@ export function errorResponse(
 
 export function handleOptions(request: Request): NextResponse {
   const origin = request.headers.get("origin");
-  const headers = corsHeaders(origin);
-  if (origin && Object.keys(headers).length === 0) {
+  const base = corsHeaders(origin);
+  if (origin && Object.keys(base).length === 0) {
     return new NextResponse(null, { status: 403 });
   }
+
+  const headers: Record<string, string> = { ...(base as Record<string, string>) };
+  // Refléter les headers demandés par le navigateur (évite les preflights bloqués)
+  const requested = request.headers.get("Access-Control-Request-Headers");
+  if (requested?.trim() && headers["Access-Control-Allow-Origin"]) {
+    headers["Access-Control-Allow-Headers"] = requested;
+  }
+
   return new NextResponse(null, {
     status: 204,
     headers,

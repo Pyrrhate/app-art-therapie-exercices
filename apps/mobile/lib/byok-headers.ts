@@ -1,11 +1,11 @@
 /**
- * Headers HTTP pour le relay BYOK.
- * Les clés transitent uniquement le temps de la requête — jamais loguées.
+ * Chemins IA éligibles au BYOK (clé dans le corps JSON `byok`).
+ * Les headers X-Custom-AI-* sont volontairement abandonnés côté client :
+ * ils déclenchent un preflight CORS souvent refusé en production.
  */
 export const BYOK_PROVIDER_HEADER = "X-Custom-AI-Provider";
 export const BYOK_KEY_HEADER = "X-Custom-AI-Key";
 
-/** Endpoints qui peuvent utiliser une clé personnelle (relay IA). */
 export const BYOK_ENABLED_PATHS = [
   "/api/exercise/generate",
   "/api/reflection/analyze",
