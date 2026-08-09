@@ -1,9 +1,14 @@
 import { decryptSecret } from "@/lib/crypto/secrets";
-import { uploadToGoogleDrive } from "./google-drive";
+import {
+  decryptRefreshToken,
+  refreshGoogleDriveAccessToken,
+  uploadToGoogleDrive,
+} from "./google-drive";
 import { uploadToOneDrive } from "./onedrive";
 import {
   getCloudIntegration,
   listConnectedProviders,
+  updateCloudAccessToken,
   type OAuthTokens,
 } from "./storage";
 import type { CloudProviderId } from "./types";
@@ -36,11 +41,40 @@ function extensionForMime(mimeType: string): string {
   return "jpg";
 }
 
-function readAccessToken(row: {
-  access_token_encrypted: string | null;
-}): string | null {
-  if (!row.access_token_encrypted) return null;
-  return decryptSecret(row.access_token_encrypted);
+type IntegrationRow = NonNullable<
+  Awaited<ReturnType<typeof getCloudIntegration>>
+>;
+
+function isTokenExpired(row: IntegrationRow): boolean {
+  if (!row.token_expires_at) return false;
+  const expires = Date.parse(row.token_expires_at);
+  if (Number.isNaN(expires)) return false;
+  // Marge 2 min
+  return expires <= Date.now() + 120_000;
+}
+
+async function resolveGoogleAccessToken(
+  userId: string,
+  row: IntegrationRow
+): Promise<string | null> {
+  let access = row.access_token_encrypted
+    ? decryptSecret(row.access_token_encrypted)
+    : null;
+
+  if (access && !isTokenExpired(row)) {
+    return access;
+  }
+
+  const refresh = decryptRefreshToken(row.refresh_token_encrypted);
+  if (!refresh) {
+    return access;
+  }
+
+  const refreshed = await refreshGoogleDriveAccessToken(refresh);
+  if (!refreshed) return access;
+
+  await updateCloudAccessToken(userId, "google_drive", refreshed);
+  return refreshed.accessToken;
 }
 
 export async function uploadArtworkToUserCloud(input: {
@@ -67,10 +101,10 @@ export async function uploadArtworkToUserCloud(input: {
     const row = await getCloudIntegration(input.userId, provider);
     if (!row) continue;
 
-    const accessToken = readAccessToken(row);
-    if (!accessToken) continue;
-
     if (provider === "google_drive") {
+      const accessToken = await resolveGoogleAccessToken(input.userId, row);
+      if (!accessToken) continue;
+
       const uploaded = await uploadToGoogleDrive(
         accessToken,
         filename,
@@ -87,6 +121,11 @@ export async function uploadArtworkToUserCloud(input: {
     }
 
     if (provider === "onedrive") {
+      const accessToken = row.access_token_encrypted
+        ? decryptSecret(row.access_token_encrypted)
+        : null;
+      if (!accessToken) continue;
+
       const uploaded = await uploadToOneDrive(
         accessToken,
         filename,

@@ -83,19 +83,70 @@ export async function saveCloudIntegration(
       ? new Date(Date.now() + tokens.expiresIn * 1000).toISOString()
       : null;
 
+  // Ne pas écraser un refresh token existant si Google n'en renvoie pas un nouveau
+  let refreshToStore = refreshEnc;
+  if (tokens && !tokens.refreshToken) {
+    const existing = await getCloudIntegration(userId, provider);
+    refreshToStore = existing?.refresh_token_encrypted ?? null;
+  }
+
   const { error } = await admin.from("user_cloud_integrations").upsert(
     {
       user_id: userId,
       provider,
       provider_account_id: accountId,
       access_token_encrypted: accessEnc,
-      refresh_token_encrypted: refreshEnc,
+      refresh_token_encrypted: refreshToStore,
       token_expires_at: expiresAt,
+      updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,provider" }
   );
 
-  return !error;
+  if (error) {
+    console.warn("[integrations] save", error.message);
+    return false;
+  }
+  return true;
+}
+
+/** Met à jour uniquement access (+ refresh si fourni) après refresh OAuth. */
+export async function updateCloudAccessToken(
+  userId: string,
+  provider: CloudProviderId,
+  tokens: OAuthTokens
+): Promise<boolean> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return false;
+
+  const accessEnc = encryptSecret(tokens.accessToken);
+  if (!accessEnc) return false;
+
+  const patch: Record<string, unknown> = {
+    access_token_encrypted: accessEnc,
+    token_expires_at:
+      tokens.expiresIn && tokens.expiresIn > 0
+        ? new Date(Date.now() + tokens.expiresIn * 1000).toISOString()
+        : null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (tokens.refreshToken) {
+    const refreshEnc = encryptSecret(tokens.refreshToken);
+    if (refreshEnc) patch.refresh_token_encrypted = refreshEnc;
+  }
+
+  const { error } = await admin
+    .from("user_cloud_integrations")
+    .update(patch)
+    .eq("user_id", userId)
+    .eq("provider", provider);
+
+  if (error) {
+    console.warn("[integrations] update tokens", error.message);
+    return false;
+  }
+  return true;
 }
 
 function getApiPublicOrigin(): string {

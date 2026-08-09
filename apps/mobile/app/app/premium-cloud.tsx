@@ -113,14 +113,14 @@ export default function PremiumCloudScreen() {
       ) : (
         <View className="gap-4 pb-8">
           <Text className={`text-xs leading-5 px-1 ${textMuted(isDark)}`}>
-            Les métadonnées du Fil restent synchronisées sur Pastek Art ; les
-            fichiers image volumineux partent vers votre espace cloud après
-            chaque exercice terminé.
+            Après un exercice avec photo, le fichier est copié dans le dossier
+            « Pastek Art » de votre Drive. Les métadonnées du Fil restent sur
+            Pastek Art.
           </Text>
 
           <CloudProviderToggle
             title="Google Drive"
-            description="Sauvegarde privée sur votre Drive (scope fichier applicatif)."
+            description="Photos d'œuvres dans le dossier « Pastek Art » (accès limité aux fichiers créés par l'app)."
             status={googleStatus}
             loading={loadingProvider === "google_drive"}
             onConnect={() => void handleConnect("google_drive")}
