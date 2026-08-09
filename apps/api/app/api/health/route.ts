@@ -2,6 +2,7 @@ import { isValidSupabaseAnonKey, isValidSupabaseUrl } from "@art-therapie/shared
 import { isEncryptionConfigured } from "@/lib/crypto/secrets";
 import { jsonResponse, handleOptions } from "@/lib/cors";
 import { isGoogleDriveConfigured } from "@/lib/integrations/google-drive";
+import { isOneDriveConfigured } from "@/lib/integrations/onedrive";
 
 export async function OPTIONS(request: Request) {
   return handleOptions(request);
@@ -48,6 +49,7 @@ export async function GET(request: Request) {
         null,
       byokBodySupported: true,
       googleDriveConfigured: isGoogleDriveConfigured(),
+      oneDriveConfigured: isOneDriveConfigured(),
       integrationEncryptionConfigured: isEncryptionConfigured(),
       timestamp: new Date().toISOString(),
     },

@@ -4,7 +4,11 @@ import {
   refreshGoogleDriveAccessToken,
   uploadToGoogleDrive,
 } from "./google-drive";
-import { uploadToOneDrive } from "./onedrive";
+import {
+  decryptOneDriveRefreshToken,
+  refreshOneDriveAccessToken,
+  uploadToOneDrive,
+} from "./onedrive";
 import {
   getCloudIntegration,
   listConnectedProviders,
@@ -49,7 +53,6 @@ function isTokenExpired(row: IntegrationRow): boolean {
   if (!row.token_expires_at) return false;
   const expires = Date.parse(row.token_expires_at);
   if (Number.isNaN(expires)) return false;
-  // Marge 2 min
   return expires <= Date.now() + 120_000;
 }
 
@@ -74,6 +77,30 @@ async function resolveGoogleAccessToken(
   if (!refreshed) return access;
 
   await updateCloudAccessToken(userId, "google_drive", refreshed);
+  return refreshed.accessToken;
+}
+
+async function resolveOneDriveAccessToken(
+  userId: string,
+  row: IntegrationRow
+): Promise<string | null> {
+  const access = row.access_token_encrypted
+    ? decryptSecret(row.access_token_encrypted)
+    : null;
+
+  if (access && !isTokenExpired(row)) {
+    return access;
+  }
+
+  const refresh = decryptOneDriveRefreshToken(row.refresh_token_encrypted);
+  if (!refresh) {
+    return access;
+  }
+
+  const refreshed = await refreshOneDriveAccessToken(refresh);
+  if (!refreshed) return access;
+
+  await updateCloudAccessToken(userId, "onedrive", refreshed);
   return refreshed.accessToken;
 }
 
@@ -121,9 +148,7 @@ export async function uploadArtworkToUserCloud(input: {
     }
 
     if (provider === "onedrive") {
-      const accessToken = row.access_token_encrypted
-        ? decryptSecret(row.access_token_encrypted)
-        : null;
+      const accessToken = await resolveOneDriveAccessToken(input.userId, row);
       if (!accessToken) continue;
 
       const uploaded = await uploadToOneDrive(

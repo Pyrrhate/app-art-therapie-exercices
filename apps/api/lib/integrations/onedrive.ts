@@ -1,9 +1,15 @@
+import { decryptSecret } from "@/lib/crypto/secrets";
+import { signOAuthState } from "./oauth-state";
 import { integrationCallbackUrl } from "./storage";
 import type { OAuthTokens } from "./storage";
 
-const ONEDRIVE_SCOPES = ["Files.ReadWrite", "offline_access", "User.Read"].join(
-  " "
-);
+const ONEDRIVE_SCOPES = [
+  "Files.ReadWrite",
+  "offline_access",
+  "User.Read",
+].join(" ");
+
+const PASTEK_FOLDER = "Pastek Art";
 
 export interface OneDriveExchangeResult {
   accountId: string;
@@ -26,7 +32,9 @@ export function buildOneDriveAuthUrl(userId: string): string | null {
     redirect_uri: integrationCallbackUrl("onedrive"),
     response_type: "code",
     scope: ONEDRIVE_SCOPES,
-    state: userId,
+    state: signOAuthState(userId, "onedrive"),
+    // Force consent pour obtenir un refresh_token fiable
+    prompt: "consent",
   });
 
   return `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${params.toString()}`;
@@ -90,13 +98,59 @@ export async function exchangeOneDriveCode(
   };
 }
 
+export async function refreshOneDriveAccessToken(
+  refreshToken: string
+): Promise<OAuthTokens | null> {
+  const clientId = process.env.ONEDRIVE_CLIENT_ID?.trim();
+  const clientSecret = process.env.ONEDRIVE_CLIENT_SECRET?.trim();
+  if (!clientId || !clientSecret) return null;
+
+  const response = await fetch(
+    "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: "refresh_token",
+        scope: ONEDRIVE_SCOPES,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    console.warn("[onedrive] refresh", await response.text());
+    return null;
+  }
+
+  const data = (await response.json()) as {
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
+  };
+  if (!data.access_token) return null;
+
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token ?? refreshToken,
+    expiresIn: data.expires_in,
+  };
+}
+
 export async function uploadToOneDrive(
   accessToken: string,
   filename: string,
   bytes: Buffer,
   mimeType: string
 ): Promise<{ itemId: string; webUrl?: string } | null> {
-  const path = encodeURIComponent(`pastek-art/${filename}`);
+  // Crée / utilise le dossier « Pastek Art » automatiquement
+  const path = `${PASTEK_FOLDER}/${filename}`
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+
   const response = await fetch(
     `https://graph.microsoft.com/v1.0/me/drive/root:/${path}:/content`,
     {
@@ -117,4 +171,11 @@ export async function uploadToOneDrive(
   const item = (await response.json()) as { id?: string; webUrl?: string };
   if (!item.id) return null;
   return { itemId: item.id, webUrl: item.webUrl };
+}
+
+export function decryptOneDriveRefreshToken(
+  encrypted: string | null | undefined
+): string | null {
+  if (!encrypted) return null;
+  return decryptSecret(encrypted);
 }

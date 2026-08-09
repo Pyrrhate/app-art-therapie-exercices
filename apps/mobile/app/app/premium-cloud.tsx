@@ -129,7 +129,7 @@ export default function PremiumCloudScreen() {
 
           <CloudProviderToggle
             title="Microsoft OneDrive"
-            description="Même principe pour votre espace Microsoft personnel."
+            description="Photos d'œuvres dans le dossier « Pastek Art » de votre OneDrive."
             status={onedriveStatus}
             loading={loadingProvider === "onedrive"}
             onConnect={() => void handleConnect("onedrive")}
