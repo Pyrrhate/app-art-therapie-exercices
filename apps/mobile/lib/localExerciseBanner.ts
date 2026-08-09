@@ -8,7 +8,7 @@ export function localExerciseBannerMessage(opts: {
   const note = opts.fallbackNote?.trim();
   if (note) return note;
   if (opts.byokConfigured) {
-    return "Votre clé IA n’a pas pu générer l’exercice (clé invalide, quota ou réponse inattendue). Exercice guidé local affiché.";
+    return "Exercice local : votre clé n’a peut‑être pas été utilisée (API à redéployer sur Vercel) ou Mistral a refusé l’appel (plan / crédits sur console.mistral.ai).";
   }
   return "Mode local actif — exercice guidé hors ligne.";
 }

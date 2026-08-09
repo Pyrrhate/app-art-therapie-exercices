@@ -40,6 +40,12 @@ export async function GET(request: Request) {
       aiHint: hasHfToken
         ? undefined
         : "Configurez HF_TOKEN sur Vercel pour activer l'IA (sinon mode secours).",
+      /** SHA du commit Vercel — permet de vérifier qu'un déploiement est bien live. */
+      gitSha:
+        process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ??
+        process.env.GIT_COMMIT_SHA?.slice(0, 7) ??
+        null,
+      byokBodySupported: true,
       timestamp: new Date().toISOString(),
     },
     request
