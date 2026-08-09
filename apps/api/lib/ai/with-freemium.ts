@@ -71,7 +71,7 @@ export async function withFreemiumAI<T extends { source?: string }>(
     );
     const withNote = result as T & { fallbackNote?: string };
     if (!withNote.fallbackNote) {
-      withNote.fallbackNote = `Votre clé ${byok.provider} n’a pas pu générer la réponse (clé invalide, quota dépassé ou format inattendu). Exercice guidé local affiché.`;
+      withNote.fallbackNote = `Votre clé ${byok.provider} n’a pas pu générer la réponse. Vérifiez la clé et le solde / plan sur le tableau de bord du fournisseur.`;
     }
   }
 

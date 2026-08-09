@@ -80,6 +80,8 @@ export class MistralProvider implements AIProvider {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback" as const,
+        fallbackNote:
+          "Aucune clé Mistral disponible. Vérifiez Réglages → Moteurs IA.",
       };
     }
 
@@ -115,7 +117,12 @@ export class MistralProvider implements AIProvider {
         };
       }
 
-      return { ...getFallbackExercise(input), source: "fallback" as const };
+      return {
+        ...getFallbackExercise(input),
+        source: "fallback" as const,
+        fallbackNote:
+          "Mistral a répondu, mais le format n’était pas exploitable. Réessayez ou vérifiez vos prompts personnalisés.",
+      };
     } catch (error) {
       console.warn("[Mistral generateExercise]", error);
       const fallback = getFallbackExercise(input);
@@ -123,6 +130,7 @@ export class MistralProvider implements AIProvider {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback" as const,
+        fallbackNote: explainMistralFailure(error),
       };
     }
   }
@@ -300,7 +308,8 @@ export class MistralProvider implements AIProvider {
     const rawBody = await response.text();
     if (!response.ok) {
       console.warn(`[Mistral chat] ${response.status}:`, rawBody.slice(0, 400));
-      throw new Error(`Mistral HTTP ${response.status}`);
+      const detail = rawBody.slice(0, 180).replace(/\s+/g, " ").trim();
+      throw new Error(`Mistral HTTP ${response.status}${detail ? `: ${detail}` : ""}`);
     }
 
     const data = JSON.parse(rawBody) as {
@@ -310,4 +319,24 @@ export class MistralProvider implements AIProvider {
     if (!content) throw new Error("Mistral: réponse vide");
     return content;
   }
+}
+
+function explainMistralFailure(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/HTTP 401|HTTP 403/i.test(message)) {
+    return "Clé Mistral refusée (401/403). Recréez la clé sur console.mistral.ai, activez le plan Experiment (gratuit) ou Scale, et collez-la à nouveau dans Réglages.";
+  }
+  if (/HTTP 402|payment|insufficient|credit|balance/i.test(message)) {
+    return "Compte Mistral sans solde / paiement requis. Ajoutez des crédits ou activez le pay-as-you-go sur console.mistral.ai (Billing).";
+  }
+  if (/HTTP 429/i.test(message)) {
+    return "Quota Mistral dépassé (429). Attendez un instant, ou passez au plan Scale / augmentez vos limites sur console.mistral.ai.";
+  }
+  if (/HTTP 400/i.test(message)) {
+    return "Requête refusée par Mistral (400). Vérifiez le modèle autorisé pour votre compte, ou recréez la clé API.";
+  }
+  if (/timeout|Timeout|AbortError/i.test(message)) {
+    return "Mistral n’a pas répondu à temps. Réessayez dans un instant.";
+  }
+  return "Votre clé Mistral n’a pas pu générer l’exercice (clé, quota ou réponse inattendue). Vérifiez Billing et les clés sur console.mistral.ai.";
 }
