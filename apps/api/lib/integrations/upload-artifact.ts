@@ -57,7 +57,7 @@ async function resolveGoogleAccessToken(
   userId: string,
   row: IntegrationRow
 ): Promise<string | null> {
-  let access = row.access_token_encrypted
+  const access = row.access_token_encrypted
     ? decryptSecret(row.access_token_encrypted)
     : null;
 
