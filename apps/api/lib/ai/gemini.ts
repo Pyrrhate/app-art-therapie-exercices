@@ -28,6 +28,61 @@ import {
 
 const DEFAULT_MODEL = "gemini-2.5-flash";
 
+/** Gemini 2.5 « thinking » consomme maxOutputTokens — budget bas → réponse vide. */
+const THINKING_OFF = {
+  thinkingConfig: { thinkingBudget: 0 },
+} as const;
+
+function geminiHttpError(status: number, body: string): Error {
+  let detail = `Gemini HTTP ${status}`;
+  try {
+    const parsed = JSON.parse(body) as {
+      error?: { message?: string; status?: string };
+    };
+    const msg = parsed.error?.message?.trim();
+    if (msg) detail = `Gemini HTTP ${status} — ${msg.slice(0, 220)}`;
+  } catch {
+    const snippet = body.replace(/\s+/g, " ").trim().slice(0, 160);
+    if (snippet) detail = `Gemini HTTP ${status} — ${snippet}`;
+  }
+  return new Error(detail);
+}
+
+function extractGeminiText(raw: string): string {
+  const data = JSON.parse(raw) as {
+    candidates?: Array<{
+      finishReason?: string;
+      content?: { parts?: Array<{ text?: string; thought?: boolean }> };
+    }>;
+    promptFeedback?: { blockReason?: string };
+  };
+
+  if (data.promptFeedback?.blockReason) {
+    throw new Error(
+      `Gemini a bloqué la requête (${data.promptFeedback.blockReason}).`
+    );
+  }
+
+  const candidate = data.candidates?.[0];
+  if (!candidate) {
+    throw new Error("Gemini: aucun candidat dans la réponse");
+  }
+
+  const text = (candidate.content?.parts ?? [])
+    .filter((p) => !p.thought)
+    .map((p) => p.text ?? "")
+    .join("")
+    .trim();
+
+  if (!text) {
+    const reason = candidate.finishReason ?? "inconnu";
+    throw new Error(
+      `Gemini: réponse vide (finishReason=${reason}). Augmentez maxOutputTokens ou désactivez le thinking.`
+    );
+  }
+  return text;
+}
+
 function ensureVouvoiementQuestion(question: string): string {
   return question
     .replace(/\bas-tu\b/gi, "avez-vous")
@@ -84,7 +139,7 @@ export class GeminiProvider implements AIProvider {
       const raw = await this.generate(
         resolvePromptText("exercise_system", input.promptOverrides),
         prompt,
-        { temperature: 0.85, maxTokens: 700 }
+        { temperature: 0.85, maxTokens: 2048 }
       );
       const parsed = parseExerciseFromAi(raw, preferredDuration);
       if (parsed) {
@@ -109,13 +164,14 @@ export class GeminiProvider implements AIProvider {
         fallbackNote: "Gemini a répondu, format non exploitable.",
       };
     } catch (error) {
-      console.warn("[Gemini generateExercise]", (error as Error).message);
+      const note = error instanceof Error ? error.message : "Erreur Gemini";
+      console.warn("[Gemini generateExercise]", note);
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback",
-        fallbackNote: "Gemini indisponible — exercice local proposé.",
+        fallbackNote: note.slice(0, 400),
       };
     }
   }
@@ -178,7 +234,7 @@ export class GeminiProvider implements AIProvider {
       let warmRaw = await this.generate(
         resolvePromptText("reflection_system", input.promptOverrides),
         buildWarmReflectionPrompt(promptCtx),
-        { temperature: 0.82, maxTokens: 950 }
+        { temperature: 0.82, maxTokens: 4096 }
       );
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -191,7 +247,7 @@ export class GeminiProvider implements AIProvider {
         warmRaw = await this.generate(
           resolvePromptText("reflection_system", input.promptOverrides),
           buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
-          { temperature: 0.78, maxTokens: 950 }
+          { temperature: 0.78, maxTokens: 4096 }
         );
         parsed = parseReflectionFromAi(warmRaw);
       }
@@ -254,7 +310,8 @@ export class GeminiProvider implements AIProvider {
         contents: [{ role: "user", parts: [{ text: user }] }],
         generationConfig: {
           temperature: opts.temperature ?? 0.7,
-          maxOutputTokens: opts.maxTokens ?? 512,
+          maxOutputTokens: opts.maxTokens ?? 2048,
+          ...THINKING_OFF,
         },
       }),
       signal: AbortSignal.timeout(90_000),
@@ -262,19 +319,9 @@ export class GeminiProvider implements AIProvider {
     const raw = await response.text();
     if (!response.ok) {
       console.warn("[Gemini]", response.status, raw.slice(0, 200));
-      throw new Error(`Gemini HTTP ${response.status}`);
+      throw geminiHttpError(response.status, raw);
     }
-    const data = JSON.parse(raw) as {
-      candidates?: Array<{
-        content?: { parts?: Array<{ text?: string }> };
-      }>;
-    };
-    const text = data.candidates?.[0]?.content?.parts
-      ?.map((p) => p.text ?? "")
-      .join("")
-      .trim();
-    if (!text) throw new Error("Gemini: réponse vide");
-    return text;
+    return extractGeminiText(raw);
   }
 
   private async generateWithImage(
@@ -299,22 +346,16 @@ export class GeminiProvider implements AIProvider {
             ],
           },
         ],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 2048,
+          ...THINKING_OFF,
+        },
       }),
       signal: AbortSignal.timeout(90_000),
     });
     const raw = await response.text();
-    if (!response.ok) throw new Error(`Gemini vision HTTP ${response.status}`);
-    const parsed = JSON.parse(raw) as {
-      candidates?: Array<{
-        content?: { parts?: Array<{ text?: string }> };
-      }>;
-    };
-    const text = parsed.candidates?.[0]?.content?.parts
-      ?.map((p) => p.text ?? "")
-      .join("")
-      .trim();
-    if (!text) throw new Error("Gemini vision: vide");
-    return text;
+    if (!response.ok) throw geminiHttpError(response.status, raw);
+    return extractGeminiText(raw);
   }
 }

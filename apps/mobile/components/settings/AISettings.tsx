@@ -117,7 +117,7 @@ const PROVIDER_META: Record<AiKeyProvider, ProviderMeta> = {
     id: "gemini",
     title: "Google Gemini",
     badge: "Créatif / rapide",
-    why: "Modèles Gemini (ex. 2.5 Flash) pour consignes inventives et rapides.",
+    why: "Modèles Gemini (ex. 2.5 Flash). Créez une clé sur AI Studio sans restriction HTTP / IP — Pastek relaie depuis le serveur.",
     docsUrl: "https://aistudio.google.com/apikey",
     docsLabel: "aistudio.google.com",
     placeholder: "Clé Google AI…",
