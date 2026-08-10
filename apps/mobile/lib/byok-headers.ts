@@ -8,6 +8,7 @@ export const BYOK_KEY_HEADER = "X-Custom-AI-Key";
 
 export const BYOK_ENABLED_PATHS = [
   "/api/exercise/generate",
+  "/api/ai/generate",
   "/api/reflection/analyze",
   "/api/reflection/ocr",
   "/api/ping-pong",

@@ -8,7 +8,7 @@ export const SITEMAP_PATHS = [
   "/exemples/exemple-002",
   "/exemples/exemple-001",
   "/app",
-  "/app/maj",
+  "/maj",
   "/app/privacy",
 ];
 

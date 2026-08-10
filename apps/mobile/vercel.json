@@ -42,7 +42,7 @@
     { "source": "/reflection", "destination": "/app/reflection", "permanent": true },
     { "source": "/settings", "destination": "/app/settings", "permanent": true },
     { "source": "/privacy", "destination": "/app/privacy", "permanent": true },
-    { "source": "/maj", "destination": "/app/maj", "permanent": true }
+    { "source": "/app/maj", "destination": "/maj", "permanent": true }
   ],
   "rewrites": [
     {

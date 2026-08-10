@@ -13,6 +13,36 @@ export type ChangelogEntry = {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "local-first-drive",
+    dateLabel: "août 2026",
+    title: "Local-first & sauvegarde Google Drive",
+    highlights: [
+      "Plus de mur de connexion ni de compte Pastek obligatoire : l’app fonctionne d’abord sur l’appareil.",
+      "Sauvegarde et restauration du Fil via Google Drive côté client (OAuth local), sans sync serveur des traces.",
+      "Vos rituels restent chez vous ; le cloud n’est qu’une option de backup.",
+    ],
+  },
+  {
+    id: "byok-moteurs",
+    dateLabel: "août 2026",
+    title: "Vos clés IA (BYOK) & moteurs souverains",
+    highlights: [
+      "Apportez votre propre clé API : elle reste sur l’appareil et n’est jamais stockée par Pastek Art.",
+      "Fournisseurs européens & souverains : Mistral, Scaleway, OVHcloud, Aleph Alpha, Ollama (local).",
+      "Fournisseurs globaux : OpenAI, Anthropic (Claude), Google Gemini — avec test de connexion dans les réglages.",
+    ],
+  },
+  {
+    id: "gratuit-prompts",
+    dateLabel: "août 2026",
+    title: "Accès libre & prompts personnalisables",
+    highlights: [
+      "Le générateur est utilisable sans crédits Premium : mode gratuit (Hugging Face) ou votre clé personnelle.",
+      "Consultation et personnalisation locale des prompts système (exercice, miroir, vision, OCR).",
+      "Export PDF des rituels du Fil avec la photo de votre création.",
+    ],
+  },
+  {
     id: "assistant-palette",
     dateLabel: "juillet 2026",
     title: "Assistant palette peinture",

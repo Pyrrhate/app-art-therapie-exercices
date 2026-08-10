@@ -31,9 +31,18 @@ function usageProviderLabel(
   byok: ByokProviderId | null,
   usePremiumLlm: boolean
 ): AiUsageProvider {
-  if (byok === "openai") return "openai";
-  if (byok === "anthropic") return "anthropic";
-  if (byok === "mistral") return "mistral";
+  if (
+    byok === "openai" ||
+    byok === "anthropic" ||
+    byok === "mistral" ||
+    byok === "gemini" ||
+    byok === "scaleway" ||
+    byok === "ovhcloud" ||
+    byok === "alephalpha" ||
+    byok === "ollama"
+  ) {
+    return byok;
+  }
   return usePremiumLlm ? "mistral" : "huggingface";
 }
 

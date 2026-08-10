@@ -1,6 +1,8 @@
 import { Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
 import { formatSessionDate, getTechniqueLabel } from "@/constants";
+import type { FilEntry } from "@/lib/fil/types";
+import { uriToDataUrl } from "@/lib/image";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import type { SavedSession } from "@/lib/types";
 
@@ -12,7 +14,26 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function buildSessionHtml(session: SavedSession): string {
+/** Convertit photoUri en data URL utilisable dans une fenêtre d'impression. */
+async function resolvePhotoForExport(
+  photoUri: string | undefined
+): Promise<string | null> {
+  if (!photoUri?.trim()) return null;
+  const uri = photoUri.trim();
+  if (uri.startsWith("data:image/")) return uri;
+  try {
+    return await uriToDataUrl(uri);
+  } catch {
+    // Dernier recours : URI brute (peut marcher en natif / http)
+    if (/^(https?:|blob:|file:)/i.test(uri)) return uri;
+    return null;
+  }
+}
+
+function buildSessionHtml(
+  session: SavedSession,
+  photoDataUrl: string | null
+): string {
   const exercise = escapeHtml(sanitizeAiDisplayText(session.exercise));
   const reflection = session.reflection
     ? sanitizeAiDisplayText(session.reflection)
@@ -31,6 +52,9 @@ function buildSessionHtml(session: SavedSession): string {
   const followUp = session.followUpExercise
     ? `<section><h2>Poursuite suggérée</h2><p>${escapeHtml(sanitizeAiDisplayText(session.followUpExercise))}</p></section>`
     : "";
+  const artwork = photoDataUrl
+    ? `<section class="artwork"><h2>Votre création</h2><img src="${photoDataUrl.replace(/"/g, "&quot;")}" alt="Création artistique" /></section>`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -47,13 +71,26 @@ function buildSessionHtml(session: SavedSession): string {
     p { margin: 0 0 12px; }
     p:last-child { margin-bottom: 0; }
     .reflection p { font-style: italic; color: #4a5c4d; }
+    .artwork { padding: 12px; }
+    .artwork img {
+      display: block;
+      width: 100%;
+      max-height: 420px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #f3ebe4;
+    }
     ul { margin: 0; padding-left: 1.2rem; }
     footer { margin-top: 32px; font-size: 0.75rem; color: #b8a090; text-align: center; }
+    @media print {
+      .artwork img { max-height: 360px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
   </style>
 </head>
 <body>
   <h1>${escapeHtml(session.impulse)}</h1>
   <p class="meta">${escapeHtml(formatSessionDate(session.createdAt))} · ${escapeHtml(getTechniqueLabel(session.technique))} · ${session.durationMinutes} min</p>
+  ${artwork}
   <section><h2>Exercice</h2><p>${exercise}</p></section>
   ${written}
   ${
@@ -68,7 +105,25 @@ function buildSessionHtml(session: SavedSession): string {
   }
   ${followUp}
   <footer>Art Thérapie — export local</footer>
-  <script>window.onload = () => window.print();</script>
+  <script>
+    async function readyToPrint() {
+      const images = Array.from(document.images || []);
+      await Promise.all(
+        images.map(
+          (img) =>
+            img.complete
+              ? Promise.resolve()
+              : new Promise((resolve) => {
+                  img.onload = resolve;
+                  img.onerror = resolve;
+                })
+        )
+      );
+      window.print();
+    }
+    if (document.readyState === "complete") readyToPrint();
+    else window.onload = () => readyToPrint();
+  </script>
 </body>
 </html>`;
 }
@@ -95,9 +150,6 @@ async function exportNativeHtml(
   return uri;
 }
 
-import type { FilEntry } from "@/lib/fil/types";
-import type { SavedSession } from "@/lib/types";
-
 export async function exportFilRitualPdf(
   entry: FilEntry
 ): Promise<{ uri?: string; message: string }> {
@@ -123,14 +175,16 @@ export async function exportFilRitualPdf(
 export async function exportSessionPdf(
   session: SavedSession
 ): Promise<{ uri?: string; message: string }> {
-  const html = buildSessionHtml(session);
+  const photoDataUrl = await resolvePhotoForExport(session.photoUri);
+  const html = buildSessionHtml(session, photoDataUrl);
   const filename = `exercice-${session.id.slice(0, 8)}.html`;
 
   if (Platform.OS === "web") {
     exportWebPdf(html);
     return {
-      message:
-        "Fenêtre d'impression ouverte — choisissez « Enregistrer en PDF ».",
+      message: photoDataUrl
+        ? "Fenêtre d'impression ouverte (avec image) — choisissez « Enregistrer en PDF »."
+        : "Fenêtre d'impression ouverte — choisissez « Enregistrer en PDF ».",
     };
   }
 

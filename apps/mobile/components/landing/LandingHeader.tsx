@@ -10,7 +10,10 @@ type LandingNavItem = {
   href: string;
 };
 
-const DEFAULT_NAV: LandingNavItem[] = [{ label: "Exemples", href: ROUTES.examples }];
+const DEFAULT_NAV: LandingNavItem[] = [
+  { label: "Exemples", href: ROUTES.examples },
+  { label: "Mises à jour", href: ROUTES.changelog },
+];
 
 interface LandingHeaderProps {
   maxWidth?: "3xl" | "5xl";

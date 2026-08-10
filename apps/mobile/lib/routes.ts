@@ -16,7 +16,8 @@ export const ROUTES = {
   prompts: `${APP_BASE}/settings/prompts`,
   premiumCloud: `${APP_BASE}/premium-cloud`,
   privacy: `${APP_BASE}/privacy`,
-  changelog: `${APP_BASE}/maj`,
+  /** Page site (hors /app) : https://pastek-art.eu/maj */
+  changelog: "/maj",
   fil: `${APP_BASE}/fil`,
   filEntry: (id: string) => `${APP_BASE}/fil/${id}`,
   pingPong: `${APP_BASE}/ping-pong`,

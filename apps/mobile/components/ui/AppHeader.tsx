@@ -1,6 +1,5 @@
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
-import { AuthNavButton } from "@/components/auth/AuthNavButton";
 import { PastekLogoIcon } from "@/components/brand/PastekBrandImage";
 import { DonateRow } from "@/components/ui/DonateRow";
 import { navigateSiteHome } from "@/lib/navigation";
@@ -34,7 +33,6 @@ export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps)
         </Pressable>
 
         <View className="flex-row items-center gap-3 shrink-0">
-          <AuthNavButton />
           <Pressable
             onPress={onNavigateTraces ?? (() => router.push(ROUTES.fil))}
             hitSlop={8}

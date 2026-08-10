@@ -5,3 +5,5 @@ export * from "./freemium";
 export * from "./supabase";
 export * from "./ai-prompt-versions";
 export * from "./ai-prompt-catalog";
+export * from "./byok-providers";
+export * from "./settings";

@@ -7,6 +7,11 @@ export type AiUsageProvider =
   | "mistral"
   | "openai"
   | "anthropic"
+  | "gemini"
+  | "scaleway"
+  | "ovhcloud"
+  | "alephalpha"
+  | "ollama"
   | "local";
 
 export interface RecordAiUsageInput {

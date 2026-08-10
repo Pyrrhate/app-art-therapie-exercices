@@ -30,6 +30,7 @@ function RootStack() {
       }}
     >
       <Stack.Screen name="index" options={{ animation: "none" }} />
+      <Stack.Screen name="maj" options={{ animation: "none" }} />
       <Stack.Screen name="exemples/index" options={{ animation: "none" }} />
       <Stack.Screen name="exemples/exemple-001" options={{ animation: "none" }} />
       <Stack.Screen name="exemples/exemple-002" options={{ animation: "none" }} />
