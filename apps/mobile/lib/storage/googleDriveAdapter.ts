@@ -7,6 +7,7 @@ import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 import { buildAppBackup, parseAppBackupJson } from "@/lib/backup/build";
 import { assertBackupSize, restoreAppBackup } from "@/lib/backup/restore";
+import { getApiUrl } from "@/lib/config";
 import {
   clearGoogleDriveMeta,
   clearGoogleDriveTokens,
@@ -74,76 +75,71 @@ async function exchangeCode(
   codeVerifier: string,
   redirectUri: string
 ): Promise<GoogleDriveTokenBundle> {
-  const body = new URLSearchParams({
-    client_id: getClientId(),
-    code,
-    code_verifier: codeVerifier,
-    redirect_uri: redirectUri,
-    grant_type: "authorization_code",
-  });
-
-  const response = await fetch(discovery.tokenEndpoint!, {
+  const base = getApiUrl().replace(/\/$/, "");
+  const response = await fetch(`${base}/api/integrations/gdrive/client-token`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "exchange",
+      code,
+      codeVerifier,
+      redirectUri,
+    }),
   });
 
-  if (!response.ok) {
-    const detail = await response.text();
-    console.warn("[gdrive client] token", detail.slice(0, 300));
+  const payload = (await response.json().catch(() => ({}))) as {
+    accessToken?: string;
+    refreshToken?: string | null;
+    expiresIn?: number;
+    scope?: string | null;
+    error?: string;
+  };
+
+  if (!response.ok || !payload.accessToken) {
+    const detail = payload.error?.trim();
     throw new Error(
-      "Échange OAuth Google refusé. Vérifiez le Client ID et les URI de redirection (origine web)."
+      detail
+        ? `Échange OAuth Google refusé. ${detail}`
+        : `Échange OAuth Google refusé. Vérifiez le Client ID et l'URI de redirection (doit être exactement ${redirectUri}, sans slash final).`
     );
   }
 
-  const data = (await response.json()) as {
-    access_token?: string;
-    refresh_token?: string;
-    expires_in?: number;
-    scope?: string;
-  };
-
-  if (!data.access_token) {
-    throw new Error("Google n'a pas renvoyé de jeton d'accès.");
-  }
-
   return {
-    accessToken: data.access_token,
-    refreshToken: data.refresh_token,
-    expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000,
-    scope: data.scope,
+    accessToken: payload.accessToken,
+    refreshToken: payload.refreshToken ?? undefined,
+    expiresAt: Date.now() + (payload.expiresIn ?? 3600) * 1000,
+    scope: payload.scope ?? undefined,
   };
 }
 
 async function refreshAccessToken(
   refreshToken: string
 ): Promise<GoogleDriveTokenBundle | null> {
-  const body = new URLSearchParams({
-    client_id: getClientId(),
-    refresh_token: refreshToken,
-    grant_type: "refresh_token",
-  });
-
-  const response = await fetch(discovery.tokenEndpoint!, {
+  const base = getApiUrl().replace(/\/$/, "");
+  const response = await fetch(`${base}/api/integrations/gdrive/client-token`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "refresh",
+      refreshToken,
+    }),
   });
 
   if (!response.ok) return null;
 
   const data = (await response.json()) as {
-    access_token?: string;
-    expires_in?: number;
-    scope?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
+    scope?: string | null;
   };
-  if (!data.access_token) return null;
+  if (!data.accessToken) return null;
 
   return {
-    accessToken: data.access_token,
-    refreshToken,
-    expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000,
-    scope: data.scope,
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken ?? refreshToken,
+    expiresAt: Date.now() + (data.expiresIn ?? 3600) * 1000,
+    scope: data.scope ?? undefined,
   };
 }
 

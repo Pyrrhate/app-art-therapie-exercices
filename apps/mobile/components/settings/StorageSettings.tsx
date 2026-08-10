@@ -148,8 +148,9 @@ export function StorageSettings({ className = "" }: { className?: string }) {
 
       {!configured ? (
         <Text className="text-amber-700 text-xs leading-5">
-          Ajoutez EXPO_PUBLIC_GOOGLE_DRIVE_CLIENT_ID au build web (même Client ID
-          Google, avec redirect URI = origine du site + /app/premium-cloud).
+          Ajoutez EXPO_PUBLIC_GOOGLE_DRIVE_CLIENT_ID au build web — le même Client
+          ID Google que GOOGLE_DRIVE_CLIENT_ID sur l&apos;API (avec secret). URI
+          de redirection : origine du site + /app/premium-cloud.
         </Text>
       ) : null}
 
