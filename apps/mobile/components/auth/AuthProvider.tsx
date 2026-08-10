@@ -1,12 +1,9 @@
-import { useEffect, type ReactNode } from "react";
-import { useAuthStore } from "@/lib/auth/store";
+import type { ReactNode } from "react";
 
+/**
+ * Ancien provider Supabase Auth — devenu no-op (local-first, pas de session app).
+ * Conservé pour ne pas casser le layout.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const init = useAuthStore((s) => s.init);
-
-  useEffect(() => {
-    return init();
-  }, [init]);
-
   return children;
 }

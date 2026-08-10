@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { SupportButton } from "@/components/SupportButton";
 import { AccountPanel } from "@/components/auth/AccountPanel";
-import { useIsAuthenticated, useUserProfile } from "@/lib/auth/store";
 import { ThemePicker } from "@/components/ThemePicker";
 import { TimerSoundPicker } from "@/components/TimerSoundPicker";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -30,8 +29,6 @@ export default function SettingsScreen() {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const isDark = theme === "dark";
-  const isAuthenticated = useIsAuthenticated();
-  const userProfile = useUserProfile();
   const [apiOk, setApiOk] = useState<boolean | null>(null);
   const [provider, setProvider] = useState<string | null>(null);
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
@@ -203,29 +200,27 @@ export default function SettingsScreen() {
         label="Paramètres"
         title="Vos "
         accent="préférences"
-        description="Personnalisez l'app. Optionnel : liez un compte pour sauvegarder votre Fil dans le cloud."
+        description="Personnalisez l'app. Optionnel : sauvegardez votre Fil sur Google Drive."
         className="mb-8"
       />
 
       <View className="gap-4 pb-8">
         <AccountPanel />
 
-        {isAuthenticated ? (
-          <Pressable
-            onPress={() => router.push(ROUTES.premiumCloud)}
-            className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
-          >
-            <View className="flex-1 pr-3">
-              <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-                Sauvegarde Drive / OneDrive
-              </Text>
-              <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-                Connectez votre cloud pour archiver automatiquement vos œuvres
-              </Text>
-            </View>
-            <Text className="text-sage-500 text-lg">→</Text>
-          </Pressable>
-        ) : null}
+        <Pressable
+          onPress={() => router.push(ROUTES.premiumCloud)}
+          className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
+        >
+          <View className="flex-1 pr-3">
+            <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
+              Sauvegarde Google Drive
+            </Text>
+            <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
+              Backup / restore local-first — sans compte Pastek
+            </Text>
+          </View>
+          <Text className="text-sage-500 text-lg">→</Text>
+        </Pressable>
 
         <Pressable
           onPress={() => router.push(ROUTES.aiEngines)}

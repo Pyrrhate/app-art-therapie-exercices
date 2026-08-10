@@ -1,77 +1,13 @@
-import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
-import { AuthModal } from "@/components/auth/AuthModal";
-import { PrimaryButton } from "@/components/ui/Button";
-import { useAuthStore, useIsAuthenticated } from "@/lib/auth/store";
-import { signOut } from "@/lib/supabase/auth";
-import {
-  diagnoseSupabaseConfigIssue,
-  initSupabaseClient,
-  isSupabaseConfigured,
-  supabaseConfigIssueMessage,
-} from "@/lib/supabase/client";
-import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
+import { StorageSettings } from "@/components/settings/StorageSettings";
+import { panelBg, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
-interface AccountPanelProps {
-  className?: string;
-}
-
-/** Connexion / déconnexion — visible dans Réglages (et réutilisable ailleurs). */
-export function AccountPanel({ className = "" }: AccountPanelProps) {
+/**
+ * Remplace l'ancien panneau compte Supabase : Pastek est local-first.
+ */
+export function AccountPanel({ className = "" }: { className?: string }) {
   const isDark = useIsDark();
-  const isAuthenticated = useIsAuthenticated();
-  const email = useAuthStore((s) => s.user?.email);
-  const [authOpen, setAuthOpen] = useState(false);
-  const [configReady, setConfigReady] = useState(isSupabaseConfigured());
-  const [checkingConfig, setCheckingConfig] = useState(!isSupabaseConfigured());
-  const [configError, setConfigError] = useState("");
-
-  useEffect(() => {
-    if (configReady) return;
-    void (async () => {
-      const ok = await initSupabaseClient();
-      if (!ok) {
-        const issue = await diagnoseSupabaseConfigIssue();
-        setConfigError(supabaseConfigIssueMessage(issue));
-      }
-      setConfigReady(ok);
-      setCheckingConfig(false);
-    })();
-  }, [configReady]);
-
-  async function retryConfig() {
-    setCheckingConfig(true);
-    setConfigError("");
-    const ok = await initSupabaseClient(true);
-    if (!ok) {
-      const issue = await diagnoseSupabaseConfigIssue();
-      setConfigError(supabaseConfigIssueMessage(issue));
-    }
-    setConfigReady(ok);
-    setCheckingConfig(false);
-  }
-
-  if (!configReady) {
-    return (
-      <View className={`rounded-3xl border px-5 py-4 gap-3 ${panelBg(isDark)} ${className}`}>
-        <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-          {checkingConfig
-            ? "Connexion au service compte…"
-            : configError ||
-              "Le service compte n'est pas encore disponible. Vérifiez la configuration Supabase sur Vercel API."}
-        </Text>
-        {!checkingConfig ? (
-          <PrimaryButton
-            label="Réessayer"
-            onPress={() => void retryConfig()}
-            variant="ghost"
-            align="start"
-          />
-        ) : null}
-      </View>
-    );
-  }
 
   return (
     <View className={`gap-3 ${className}`}>
@@ -79,39 +15,13 @@ export function AccountPanel({ className = "" }: AccountPanelProps) {
         <Text className="text-xs uppercase tracking-widest text-sage-500 font-medium">
           Compte
         </Text>
-        {isAuthenticated ? (
-          <>
-            <Text className={`font-medium ${textPrimary(isDark)}`}>
-              Connecté
-            </Text>
-            <Text className={`text-sm ${textSecondary(isDark)}`}>
-              {email ?? "Compte actif"}
-            </Text>
-            <Text className={`text-xs leading-5 ${textMuted(isDark)}`}>
-              Votre Fil créatif se synchronise avec le cloud. Connectez Drive ou
-              OneDrive dans Sauvegarde personnelle pour archiver vos œuvres.
-            </Text>
-            <PrimaryButton
-              label="Se déconnecter"
-              onPress={() => void signOut()}
-              variant="ghost"
-            />
-          </>
-        ) : (
-          <>
-            <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-              Créez un compte gratuit pour sauvegarder votre Fil créatif dans le
-              cloud et connecter votre Drive personnel.
-            </Text>
-            <PrimaryButton
-              label="Créer un compte / Se connecter"
-              onPress={() => setAuthOpen(true)}
-            />
-          </>
-        )}
+        <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
+          Aucun compte Pastek requis. L&apos;app fonctionne hors ligne sur cet
+          appareil. Optionnel : connectez Google Drive ci-dessous pour
+          sauvegarder votre Fil.
+        </Text>
       </View>
-
-      <AuthModal visible={authOpen} onClose={() => setAuthOpen(false)} />
+      <StorageSettings />
     </View>
   );
 }

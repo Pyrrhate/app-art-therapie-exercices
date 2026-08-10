@@ -1,86 +1,31 @@
-import { useCallback, useState } from "react";
 import { Text, View } from "react-native";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { CloudProviderToggle } from "@/components/integrations/CloudProviderToggle";
-import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect } from "react";
+import { StorageSettings } from "@/components/settings/StorageSettings";
+import { ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { showAlert } from "@/lib/alert";
-import { useIsAuthenticated } from "@/lib/auth/store";
-import {
-  connectCloudProvider,
-  disconnectCloudProvider,
-  fetchCloudIntegrationStatus,
-  type CloudIntegrationStatus,
-  type CloudProviderId,
-} from "@/lib/integrations/cloud";
 import { ROUTES } from "@/lib/routes";
-import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
+import { textMuted, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
+/**
+ * Sauvegarde personnelle — Google Drive côté appareil (local-first).
+ * Plus de compte Pastek / OAuth serveur.
+ */
 export default function PremiumCloudScreen() {
   const isDark = useIsDark();
-  const isAuthenticated = useIsAuthenticated();
-  const params = useLocalSearchParams<{ connected?: string }>();
+  const params = useLocalSearchParams<{ connected?: string; code?: string }>();
 
-  const [googleStatus, setGoogleStatus] =
-    useState<CloudIntegrationStatus | null>(null);
-  const [onedriveStatus, setOnedriveStatus] =
-    useState<CloudIntegrationStatus | null>(null);
-  const [loadingProvider, setLoadingProvider] =
-    useState<CloudProviderId | null>(null);
-
-  const load = useCallback(async () => {
-    if (!isAuthenticated) return;
-    const [google, onedrive] = await Promise.all([
-      fetchCloudIntegrationStatus("google_drive"),
-      fetchCloudIntegrationStatus("onedrive"),
-    ]);
-    setGoogleStatus(google);
-    setOnedriveStatus(onedrive);
-  }, [isAuthenticated]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void load();
-      if (params.connected === "google_drive") {
-        showAlert("Google Drive", "Connexion enregistrée.");
-      }
-      if (params.connected === "onedrive") {
-        showAlert("OneDrive", "Connexion enregistrée.");
-      }
-    }, [load, params.connected])
-  );
-
-  async function handleConnect(provider: CloudProviderId) {
-    setLoadingProvider(provider);
-    try {
-      await connectCloudProvider(provider);
-      await load();
-    } catch (error) {
+  useEffect(() => {
+    if (params.connected === "google_drive" || params.code) {
       showAlert(
-        "Connexion",
-        error instanceof Error ? error.message : "Impossible de connecter."
+        "Google Drive",
+        "Si la connexion vient de se terminer, utilisez « Sauvegarder vers Drive » ci-dessous."
       );
-    } finally {
-      setLoadingProvider(null);
     }
-  }
-
-  async function handleDisconnect(provider: CloudProviderId) {
-    setLoadingProvider(provider);
-    try {
-      await disconnectCloudProvider(provider);
-      await load();
-    } catch (error) {
-      showAlert(
-        "Déconnexion",
-        error instanceof Error ? error.message : "Impossible de déconnecter."
-      );
-    } finally {
-      setLoadingProvider(null);
-    }
-  }
+  }, [params.connected, params.code]);
 
   return (
     <ScreenContainer scrollable compactTop>
@@ -90,53 +35,25 @@ export default function PremiumCloudScreen() {
       />
 
       <PastekScreenHero
-        label="Compte"
-        title="Sauvegarde "
-        accent="personnelle"
-        description="Vos photos d'œuvres sont copiées dans votre Google Drive ou OneDrive — Pastek Art n'héberge pas vos images lourdes."
+        label="Sauvegarde"
+        title="Votre "
+        accent="Drive"
+        description="Connexion directe à votre Google Drive depuis cet appareil. Pastek ne stocke ni compte ni jetons."
         className="mb-6"
       />
 
-      {!isAuthenticated ? (
-        <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
-          <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-            Créez un compte gratuit dans Réglages pour connecter votre cloud
-            personnel et sauvegarder automatiquement vos œuvres.
-          </Text>
-          <View className="mt-4">
-            <PrimaryButton
-              label="Aller aux Réglages"
-              onPress={() => router.push(ROUTES.settings)}
-            />
-          </View>
-        </View>
-      ) : (
-        <View className="gap-4 pb-8">
-          <Text className={`text-xs leading-5 px-1 ${textMuted(isDark)}`}>
-            Après un exercice avec photo, le fichier est copié dans le dossier
-            « Pastek Art » de votre Drive. Les métadonnées du Fil restent sur
-            Pastek Art.
-          </Text>
+      <Text className={`text-xs leading-5 px-1 mb-4 ${textMuted(isDark)}`}>
+        Les photos d&apos;œuvres peuvent aussi être copiées dans le dossier
+        « Pastek Art » après un rituel, si Drive est connecté.
+      </Text>
 
-          <CloudProviderToggle
-            title="Google Drive"
-            description="Photos d'œuvres dans le dossier « Pastek Art » (accès limité aux fichiers créés par l'app)."
-            status={googleStatus}
-            loading={loadingProvider === "google_drive"}
-            onConnect={() => void handleConnect("google_drive")}
-            onDisconnect={() => void handleDisconnect("google_drive")}
-          />
+      <StorageSettings />
 
-          <CloudProviderToggle
-            title="Microsoft OneDrive"
-            description="Photos d'œuvres dans le dossier « Pastek Art » de votre OneDrive."
-            status={onedriveStatus}
-            loading={loadingProvider === "onedrive"}
-            onConnect={() => void handleConnect("onedrive")}
-            onDisconnect={() => void handleDisconnect("onedrive")}
-          />
-        </View>
-      )}
+      <View className="mt-6 px-1">
+        <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
+          OneDrive, Infomaniak et Proton suivront le même modèle local-first.
+        </Text>
+      </View>
     </ScreenContainer>
   );
 }

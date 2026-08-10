@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
-import { AuthModal } from "@/components/auth/AuthModal";
 import { FilConversionCTA } from "@/components/fil/FilConversionCTA";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -27,10 +26,9 @@ import {
 } from "@/lib/fil/types";
 import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
-import { useAuthLoading, useAuthStore, useIsAuthenticated } from "@/lib/auth/store";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
+import { getGoogleDriveConnectionStatus } from "@/lib/storage/googleDriveAdapter";
 
 const FILTER_SOURCES: Array<{ id: FilSource | "all"; label: string }> = [
   { id: "all", label: "Tout" },
@@ -43,29 +41,23 @@ const FILTER_SOURCES: Array<{ id: FilSource | "all"; label: string }> = [
 
 export default function FilScreen() {
   const isDark = useIsDark();
-  const isAuthenticated = useIsAuthenticated();
-  const authLoading = useAuthLoading();
-  const lastSyncCount = useAuthStore((s) => s.lastSyncCount);
-  const showConversionCta =
-    isSupabaseConfigured() && !authLoading && !isAuthenticated;
   const [entries, setEntries] = useState<FilEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<FilSource | "all">("all");
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [showDriveCta, setShowDriveCta] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     setEntries(await getFilEntries());
     setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      setAuthModalOpen(false);
-      void load();
+    try {
+      const status = await getGoogleDriveConnectionStatus();
+      setShowDriveCta(!status.connected);
+    } catch {
+      setShowDriveCta(true);
     }
-  }, [isAuthenticated, lastSyncCount, load]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -131,9 +123,9 @@ export default function FilScreen() {
           <Text className={`text-center leading-6 ${textSecondary(isDark)}`}>
             Rien ici pour l&apos;instant. Terminez un exercice ou une amorce — une trace s&apos;ajoutera toute seule.
           </Text>
-          {showConversionCta ? (
+          {showDriveCta ? (
             <View className="mt-6 w-full">
-              <FilConversionCTA onPress={() => setAuthModalOpen(true)} />
+              <FilConversionCTA onPress={() => router.push(ROUTES.premiumCloud)} />
             </View>
           ) : null}
           <View className="mt-6 w-full gap-3">
@@ -143,22 +135,6 @@ export default function FilScreen() {
         </View>
       ) : (
         <View className="gap-3 pb-6">
-          {isAuthenticated ? (
-            <View
-              className={`rounded-2xl border px-4 py-3 mb-1 gap-1 ${
-                isDark
-                  ? "border-sage-600/40 bg-sage-700/20"
-                  : "border-sage-100 bg-sage-50"
-              }`}
-            >
-              <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-                {lastSyncCount && lastSyncCount > 0
-                  ? `${lastSyncCount} trace${lastSyncCount > 1 ? "s" : ""} sauvegardée${lastSyncCount > 1 ? "s" : ""} dans le cloud.`
-                  : "Votre Fil est lié à votre compte — les nouvelles traces se synchronisent automatiquement."}
-              </Text>
-            </View>
-          ) : null}
-
           {nearLimit ? (
             <View className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-1">
               <Text className="text-amber-800 text-sm leading-5">
@@ -278,8 +254,8 @@ export default function FilScreen() {
                     </Text>
                   </Pressable>
                 </Pressable>
-                {showConversionCta && index === 0 ? (
-                  <FilConversionCTA onPress={() => setAuthModalOpen(true)} />
+                {showDriveCta && index === 0 ? (
+                  <FilConversionCTA onPress={() => router.push(ROUTES.premiumCloud)} />
                 ) : null}
               </View>
             );
@@ -302,11 +278,6 @@ export default function FilScreen() {
           </View>
         </View>
       )}
-
-      <AuthModal
-        visible={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-      />
     </ScreenContainer>
   );
 }

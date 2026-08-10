@@ -6,6 +6,7 @@ interface FilConversionCTAProps {
   onPress: () => void;
 }
 
+/** CTA Fil → sauvegarde Drive (plus de création de compte Pastek). */
 export function FilConversionCTA({ onPress }: FilConversionCTAProps) {
   const isDark = useIsDark();
 
@@ -28,23 +29,23 @@ export function FilConversionCTA({ onPress }: FilConversionCTAProps) {
         <View className="flex-row items-center gap-2 mb-2">
           <View className="w-2 h-2 rounded-full bg-sage-400" />
           <Text className="text-xs uppercase tracking-widest text-sage-500 font-medium">
-            Sauvegarde cloud
+            Sauvegarde
           </Text>
         </View>
         <Text className={`text-base leading-6 mb-2 ${textPrimary(isDark)}`}>
-          Vos créations sont actuellement stockées uniquement sur cet appareil.
+          Vos créations sont stockées sur cet appareil.
         </Text>
         <Text className={`text-sm leading-6 mb-4 ${textSecondary(isDark)}`}>
-          Créez un compte gratuit pour les sécuriser et connecter votre Drive
-          personnel (Google, Microsoft…).
+          Connectez Google Drive pour une copie de secours personnelle — sans
+          compte Pastek.
         </Text>
         <View className="self-start rounded-full bg-sage-500 px-5 py-2.5">
           <Text className="text-white text-sm font-semibold tracking-wide">
-            Créer un compte gratuit →
+            Sauvegarde Drive →
           </Text>
         </View>
         <Text className={`text-xs mt-3 leading-5 ${textMuted(isDark)}`}>
-          Connexion par email, Google ou Microsoft · sans engagement
+          Local-first · BYOK · zéro connaissance serveur
         </Text>
       </View>
     </Pressable>

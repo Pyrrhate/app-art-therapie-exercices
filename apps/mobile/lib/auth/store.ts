@@ -1,7 +1,6 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { fetchUserProfile, type UserProfile } from "@/lib/auth/profile";
-import { syncLocalHistoryToCloud } from "@/lib/fil/sync";
 import { getSupabaseClient, initSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { createSessionFromAuthUrl } from "@/lib/supabase/sessionFromUrl";
 import { getInitialAuthCallbackUrl, parseAuthCallbackUrl } from "@/lib/supabase/redirect";
@@ -21,15 +20,8 @@ interface AuthStore {
   refreshProfile: () => Promise<void>;
 }
 
-async function runCloudSync(set: (partial: Partial<AuthStore>) => void) {
-  try {
-    const result = await syncLocalHistoryToCloud();
-    if (result.synced > 0) {
-      set({ lastSyncCount: result.synced });
-    }
-  } catch (error) {
-    console.warn("[auth] sync", error);
-  }
+async function runCloudSync(_set: (partial: Partial<AuthStore>) => void) {
+  // Sync Fil → Supabase désactivée (local-first). Backup via Google Drive client.
 }
 
 async function loadProfile(

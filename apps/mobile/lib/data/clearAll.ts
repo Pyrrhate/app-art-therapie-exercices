@@ -5,6 +5,10 @@ import { clearAllPromptOverrides } from "@/lib/promptOverrides";
 import { clearFilEntries } from "@/lib/fil/storage";
 import { clearRitualDraft } from "@/lib/ritualDraft";
 import { setThemePreference, setTimerSound } from "@/lib/preferences";
+import {
+  clearGoogleDriveMeta,
+  clearGoogleDriveTokens,
+} from "@/lib/storage/googleDriveTokens";
 import { useRitualStore } from "@/lib/store";
 import { useThemeStore } from "@/lib/themeStore";
 
@@ -31,6 +35,8 @@ export async function clearAllLocalData(): Promise<void> {
   await AsyncStorage.multiRemove([...new Set(keys)]);
   await removeAllAiKeys();
   await clearAllPromptOverrides();
+  await clearGoogleDriveTokens();
+  await clearGoogleDriveMeta();
 
   await setThemePreference("light");
   await setTimerSound("gong");
