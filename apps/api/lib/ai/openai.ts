@@ -24,6 +24,43 @@ import {
 
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
+const DEFAULT_TEXT_MODEL = "gpt-4o-mini";
+const DEFAULT_VISION_MODEL = "gpt-4o";
+const TEXT_FALLBACKS = [
+  "gpt-4o-mini",
+  "gpt-4.1-mini",
+  "gpt-5-mini",
+  "gpt-5.6-luna",
+] as const;
+const VISION_FALLBACKS = ["gpt-4o", "gpt-4.1", "gpt-5-mini", "gpt-5.6-luna"] as const;
+
+function openaiHttpError(status: number, rawBody: string, model?: string): Error {
+  let detail = `OpenAI HTTP ${status}`;
+  try {
+    const parsed = JSON.parse(rawBody) as {
+      error?: { message?: string; code?: string; type?: string };
+    };
+    const msg = parsed.error?.message?.trim();
+    if (msg) detail = `OpenAI HTTP ${status} — ${msg.slice(0, 220)}`;
+  } catch {
+    const snippet = rawBody.replace(/\s+/g, " ").trim().slice(0, 160);
+    if (snippet) detail = `OpenAI HTTP ${status} — ${snippet}`;
+  }
+  if (model && !detail.includes(model)) {
+    detail = `${detail} (model: ${model})`;
+  }
+  return new Error(detail);
+}
+
+function shouldTryNextModel(message: string): boolean {
+  return /HTTP 404|model_not_found|does not exist|not have access|unsupported_model|unknown model/i.test(
+    message
+  );
+}
+
+function usesMaxCompletionTokens(model: string): boolean {
+  return /^gpt-5/i.test(model) || /^o\d/i.test(model);
+}
 interface ChatMessage {
   role: "system" | "user" | "assistant";
   content:
@@ -64,9 +101,19 @@ export class OpenAIProvider implements AIProvider {
     this.apiKey =
       options.apiKey?.trim() || process.env.OPENAI_API_KEY?.trim() || "";
     this.textModel =
-      options.textModel ?? process.env.OPENAI_TEXT_MODEL ?? "gpt-4o-mini";
+      options.textModel ?? process.env.OPENAI_TEXT_MODEL ?? DEFAULT_TEXT_MODEL;
     this.visionModel =
-      options.visionModel ?? process.env.OPENAI_VISION_MODEL ?? "gpt-4o";
+      options.visionModel ??
+      process.env.OPENAI_VISION_MODEL ??
+      DEFAULT_VISION_MODEL;
+  }
+
+  async ping(): Promise<string> {
+    return this.callText("Répondez uniquement par le mot OK.", {
+      maxTokens: 16,
+      temperature: 0,
+      systemPrompt: "Répondez strictement: OK",
+    });
   }
 
   async generateExercise(input: ExerciseRequest): Promise<ExerciseResponse> {
@@ -113,14 +160,20 @@ export class OpenAIProvider implements AIProvider {
         };
       }
 
-      return { ...getFallbackExercise(input), source: "fallback" as const };
+      return {
+        ...getFallbackExercise(input),
+        source: "fallback" as const,
+        fallbackNote: "OpenAI a répondu, mais le format est invalide.",
+      };
     } catch (error) {
-      console.warn("[OpenAI generateExercise]", error);
+      const note = error instanceof Error ? error.message : "Erreur OpenAI";
+      console.warn("[OpenAI generateExercise]", note);
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback" as const,
+        fallbackNote: note.slice(0, 400),
       };
     }
   }
@@ -267,7 +320,11 @@ export class OpenAIProvider implements AIProvider {
       messages.push({ role: "system", content: options.systemPrompt });
     }
     messages.push({ role: "user", content: prompt });
-    return this.chat(messages, this.textModel, options);
+    return this.chatWithFallback(
+      [this.textModel, ...TEXT_FALLBACKS],
+      messages,
+      options
+    );
   }
 
   private async callVision(imageBase64: string, prompt: string): Promise<string> {
@@ -280,10 +337,31 @@ export class OpenAIProvider implements AIProvider {
         ],
       },
     ];
-    return this.chat(messages, this.visionModel, {
+    return this.chatWithFallback([this.visionModel, ...VISION_FALLBACKS], messages, {
       maxTokens: 1024,
       temperature: 0.4,
     });
+  }
+
+  private async chatWithFallback(
+    models: string[],
+    messages: ChatMessage[],
+    options?: { temperature?: number; maxTokens?: number }
+  ): Promise<string> {
+    const ordered = [...new Set(models.filter(Boolean))];
+    let lastError: Error | null = null;
+
+    for (const model of ordered) {
+      try {
+        return await this.chat(messages, model, options);
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.warn(`[OpenAI] modèle ${model}:`, lastError.message.slice(0, 180));
+        if (!shouldTryNextModel(lastError.message)) throw lastError;
+      }
+    }
+
+    throw lastError ?? new Error("OpenAI: tous les modèles ont échoué");
   }
 
   private async chat(
@@ -291,25 +369,32 @@ export class OpenAIProvider implements AIProvider {
     model: string,
     options?: { temperature?: number; maxTokens?: number }
   ): Promise<string> {
+    const maxTokens = options?.maxTokens ?? 512;
+    const body: Record<string, unknown> = {
+      model,
+      messages,
+      temperature: options?.temperature ?? 0.7,
+    };
+    if (usesMaxCompletionTokens(model)) {
+      body.max_completion_tokens = maxTokens;
+    } else {
+      body.max_tokens = maxTokens;
+    }
+
     const response = await fetch(OPENAI_CHAT_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        max_tokens: options?.maxTokens ?? 512,
-        temperature: options?.temperature ?? 0.7,
-      }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(90_000),
     });
 
     const rawBody = await response.text();
     if (!response.ok) {
       console.warn(`[OpenAI chat] ${response.status}:`, rawBody.slice(0, 400));
-      throw new Error(`OpenAI HTTP ${response.status}`);
+      throw openaiHttpError(response.status, rawBody, model);
     }
 
     const data = JSON.parse(rawBody) as {

@@ -7,6 +7,7 @@ import { createAiAdapter } from "@/lib/ai/adapter";
 import { AnthropicProvider } from "@/lib/ai/anthropic";
 import { byokBodySchema, byokFromBody } from "@/lib/ai/byok";
 import { GeminiProvider } from "@/lib/ai/gemini";
+import { OpenAIProvider } from "@/lib/ai/openai";
 import {
   corsHeaders,
   errorResponse,
@@ -77,23 +78,28 @@ export async function POST(request: Request) {
   try {
     const provider = createAiAdapter(credentials);
 
-    // Gemini / Anthropic : ping court (évite les faux négatifs JSON).
+    // Gemini / Anthropic / OpenAI : ping court (évite les faux négatifs JSON).
     if (
       (credentials.provider === "gemini" &&
         provider instanceof GeminiProvider) ||
       (credentials.provider === "anthropic" &&
-        provider instanceof AnthropicProvider)
+        provider instanceof AnthropicProvider) ||
+      (credentials.provider === "openai" && provider instanceof OpenAIProvider)
     ) {
       const reply = await provider.ping();
       const ok = /ok/i.test(reply);
+      const label =
+        credentials.provider === "gemini"
+          ? "Gemini"
+          : credentials.provider === "anthropic"
+            ? "Anthropic"
+            : "OpenAI";
       return jsonResponse(
         {
           ok,
           provider: credentials.provider,
           message: ok
-            ? `Connexion ${
-                credentials.provider === "gemini" ? "Gemini" : "Anthropic"
-              } réussie`
+            ? `Connexion ${label} réussie`
             : `Réponse inattendue : ${reply.slice(0, 80)}`,
         },
         request,
