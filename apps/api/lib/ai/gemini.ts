@@ -27,17 +27,34 @@ import {
   type ReflectionPromptContext,
 } from "./prompts";
 
-/** Modèle principal + secours si 404 / indisponible. */
-const PRIMARY_MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
-const FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash-lite"] as const;
+/** Modèle principal + secours si 404 / retiré pour les nouveaux comptes. */
+const PRIMARY_MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash";
+const FALLBACK_MODELS = [
+  "gemini-3.6-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
+] as const;
 
 function modelsToTry(preferred: string): string[] {
   const ordered = [preferred, ...FALLBACK_MODELS];
   return [...new Set(ordered.filter(Boolean))];
 }
 
-function usesThinkingBudget(model: string): boolean {
-  return /gemini-2\.5/i.test(model);
+/** Config thinking selon la famille de modèle (2.5 vs 3.x). */
+function thinkingGenerationFields(model: string): Record<string, unknown> {
+  if (/gemini-2\.5/i.test(model)) {
+    return { thinkingConfig: { thinkingBudget: 0 } };
+  }
+  if (/gemini-3/i.test(model)) {
+    return { thinkingConfig: { thinkingLevel: "minimal" } };
+  }
+  return {};
+}
+
+function shouldTryNextModel(message: string): boolean {
+  return /HTTP 404|not found|is not found|not supported|UNKNOWN_MODEL|no longer available|deprecated|has been shut down/i.test(
+    message
+  );
 }
 
 function geminiHttpError(status: number, body: string): Error {
@@ -337,9 +354,7 @@ export class GeminiProvider implements AIProvider {
       if (opts.json) {
         generationConfig.responseMimeType = "application/json";
       }
-      if (usesThinkingBudget(model)) {
-        generationConfig.thinkingConfig = { thinkingBudget: 0 };
-      }
+      Object.assign(generationConfig, thinkingGenerationFields(model));
       return { ...bodyBase, generationConfig };
     });
   }
@@ -369,9 +384,7 @@ export class GeminiProvider implements AIProvider {
         temperature: 0.4,
         maxOutputTokens: 2048,
       };
-      if (usesThinkingBudget(model)) {
-        generationConfig.thinkingConfig = { thinkingBudget: 0 };
-      }
+      Object.assign(generationConfig, thinkingGenerationFields(model));
       return { ...bodyBase, generationConfig };
     });
   }
@@ -392,12 +405,8 @@ export class GeminiProvider implements AIProvider {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
         const msg = lastError.message;
-        const tryNext =
-          /HTTP 404|not found|is not found|not supported|UNKNOWN_MODEL/i.test(
-            msg
-          );
         console.warn(`[Gemini] modèle ${model}:`, msg.slice(0, 180));
-        if (!tryNext) throw lastError;
+        if (!shouldTryNextModel(msg)) throw lastError;
       }
     }
 
