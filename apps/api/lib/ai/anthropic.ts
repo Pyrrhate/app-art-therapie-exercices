@@ -25,6 +25,21 @@ import {
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 
+function anthropicHttpError(status: number, rawBody: string): Error {
+  let detail = `Anthropic HTTP ${status}`;
+  try {
+    const parsed = JSON.parse(rawBody) as {
+      error?: { type?: string; message?: string };
+    };
+    const msg = parsed.error?.message?.trim();
+    if (msg) detail = `Anthropic HTTP ${status} — ${msg.slice(0, 220)}`;
+  } catch {
+    const snippet = rawBody.replace(/\s+/g, " ").trim().slice(0, 160);
+    if (snippet) detail = `Anthropic HTTP ${status} — ${snippet}`;
+  }
+  return new Error(detail);
+}
+
 function stripDataUrl(imageBase64: string): {
   mediaType: string;
   data: string;
@@ -76,6 +91,14 @@ export class AnthropicProvider implements AIProvider {
       "claude-3-5-sonnet-latest";
   }
 
+  async ping(): Promise<string> {
+    return this.callText("Répondez uniquement par le mot OK.", {
+      maxTokens: 16,
+      temperature: 0,
+      system: "Répondez strictement: OK",
+    });
+  }
+
   async generateExercise(input: ExerciseRequest): Promise<ExerciseResponse> {
     const preferredDuration = input.durationMinutes;
     if (!this.apiKey) {
@@ -117,14 +140,20 @@ export class AnthropicProvider implements AIProvider {
         };
       }
 
-      return { ...getFallbackExercise(input), source: "fallback" as const };
+      return {
+        ...getFallbackExercise(input),
+        source: "fallback" as const,
+        fallbackNote: "Anthropic a répondu, mais le format est invalide.",
+      };
     } catch (error) {
-      console.warn("[Anthropic generateExercise]", error);
+      const note = error instanceof Error ? error.message : "Erreur Anthropic";
+      console.warn("[Anthropic generateExercise]", note);
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback" as const,
+        fallbackNote: note.slice(0, 400),
       };
     }
   }
@@ -320,7 +349,7 @@ export class AnthropicProvider implements AIProvider {
         `[Anthropic messages] ${response.status}:`,
         rawBody.slice(0, 400)
       );
-      throw new Error(`Anthropic HTTP ${response.status}`);
+      throw anthropicHttpError(response.status, rawBody);
     }
 
     const data = JSON.parse(rawBody) as {

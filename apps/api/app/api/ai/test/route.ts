@@ -4,6 +4,7 @@
  */
 import { z } from "zod";
 import { createAiAdapter } from "@/lib/ai/adapter";
+import { AnthropicProvider } from "@/lib/ai/anthropic";
 import { byokBodySchema, byokFromBody } from "@/lib/ai/byok";
 import { GeminiProvider } from "@/lib/ai/gemini";
 import {
@@ -76,10 +77,12 @@ export async function POST(request: Request) {
   try {
     const provider = createAiAdapter(credentials);
 
-    // Gemini : ping court (évite le faux négatif si le JSON exercice échoue).
+    // Gemini / Anthropic : ping court (évite les faux négatifs JSON).
     if (
-      credentials.provider === "gemini" &&
-      provider instanceof GeminiProvider
+      (credentials.provider === "gemini" &&
+        provider instanceof GeminiProvider) ||
+      (credentials.provider === "anthropic" &&
+        provider instanceof AnthropicProvider)
     ) {
       const reply = await provider.ping();
       const ok = /ok/i.test(reply);
@@ -88,7 +91,9 @@ export async function POST(request: Request) {
           ok,
           provider: credentials.provider,
           message: ok
-            ? "Connexion Gemini réussie"
+            ? `Connexion ${
+                credentials.provider === "gemini" ? "Gemini" : "Anthropic"
+              } réussie`
             : `Réponse inattendue : ${reply.slice(0, 80)}`,
         },
         request,
