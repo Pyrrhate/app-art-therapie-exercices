@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { createAiAdapter } from "@/lib/ai/adapter";
 import { byokBodySchema, byokFromBody } from "@/lib/ai/byok";
+import { GeminiProvider } from "@/lib/ai/gemini";
 import {
   corsHeaders,
   errorResponse,
@@ -74,6 +75,32 @@ export async function POST(request: Request) {
 
   try {
     const provider = createAiAdapter(credentials);
+
+    // Gemini : ping court (évite le faux négatif si le JSON exercice échoue).
+    if (
+      credentials.provider === "gemini" &&
+      provider instanceof GeminiProvider
+    ) {
+      const reply = await provider.ping();
+      const ok = /ok/i.test(reply);
+      return jsonResponse(
+        {
+          ok,
+          provider: credentials.provider,
+          message: ok
+            ? "Connexion Gemini réussie"
+            : `Réponse inattendue : ${reply.slice(0, 80)}`,
+        },
+        request,
+        {
+          headers: {
+            "X-RateLimit-Remaining": String(rateLimit.remaining),
+            "Cache-Control": "no-store",
+          },
+        }
+      );
+    }
+
     const result = await provider.generateExercise({
       impulse: "connexion",
       technique: "drawing",
@@ -99,12 +126,16 @@ export async function POST(request: Request) {
       }
     );
   } catch (error) {
-    console.warn("[ai/test]", (error as Error).message?.slice(0, 120));
+    const message =
+      error instanceof Error
+        ? error.message.slice(0, 280)
+        : "Échec de connexion au fournisseur.";
+    console.warn("[ai/test]", message);
     return jsonResponse(
       {
         ok: false,
         provider: credentials.provider,
-        message: "Échec de connexion au fournisseur.",
+        message,
       },
       request,
       { status: 200 }

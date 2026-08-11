@@ -1,5 +1,6 @@
 /**
  * Google Gemini (Generative Language API) — BYOK.
+ * Thinking désactivé sur 2.5 (sinon maxOutputTokens part en « thoughts » → réponse vide).
  */
 
 import { CREATIVE_COACH_SAFETY, resolvePromptText } from "@art-therapie/shared";
@@ -26,12 +27,18 @@ import {
   type ReflectionPromptContext,
 } from "./prompts";
 
-const DEFAULT_MODEL = "gemini-2.5-flash";
+/** Modèle principal + secours si 404 / indisponible. */
+const PRIMARY_MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
+const FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash-lite"] as const;
 
-/** Gemini 2.5 « thinking » consomme maxOutputTokens — budget bas → réponse vide. */
-const THINKING_OFF = {
-  thinkingConfig: { thinkingBudget: 0 },
-} as const;
+function modelsToTry(preferred: string): string[] {
+  const ordered = [preferred, ...FALLBACK_MODELS];
+  return [...new Set(ordered.filter(Boolean))];
+}
+
+function usesThinkingBudget(model: string): boolean {
+  return /gemini-2\.5/i.test(model);
+}
 
 function geminiHttpError(status: number, body: string): Error {
   let detail = `Gemini HTTP ${status}`;
@@ -77,7 +84,7 @@ function extractGeminiText(raw: string): string {
   if (!text) {
     const reason = candidate.finishReason ?? "inconnu";
     throw new Error(
-      `Gemini: réponse vide (finishReason=${reason}). Augmentez maxOutputTokens ou désactivez le thinking.`
+      `Gemini: réponse vide (finishReason=${reason}). Vérifiez la clé AI Studio (sans restriction IP/HTTP) et réessayez.`
     );
   }
   return text;
@@ -103,6 +110,13 @@ function stripDataUrl(imageBase64: string): { mime: string; data: string } {
   };
 }
 
+type GenerateOpts = {
+  temperature?: number;
+  maxTokens?: number;
+  /** Force une réponse JSON (exercice / miroir). */
+  json?: boolean;
+};
+
 export type GeminiProviderOptions = {
   apiKey: string;
   model?: string;
@@ -114,7 +128,16 @@ export class GeminiProvider implements AIProvider {
 
   constructor(options: GeminiProviderOptions) {
     this.apiKey = options.apiKey.trim();
-    this.model = options.model ?? process.env.GEMINI_MODEL ?? DEFAULT_MODEL;
+    this.model = options.model ?? PRIMARY_MODEL;
+  }
+
+  /** Smoke test léger — utilisé pour /api/ai/test. */
+  async ping(): Promise<string> {
+    return this.generate(
+      "Répondez uniquement par le mot OK.",
+      "ping",
+      { temperature: 0, maxTokens: 16, json: false }
+    );
   }
 
   async generateExercise(input: ExerciseRequest): Promise<ExerciseResponse> {
@@ -139,7 +162,7 @@ export class GeminiProvider implements AIProvider {
       const raw = await this.generate(
         resolvePromptText("exercise_system", input.promptOverrides),
         prompt,
-        { temperature: 0.85, maxTokens: 2048 }
+        { temperature: 0.85, maxTokens: 2048, json: true }
       );
       const parsed = parseExerciseFromAi(raw, preferredDuration);
       if (parsed) {
@@ -234,7 +257,7 @@ export class GeminiProvider implements AIProvider {
       let warmRaw = await this.generate(
         resolvePromptText("reflection_system", input.promptOverrides),
         buildWarmReflectionPrompt(promptCtx),
-        { temperature: 0.82, maxTokens: 4096 }
+        { temperature: 0.82, maxTokens: 4096, json: true }
       );
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -247,7 +270,7 @@ export class GeminiProvider implements AIProvider {
         warmRaw = await this.generate(
           resolvePromptText("reflection_system", input.promptOverrides),
           buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
-          { temperature: 0.78, maxTokens: 4096 }
+          { temperature: 0.78, maxTokens: 4096, json: true }
         );
         parsed = parseReflectionFromAi(warmRaw);
       }
@@ -297,31 +320,28 @@ export class GeminiProvider implements AIProvider {
   private async generate(
     system: string,
     user: string,
-    opts: { temperature?: number; maxTokens?: number }
+    opts: GenerateOpts
   ): Promise<string> {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: `${CREATIVE_COACH_SAFETY}\n\n${system}` }],
-        },
-        contents: [{ role: "user", parts: [{ text: user }] }],
-        generationConfig: {
-          temperature: opts.temperature ?? 0.7,
-          maxOutputTokens: opts.maxTokens ?? 2048,
-          ...THINKING_OFF,
-        },
-      }),
-      signal: AbortSignal.timeout(90_000),
+    const bodyBase = {
+      systemInstruction: {
+        parts: [{ text: `${CREATIVE_COACH_SAFETY}\n\n${system}` }],
+      },
+      contents: [{ role: "user", parts: [{ text: user }] }],
+    };
+
+    return this.requestWithModelFallback((model) => {
+      const generationConfig: Record<string, unknown> = {
+        temperature: opts.temperature ?? 0.7,
+        maxOutputTokens: opts.maxTokens ?? 2048,
+      };
+      if (opts.json) {
+        generationConfig.responseMimeType = "application/json";
+      }
+      if (usesThinkingBudget(model)) {
+        generationConfig.thinkingConfig = { thinkingBudget: 0 };
+      }
+      return { ...bodyBase, generationConfig };
     });
-    const raw = await response.text();
-    if (!response.ok) {
-      console.warn("[Gemini]", response.status, raw.slice(0, 200));
-      throw geminiHttpError(response.status, raw);
-    }
-    return extractGeminiText(raw);
   }
 
   private async generateWithImage(
@@ -329,33 +349,76 @@ export class GeminiProvider implements AIProvider {
     imageBase64: string
   ): Promise<string> {
     const { mime, data } = stripDataUrl(imageBase64);
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
+    const bodyBase = {
+      systemInstruction: {
+        parts: [{ text: CREATIVE_COACH_SAFETY }],
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: mime, data } },
+          ],
+        },
+      ],
+    };
+
+    return this.requestWithModelFallback((model) => {
+      const generationConfig: Record<string, unknown> = {
+        temperature: 0.4,
+        maxOutputTokens: 2048,
+      };
+      if (usesThinkingBudget(model)) {
+        generationConfig.thinkingConfig = { thinkingBudget: 0 };
+      }
+      return { ...bodyBase, generationConfig };
+    });
+  }
+
+  /**
+   * Essaie le modèle préféré puis les secours (404 / modèle inconnu).
+   * Ne logue jamais la clé.
+   */
+  private async requestWithModelFallback(
+    buildBody: (model: string) => Record<string, unknown>
+  ): Promise<string> {
+    const models = modelsToTry(this.model);
+    let lastError: Error | null = null;
+
+    for (const model of models) {
+      try {
+        return await this.requestOnce(model, buildBody(model));
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        const msg = lastError.message;
+        const tryNext =
+          /HTTP 404|not found|is not found|not supported|UNKNOWN_MODEL/i.test(
+            msg
+          );
+        console.warn(`[Gemini] modèle ${model}:`, msg.slice(0, 180));
+        if (!tryNext) throw lastError;
+      }
+    }
+
+    throw lastError ?? new Error("Gemini: tous les modèles ont échoué");
+  }
+
+  private async requestOnce(
+    model: string,
+    body: Record<string, unknown>
+  ): Promise<string> {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(this.apiKey)}`;
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: CREATIVE_COACH_SAFETY }],
-        },
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: prompt },
-              { inlineData: { mimeType: mime, data } },
-            ],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 2048,
-          ...THINKING_OFF,
-        },
-      }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(90_000),
     });
     const raw = await response.text();
-    if (!response.ok) throw geminiHttpError(response.status, raw);
+    if (!response.ok) {
+      throw geminiHttpError(response.status, raw);
+    }
     return extractGeminiText(raw);
   }
 }
