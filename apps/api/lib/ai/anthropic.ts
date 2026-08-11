@@ -25,7 +25,13 @@ import {
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 
-function anthropicHttpError(status: number, rawBody: string): Error {
+/** Alias stables Anthropic (3.5 retiré → 404). */
+const DEFAULT_TEXT_MODEL = "claude-haiku-4-5";
+const DEFAULT_VISION_MODEL = "claude-sonnet-5";
+const TEXT_FALLBACKS = ["claude-haiku-4-5", "claude-sonnet-5"] as const;
+const VISION_FALLBACKS = ["claude-sonnet-5", "claude-haiku-4-5"] as const;
+
+function anthropicHttpError(status: number, rawBody: string, model?: string): Error {
   let detail = `Anthropic HTTP ${status}`;
   try {
     const parsed = JSON.parse(rawBody) as {
@@ -37,7 +43,16 @@ function anthropicHttpError(status: number, rawBody: string): Error {
     const snippet = rawBody.replace(/\s+/g, " ").trim().slice(0, 160);
     if (snippet) detail = `Anthropic HTTP ${status} — ${snippet}`;
   }
+  if (model && !detail.includes(model)) {
+    detail = `${detail} (model: ${model})`;
+  }
   return new Error(detail);
+}
+
+function shouldTryNextModel(message: string): boolean {
+  return /HTTP 404|not_found|model:|no longer|deprecated|unknown model/i.test(
+    message
+  );
 }
 
 function stripDataUrl(imageBase64: string): {
@@ -84,11 +99,11 @@ export class AnthropicProvider implements AIProvider {
     this.textModel =
       options.textModel ??
       process.env.ANTHROPIC_TEXT_MODEL ??
-      "claude-3-5-haiku-latest";
+      DEFAULT_TEXT_MODEL;
     this.visionModel =
       options.visionModel ??
       process.env.ANTHROPIC_VISION_MODEL ??
-      "claude-3-5-sonnet-latest";
+      DEFAULT_VISION_MODEL;
   }
 
   async ping(): Promise<string> {
@@ -292,29 +307,58 @@ export class AnthropicProvider implements AIProvider {
     prompt: string,
     options?: { temperature?: number; maxTokens?: number; system?: string }
   ): Promise<string> {
-    return this.messages({
-      model: this.textModel,
-      system: options?.system,
-      maxTokens: options?.maxTokens ?? 512,
-      temperature: options?.temperature ?? 0.7,
-      content: [{ type: "text", text: prompt }],
-    });
+    return this.messagesWithFallback(
+      [this.textModel, ...TEXT_FALLBACKS],
+      {
+        system: options?.system,
+        maxTokens: options?.maxTokens ?? 512,
+        temperature: options?.temperature ?? 0.7,
+        content: [{ type: "text", text: prompt }],
+      }
+    );
   }
 
   private async callVision(imageBase64: string, prompt: string): Promise<string> {
     const { mediaType, data } = stripDataUrl(imageBase64);
-    return this.messages({
-      model: this.visionModel,
-      maxTokens: 1024,
-      temperature: 0.4,
-      content: [
-        {
-          type: "image",
-          source: { type: "base64", media_type: mediaType, data },
-        },
-        { type: "text", text: prompt },
-      ],
-    });
+    return this.messagesWithFallback(
+      [this.visionModel, ...VISION_FALLBACKS],
+      {
+        maxTokens: 1024,
+        temperature: 0.4,
+        content: [
+          {
+            type: "image",
+            source: { type: "base64", media_type: mediaType, data },
+          },
+          { type: "text", text: prompt },
+        ],
+      }
+    );
+  }
+
+  private async messagesWithFallback(
+    models: string[],
+    params: {
+      system?: string;
+      maxTokens: number;
+      temperature: number;
+      content: Array<Record<string, unknown>>;
+    }
+  ): Promise<string> {
+    const ordered = [...new Set(models.filter(Boolean))];
+    let lastError: Error | null = null;
+
+    for (const model of ordered) {
+      try {
+        return await this.messages({ ...params, model });
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.warn(`[Anthropic] modèle ${model}:`, lastError.message.slice(0, 180));
+        if (!shouldTryNextModel(lastError.message)) throw lastError;
+      }
+    }
+
+    throw lastError ?? new Error("Anthropic: tous les modèles ont échoué");
   }
 
   private async messages(params: {
@@ -349,7 +393,7 @@ export class AnthropicProvider implements AIProvider {
         `[Anthropic messages] ${response.status}:`,
         rawBody.slice(0, 400)
       );
-      throw anthropicHttpError(response.status, rawBody);
+      throw anthropicHttpError(response.status, rawBody, params.model);
     }
 
     const data = JSON.parse(rawBody) as {

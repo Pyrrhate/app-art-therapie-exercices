@@ -108,7 +108,7 @@ const PROVIDER_META: Record<AiKeyProvider, ProviderMeta> = {
     id: "anthropic",
     title: "Anthropic (Claude)",
     badge: "Vision",
-    why: "Excellent pour observer une œuvre avec nuance, sans jugement esthétique.",
+    why: "Claude Haiku 4.5 / Sonnet 5 — excellent pour observer une œuvre avec nuance, sans jugement esthétique.",
     docsUrl: "https://console.anthropic.com/settings/keys",
     docsLabel: "console.anthropic.com",
     placeholder: "Clé Anthropic…",
