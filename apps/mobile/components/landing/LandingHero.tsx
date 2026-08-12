@@ -1,8 +1,15 @@
-import { Platform, Pressable, Text, View } from "react-native";
+import {
+  ImageBackground,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { Link } from "expo-router";
-import { PastekMascot } from "@/components/brand/PastekBrandImage";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ROUTES } from "@/lib/routes";
+
+const HERO_IMAGE = require("@/assets/brand/pastek-home-hero.png");
 
 const ctaShadow =
   Platform.OS === "web"
@@ -15,71 +22,84 @@ const TAGS = [
   { label: "Expression", bg: "bg-melon-500", text: "text-white" },
 ] as const;
 
+const heroMinHeight = Platform.OS === "web" ? 520 : 460;
+
 export function LandingHero() {
   return (
     <SemanticWeb
       tag="section"
-      className="bg-sand-50 border-b border-sand-200/80"
+      className="border-b border-sand-200/80 overflow-hidden"
       aria-label="Présentation du générateur d'exercices créatifs Pastek Art"
     >
-      <View className="max-w-3xl mx-auto px-6 pt-6 pb-14 md:pt-8 md:pb-20 items-center">
-        <View className="items-center mb-6 md:mb-8">
-          <PastekMascot size={Platform.OS === "web" ? 220 : 180} />
-        </View>
+      <ImageBackground
+        source={HERO_IMAGE}
+        resizeMode="cover"
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+        imageStyle={
+          Platform.OS === "web"
+            ? ({ objectPosition: "center 20%" } as const)
+            : undefined
+        }
+        style={{ width: "100%", minHeight: heroMinHeight }}
+      >
+        <View className="absolute inset-0 bg-sand-50/78" />
 
-        <View className="flex-row flex-wrap justify-center gap-2 mb-6">
-          {TAGS.map((tag) => (
-            <View
-              key={tag.label}
-              className={`rounded-full px-3 py-1.5 ${tag.bg}`}
-            >
-              <Text className={`text-xs font-semibold tracking-wide ${tag.text}`}>
-                {tag.label}
+        <View className="relative max-w-3xl mx-auto px-6 pt-10 pb-14 md:pt-12 md:pb-20 items-center">
+          <View className="flex-row flex-wrap justify-center gap-2 mb-6">
+            {TAGS.map((tag) => (
+              <View
+                key={tag.label}
+                className={`rounded-full px-3 py-1.5 ${tag.bg}`}
+              >
+                <Text className={`text-xs font-semibold tracking-wide ${tag.text}`}>
+                  {tag.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <SemanticWeb
+            tag="h1"
+            className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-tight text-sand-900 mb-5 text-center"
+          >
+            Libérez Votre Créativité, Un Exercice à la Fois
+          </SemanticWeb>
+
+          <SemanticWeb
+            tag="p"
+            className="text-sand-800 text-base md:text-lg leading-8 mb-8 max-w-2xl text-center"
+          >
+            Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
+            jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
+            clé IA reste chez vous (BYOK) ; vos traces restent locales.
+          </SemanticWeb>
+
+          <View className="flex-row flex-wrap items-center justify-center gap-3 mb-8">
+            <View className="rounded-full bg-mint-100/95 px-3 py-1.5 border border-sage-200">
+              <Text className="text-sage-800 text-xs font-semibold">
+                100 % local & privé
               </Text>
             </View>
-          ))}
-        </View>
-
-        <SemanticWeb
-          tag="h1"
-          className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-tight text-sand-900 mb-5 text-center"
-        >
-          Libérez Votre Créativité, Un Exercice à la Fois
-        </SemanticWeb>
-
-        <SemanticWeb
-          tag="p"
-          className="text-sand-700 text-base md:text-lg leading-8 mb-8 max-w-2xl text-center"
-        >
-          Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
-          jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
-          clé IA reste chez vous (BYOK) ; vos traces restent locales.
-        </SemanticWeb>
-
-        <View className="flex-row flex-wrap items-center justify-center gap-3 mb-8">
-          <View className="rounded-full bg-mint-100 px-3 py-1.5 border border-sage-200">
-            <Text className="text-sage-800 text-xs font-semibold">
-              100 % local & privé
-            </Text>
+            <View className="rounded-full bg-melon-50/95 px-3 py-1.5 border border-melon-200">
+              <Text className="text-melon-700 text-xs font-semibold">BYOK activé</Text>
+            </View>
           </View>
-          <View className="rounded-full bg-melon-50 px-3 py-1.5 border border-melon-200">
-            <Text className="text-melon-700 text-xs font-semibold">BYOK activé</Text>
-          </View>
-        </View>
 
-        <Link href={ROUTES.home} asChild>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Commencer à créer"
-            className="rounded-full bg-melon-500 active:bg-melon-600 px-9 py-4 min-h-[52px] justify-center web:transition-colors web:duration-200 web:hover:bg-melon-600"
-            style={ctaShadow}
-          >
-            <Text className="text-white text-sm font-semibold tracking-wide text-center">
-              Commencer à créer
-            </Text>
-          </Pressable>
-        </Link>
-      </View>
+          <Link href={ROUTES.home} asChild>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Commencer à créer"
+              className="rounded-full bg-melon-500 active:bg-melon-600 px-9 py-4 min-h-[52px] justify-center web:transition-colors web:duration-200 web:hover:bg-melon-600"
+              style={ctaShadow}
+            >
+              <Text className="text-white text-sm font-semibold tracking-wide text-center">
+                Commencer à créer
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
+      </ImageBackground>
     </SemanticWeb>
   );
 }
