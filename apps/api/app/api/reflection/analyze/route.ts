@@ -31,14 +31,16 @@ const bodySchema = z
       .union([z.literal(15), z.literal(30), z.literal(45)])
       .optional(),
     colorContext: z.string().min(10).max(2000).optional(),
+    previousReflection: z.string().min(20).max(6000).optional(),
     promptOverrides: promptOverridesSchema,
     byok: byokBodySchema,
   })
   .refine(
     (data) =>
       (data.imageBase64 && data.imageBase64.length >= 100) ||
-      (data.writtenText && data.writtenText.trim().length >= 10),
-    { message: "Fournissez une photo ou au moins 10 caractères de texte." }
+      (data.writtenText && data.writtenText.trim().length >= 10) ||
+      (data.previousReflection && data.previousReflection.trim().length >= 20),
+    { message: "Fournissez une photo, un texte, ou un miroir à approfondir." }
   );
 
 export async function OPTIONS(request: Request) {

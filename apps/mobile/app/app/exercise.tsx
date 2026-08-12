@@ -20,6 +20,8 @@ import { useRitualStore } from "@/lib/store";
 
 export default function ExerciseScreen() {
   const exercise = useRitualStore((s) => s.exercise);
+  const exerciseDevelopment = useRitualStore((s) => s.exerciseDevelopment);
+  const moduleStatement = useRitualStore((s) => s.moduleStatement);
   const durationMinutes = useRitualStore((s) => s.durationMinutes);
   const impulse = useRitualStore((s) => s.impulse);
   const technique = useRitualStore((s) => s.technique);
@@ -116,11 +118,31 @@ export default function ExerciseScreen() {
           Impulsion · {impulse}
         </Text>
         <ScrollView
-          style={{ maxHeight: 100 }}
+          style={{ maxHeight: 220 }}
           nestedScrollEnabled
           showsVerticalScrollIndicator
         >
-          <Text className="text-sand-700 text-sm leading-6">{exercise}</Text>
+          <Text className="text-sand-700 text-sm leading-6 mb-3">{exercise}</Text>
+          {exerciseDevelopment?.trim() ? (
+            <View className="mb-3">
+              <Text className="text-sand-500 text-xs uppercase tracking-wider mb-1">
+                Développer la consigne
+              </Text>
+              <Text className="text-sand-700 text-sm leading-6">
+                {exerciseDevelopment}
+              </Text>
+            </View>
+          ) : null}
+          {moduleStatement?.trim() ? (
+            <View className="pt-2 border-t border-sand-100">
+              <Text className="text-sand-500 text-xs uppercase tracking-wider mb-1">
+                Contexte du module
+              </Text>
+              <Text className="text-sand-600 text-sm leading-6">
+                {moduleStatement}
+              </Text>
+            </View>
+          ) : null}
         </ScrollView>
       </ContentCard>
 

@@ -9,6 +9,8 @@ export interface RitualDraft {
   impulse: string;
   technique: ArtisticTechnique;
   exercise: string;
+  exerciseDevelopment?: string | null;
+  moduleStatement?: string | null;
   exerciseKeywords?: string[];
   durationMinutes: RitualDuration;
   step: RitualDraftStep;

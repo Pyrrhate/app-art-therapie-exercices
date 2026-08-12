@@ -13,6 +13,16 @@ export type ChangelogEntry = {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "rituel-approfondi",
+    dateLabel: "août 2026",
+    title: "Rituel enrichi & Fil analytique",
+    highlights: [
+      "Énoncé d'exercice développé (consigne + paragraphe), contexte des modules visible sans être envoyé comme directive IA.",
+      "Bouton Approfondir après le miroir, questions profondes personnalisables, techniques activables / personnalisées.",
+      "Analyse IA possible pour vidéo / musique / danse / théâtre avec une clé perso ; export PDF en fin d'exercice ; analyse croisée du Fil (max 5).",
+    ],
+  },
+  {
     id: "creative-watermelon",
     dateLabel: "août 2026",
     title: "Identité Creative Watermelon",

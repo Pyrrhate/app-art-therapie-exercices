@@ -237,10 +237,41 @@ export async function analyzeArtwork(context: {
   durationMinutes?: number;
   writtenText?: string;
   colorContext?: string;
+  previousReflection?: string;
 }): Promise<ReflectionResponse> {
   return request<ReflectionResponse>("/api/reflection/analyze", {
     method: "POST",
     body: JSON.stringify(context),
+  });
+}
+
+/** Analyse croisée de plusieurs traces du Fil (max 5). */
+export async function analyzeFilSelection(payload: {
+  entries: Array<{
+    summary: string;
+    detail?: string;
+    impulse?: string;
+    technique?: string;
+    reflection?: string;
+    exercise?: string;
+  }>;
+}): Promise<ReflectionResponse> {
+  const lines = payload.entries.slice(0, 5).map((e, i) => {
+    const parts = [
+      `Trace ${i + 1} — ${e.summary}`,
+      e.impulse ? `Impulsion : ${e.impulse}` : null,
+      e.technique ? `Technique : ${e.technique}` : null,
+      e.exercise ? `Exercice : ${e.exercise.slice(0, 400)}` : null,
+      e.reflection ? `Miroir : ${e.reflection.slice(0, 600)}` : null,
+      e.detail ? `Détail : ${e.detail.slice(0, 400)}` : null,
+    ].filter(Boolean);
+    return parts.join("\n");
+  });
+
+  return analyzeArtwork({
+    impulse: "Fil créatif",
+    exercise: "Lire ces traces ensemble avec bienveillance",
+    writtenText: `Voici ${Math.min(payload.entries.length, 5)} traces du Fil créatif à croiser :\n\n${lines.join("\n\n---\n\n")}`,
   });
 }
 

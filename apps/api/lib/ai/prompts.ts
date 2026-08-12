@@ -32,7 +32,7 @@ Durée prévue : ${preferred} minutes (ne pas la modifier dans ta réponse JSON)
 - Durée prévue : ${durationMinutes} minutes (ne pas la modifier dans votre réponse)
 
 FORMAT DE RÉPONSE ATTENDU :
-{"exercise":"texte de la consigne créative","durationMinutes":${durationMinutes},"keywords":["expression 1","expression 2","expression 3"]}`;
+{"exercise":"texte de la consigne créative","development":"paragraphe qui développe le déroulé et les variations","durationMinutes":${durationMinutes},"keywords":["expression 1","expression 2","expression 3"]}`;
 }
 
 export function buildVisionObservationPrompt(
@@ -70,6 +70,8 @@ export interface ReflectionPromptContext {
   durationMinutes?: number;
   /** Parcours chromatique amont (palette, harmonie nuances). */
   colorContext?: string;
+  /** Miroir créatif déjà reçu — à approfondir. */
+  previousReflection?: string;
 }
 
 function formatReflectionContext(ctx: ReflectionPromptContext): string {
@@ -91,16 +93,22 @@ function formatReflectionContext(ctx: ReflectionPromptContext): string {
     ctx.colorContext
       ? `Parcours chromatique exploré avant la création (tisser un lien doux avec l'œuvre si pertinent — au conditionnel) :\n${ctx.colorContext.slice(0, 1500)}`
       : null,
+    ctx.previousReflection
+      ? `Miroir créatif déjà proposé (à approfondir — allez plus loin, sans répéter) :\n« ${ctx.previousReflection.slice(0, 2500)} »`
+      : null,
   ].filter(Boolean);
   return lines.join("\n\n");
 }
 
 export function buildWarmReflectionPrompt(ctx: ReflectionPromptContext): string {
   const contextBlock = formatReflectionContext(ctx);
+  const deepenHint = ctx.previousReflection?.trim()
+    ? `\nMode approfondissement : partez du miroir déjà proposé, enrichissez la symbolique douce et proposez des questions plus précises — sans reformuler à l'identique.\n`
+    : "";
 
   return `DONNÉES DE LA SÉANCE :
 ${contextBlock}
-
+${deepenHint}
 Avant de rédiger, vérifiez mentalement que votre ton n'est ni trop clinique, ni trop professoral — accueil chaleureux avant tout.
 
 Fidélité : ne décrivez que ce qui est visible dans l'image ou le texte fourni. Si les observations indiquent un accord_exercice faible ou partiel, accueillez la création telle qu'elle est (« votre geste semble avoir pris un autre chemin que l'intitulé… ») puis parlez de ce qui est montré.
@@ -262,13 +270,38 @@ export function parseJsonFromText<T>(text: string): T | null {
   }
 }
 
+function extractDevelopmentField(
+  parsed: { development?: unknown } | null,
+  normalized: string
+): string | undefined {
+  if (parsed && typeof parsed.development === "string") {
+    const development = cleanAiText(parsed.development);
+    if (development && !looksLikeJsonArtifact(development)) {
+      return development;
+    }
+  }
+  const extracted = extractJsonStringField(normalized, "development");
+  if (!extracted) return undefined;
+  const development = cleanAiText(extracted);
+  if (development && !looksLikeJsonArtifact(development)) {
+    return development;
+  }
+  return undefined;
+}
+
 export function parseExerciseFromAi(
   raw: string,
   preferredDuration?: number
-): { exercise: string; durationMinutes: number; keywords: string[] } | null {
+): {
+  exercise: string;
+  durationMinutes: number;
+  keywords: string[];
+  development?: string;
+} | null {
   const normalized = normalizeRawAiResponse(raw);
   const parsed = parseJsonFromText<{
     exercise?: unknown;
+    development?: unknown;
     durationMinutes?: unknown;
     keywords?: unknown;
   }>(normalized);
@@ -276,10 +309,12 @@ export function parseExerciseFromAi(
   if (parsed && typeof parsed.exercise === "string") {
     const exercise = cleanAiText(parsed.exercise);
     if (exercise && !looksLikeJsonArtifact(exercise)) {
+      const development = extractDevelopmentField(parsed, normalized);
       return {
         exercise,
         durationMinutes: clampDuration(parsed.durationMinutes, preferredDuration),
         keywords: sanitizeExerciseKeywords(parsed.keywords),
+        ...(development ? { development } : {}),
       };
     }
   }
@@ -302,10 +337,12 @@ export function parseExerciseFromAi(
           )
         );
       }
+      const development = extractDevelopmentField(parsed, normalized);
       return {
         exercise,
         durationMinutes: clampDuration(durationRaw, preferredDuration),
         keywords,
+        ...(development ? { development } : {}),
       };
     }
   }

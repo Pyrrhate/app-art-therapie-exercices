@@ -54,8 +54,13 @@ ${intro}. Travaillez pendant ${minutes} minutes en restant curieux·se face à c
 
 Il n'y a pas de bon ou mauvais résultat — seulement votre expression du moment.`;
 
+  const development = isPerformative
+    ? `Vous pouvez varier le rythme, l'intensité ou le point de vue au fil de la séance. Si un geste vous surprend, accueillez-le plutôt que de le corriger — c'est souvent là que l'exploration s'ouvre.`
+    : `Précisez un détail qui vous attire (texture, contraste, silence entre deux traits) et laissez-le grandir sans forcer le reste de la composition. Changez d'échelle une fois si l'envie vient.`;
+
   return {
     exercise,
+    development,
     durationMinutes: minutes,
     source: "fallback",
     keywords: deriveExerciseKeywords(impulse, technique, exercise),

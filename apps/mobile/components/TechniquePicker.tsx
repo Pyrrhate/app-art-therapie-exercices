@@ -8,12 +8,15 @@ import { useIsDark } from "@/lib/themeStore";
 
 interface TechniquePickerProps {
   selected: ArtisticTechnique | null;
-  onSelect: (technique: ArtisticTechnique) => void;
+  /** Libellé affiché sélectionné (techniques custom). */
+  selectedLabel?: string | null;
+  onSelect: (technique: ArtisticTechnique, label?: string) => void;
   techniques: TechniqueDefinition[];
 }
 
 export function TechniquePicker({
   selected,
+  selectedLabel,
   onSelect,
   techniques,
 }: TechniquePickerProps) {
@@ -22,7 +25,9 @@ export function TechniquePicker({
   return (
     <View className="flex-row flex-wrap gap-2">
       {techniques.map((tech) => {
-        const isSelected = selected === tech.id;
+        const isSelected =
+          selected === tech.id &&
+          (!selectedLabel || selectedLabel === tech.label);
         const card = (
           <View
             className={`rounded-xl px-3 py-2 min-h-[68px] min-w-[92px] border justify-center ${
@@ -56,8 +61,8 @@ export function TechniquePicker({
         if (Platform.OS === "web") {
           return (
             <HoverScale
-              key={tech.id}
-              onPress={() => onSelect(tech.id)}
+              key={`${tech.id}-${tech.label}`}
+              onPress={() => onSelect(tech.id, tech.label)}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
               accessibilityLabel={tech.label}
@@ -70,8 +75,8 @@ export function TechniquePicker({
 
         return (
           <Pressable
-            key={tech.id}
-            onPress={() => onSelect(tech.id)}
+            key={`${tech.id}-${tech.label}`}
+            onPress={() => onSelect(tech.id, tech.label)}
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
             accessibilityLabel={tech.label}

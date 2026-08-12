@@ -29,23 +29,29 @@ export function startRitualFromImpulse(
   impulse: string,
   technique: ArtisticTechnique = "mixed_media",
   durationMinutes: RitualDuration = 15,
-  colorHints?: ColorBridgeHints
+  colorHints?: ColorBridgeHints,
+  moduleStatement?: string
 ): void {
   const store = useRitualStore.getState();
   store.reset();
   store.setImpulse(impulse.trim());
   store.setTechnique(technique);
   store.setDurationMinutes(durationMinutes);
+  store.setModuleStatement(moduleStatement?.trim() || null);
   applyColorHints(colorHints);
   router.push(ROUTES.ritual);
 }
 
-/** Amorce → exercice direct (technique et durée déjà choisies ou par défaut). */
+/**
+ * Amorce → exercice direct.
+ * `moduleStatement` est affiché dans l'énoncé mais n'est PAS envoyé comme directive IA
+ * (contrairement à `augmentationContext`, réservé au 2e tour).
+ */
 export async function startExerciseFromImpulse(
   impulse: string,
   technique: ArtisticTechnique = "mixed_media",
   durationMinutes?: RitualDuration,
-  augmentationContext?: string,
+  moduleStatement?: string,
   colorHints?: ColorBridgeHints
 ): Promise<void> {
   const trimmed = impulse.trim();
@@ -59,16 +65,13 @@ export async function startExerciseFromImpulse(
   store.setTechnique(technique);
   const minutes = durationMinutes ?? 15;
   store.setDurationMinutes(minutes);
+  store.setModuleStatement(moduleStatement?.trim() || null);
   applyColorHints(colorHints);
 
   let result: ExerciseResponse;
   try {
-    result = await generateExercise(
-      trimmed,
-      technique,
-      minutes,
-      augmentationContext
-    );
+    // Pas d'augmentationContext : l'IA reçoit seulement impulsion + technique.
+    result = await generateExercise(trimmed, technique, minutes);
   } catch {
     result = getFallbackExercise(trimmed, technique, minutes);
   }
@@ -82,7 +85,8 @@ export async function startExerciseFromImpulse(
     minutes,
     result.source,
     result.keywords,
-    result.fallbackNote
+    result.fallbackNote,
+    result.development
   );
 
   if (!useRitualStore.getState().exercise?.trim()) {
@@ -115,5 +119,5 @@ export function startRitualFromColors(
   startRitualFromImpulse(impulse, "painting", 15, {
     colorContext,
     paletteColors: hexes,
-  });
+  }, colorContext);
 }

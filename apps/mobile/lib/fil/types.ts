@@ -20,10 +20,13 @@ export interface FilMetadata {
   paletteSource?: "nuances" | "color-journey";
   impulse?: string;
   technique?: ArtisticTechnique;
+  techniqueLabel?: string;
   /** Anciennes traces mandala (module abandonné). */
   theme?: string;
   chain?: string;
   exercise?: string;
+  exerciseDevelopment?: string;
+  moduleStatement?: string;
   durationMinutes?: number;
   reflection?: string;
   openQuestions?: string[];

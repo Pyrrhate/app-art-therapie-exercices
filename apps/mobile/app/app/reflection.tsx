@@ -32,6 +32,9 @@ import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { analyzeArtwork, ApiError, generateAugmentedExercise, transcribeHandwriting } from "@/lib/api";
+import { resolveByokCredentials } from "@/lib/aiKeys";
+import { exportSessionPdf } from "@/lib/sessionExport";
+import { showAlert } from "@/lib/alert";
 import {
   extractImageFileFromDataTransfer,
   formatImageSize,
@@ -163,7 +166,20 @@ export default function ReflectionScreen() {
   );
 
   const isWriting = technique === "writing";
-  const supportsAiAnalysis = technique ? isAiAnalysisSupported(technique) : true;
+  const techniqueNeedsByokForAi = technique
+    ? !isAiAnalysisSupported(technique)
+    : false;
+  const [byokConfigured, setByokConfigured] = useState(false);
+
+  useEffect(() => {
+    void resolveByokCredentials()
+      .then((c) => setByokConfigured(Boolean(c)))
+      .catch(() => setByokConfigured(false));
+  }, []);
+
+  const supportsAiAnalysis = technique
+    ? isAiAnalysisSupported(technique) || byokConfigured
+    : true;
 
   const abortRef = useRef<AbortController | null>(null);
   const workGenRef = useRef(0);
@@ -449,8 +465,13 @@ export default function ReflectionScreen() {
 
   async function handleRequestReflection() {
     const hasText = writtenText.trim().length >= 10;
+    const hasDeepContext =
+      isDeep &&
+      (preAnswers.emotionalWord.trim().length >= 2 ||
+        preAnswers.anchorMoment.trim().length >= 2);
 
-    if (!supportsAiAnalysis) {
+    // Techniques performatives sans clé IA : miroir local uniquement.
+    if (techniqueNeedsByokForAi && !byokConfigured) {
       const mergedText =
         currentRound === 2 && round1Snapshot
           ? mergeWrittenTextWithSecondRound(
@@ -478,18 +499,20 @@ export default function ReflectionScreen() {
       setNotice({
         type: "info",
         message:
-          "Pas d'analyse IA pour cette technique — miroir créatif local, sans envoi au serveur.",
+          "Pas de clé IA — miroir créatif local. Ajoutez une clé dans Réglages pour une analyse personnalisée.",
       });
       return;
     }
 
-    if ((!photoUri && !hasText) || preparingPhoto) {
-      if (!hasText && !photoUri) {
+    if ((!photoUri && !hasText && !hasDeepContext) || preparingPhoto) {
+      if (!hasText && !photoUri && !hasDeepContext) {
         setNotice({
           type: "error",
           message: isWriting
             ? "Collez votre texte ou photographiez votre écriture manuscrite."
-            : "Ajoutez une photo de votre création.",
+            : techniqueNeedsByokForAi
+              ? "Décrivez votre ressenti (au moins 10 caractères) pour l'analyse."
+              : "Ajoutez une photo de votre création ou un texte de ressenti.",
         });
       }
       return;
@@ -663,7 +686,10 @@ export default function ReflectionScreen() {
         metadata: {
           impulse,
           technique,
+          techniqueLabel: ritual.techniqueLabel ?? undefined,
           exercise,
+          exerciseDevelopment: ritual.exerciseDevelopment ?? undefined,
+          moduleStatement: ritual.moduleStatement ?? undefined,
           durationMinutes,
           photoUri: storedPhotoUri,
           reflection,
@@ -744,6 +770,88 @@ export default function ReflectionScreen() {
   function handleStartFollowUp() {
     startFollowUpExercise();
     router.push(ROUTES.exercise);
+  }
+
+  async function handleDeepenReflection() {
+    if (!reflection?.trim() || loadingReflection) return;
+    const { generation } = startWork();
+    setLoadingReflection(true);
+    setNotice({
+      type: "info",
+      message: "Approfondissement du miroir en cours…",
+    });
+    try {
+      const result = await withTimeout(
+        analyzeArtwork({
+          impulse,
+          technique: technique ?? undefined,
+          exercise,
+          durationMinutes,
+          previousReflection: reflection,
+          writtenText: writtenText.trim() || undefined,
+          colorContext: colorContext ?? undefined,
+        }),
+        90_000
+      );
+      if (isStale(generation)) return;
+      setReflection(
+        result.reflection,
+        result.openQuestions,
+        result.followUpExercise ?? null
+      );
+      setReflectionSource(result.source);
+      setNotice(
+        result.source === "ai"
+          ? { type: "success", message: "Miroir approfondi." }
+          : {
+              type: "info",
+              message:
+                result.analysisNote ??
+                "Approfondissement en mode secours.",
+            }
+      );
+    } catch (error) {
+      if (isStale(generation)) return;
+      setNotice({
+        type: "error",
+        message:
+          error instanceof ApiError
+            ? error.message
+            : "Impossible d'approfondir le miroir pour le moment.",
+      });
+    } finally {
+      if (!isStale(generation)) {
+        finishWork();
+        setLoadingReflection(false);
+      }
+    }
+  }
+
+  async function handleExportPdf() {
+    if (!technique || !exercise) return;
+    try {
+      const result = await exportSessionPdf({
+        id: sessionExerciseId || `session_${Date.now()}`,
+        impulse: impulse || "Exercice créatif",
+        technique,
+        exercise: [exercise, ritual.exerciseDevelopment]
+          .filter(Boolean)
+          .join("\n\n"),
+        durationMinutes,
+        photoUri: photoUri ?? undefined,
+        reflection: reflection ?? undefined,
+        openQuestions: openQuestions.length ? openQuestions : undefined,
+        writtenText: writtenText.trim() || undefined,
+        followUpExercise: followUpExercise ?? undefined,
+        createdAt: new Date().toISOString(),
+      });
+      setNotice({ type: "success", message: result.message });
+    } catch (error) {
+      showAlert(
+        "Export PDF",
+        error instanceof Error ? error.message : "Export impossible."
+      );
+    }
   }
 
   async function handleSaveIntegration() {
@@ -912,7 +1020,8 @@ export default function ReflectionScreen() {
         result.exercise,
         result.source,
         result.keywords,
-        result.fallbackNote
+        result.fallbackNote,
+        result.development
       );
       completeSecondRoundPrep();
       setNotice({
@@ -959,7 +1068,9 @@ export default function ReflectionScreen() {
     workflowPhase === "capture";
 
   const canAnalyze = supportsAiAnalysis
-    ? Boolean(photoUri) || writtenText.trim().length >= 10
+    ? Boolean(photoUri) ||
+      writtenText.trim().length >= 10 ||
+      (isDeep && preAnswersComplete(preAnswers))
     : true;
   const previewUri = photoDataUrl ?? photoUri;
   const busy =
@@ -1125,6 +1236,15 @@ export default function ReflectionScreen() {
         </View>
       )}
 
+      {techniqueNeedsByokForAi && byokConfigured && showCapture && (
+        <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-3 mb-4">
+          <Text className="text-sage-800 text-sm leading-6">
+            Clé IA active — décrivez votre ressenti ou votre performance pour
+            recevoir une analyse bienveillante (photo optionnelle).
+          </Text>
+        </View>
+      )}
+
       {showPreAnalysis && (
         <WorkflowStepTransition stepKey="pre_analysis">
           <View className="mb-2">
@@ -1194,6 +1314,24 @@ export default function ReflectionScreen() {
               ? "Texte prêt pour l'analyse."
               : "Minimum 10 caractères, ou ajoutez une photo manuscrite."}
           </Text>
+        </View>
+      )}
+
+      {!isWriting && techniqueNeedsByokForAi && (
+        <View className="mb-6">
+          <Text className="text-sand-700 text-base font-medium mb-2">
+            Votre ressenti / description
+          </Text>
+          <TextInput
+            className="bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base min-h-[120px] mb-2"
+            multiline
+            textAlignVertical="top"
+            placeholder="Décrivez ce que vous avez exploré, ressenti, entendu ou vu…"
+            placeholderTextColor="#A89F91"
+            value={writtenText}
+            onChangeText={setWrittenText}
+            editable={!busy}
+          />
         </View>
       )}
 
@@ -1360,6 +1498,22 @@ export default function ReflectionScreen() {
                 aiResponseText={displayReflectionBody || reflection}
               />
             ) : null}
+
+            {reflectionSource === "ai" && (
+              <PrimaryButton
+                label={loadingReflection ? "Approfondissement…" : "Approfondir"}
+                onPress={() => void handleDeepenReflection()}
+                variant="secondary"
+                disabled={busy}
+              />
+            )}
+
+            <PrimaryButton
+              label="Exporter en PDF"
+              onPress={() => void handleExportPdf()}
+              variant="ghost"
+              disabled={busy}
+            />
           </View>
         )}
 
@@ -1427,10 +1581,15 @@ export default function ReflectionScreen() {
             <Text className="text-sage-700 text-base font-medium mb-2">
               Séance profonde enregistrée
             </Text>
-            <Text className="text-sand-600 text-sm leading-6">
+            <Text className="text-sand-600 text-sm leading-6 mb-4">
               Votre parcours complet — ancrage, réflexion et intégration — est
               conservé localement. Vous pouvez revenir quand vous le souhaitez.
             </Text>
+            <PrimaryButton
+              label="Exporter en PDF"
+              onPress={() => void handleExportPdf()}
+              variant="secondary"
+            />
           </View>
         </WorkflowStepTransition>
       )}

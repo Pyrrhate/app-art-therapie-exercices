@@ -30,6 +30,8 @@ export async function clearAllLocalData(): Promise<void> {
     ...LEGACY_KEYS,
     "@art_therapie/theme",
     "@art_therapie/timer_sound",
+    "@art_therapie/managed_techniques_v1",
+    "@art_therapie/deep_questions_v1",
   ];
 
   await AsyncStorage.multiRemove([...new Set(keys)]);

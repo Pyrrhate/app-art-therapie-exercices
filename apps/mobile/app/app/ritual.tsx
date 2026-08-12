@@ -16,17 +16,19 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { TechniquePicker } from "@/components/TechniquePicker";
-import { TECHNIQUES, isAiAnalysisSupported } from "@/constants";
+import { isAiAnalysisSupported } from "@/constants";
 import { resolveByokCredentials } from "@/lib/aiKeys";
 import { ApiError, generateExercise } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
 import { localExerciseBannerMessage } from "@/lib/localExerciseBanner";
 import { useRitualStore } from "@/lib/store";
+import { useEnabledTechniques } from "@/lib/techniques/managed";
 
 export default function RitualScreen() {
   const {
     impulse,
     technique,
+    techniqueLabel,
     durationMinutes,
     experienceMode,
     exerciseFallbackNote,
@@ -36,6 +38,7 @@ export default function RitualScreen() {
     setExercise,
     setExperienceMode,
   } = useRitualStore();
+  const techniques = useEnabledTechniques();
   const [impulsePrefilled] = useState(() => impulse.trim().length > 0);
   const [loading, setLoading] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
@@ -43,14 +46,10 @@ export default function RitualScreen() {
   const [byokConfigured, setByokConfigured] = useState(false);
 
   useEffect(() => {
-    if (!offlineMode) {
-      setByokConfigured(false);
-      return;
-    }
     void resolveByokCredentials()
       .then((c) => setByokConfigured(Boolean(c)))
       .catch(() => setByokConfigured(false));
-  }, [offlineMode]);
+  }, []);
 
   async function handleContinue() {
     if (!impulse.trim() || !technique) return;
@@ -64,7 +63,14 @@ export default function RitualScreen() {
         technique,
         durationMinutes
       );
-      setExercise(result.exercise, durationMinutes, result.source, result.keywords, result.fallbackNote);
+      setExercise(
+        result.exercise,
+        durationMinutes,
+        result.source,
+        result.keywords,
+        result.fallbackNote,
+        result.development
+      );
       if (result.source === "fallback") {
         setOfflineMode(true);
       }
@@ -141,15 +147,22 @@ export default function RitualScreen() {
       </Text>
       <TechniquePicker
         selected={technique}
+        selectedLabel={techniqueLabel}
         onSelect={setTechnique}
-        techniques={TECHNIQUES}
+        techniques={techniques}
       />
 
-      {technique && !isAiAnalysisSupported(technique) && (
+      {technique && !isAiAnalysisSupported(technique) && !byokConfigured && (
         <Text className="text-amber-700 text-xs mt-2 mb-1 leading-5">
-          Cette technique ne propose pas d&apos;analyse IA en phase réflexion —
-          vous pourrez accueillir votre ressenti avec des questions
-          bienveillantes, sans envoi d&apos;image au serveur.
+          Sans clé IA, cette technique propose un miroir textuel local. Ajoutez
+          une clé personnelle (Réglages) pour recevoir une analyse bienveillante
+          à partir de votre ressenti.
+        </Text>
+      )}
+      {technique && !isAiAnalysisSupported(technique) && byokConfigured && (
+        <Text className="text-sage-700 text-xs mt-2 mb-1 leading-5">
+          Clé IA détectée — vous pourrez demander une analyse à partir de votre
+          description / ressenti (photo optionnelle).
         </Text>
       )}
 

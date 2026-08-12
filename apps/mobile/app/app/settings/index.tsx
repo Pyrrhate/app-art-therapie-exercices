@@ -252,6 +252,36 @@ export default function SettingsScreen() {
           <Text className="text-sage-500 text-lg">→</Text>
         </Pressable>
 
+        <Pressable
+          onPress={() => router.push(ROUTES.techniques)}
+          className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
+        >
+          <View className="flex-1 pr-3">
+            <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
+              Techniques artistiques
+            </Text>
+            <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
+              Activer, désactiver ou ajouter vos techniques
+            </Text>
+          </View>
+          <Text className="text-sage-500 text-lg">→</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push(ROUTES.deepQuestions)}
+          className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
+        >
+          <View className="flex-1 pr-3">
+            <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
+              Questions du parcours profond
+            </Text>
+            <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
+              Personnaliser les trois questions d&apos;ancrage
+            </Text>
+          </View>
+          <Text className="text-sage-500 text-lg">→</Text>
+        </Pressable>
+
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
             Apparence

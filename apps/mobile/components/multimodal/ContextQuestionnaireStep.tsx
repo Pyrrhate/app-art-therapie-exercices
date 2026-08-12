@@ -1,38 +1,14 @@
+import { useEffect, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import type { MultimodalUserAnswers } from "@/lib/multimodal/types";
-import { textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
+import {
+  DEEP_QUESTION_KEYS,
+  resolveDeepQuestions,
+  getDeepQuestionsOverrides,
+  type DeepQuestionKey,
+} from "@/lib/deepQuestions";
+import { textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
-
-const QUESTIONS: {
-  key: keyof MultimodalUserAnswers;
-  label: string;
-  placeholder: string;
-  accessibilityLabel: string;
-}[] = [
-  {
-    key: "emotionalWord",
-    label: "Ressenti émotionnel",
-    placeholder:
-      "Un mot, une émotion qui émerge en repensant à votre geste ou performance…",
-    accessibilityLabel:
-      "Quel mot ou quelle émotion vous vient en repensant à votre geste ou performance",
-  },
-  {
-    key: "anchorMoment",
-    label: "Le point d'ancrage",
-    placeholder:
-      "Un moment, un mouvement, un accord ou une couleur inattendu(e)…",
-    accessibilityLabel:
-      "Y a-t-il un moment précis qui a émergé de manière inattendue",
-  },
-  {
-    key: "bodilyState",
-    label: "L'état physique",
-    placeholder: "Comment votre corps se sent-il maintenant, par rapport au début ?",
-    accessibilityLabel:
-      "Comment vous sentez-vous corporellement maintenant par rapport au début de l'exercice",
-  },
-];
 
 export function preAnswersComplete(answers: MultimodalUserAnswers): boolean {
   return (
@@ -52,6 +28,14 @@ export function ContextQuestionnaireStep({
   onChange,
 }: ContextQuestionnaireStepProps) {
   const isDark = useIsDark();
+  const [questions, setQuestions] = useState(() => resolveDeepQuestions());
+
+  useEffect(() => {
+    void getDeepQuestionsOverrides().then((overrides) => {
+      setQuestions(resolveDeepQuestions(overrides));
+    });
+  }, []);
+
   const inputClass = `bg-white border rounded-2xl px-4 py-3 text-base min-h-[88px] ${
     isDark
       ? "border-sand-600 bg-sand-800 text-sand-100"
@@ -59,30 +43,33 @@ export function ContextQuestionnaireStep({
   }`;
 
   return (
-    <View accessibilityRole="form" className="gap-6">
+    <View className="gap-6">
       <Text className={`text-base leading-7 ${textSecondary(isDark)}`}>
         Avant de partager votre création, prenez un instant pour ancrer ce que vous
-        avez vécu. Ces mots guideront l'accompagnement bienveillant — ils ne seront
+        avez vécu. Ces mots guideront l&apos;accompagnement bienveillant — ils ne seront
         pas jugés.
       </Text>
 
-      {QUESTIONS.map((q) => (
-        <View key={q.key} className="gap-2">
-          <Text className={`text-sm font-medium ${textPrimary(isDark)}`}>
-            {q.label}
-          </Text>
-          <TextInput
-            value={answers[q.key]}
-            onChangeText={(text) => onChange({ ...answers, [q.key]: text })}
-            placeholder={q.placeholder}
-            placeholderTextColor={isDark ? "#8A8478" : "#B8A090"}
-            multiline
-            textAlignVertical="top"
-            accessibilityLabel={q.accessibilityLabel}
-            className={inputClass}
-          />
-        </View>
-      ))}
+      {DEEP_QUESTION_KEYS.map((key: DeepQuestionKey) => {
+        const q = questions[key];
+        return (
+          <View key={key} className="gap-2">
+            <Text className={`text-sm font-medium ${textPrimary(isDark)}`}>
+              {q.label}
+            </Text>
+            <TextInput
+              value={answers[key]}
+              onChangeText={(text) => onChange({ ...answers, [key]: text })}
+              placeholder={q.placeholder}
+              placeholderTextColor={isDark ? "#8A8478" : "#B8A090"}
+              multiline
+              textAlignVertical="top"
+              accessibilityLabel={q.accessibilityLabel}
+              className={inputClass}
+            />
+          </View>
+        );
+      })}
     </View>
   );
 }

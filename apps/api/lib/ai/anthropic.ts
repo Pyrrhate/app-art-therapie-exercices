@@ -1,7 +1,6 @@
 import { resolvePromptText } from "@art-therapie/shared";
 import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
-import { isAiAnalysisSupported } from "../techniques";
 import type {
   AIProvider,
   ExerciseRequest,
@@ -151,6 +150,7 @@ export class AnthropicProvider implements AIProvider {
           exercise: parsed.exercise,
           durationMinutes: parsed.durationMinutes,
           keywords,
+          ...(parsed.development ? { development: parsed.development } : {}),
           source: "ai",
         };
       }
@@ -174,15 +174,6 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse> {
-    if (input.technique && !isAiAnalysisSupported(input.technique)) {
-      const fallback = getFallbackReflection(input);
-      return {
-        ...fallback,
-        source: "fallback",
-        analysisNote: "Technique sans analyse IA.",
-      };
-    }
-
     if (!this.apiKey) {
       const fallback = getFallbackReflection(input);
       return {
@@ -230,6 +221,7 @@ export class AnthropicProvider implements AIProvider {
         writtenText: writtenText || undefined,
         durationMinutes: input.durationMinutes,
         colorContext: input.colorContext,
+        previousReflection: input.previousReflection,
       };
 
       let warmRaw = await this.callText(buildWarmReflectionPrompt(promptCtx), {

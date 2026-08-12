@@ -94,14 +94,14 @@ function CreateButton({
 }
 
 export function LandingHeader({
-  maxWidth = "5xl",
+  maxWidth = "3xl",
   navItems = DEFAULT_NAV,
   activeHref,
 }: LandingHeaderProps) {
   const { width } = useWindowDimensions();
   const isNativeMobile = Platform.OS !== "web" && width < MOBILE_BREAKPOINT;
   const [menuOpen, setMenuOpen] = useState(false);
-  const maxW = maxWidth === "3xl" ? "max-w-3xl" : "max-w-5xl";
+  const maxW = maxWidth === "3xl" ? "max-w-3xl" : "max-w-3xl";
 
   function closeMenu() {
     setMenuOpen(false);

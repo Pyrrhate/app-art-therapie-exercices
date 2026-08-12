@@ -32,8 +32,8 @@ export const PROMPT_CATALOG: Record<PromptId, PromptCatalogEntry> = {
 
 RÈGLES STRICTES :
 1. Ton : chaleureux, encourageant et ouvert — vouvoiement doux (« vous »).
-2. Format : un exercice clair qui aide à démarrer sans bloquer l'imagination.
-3. Longueur : maximum 120 mots pour la consigne (champ exercise).
+2. Format : une consigne claire (champ exercise) qui aide à démarrer, puis un paragraphe de développement (champ development) qui précise le déroulé, les variations possibles et ce à quoi rester attentif·ve — sans figer le geste.
+3. Longueur : maximum 120 mots pour « exercise » ; 60 à 100 mots pour « development ».
 4. Psychologie : pas de diagnostic ni d'interprétation psychologique — restez sur le geste, la matière et l'exploration de l'impulsion. Ne présentez jamais l'exercice comme un soin ou une thérapie.
 5. keywords : 3 à 5 courtes expressions (2 à 4 mots chacune) — jamais un mot isolé coupé d'une phrase (ex. « Ce qui nourrit », « Lumière douce », pas « nourriture » seul). Inclure l'axe créatif de l'impulsion.
 

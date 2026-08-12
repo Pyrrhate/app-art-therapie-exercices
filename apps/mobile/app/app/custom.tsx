@@ -91,7 +91,8 @@ export default function CustomWorkspaceScreen() {
         result.durationMinutes,
         result.source,
         result.keywords,
-        result.fallbackNote
+        result.fallbackNote,
+        result.development
       );
 
       if (result.source === "fallback") {

@@ -6,7 +6,6 @@
 import { CREATIVE_COACH_SAFETY, resolvePromptText } from "@art-therapie/shared";
 import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
-import { isAiAnalysisSupported } from "../techniques";
 import type {
   AIProvider,
   ExerciseRequest,
@@ -94,6 +93,7 @@ export class AlephAlphaProvider implements AIProvider {
           exercise: parsed.exercise,
           durationMinutes: parsed.durationMinutes,
           keywords,
+          ...(parsed.development ? { development: parsed.development } : {}),
           source: "ai",
         };
       }
@@ -115,14 +115,6 @@ export class AlephAlphaProvider implements AIProvider {
   }
 
   async analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse> {
-    if (input.technique && !isAiAnalysisSupported(input.technique)) {
-      const fallback = getFallbackReflection(input);
-      return {
-        ...fallback,
-        source: "fallback",
-        analysisNote: "Technique sans analyse IA.",
-      };
-    }
     if (!this.apiKey) {
       const fallback = getFallbackReflection(input);
       return {
@@ -140,6 +132,7 @@ export class AlephAlphaProvider implements AIProvider {
         writtenText: input.writtenText,
         durationMinutes: input.durationMinutes,
         colorContext: input.colorContext,
+        previousReflection: input.previousReflection,
         visualNotes: input.imageBase64
           ? "(Image fournie — Aleph Alpha texte seul : décrivez librement votre ressenti.)"
           : undefined,

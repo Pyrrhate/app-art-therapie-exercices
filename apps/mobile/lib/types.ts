@@ -15,6 +15,8 @@ export type { CustomSessionConfig };
 
 export interface ExerciseResponse {
   exercise: string;
+  /** Paragraphe qui développe les consignes (énoncé). */
+  development?: string;
   durationMinutes: RitualDuration;
   source: "ai" | "fallback";
   keywords: string[];
@@ -48,7 +50,13 @@ export interface SavedSession {
 export interface RitualState {
   impulse: string;
   technique: import("@art-therapie/shared").ArtisticTechnique | null;
+  /** Libellé affiché (technique custom ou libellé overridé). */
+  techniqueLabel: string | null;
   exercise: string;
+  /** Développement des consignes (énoncé). */
+  exerciseDevelopment: string | null;
+  /** Texte des modules d'impulsion — visible en énoncé, jamais envoyé comme directive IA. */
+  moduleStatement: string | null;
   exerciseSource: "ai" | "fallback" | null;
   /** Message UX si fallback après tentative BYOK (sinon null). */
   exerciseFallbackNote: string | null;

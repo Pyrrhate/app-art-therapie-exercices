@@ -94,7 +94,7 @@ export default function WelcomeScreen() {
   }
 
   return (
-    <ScreenContainer scrollable refreshable scrollRef={scrollRef} contentMaxWidth={920} compactTop>
+    <ScreenContainer scrollable refreshable scrollRef={scrollRef} contentMaxWidth={720} compactTop>
       <AppHeader compact onNavigateTraces={scrollToTraces} />
 
       <PastekScreenHero

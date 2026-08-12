@@ -14,6 +14,8 @@ export interface ExerciseRequest {
 
 export interface ExerciseResponse {
   exercise: string;
+  /** Paragraphe qui développe les consignes (énoncé). */
+  development?: string;
   durationMinutes: number;
   source: "ai" | "fallback";
   keywords: string[];
@@ -33,6 +35,8 @@ export interface ReflectionRequest {
   writtenText?: string;
   /** Palette ou harmonie explorée avant le rituel (nuancier, palette intérieure). */
   colorContext?: string;
+  /** Miroir précédent à approfondir. */
+  previousReflection?: string;
   /** Overrides locaux des prompts système (BYOP — jamais stockés serveur). */
   promptOverrides?: PromptOverrides;
 }

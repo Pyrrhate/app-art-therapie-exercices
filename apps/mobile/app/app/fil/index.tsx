@@ -6,7 +6,8 @@ import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
-import { formatSessionDate } from "@/constants";
+import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
+import { formatSessionDate, getTechniqueLabel } from "@/constants";
 import {
   clearFilEntries,
   deleteFilEntry,
@@ -24,6 +25,8 @@ import {
   type FilEntry,
   type FilSource,
 } from "@/lib/fil/types";
+import { analyzeFilSelection, ApiError } from "@/lib/api";
+import { showAlert } from "@/lib/alert";
 import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
@@ -39,6 +42,8 @@ const FILTER_SOURCES: Array<{ id: FilSource | "all"; label: string }> = [
   { id: "nuances", label: "Nuances" },
 ];
 
+const MAX_FIL_ANALYSIS = 5;
+
 export default function FilScreen() {
   const isDark = useIsDark();
   const [entries, setEntries] = useState<FilEntry[]>([]);
@@ -46,6 +51,10 @@ export default function FilScreen() {
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<FilSource | "all">("all");
   const [showDriveCta, setShowDriveCta] = useState(true);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -93,6 +102,8 @@ export default function FilScreen() {
     if (!confirmed) return;
     await clearFilEntries();
     setEntries([]);
+    setSelectedIds([]);
+    setAnalysisResult(null);
   }
 
   async function handleDeleteEntry(entry: FilEntry) {
@@ -100,6 +111,61 @@ export default function FilScreen() {
     if (!confirmed) return;
     await deleteFilEntry(entry.id);
     setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+    setSelectedIds((prev) => prev.filter((id) => id !== entry.id));
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_FIL_ANALYSIS) {
+        showAlert(
+          "Sélection",
+          `Vous pouvez analyser au maximum ${MAX_FIL_ANALYSIS} traces.`
+        );
+        return prev;
+      }
+      return [...prev, id];
+    });
+  }
+
+  async function handleAnalyzeSelection() {
+    if (selectedIds.length === 0) return;
+    setAnalyzing(true);
+    setAnalysisResult(null);
+    try {
+      const selected = entries.filter((e) => selectedIds.includes(e.id));
+      const result = await analyzeFilSelection({
+        entries: selected.map((e) => ({
+          summary: e.summary,
+          detail: e.detail,
+          impulse: e.metadata?.impulse,
+          technique: e.metadata?.technique
+            ? getTechniqueLabel(e.metadata.technique)
+            : undefined,
+          reflection: e.metadata?.reflection,
+          exercise: e.metadata?.exercise,
+        })),
+      });
+      setAnalysisResult(result.reflection);
+      if (result.source === "fallback") {
+        showAlert(
+          "Analyse",
+          result.analysisNote ??
+            "Analyse en mode secours — vérifiez votre clé IA."
+        );
+      }
+    } catch (error) {
+      showAlert(
+        "Analyse impossible",
+        error instanceof ApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "Réessayez dans un instant."
+      );
+    } finally {
+      setAnalyzing(false);
+    }
   }
 
   return (
@@ -143,6 +209,31 @@ export default function FilScreen() {
                 dans les paramètres si vous souhaitez tout conserver.
               </Text>
             </View>
+          ) : null}
+
+          <View className="flex-row gap-2 mb-1">
+            <View className="flex-1">
+              <PrimaryButton
+                label={
+                  selectMode
+                    ? "Annuler la sélection"
+                    : "Analyser le Fil (max 5)"
+                }
+                onPress={() => {
+                  setSelectMode((v) => !v);
+                  setSelectedIds([]);
+                  setAnalysisResult(null);
+                }}
+                variant={selectMode ? "ghost" : "secondary"}
+              />
+            </View>
+          </View>
+
+          {selectMode ? (
+            <Text className={`text-xs mb-1 ${textMuted(isDark)}`}>
+              Sélectionnez jusqu&apos;à {MAX_FIL_ANALYSIS} traces ({selectedIds.length}/
+              {MAX_FIL_ANALYSIS}).
+            </Text>
           ) : null}
 
           <TextInput
@@ -195,12 +286,30 @@ export default function FilScreen() {
             const preview =
               entry.metadata?.reflection?.slice(0, 120) ??
               entry.detail?.slice(0, 120);
+            const selected = selectedIds.includes(entry.id);
             return (
               <View key={entry.id} className="gap-3">
                 <Pressable
-                  onPress={() => router.push(ROUTES.filEntry(entry.id))}
-                  className={`rounded-3xl border px-5 py-4 ${panelBg(isDark)}`}
+                  onPress={() => {
+                    if (selectMode) {
+                      toggleSelect(entry.id);
+                      return;
+                    }
+                    router.push(ROUTES.filEntry(entry.id));
+                  }}
+                  className={`rounded-3xl border px-5 py-4 ${panelBg(isDark)} ${
+                    selected ? "border-sage-500" : ""
+                  }`}
                 >
+                  {selectMode ? (
+                    <Text
+                      className={`text-xs font-medium mb-2 ${
+                        selected ? "text-sage-600" : textMuted(isDark)
+                      }`}
+                    >
+                      {selected ? "Sélectionnée" : "Toucher pour sélectionner"}
+                    </Text>
+                  ) : null}
                   <View className="flex-row items-center justify-between mb-2">
                     <Text className={`text-xs ${textMuted(isDark)}`}>
                       {formatSessionDate(entry.createdAt)}
@@ -241,18 +350,20 @@ export default function FilScreen() {
                       ))}
                     </View>
                   ) : null}
-                  <Pressable
-                    onPress={(e) => {
-                      e.stopPropagation?.();
-                      void handleDeleteEntry(entry);
-                    }}
-                    hitSlop={8}
-                    className="mt-3 self-end"
-                  >
-                    <Text className={`text-xs ${textMuted(isDark)}`}>
-                      Retirer du Fil
-                    </Text>
-                  </Pressable>
+                  {!selectMode ? (
+                    <Pressable
+                      onPress={(e) => {
+                        e.stopPropagation?.();
+                        void handleDeleteEntry(entry);
+                      }}
+                      hitSlop={8}
+                      className="mt-3 self-end"
+                    >
+                      <Text className={`text-xs ${textMuted(isDark)}`}>
+                        Retirer du Fil
+                      </Text>
+                    </Pressable>
+                  ) : null}
                 </Pressable>
                 {showDriveCta && index === 0 ? (
                   <FilConversionCTA onPress={() => router.push(ROUTES.premiumCloud)} />
@@ -260,6 +371,32 @@ export default function FilScreen() {
               </View>
             );
           })}
+
+          {selectMode ? (
+            <View className="gap-3 pt-2">
+              <PrimaryButton
+                label={
+                  analyzing
+                    ? "Analyse en cours…"
+                    : `Analyser ${selectedIds.length || ""} trace${selectedIds.length > 1 ? "s" : ""}`
+                }
+                onPress={() => void handleAnalyzeSelection()}
+                disabled={analyzing || selectedIds.length === 0}
+              />
+              {analysisResult ? (
+                <View
+                  className={`rounded-2xl border px-4 py-4 ${panelBg(isDark)}`}
+                >
+                  <Text
+                    className={`text-xs uppercase tracking-wider mb-2 ${textMuted(isDark)}`}
+                  >
+                    Lecture croisée
+                  </Text>
+                  <ProgressiveReflection reflection={analysisResult} />
+                </View>
+              ) : null}
+            </View>
+          ) : null}
 
           <View className={`gap-3 pt-6 mt-2 border-t ${isDark ? "border-sand-700" : "border-sand-200"}`}>
             <PrimaryButton

@@ -3,19 +3,25 @@ import { Text, View } from "react-native";
 import { DurationPicker } from "@/components/DurationPicker";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { PrimaryButton } from "@/components/ui/Button";
-import { TECHNIQUES } from "@/constants";
 import type { RitualDuration } from "@/constants";
 import {
   startExerciseFromImpulse,
   startRitualFromImpulse,
   type ColorBridgeHints,
 } from "@/lib/fil/bridges";
+import { useEnabledTechniques } from "@/lib/techniques/managed";
 import type { ArtisticTechnique } from "@/lib/types";
 import { showAlert } from "@/lib/alert";
 import { ApiError } from "@/lib/api";
 
 interface AmorceOutcomePanelProps {
   impulse: string;
+  /**
+   * Contexte du module (palette, nuances…) — visible dans l'énoncé,
+   * jamais transmis comme directive de génération IA.
+   */
+  moduleStatement?: string;
+  /** @deprecated Utiliser moduleStatement */
   augmentationContext?: string;
   colorHints?: ColorBridgeHints;
   disabled?: boolean;
@@ -23,23 +29,24 @@ interface AmorceOutcomePanelProps {
 
 export function AmorceOutcomePanel({
   impulse,
+  moduleStatement,
   augmentationContext,
   colorHints,
   disabled = false,
 }: AmorceOutcomePanelProps) {
+  const techniques = useEnabledTechniques();
   const [technique, setTechnique] = useState<ArtisticTechnique | null>(
     "painting"
   );
   const [duration, setDuration] = useState<RitualDuration>(15);
   const [busy, setBusy] = useState(false);
 
+  const statement = (moduleStatement ?? augmentationContext)?.trim() || undefined;
   const trimmed = impulse.trim();
   const isDisabled = disabled || busy || !trimmed || !technique;
   const bridgeColorHints: ColorBridgeHints | undefined =
     colorHints ??
-    (augmentationContext?.trim()
-      ? { colorContext: augmentationContext.trim() }
-      : undefined);
+    (statement ? { colorContext: statement } : undefined);
 
   async function handleExercise() {
     if (!technique || !trimmed) return;
@@ -49,7 +56,7 @@ export function AmorceOutcomePanel({
         trimmed,
         technique,
         duration,
-        augmentationContext,
+        statement,
         bridgeColorHints
       );
     } catch (error) {
@@ -68,7 +75,13 @@ export function AmorceOutcomePanel({
 
   function handleRitual() {
     if (!technique || !trimmed) return;
-    startRitualFromImpulse(trimmed, technique, duration, bridgeColorHints);
+    startRitualFromImpulse(
+      trimmed,
+      technique,
+      duration,
+      bridgeColorHints,
+      statement
+    );
   }
 
   return (
@@ -78,7 +91,9 @@ export function AmorceOutcomePanel({
       </Text>
       <Text className="text-sand-600 text-xs leading-5">
         Choisissez technique et durée, puis le parcours rituel (avec choix
-        d&apos;expérience) ou l&apos;exercice direct.
+        d&apos;expérience) ou l&apos;exercice direct. Le contexte du module
+        reste visible dans l&apos;énoncé — il n&apos;est pas envoyé comme
+        directive à l&apos;IA.
       </Text>
 
       <View>
@@ -88,7 +103,7 @@ export function AmorceOutcomePanel({
         <TechniquePicker
           selected={technique}
           onSelect={setTechnique}
-          techniques={TECHNIQUES}
+          techniques={techniques}
         />
       </View>
 

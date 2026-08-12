@@ -37,8 +37,13 @@ ${middle}
 
 Il n'y a pas de bon ou mauvais résultat — seulement votre expression du moment.`;
 
+  const development = isPerformative
+    ? `Vous pouvez varier le rythme, l'intensité ou le point de vue. Si un geste vous surprend, accueillez-le plutôt que de le corriger.`
+    : `Précisez un détail qui vous attire et laissez-le grandir sans forcer le reste. Changez d'échelle une fois si l'envie vient.`;
+
   return {
     exercise,
+    development,
     durationMinutes,
     source: "fallback",
     keywords: deriveExerciseKeywords(input.impulse, input.technique, exercise),

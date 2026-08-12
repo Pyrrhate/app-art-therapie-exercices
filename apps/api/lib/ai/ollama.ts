@@ -6,7 +6,6 @@
 import { CREATIVE_COACH_SAFETY, resolvePromptText } from "@art-therapie/shared";
 import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
-import { isAiAnalysisSupported } from "../techniques";
 import type {
   AIProvider,
   ExerciseRequest,
@@ -90,6 +89,7 @@ export class OllamaProvider implements AIProvider {
           exercise: parsed.exercise,
           durationMinutes: parsed.durationMinutes,
           keywords,
+          ...(parsed.development ? { development: parsed.development } : {}),
           source: "ai",
         };
       }
@@ -112,14 +112,6 @@ export class OllamaProvider implements AIProvider {
   }
 
   async analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse> {
-    if (input.technique && !isAiAnalysisSupported(input.technique)) {
-      const fallback = getFallbackReflection(input);
-      return {
-        ...fallback,
-        source: "fallback",
-        analysisNote: "Technique sans analyse IA.",
-      };
-    }
     if (!this.baseUrl) {
       const fallback = getFallbackReflection(input);
       return {
@@ -137,6 +129,7 @@ export class OllamaProvider implements AIProvider {
         writtenText: input.writtenText,
         durationMinutes: input.durationMinutes,
         colorContext: input.colorContext,
+        previousReflection: input.previousReflection,
         visualNotes: input.imageBase64
           ? "(Image fournie — Ollama texte : appuyez-vous sur le ressenti décrit.)"
           : undefined,

@@ -66,7 +66,7 @@ export default function FilDetailScreen() {
         meta.impulse,
         technique,
         meta.durationMinutes as RitualDuration | undefined,
-        colorContext,
+        meta.moduleStatement ?? colorContext,
         {
           colorContext,
           paletteColors: meta.colors,
