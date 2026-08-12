@@ -192,6 +192,13 @@ export default function ReflectionScreen() {
   const [reflectionSource, setReflectionSource] = useState<
     "ai" | "fallback" | null
   >(null);
+  /** Miroir d'approfondissement — affiché sous le bouton, sans remplacer le premier. */
+  const [deepenedReflection, setDeepenedReflection] = useState<string | null>(
+    null
+  );
+  const [deepenedOpenQuestions, setDeepenedOpenQuestions] = useState<string[]>(
+    []
+  );
   const [ocrLoading, setOcrLoading] = useState(false);
   const [loadingAugmentedExercise, setLoadingAugmentedExercise] = useState(false);
   const [notice, setNotice] = useState<{
@@ -496,6 +503,8 @@ export default function ReflectionScreen() {
         local.followUpExercise ?? null
       );
       setReflectionSource("fallback");
+      setDeepenedReflection(null);
+      setDeepenedOpenQuestions([]);
       setNotice({
         type: "info",
         message:
@@ -521,6 +530,8 @@ export default function ReflectionScreen() {
     const { signal, generation } = startWork();
     setLoadingReflection(true);
     setReflectionSource(null);
+    setDeepenedReflection(null);
+    setDeepenedOpenQuestions([]);
     setNotice({
       type: "info",
       message:
@@ -775,6 +786,7 @@ export default function ReflectionScreen() {
   async function handleDeepenReflection() {
     if (!reflection?.trim() || loadingReflection) return;
     const previousMirror = reflection.trim();
+    const alreadyDeepened = deepenedReflection?.trim() || "";
     const { generation } = startWork();
     setLoadingReflection(true);
     setNotice({
@@ -784,7 +796,13 @@ export default function ReflectionScreen() {
     try {
       const deepenWritten = [
         writtenText.trim() || null,
-        `[Demande d'approfondissement du miroir créatif]\nMiroir précédent à prolonger (ne pas recopier) :\n« ${previousMirror.slice(0, 3500)} »`,
+        `[Demande d'approfondissement du miroir créatif]
+Miroir initial (à conserver — ne pas recopier) :
+« ${previousMirror.slice(0, 2800)} »`,
+        alreadyDeepened
+          ? `Approfondissement déjà proposé (aller encore plus loin, sans répéter) :
+« ${alreadyDeepened.slice(0, 2000)} »`
+          : null,
       ]
         .filter(Boolean)
         .join("\n\n");
@@ -795,13 +813,15 @@ export default function ReflectionScreen() {
           technique: technique ?? undefined,
           exercise: exercise?.slice(0, 3000),
           durationMinutes,
-          previousReflection: previousMirror.slice(0, 6000),
+          previousReflection: [previousMirror, alreadyDeepened]
+            .filter(Boolean)
+            .join("\n\n---\n\n")
+            .slice(0, 6000),
           writtenText: deepenWritten.slice(0, 8000),
           colorContext:
             colorContext && colorContext.trim().length >= 10
               ? colorContext.trim().slice(0, 2000)
               : undefined,
-          // Réutilise la photo déjà préparée si disponible pour enrichir l'approfondissement.
           imageBase64: photoDataUrl?.startsWith("data:")
             ? photoDataUrl
             : undefined,
@@ -821,15 +841,15 @@ export default function ReflectionScreen() {
         return;
       }
 
-      setReflection(
-        nextReflection,
-        result.openQuestions ?? [],
-        result.followUpExercise ?? null
-      );
-      setReflectionSource(result.source);
+      // Conserve le miroir créatif initial ; l'approfondissement s'affiche en dessous.
+      setDeepenedReflection(nextReflection);
+      setDeepenedOpenQuestions(result.openQuestions ?? []);
       setNotice(
         result.source === "ai"
-          ? { type: "success", message: "Miroir approfondi." }
+          ? {
+              type: "success",
+              message: "Approfondissement ajouté sous le bouton.",
+            }
           : {
               type: "info",
               message:
@@ -866,8 +886,15 @@ export default function ReflectionScreen() {
           .join("\n\n"),
         durationMinutes,
         photoUri: photoUri ?? undefined,
-        reflection: reflection ?? undefined,
-        openQuestions: openQuestions.length ? openQuestions : undefined,
+        reflection: [reflection, deepenedReflection]
+          .filter(Boolean)
+          .join("\n\n—— Approfondissement ——\n\n"),
+        openQuestions:
+          deepenedOpenQuestions.length > 0
+            ? deepenedOpenQuestions
+            : openQuestions.length
+              ? openQuestions
+              : undefined,
         writtenText: writtenText.trim() || undefined,
         followUpExercise: followUpExercise ?? undefined,
         createdAt: new Date().toISOString(),
@@ -1510,7 +1537,7 @@ export default function ReflectionScreen() {
               </View>
               {displayReflectionBody ? (
                 <ProgressiveReflection
-                  key={displayReflectionBody.slice(0, 64)}
+                  key="miroir-initial"
                   reflection={displayReflectionBody}
                 />
               ) : (
@@ -1533,12 +1560,42 @@ export default function ReflectionScreen() {
 
             {reflectionSource === "ai" && (
               <PrimaryButton
-                label={loadingReflection ? "Approfondissement…" : "Approfondir"}
+                label={
+                  loadingReflection && !deepenedReflection
+                    ? "Approfondissement…"
+                    : loadingReflection
+                      ? "Nouvel approfondissement…"
+                      : deepenedReflection
+                        ? "Approfondir encore"
+                        : "Approfondir"
+                }
                 onPress={() => void handleDeepenReflection()}
                 variant="secondary"
                 disabled={busy}
               />
             )}
+
+            {deepenedReflection ? (
+              <View className="bg-white rounded-2xl border border-sage-200 px-5 py-6">
+                <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
+                  Approfondissement
+                </Text>
+                <ProgressiveReflection
+                  key={deepenedReflection.slice(0, 64)}
+                  reflection={
+                    cleanReflectionBodyForDisplay(
+                      deepenedReflection,
+                      deepenedOpenQuestions
+                    ) || deepenedReflection
+                  }
+                />
+                {deepenedOpenQuestions.length > 0 ? (
+                  <View className="mt-4">
+                    <ReflectionOpenQuestions questions={deepenedOpenQuestions} />
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
 
             <PrimaryButton
               label="Exporter en PDF"
