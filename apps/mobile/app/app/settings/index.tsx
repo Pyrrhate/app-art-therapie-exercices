@@ -257,7 +257,8 @@ export default function SettingsScreen() {
             Apparence
           </Text>
           <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
-            Choisissez un thème clair ou sombre pour toute l&apos;application.
+            Thème clair (crème & pastèque) ou foncé (écorce & menthe) pour toute
+            l&apos;application.
           </Text>
           <ThemePicker selected={theme} onSelect={handleThemeChange} />
         </View>
