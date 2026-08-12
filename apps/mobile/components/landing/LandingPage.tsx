@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { LandingBenefits } from "@/components/landing/LandingBenefits";
@@ -10,17 +11,23 @@ import { ROUTES } from "@/lib/routes";
 
 /** Page marketing SEO — contenu entièrement rendu côté serveur / DOM initial. */
 export function LandingPage() {
+  const [scrollY, setScrollY] = useState(0);
+
   return (
     <View className="flex-1 bg-sand-50">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={Platform.OS === "web"}
+        scrollEventThrottle={16}
+        onScroll={(event) => {
+          setScrollY(event.nativeEvent.contentOffset.y);
+        }}
       >
         <LandingHeader />
 
         <SemanticWeb tag="main">
-          <LandingHero />
+          <LandingHero scrollY={scrollY} />
           <LandingBenefits />
           <LandingHowItWorks />
         </SemanticWeb>

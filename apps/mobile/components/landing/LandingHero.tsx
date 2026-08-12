@@ -1,11 +1,4 @@
-import { useEffect, useState } from "react";
-import {
-  ImageBackground,
-  Platform,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { Image, Platform, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ROUTES } from "@/lib/routes";
@@ -24,119 +17,124 @@ const TAGS = [
 ] as const;
 
 const heroMinHeight = Platform.OS === "web" ? 520 : 460;
+const PARALLAX_EXTRA = 80;
 
-export function LandingHero() {
-  const [parallaxY, setParallaxY] = useState(0);
+interface LandingHeroProps {
+  /** Décalage vertical du conteneur scroll parent (ScrollView). */
+  scrollY?: number;
+}
 
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-
-    const onScroll = () => {
-      const y = window.scrollY || 0;
-      // Effet léger pour garder une lecture confortable du hero.
-      setParallaxY(Math.min(y * 0.12, 42));
-    };
-
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+export function LandingHero({ scrollY = 0 }: LandingHeroProps) {
+  const parallaxY = Math.min(scrollY * 0.3, 72);
 
   return (
     <SemanticWeb
       tag="section"
-      className="border-b border-sand-200/80 overflow-hidden"
+      className="border-b border-sand-200/80 overflow-hidden relative"
       aria-label="Présentation du générateur d'exercices créatifs Pastek Art"
+      style={{ minHeight: heroMinHeight }}
     >
-      <ImageBackground
-        source={HERO_IMAGE}
-        resizeMode="cover"
+      <View
+        className="absolute inset-0 overflow-hidden"
         accessibilityElementsHidden
         importantForAccessibility="no"
-        imageStyle={
-          Platform.OS === "web"
-            ? ({
-                objectPosition: "center center",
-                transform: [{ translateY: -parallaxY }, { scale: 1.06 }],
-                transition: "transform 90ms linear",
-              } as const)
-            : undefined
-        }
-        style={{ width: "100%", minHeight: heroMinHeight }}
       >
-        <View className="absolute inset-0 bg-sand-50/50" />
+        <Image
+          source={HERO_IMAGE}
+          resizeMode="cover"
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          style={{
+            position: "absolute",
+            left: 0,
+            width: "100%",
+            top: -PARALLAX_EXTRA / 2,
+            height: heroMinHeight + PARALLAX_EXTRA,
+            transform: [{ translateY: parallaxY }],
+          }}
+        />
+      </View>
 
-        <View className="relative max-w-3xl mx-auto px-6 pt-10 pb-14 md:pt-12 md:pb-20 items-center">
-          <View className="flex-row flex-wrap justify-center gap-2 mb-6">
-            {TAGS.map((tag) => (
-              <View
-                key={tag.label}
-                className={`rounded-full px-3 py-1.5 ${tag.bg}`}
-              >
-                <Text className={`text-xs font-semibold tracking-wide ${tag.text}`}>
-                  {tag.label}
-                </Text>
-              </View>
-            ))}
-          </View>
+      <View className="absolute inset-0 bg-sand-50/50" pointerEvents="none" />
 
-          <View className="landing-hero-copy-wrap mb-8 px-1">
-            <SemanticWeb
-              tag="h1"
-              className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-snug text-sand-900 text-center whitespace-pre-line"
+      <View className="relative max-w-3xl mx-auto px-6 pt-10 pb-14 md:pt-12 md:pb-20 items-center">
+        <View className="flex-row flex-wrap justify-center gap-2 mb-6">
+          {TAGS.map((tag) => (
+            <View
+              key={tag.label}
+              className={`rounded-full px-3 py-1.5 ${tag.bg}`}
             >
-              {Platform.OS === "web" ? (
-                <>
-                  <span className="landing-hero-mark">Libérez Votre Créativité,</span>
-                  <br />
-                  <span className="landing-hero-mark">Un Exercice à la Fois</span>
-                </>
-              ) : (
-                `Libérez Votre Créativité,\nUn Exercice à la Fois`
-              )}
-            </SemanticWeb>
-
-            <SemanticWeb
-              tag="p"
-              className="text-base md:text-lg leading-8 text-sand-900 text-center"
-            >
-              {Platform.OS === "web" ? (
-                <span className="landing-hero-mark">
-                  Pastek Art vous invite à explorer le dessin, la peinture et le collage comme
-                  un jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique.
-                  Votre clé IA reste chez vous (BYOK) ; vos traces restent locales.
-                </span>
-              ) : (
-                "Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre clé IA reste chez vous (BYOK) ; vos traces restent locales."
-              )}
-            </SemanticWeb>
-          </View>
-
-          <View className="flex-row flex-wrap items-center justify-center gap-3 mb-8">
-            <View className="rounded-full bg-mint-100/95 px-3 py-1.5 border border-sage-200">
-              <Text className="text-sage-800 text-xs font-semibold">
-                100 % local & privé
+              <Text className={`text-xs font-semibold tracking-wide ${tag.text}`}>
+                {tag.label}
               </Text>
             </View>
-            <View className="rounded-full bg-melon-50/95 px-3 py-1.5 border border-melon-200">
-              <Text className="text-melon-700 text-xs font-semibold">BYOK activé</Text>
-            </View>
-          </View>
-
-          <Link href={ROUTES.home} asChild>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Commencer à créer"
-              className="rounded-full bg-melon-500 active:bg-melon-600 px-9 py-4 min-h-[52px] justify-center web:transition-colors web:duration-200 web:hover:bg-melon-600"
-              style={ctaShadow}
-            >
-              <Text className="text-white text-sm font-semibold tracking-wide text-center">
-                Commencer à créer
-              </Text>
-            </Pressable>
-          </Link>
+          ))}
         </View>
-      </ImageBackground>
+
+        <View className="landing-hero-copy-wrap mb-8 px-1">
+          <SemanticWeb
+            tag="h1"
+            className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-snug text-sand-900 text-center"
+          >
+            {Platform.OS === "web" ? (
+              <>
+                <span className="landing-hero-mark">Libérez Votre Créativité,</span>
+                <br />
+                <span className="landing-hero-mark">Un Exercice à la Fois</span>
+              </>
+            ) : (
+              <>
+                <Text className="bg-sage-500 text-white px-1 py-0.5">
+                  Libérez Votre Créativité,{"\n"}Un Exercice à la Fois
+                </Text>
+              </>
+            )}
+          </SemanticWeb>
+
+          <SemanticWeb
+            tag="p"
+            className="text-base md:text-lg leading-8 text-sand-900 text-center"
+          >
+            {Platform.OS === "web" ? (
+              <span className="landing-hero-mark">
+                Pastek Art vous invite à explorer le dessin, la peinture et le collage comme
+                un jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique.
+                Votre clé IA reste chez vous (BYOK) ; vos traces restent locales.
+              </span>
+            ) : (
+              <Text className="bg-sage-500 text-white px-1 py-0.5">
+                Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
+                jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
+                clé IA reste chez vous (BYOK) ; vos traces restent locales.
+              </Text>
+            )}
+          </SemanticWeb>
+        </View>
+
+        <View className="flex-row flex-wrap items-center justify-center gap-3 mb-8">
+          <View className="rounded-full bg-mint-100/95 px-3 py-1.5 border border-sage-200">
+            <Text className="text-sage-800 text-xs font-semibold">
+              100 % local & privé
+            </Text>
+          </View>
+          <View className="rounded-full bg-melon-50/95 px-3 py-1.5 border border-melon-200">
+            <Text className="text-melon-700 text-xs font-semibold">BYOK activé</Text>
+          </View>
+        </View>
+
+        <Link href={ROUTES.home} asChild>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Commencer à créer"
+            className="rounded-full bg-melon-500 active:bg-melon-600 px-9 py-4 min-h-[52px] justify-center web:transition-colors web:duration-200 web:hover:bg-melon-600"
+            style={ctaShadow}
+          >
+            <Text className="text-white text-sm font-semibold tracking-wide text-center">
+              Commencer à créer
+            </Text>
+          </Pressable>
+        </Link>
+      </View>
     </SemanticWeb>
   );
 }

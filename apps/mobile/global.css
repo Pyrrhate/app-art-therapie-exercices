@@ -52,14 +52,12 @@ html.dark body {
 
 .landing-hero-mark {
   display: inline;
-  padding: 0.02rem 0.18rem;
+  background-color: var(--bark-green);
+  color: #ffffff;
+  padding: 0.12em 0.28em;
+  line-height: 1.55;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  background-image: linear-gradient(
-    to bottom,
-    transparent 52%,
-    color-mix(in srgb, var(--bark-green) 36%, white) 52%
-  );
 }
 
 /* Landing header — nav desktop sur une seule ligne (web) */
