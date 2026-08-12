@@ -13,6 +13,16 @@ export type ChangelogEntry = {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "exercice-creatif",
+    dateLabel: "août 2026",
+    title: "Positionnement exercices créatifs",
+    highlights: [
+      "Le langage produit parle d’exercices et de rituels créatifs — sans se présenter comme de l’art-thérapie clinique.",
+      "Prompts IA et écrans mis à jour : coach / miroir créatif, disclaimer inchangé (ne remplace pas une thérapie).",
+      "Landing et SEO recentrés sur le geste, le jeu et le lâcher-prise.",
+    ],
+  },
+  {
     id: "local-first-drive",
     dateLabel: "août 2026",
     title: "Local-first & sauvegarde Google Drive",
@@ -77,7 +87,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     dateLabel: "juin 2026",
     title: "Site pastek-art.eu & application sous /app",
     highlights: [
-      "Page d'accueil SEO à la racine du domaine, avec présentation de l'art-thérapie créative.",
+      "Page d'accueil SEO à la racine du domaine, avec présentation des exercices créatifs.",
       "Application interactive déplacée sous /app pour séparer marketing et outil.",
       "Logo et baseline cliquables pour revenir à l'accueil du site.",
     ],

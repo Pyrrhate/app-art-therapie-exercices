@@ -17,7 +17,7 @@ export function ExamplesIndexPage({ examples }: ExamplesIndexPageProps) {
   return (
     <View className="max-w-3xl mx-auto px-6 py-12 pb-20">
       <SemanticWeb tag="h1" className="font-display text-3xl md:text-4xl text-sand-900 mb-4">
-        Exemples d'exercices d'art-thérapie
+        Exemples d'exercices créatifs
       </SemanticWeb>
       <SemanticWeb tag="p" className="text-sand-700 text-base md:text-lg leading-8 mb-10">
         Parcourez des parcours réels du générateur Pastek Art : impulsion, consigne

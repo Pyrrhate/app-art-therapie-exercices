@@ -8,7 +8,7 @@ import { PASTEK_EXAMPLES } from "@/lib/examples/catalog";
 import { ROUTES } from "@/lib/routes";
 
 const SEO_TITLE =
-  "Exemples d'exercices d'art-thérapie — parcours peinture, écriture, créativité | Pastek Art";
+  "Exemples d'exercices créatifs — parcours peinture, écriture, créativité | Pastek Art";
 
 const SEO_DESCRIPTION =
   "Découvrez des exemples concrets du générateur Pastek Art : impulsion, consigne IA, création guidée et réflexion bienveillante. Inspirez-vous avant votre premier rituel créatif.";

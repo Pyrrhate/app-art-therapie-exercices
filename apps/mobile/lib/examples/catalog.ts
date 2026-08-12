@@ -10,7 +10,7 @@ export const EXEMPLE_001: PastekExample = {
   title: "Paysage chaud en peinture",
   subtitle: "De l'impulsion « rose beige avec accent fuchsia et vert » au miroir créatif",
   seoTitle:
-    "Exemple d'exercice d'art-thérapie en peinture — paysage rose-beige et fuchsia | Pastek Art",
+    "Exemple d'exercice créatif en peinture — paysage rose-beige et fuchsia | Pastek Art",
   seoDescription:
     "Découvrez un parcours complet : impulsion couleur, consigne IA personnalisée, création à l'aquarelle et réflexion bienveillante. Exemple concret du générateur Pastek Art pour la peinture et le lâcher-prise.",
   canonicalPath: "/exemples/exemple-001",
@@ -22,7 +22,7 @@ export const EXEMPLE_001: PastekExample = {
   publishedAt: "2026-06-24",
   heroImage: EXAMPLE_001_ASSETS.artwork,
   heroImageAlt:
-    "Aquarelle d'un paysage au ciel rose, montagnes violettes et herbes vertes — création issue d'un exercice d'art-thérapie",
+    "Aquarelle d'un paysage au ciel rose, montagnes violettes et herbes vertes — création issue d'un exercice créatif",
   steps: [
     {
       id: "impulsion",
@@ -85,7 +85,7 @@ export const EXEMPLE_002: PastekExample = {
   subtitle:
     "De l'impulsion « bleu vert, un village en Italie style bord du lac de Côme » au miroir créatif",
   seoTitle:
-    "Exemple d'exercice d'art-thérapie en peinture — village italien bleu-vert au lac de Côme | Pastek Art",
+    "Exemple d'exercice créatif en peinture — village italien bleu-vert au lac de Côme | Pastek Art",
   seoDescription:
     "Parcours profond Pastek Art : impulsion lac de Côme, consigne IA, ancrage émotionnel, aquarelle avec citronnier et réflexion bienveillante. Exemple concret du mode profond pour la peinture et le lâcher-prise.",
   canonicalPath: "/exemples/exemple-002",
@@ -97,7 +97,7 @@ export const EXEMPLE_002: PastekExample = {
   publishedAt: "2026-07-05",
   heroImage: EXAMPLE_002_ASSETS.artwork,
   heroImageAlt:
-    "Aquarelle d'un village coloré au bord d'un lac turquoise, citronnier au premier plan et montagnes vertes — création issue d'un exercice d'art-thérapie",
+    "Aquarelle d'un village coloré au bord d'un lac turquoise, citronnier au premier plan et montagnes vertes — création issue d'un exercice créatif",
   steps: [
     {
       id: "impulsion",
@@ -166,7 +166,7 @@ export const EXEMPLE_004: PastekExample = {
   subtitle:
     "De l'impulsion « couleur pourpre, inquiet » au miroir créatif",
   seoTitle:
-    "Exemple d'exercice d'art-thérapie en peinture — couleur pourpre et émotion d'inquiétude | Pastek Art",
+    "Exemple d'exercice créatif en peinture — couleur pourpre et émotion d'inquiétude | Pastek Art",
   seoDescription:
     "Parcours express Pastek Art : impulsion pourpre et inquiétude, consigne IA, peinture expressive en 15 minutes et réflexion bienveillante. Exemple concret pour exprimer et apaiser une émotion par la création.",
   canonicalPath: "/exemples/exemple-004",
@@ -178,7 +178,7 @@ export const EXEMPLE_004: PastekExample = {
   publishedAt: "2026-07-05",
   heroImage: EXAMPLE_004_ASSETS.artwork,
   heroImageAlt:
-    "Peinture expressive : fond pourpre et rose, lignes noires horizontales, soleils jaunes et rouges — création issue d'un exercice d'art-thérapie",
+    "Peinture expressive : fond pourpre et rose, lignes noires horizontales, soleils jaunes et rouges — création issue d'un exercice créatif",
   steps: [
     {
       id: "impulsion",

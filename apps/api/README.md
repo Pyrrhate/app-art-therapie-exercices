@@ -1,4 +1,4 @@
-# Art Thérapie API
+# Pastek Art — API
 
 Backend Next.js serverless. Voir le README racine du monorepo.
 

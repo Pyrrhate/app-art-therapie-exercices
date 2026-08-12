@@ -104,7 +104,7 @@ function buildSessionHtml(
       : ""
   }
   ${followUp}
-  <footer>Art Thérapie — export local</footer>
+  <footer>Pastek Art — export local</footer>
   <script>
     async function readyToPrint() {
       const images = Array.from(document.images || []);

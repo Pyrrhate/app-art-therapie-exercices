@@ -1,4 +1,4 @@
-# Architecture — Art Thérapie (MVP)
+# Architecture — Pastek Art (MVP)
 
 ## Vue d'ensemble
 

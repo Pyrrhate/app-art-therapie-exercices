@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export function GET() {
   return NextResponse.json({
-    name: "Art Thérapie API",
+    name: "Pastek Art API",
     routes: [
       "GET /api/health",
       "GET /api/config/public",

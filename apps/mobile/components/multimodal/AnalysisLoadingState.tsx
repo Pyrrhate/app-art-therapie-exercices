@@ -7,9 +7,9 @@ interface AnalysisLoadingStateProps {
   message?: string;
 }
 
-/** État de chargement pendant l'analyse croisée par l'art-thérapeute virtuel. */
+/** État de chargement pendant l'analyse croisée par le miroir créatif. */
 export function AnalysisLoadingState({
-  message = "Votre art-thérapeute virtuel croise votre ressenti et votre création…",
+  message = "Votre miroir créatif croise votre ressenti et votre création…",
 }: AnalysisLoadingStateProps) {
   const isDark = useIsDark();
 

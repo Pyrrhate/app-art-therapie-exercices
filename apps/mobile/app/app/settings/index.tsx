@@ -382,7 +382,7 @@ export default function SettingsScreen() {
           <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
             Exportez votre Fil créatif, vos préférences et votre brouillon de
             rituel dans un fichier JSON — uniquement chez vous. Restaurez-le sur
-            un autre appareil sans compte ni serveur Art Thérapie.
+            un autre appareil sans compte ni serveur Pastek Art.
           </Text>
           <View className="gap-3">
             <PrimaryButton
@@ -431,7 +431,7 @@ export default function SettingsScreen() {
         <SupportButton />
 
         <Text className={`text-xs text-center mt-4 ${textMuted(isDark)}`}>
-          Art Thérapie · v0.1.0 · MVP
+          Pastek Art · v0.1.0 · MVP
         </Text>
       </View>
     </ScreenContainer>

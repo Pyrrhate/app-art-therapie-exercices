@@ -52,7 +52,7 @@ export function parseAppBackupJson(json: string): AppBackup {
   try {
     parsed = JSON.parse(json);
   } catch {
-    throw new Error("Fichier illisible — vérifiez qu'il s'agit d'une sauvegarde Art Thérapie.");
+    throw new Error("Fichier illisible — vérifiez qu'il s'agit d'une sauvegarde Pastek Art.");
   }
 
   if (!parsed || typeof parsed !== "object") {
@@ -62,7 +62,7 @@ export function parseAppBackupJson(json: string): AppBackup {
   const backup = parsed as Partial<AppBackup>;
 
   if (backup.app !== BACKUP_APP_ID) {
-    throw new Error("Ce fichier ne provient pas d'Art Thérapie.");
+    throw new Error("Ce fichier ne provient pas de Pastek Art.");
   }
 
   if (backup.version !== BACKUP_FORMAT_VERSION) {

@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Art Thérapie API",
-  description: "Backend serverless pour l'application Art Thérapie",
+  title: "Pastek Art API",
+  description: "Backend serverless pour l'application Pastek Art",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -55,7 +55,7 @@ function buildPrompt(input: ColorMirrorInput): string {
     .join("\n");
 
   if (input.mode === "synthesis") {
-    return `Tu es un assistant palette peinture dans une app d'art-thérapie francophone (théorie RYB).
+    return `Tu es un assistant palette peinture dans une app d'exercices créatifs francophone (théorie RYB).
 
 Palette construite :
 ${historyLines}
@@ -72,7 +72,7 @@ Ton pratique et encourageant. Vouvoiement. Pas de markdown. Pas de liste.`;
   const dim = DIMENSION_LABELS[chosen.dimensionId] ?? chosen.dimensionId;
   const recipe = chosen.mixRecipe ? `\nRecette : ${chosen.mixRecipe}` : "";
 
-  return `Tu es un assistant palette peinture dans une app d'art-thérapie francophone.
+  return `Tu es un assistant palette peinture dans une app d'exercices créatifs francophone.
 
 Palette en cours :
 ${historyLines}

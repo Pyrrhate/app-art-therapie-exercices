@@ -31,7 +31,7 @@ export function LandingHowItWorks() {
         <Link href={ROUTES.home} asChild>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Accéder au générateur d'exercices d'art-thérapie"
+            accessibilityLabel="Accéder au générateur d'exercices créatifs"
             className="self-start rounded-full border border-sage-400 bg-white px-7 py-3.5 min-h-[48px] justify-center web:transition-colors web:duration-200 web:hover:bg-sage-50"
           >
             <Text className="text-sage-600 text-sm font-semibold tracking-wide">

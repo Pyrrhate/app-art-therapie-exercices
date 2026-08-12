@@ -2,10 +2,10 @@ import { ScrollViewStyleReset } from "expo-router/html";
 import { type PropsWithChildren } from "react";
 
 const DEFAULT_TITLE =
-  "Générateur d'Exercices d'Art-Thérapie & Rituels Créatifs | Lâcher-Prise";
+  "Générateur d'Exercices Créatifs & Rituels Artistiques | Pastek Art";
 
 const DEFAULT_DESCRIPTION =
-  "Besoin de décompresser ou de libérer votre créativité ? Découvrez notre générateur gratuit d'exercices d'art-thérapie et de rituels de dessin pour retrouver le calme et le bien-être.";
+  "Besoin de décompresser ou de libérer votre créativité ? Découvrez notre générateur gratuit d'exercices créatifs et de rituels de dessin pour le lâcher-prise — sans prétendre remplacer un accompagnement professionnel.";
 
 export default function Root({ children }: PropsWithChildren) {
   return (

@@ -31,7 +31,7 @@ export const GLOBAL_BYOK_PROVIDERS: readonly ByokProviderId[] = [
 ] as const;
 
 /** Instruction de sécurité créative (non clinique) — injectée côté providers. */
-export const CREATIVE_COACH_SAFETY = `You are a creative coach and art-therapy exercise generator. Your goal is to suggest creative, artistic, and reflective activities for personal well-being. NEVER give medical diagnoses, psychological evaluations, or clinical advice. Always maintain an encouraging, open-ended, and metaphor-driven tone. Respond in French with vousvoiement.`;
+export const CREATIVE_COACH_SAFETY = `You are a creative coach and generator of artistic exercises (not a therapist). Your goal is to suggest creative, artistic, and reflective activities for personal well-being and playful exploration. NEVER give medical diagnoses, psychological evaluations, or clinical advice. Never claim to provide art therapy or treatment. Always maintain an encouraging, open-ended, and metaphor-driven tone. Respond in French with vousvoiement.`;
 
 export function isByokProviderId(value: string): value is ByokProviderId {
   return (BYOK_PROVIDER_IDS as readonly string[]).includes(value);

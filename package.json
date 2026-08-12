@@ -2,7 +2,7 @@
   "name": "art-therapie",
   "version": "0.1.0",
   "private": true,
-  "description": "MVP Art Thérapie — monorepo Expo + Next.js",
+  "description": "Pastek Art — générateur d'exercices créatifs (monorepo Expo + Next.js)",
   "workspaces": [
     "apps/mobile",
     "apps/api",

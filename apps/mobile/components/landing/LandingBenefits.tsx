@@ -3,8 +3,8 @@ import { SemanticWeb } from "@/components/landing/SemanticWeb";
 
 const BENEFITS = [
   {
-    title: "Réduction instantanée du stress",
-    body: "Focaliser son attention sur les lignes, les formes et les couleurs apaise le système nerveux.",
+    title: "Un moment pour ralentir",
+    body: "Focaliser son attention sur les lignes, les formes et les couleurs aide à poser le rythme et à se recentrer.",
     icon: "◎",
     iconLabel: "Symbole de calme",
   },
@@ -15,10 +15,10 @@ const BENEFITS = [
     iconLabel: "Symbole d'éveil créatif",
   },
   {
-    title: "Exploration émotionnelle",
-    body: "Laisser l'inconscient guider le geste pour libérer les tensions accumulées.",
+    title: "Exploration personnelle",
+    body: "Laisser le geste guider la découverte — curiosité, jeu et matière avant tout jugement.",
     icon: "◌",
-    iconLabel: "Symbole d'exploration intérieure",
+    iconLabel: "Symbole d'exploration créative",
   },
 ] as const;
 
@@ -27,7 +27,7 @@ export function LandingBenefits() {
     <SemanticWeb
       tag="section"
       className="bg-white"
-      aria-label="Bénéfices de l'art-thérapie au quotidien"
+      aria-label="Bénéfices d'un rituel créatif au quotidien"
     >
       <View className="max-w-5xl mx-auto px-6 py-14 md:py-16">
         <SemanticWeb
@@ -38,10 +38,10 @@ export function LandingBenefits() {
         </SemanticWeb>
 
         <SemanticWeb tag="p" className="text-sand-700 text-base leading-7 mb-10 max-w-3xl">
-          L'art-thérapie n'exige aucune compétence technique ni talent particulier. Le but
-          n'est pas de créer une œuvre esthétique, mais de vivre pleinement le processus de
-          création. En pratiquant régulièrement des exercices d'expression artistique, vous
-          agissez directement sur votre bien-être :
+          Un exercice créatif n'exige aucune compétence technique ni talent particulier. Le
+          but n'est pas de créer une œuvre esthétique, mais de vivre pleinement le processus
+          de création. En pratiquant régulièrement, vous cultivez curiosité, lâcher-prise et
+          bien-être au quotidien :
         </SemanticWeb>
 
         <View className="flex-row flex-wrap gap-4 md:gap-6">

@@ -45,7 +45,7 @@ Test : `https://api.pastek-art.eu/api/health` → `{"status":"ok",...}`
 
 6. Deploy
 
-Test : `https://pastek-art.eu` → écran d'accueil Art Thérapie
+Test : `https://pastek-art.eu` → écran d'accueil Pastek Art
 
 ---
 

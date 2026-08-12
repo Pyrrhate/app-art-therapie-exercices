@@ -21,8 +21,7 @@ export function LandingFooter() {
           </Link>
         </View>
         <Text className="text-sand-500 text-sm text-center leading-6">
-          Générateur d&apos;exercices d&apos;art-thérapie — rituels créatifs pour le
-          bien-être. © {year}
+          Générateur d&apos;exercices créatifs — rituels pour le lâcher-prise. © {year}
         </Text>
       </View>
     </SemanticWeb>

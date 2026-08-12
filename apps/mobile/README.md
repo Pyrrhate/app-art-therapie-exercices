@@ -1,4 +1,4 @@
-# Art Thérapie Mobile
+# Pastek Art — Mobile
 
 Application Expo + NativeWind. Voir le README racine du monorepo.
 

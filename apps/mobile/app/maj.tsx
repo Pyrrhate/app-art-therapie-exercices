@@ -102,7 +102,7 @@ function MajContent({ showAppLink }: { showAppLink?: boolean }) {
       <ChangelogList />
 
       <Text className={`text-xs text-center leading-5 pb-4 ${textMuted(isDark)}`}>
-        Pastek Art · générateur d&apos;exercices d&apos;art-thérapie
+        Pastek Art · générateur d&apos;exercices créatifs
       </Text>
     </View>
   );

@@ -118,8 +118,8 @@ export function CustomExerciseFilters({
       />
 
       <FilterGroup
-        label="Objectif thérapeutique"
-        accessibilityLabel="Choisir un objectif thérapeutique"
+        label="Intention créative"
+        accessibilityLabel="Choisir une intention créative"
         options={CUSTOM_GOALS}
         selected={value.goal}
         onSelect={(goal) => onChange({ goal })}

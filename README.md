@@ -1,4 +1,4 @@
-# Pastek Art — Art Thérapie
+# Pastek Art — exercices créatifs
 
 Application gratuite cross-platform (web, Android, iOS) pour un rituel créatif guidé par l'IA, avec stockage local-first.
 

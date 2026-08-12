@@ -98,7 +98,7 @@ export default function WelcomeScreen() {
       <AppHeader compact onNavigateTraces={scrollToTraces} />
 
       <PastekScreenHero
-        label="Art Thérapie"
+        label="Pastek Art"
         title={isWide ? "Trouver une impulsion,\n" : "Impulsion & "}
         accent={isWide ? "puis créer" : "création"}
         description={

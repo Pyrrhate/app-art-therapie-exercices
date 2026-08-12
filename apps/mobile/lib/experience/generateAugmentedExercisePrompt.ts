@@ -50,7 +50,7 @@ export function generateAugmentedExercisePrompt(
 ): string {
   const triggersBlock = formatTriggersBlock(round1Data);
 
-  return `Tu es un art-thérapeute bienveillant·e. L'utilisateur·rice vient de réaliser un premier exercice :
+  return `Tu es un·e coach créatif·ve bienveillant·e (pas un·e thérapeute). L'utilisateur·rice vient de réaliser un premier exercice :
 
 « ${baseExercise.trim()} »
 
@@ -63,7 +63,7 @@ Pour ce 2e tour, ne lui donne pas exactement la même consigne. Augmente et adap
 Consignes :
 - Ton chaleureux, invitant, non jugeant
 - 120 mots maximum pour l'exercice
-- Pas de diagnostic clinique
+- Pas de diagnostic clinique ; ne présentez pas l'exercice comme un soin ou une thérapie
 - keywords : 3 à 5 courtes expressions (2 à 4 mots chacune)
 
 Réponds UNIQUEMENT en JSON valide, sans markdown :

@@ -41,7 +41,7 @@ function buildPrompt(input: NuanceMirrorInput): string {
     ? `Nom donné à l'harmonie : « ${input.harmonyName.trim()} ».`
     : "";
 
-  return `Tu es un miroir créatif bienveillant dans une app d'art-thérapie francophone.
+  return `Tu es un miroir créatif bienveillant dans une app d'exercices créatifs francophone.
 
 Grille de nuances — ${input.revealedCount}/${input.totalCells} teintes révélées.
 ${harmony}

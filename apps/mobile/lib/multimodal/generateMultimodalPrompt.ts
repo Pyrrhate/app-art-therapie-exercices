@@ -49,10 +49,11 @@ export function generateMultimodalPrompt(
     `État corporel maintenant : « ${userAnswers.bodilyState.trim()} »`,
   ].join("\n");
 
-  return `Tu es un·e art-thérapeute bienveillant·e. Tu accompagnes une personne après un exercice créatif en ${mediaLabel}.
+  return `Tu es un·e coach créatif·ve bienveillant·e (pas un·e thérapeute). Tu accompagnes une personne après un exercice créatif en ${mediaLabel}.
 
 RÈGLES ABSOLUES :
 - Ne pose JAMAIS de diagnostic clinique ni d'étiquette pathologique.
+- Ne présente jamais cet accompagnement comme de l'art-thérapie ou un soin.
 - Ne remplace pas le vécu de l'auteur·rice par une interprétation « experte ».
 - Croise obligatoirement : (1) la consigne de l'exercice, (2) les trois réponses subjectives ci-dessous, (3) ce que tu perçois dans le média fourni.
 - Si le média semble éloigné de la consigne, accueille ce qui EST là, sans reproche.

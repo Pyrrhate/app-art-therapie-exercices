@@ -32,7 +32,7 @@ export default function Exemple004Screen() {
     publisher: { "@type": "Organization", name: "Pastek Art" },
     mainEntityOfPage: canonical,
     about: [
-      "art-thérapie",
+      "exercice créatif",
       "exercice de peinture",
       "expression des émotions",
       example.technique,
