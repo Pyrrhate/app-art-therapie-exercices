@@ -7,6 +7,7 @@ import { createAiAdapter } from "@/lib/ai/adapter";
 import { AnthropicProvider } from "@/lib/ai/anthropic";
 import { byokBodySchema, byokFromBody } from "@/lib/ai/byok";
 import { GeminiProvider } from "@/lib/ai/gemini";
+import { OpenAICompatibleProvider } from "@/lib/ai/openai-compatible";
 import { OpenAIProvider } from "@/lib/ai/openai";
 import {
   corsHeaders,
@@ -78,22 +79,27 @@ export async function POST(request: Request) {
   try {
     const provider = createAiAdapter(credentials);
 
-    // Gemini / Anthropic / OpenAI : ping court (évite les faux négatifs JSON).
+    // Ping court pour les providers qui l'exposent (évite les faux négatifs JSON).
     if (
       (credentials.provider === "gemini" &&
         provider instanceof GeminiProvider) ||
       (credentials.provider === "anthropic" &&
         provider instanceof AnthropicProvider) ||
-      (credentials.provider === "openai" && provider instanceof OpenAIProvider)
+      (credentials.provider === "openai" && provider instanceof OpenAIProvider) ||
+      ((credentials.provider === "scaleway" ||
+        credentials.provider === "ovhcloud") &&
+        provider instanceof OpenAICompatibleProvider)
     ) {
       const reply = await provider.ping();
       const ok = /ok/i.test(reply);
-      const label =
-        credentials.provider === "gemini"
-          ? "Gemini"
-          : credentials.provider === "anthropic"
-            ? "Anthropic"
-            : "OpenAI";
+      const labels: Record<string, string> = {
+        gemini: "Gemini",
+        anthropic: "Anthropic",
+        openai: "OpenAI",
+        scaleway: "Scaleway",
+        ovhcloud: "OVHcloud",
+      };
+      const label = labels[credentials.provider] ?? credentials.provider;
       return jsonResponse(
         {
           ok,

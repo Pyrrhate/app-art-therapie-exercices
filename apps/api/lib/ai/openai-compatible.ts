@@ -33,6 +33,8 @@ export interface OpenAICompatibleOptions {
   apiKey: string;
   textModel: string;
   visionModel?: string;
+  /** Modèles de secours si le principal est 404 / indisponible. */
+  fallbackModels?: string[];
   /** true = pas de vision (texte seul + fallback OCR). */
   textOnly?: boolean;
 }
@@ -67,12 +69,46 @@ function withSafety(system?: string): string {
     : CREATIVE_COACH_SAFETY;
 }
 
+function compatibleHttpError(
+  label: string,
+  status: number,
+  rawBody: string,
+  model?: string
+): Error {
+  let detail = `${label} HTTP ${status}`;
+  try {
+    const parsed = JSON.parse(rawBody) as {
+      error?: { message?: string; type?: string; code?: string } | string;
+      message?: string;
+    };
+    const msg =
+      (typeof parsed.error === "string"
+        ? parsed.error
+        : parsed.error?.message?.trim()) || parsed.message?.trim();
+    if (msg) detail = `${label} HTTP ${status} — ${msg.slice(0, 220)}`;
+  } catch {
+    const snippet = rawBody.replace(/\s+/g, " ").trim().slice(0, 160);
+    if (snippet) detail = `${label} HTTP ${status} — ${snippet}`;
+  }
+  if (model && !detail.includes(model)) {
+    detail = `${detail} (model: ${model})`;
+  }
+  return new Error(detail);
+}
+
+function shouldTryNextModel(message: string): boolean {
+  return /HTTP 404|model_not_found|does not exist|not found|unknown model|not available|no longer/i.test(
+    message
+  );
+}
+
 export class OpenAICompatibleProvider implements AIProvider {
   private readonly label: string;
   private readonly baseUrl: string;
   private readonly apiKey: string;
   private readonly textModel: string;
   private readonly visionModel: string;
+  private readonly fallbackModels: string[];
   private readonly textOnly: boolean;
 
   constructor(options: OpenAICompatibleOptions) {
@@ -81,7 +117,16 @@ export class OpenAICompatibleProvider implements AIProvider {
     this.apiKey = options.apiKey.trim();
     this.textModel = options.textModel;
     this.visionModel = options.visionModel ?? options.textModel;
+    this.fallbackModels = options.fallbackModels ?? [];
     this.textOnly = options.textOnly ?? false;
+  }
+
+  async ping(): Promise<string> {
+    return this.callText("Répondez uniquement par le mot OK.", {
+      maxTokens: 16,
+      temperature: 0,
+      systemPrompt: "Répondez strictement: OK",
+    });
   }
 
   async generateExercise(input: ExerciseRequest): Promise<ExerciseResponse> {
@@ -136,13 +181,17 @@ export class OpenAICompatibleProvider implements AIProvider {
         fallbackNote: `${this.label} a répondu, mais le format n’était pas exploitable.`,
       };
     } catch (error) {
-      console.warn(`[${this.label} generateExercise]`, (error as Error).message);
+      const note =
+        error instanceof Error
+          ? error.message
+          : `${this.label} indisponible — exercice local proposé.`;
+      console.warn(`[${this.label} generateExercise]`, note);
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback",
-        fallbackNote: `${this.label} indisponible — exercice local proposé.`,
+        fallbackNote: note.slice(0, 400),
       };
     }
   }
@@ -288,7 +337,11 @@ export class OpenAICompatibleProvider implements AIProvider {
       { role: "system", content: withSafety(options?.systemPrompt) },
       { role: "user", content: prompt },
     ];
-    return this.chat(messages, this.textModel, options);
+    return this.chatWithFallback(
+      [this.textModel, ...this.fallbackModels],
+      messages,
+      options
+    );
   }
 
   private async callVision(imageBase64: string, prompt: string): Promise<string> {
@@ -301,10 +354,38 @@ export class OpenAICompatibleProvider implements AIProvider {
         ],
       },
     ];
-    return this.chat(messages, this.visionModel, {
-      maxTokens: 1024,
-      temperature: 0.4,
-    });
+    return this.chatWithFallback(
+      [this.visionModel, ...this.fallbackModels],
+      messages,
+      {
+        maxTokens: 1024,
+        temperature: 0.4,
+      }
+    );
+  }
+
+  private async chatWithFallback(
+    models: string[],
+    messages: ChatMessage[],
+    options?: { temperature?: number; maxTokens?: number }
+  ): Promise<string> {
+    const ordered = [...new Set(models.filter(Boolean))];
+    let lastError: Error | null = null;
+
+    for (const model of ordered) {
+      try {
+        return await this.chat(messages, model, options);
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.warn(
+          `[${this.label}] modèle ${model}:`,
+          lastError.message.slice(0, 180)
+        );
+        if (!shouldTryNextModel(lastError.message)) throw lastError;
+      }
+    }
+
+    throw lastError ?? new Error(`${this.label}: tous les modèles ont échoué`);
   }
 
   private async chat(
@@ -333,9 +414,7 @@ export class OpenAICompatibleProvider implements AIProvider {
         `[${this.label} chat] ${response.status}:`,
         rawBody.slice(0, 200)
       );
-      throw new Error(
-        `${this.label} HTTP ${response.status}: ${rawBody.slice(0, 120)}`
-      );
+      throw compatibleHttpError(this.label, response.status, rawBody, model);
     }
 
     const data = JSON.parse(rawBody) as {
@@ -362,17 +441,11 @@ export async function testOpenAICompatibleConnection(options: {
       textModel: options.model,
       textOnly: true,
     });
-    const exercise = await provider.generateExercise({
-      impulse: "ping",
-      technique: "drawing",
-      durationMinutes: 5,
-    });
+    const reply = await provider.ping();
+    const ok = /ok/i.test(reply);
     return {
-      ok: exercise.source === "ai",
-      message:
-        exercise.source === "ai"
-          ? "Connexion OK"
-          : exercise.fallbackNote ?? "Échec",
+      ok,
+      message: ok ? "Connexion OK" : `Réponse inattendue : ${reply.slice(0, 80)}`,
     };
   } catch (e) {
     return { ok: false, message: (e as Error).message.slice(0, 200) };

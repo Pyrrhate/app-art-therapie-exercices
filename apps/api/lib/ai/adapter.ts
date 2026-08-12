@@ -24,12 +24,21 @@ export const PROVIDER_ENDPOINTS = {
     baseUrl: "https://api.scaleway.ai/v1",
     textModel: "llama-3.3-70b-instruct",
     visionModel: "llama-3.3-70b-instruct",
+    fallbackModels: [
+      "mistral-small-3.2-24b-instruct-2506",
+      "gemma-4-26b-a4b-it",
+      "mistral-medium-3.5-128b",
+    ],
     textOnly: true as const,
   },
   ovhcloud: {
     baseUrl: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
     textModel: "Meta-Llama-3_3-70B-Instruct",
     visionModel: "Meta-Llama-3_3-70B-Instruct",
+    fallbackModels: [
+      "Meta-Llama-3_1-70B-Instruct",
+      "Mixtral-8x22B-Instruct-v0.1",
+    ],
     textOnly: true as const,
   },
 } as const;
@@ -60,6 +69,7 @@ export function createAiAdapter(credentials: AdapterCredentials): AIProvider {
         apiKey,
         textModel: cfg.textModel,
         visionModel: cfg.visionModel,
+        fallbackModels: [...cfg.fallbackModels],
         textOnly: cfg.textOnly,
       });
     }
@@ -71,6 +81,7 @@ export function createAiAdapter(credentials: AdapterCredentials): AIProvider {
         apiKey,
         textModel: cfg.textModel,
         visionModel: cfg.visionModel,
+        fallbackModels: [...cfg.fallbackModels],
         textOnly: cfg.textOnly,
       });
     }
