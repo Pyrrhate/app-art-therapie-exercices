@@ -11,12 +11,19 @@ export function ProgressiveReflection({
   reflection,
   staggerMs = 700,
 }: ProgressiveReflectionProps) {
-  const paragraphs = reflection.split(/\n\s*\n/).filter((p) => p.trim());
-  const [visibleCount, setVisibleCount] = useState(0);
+  const paragraphs = reflection
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const [visibleCount, setVisibleCount] = useState(() =>
+    paragraphs.length > 0 ? 1 : 0
+  );
 
   useEffect(() => {
-    setVisibleCount(0);
-    if (paragraphs.length === 0) return;
+    if (paragraphs.length === 0) {
+      setVisibleCount(0);
+      return;
+    }
 
     setVisibleCount(1);
     if (paragraphs.length === 1) return;
@@ -31,18 +38,26 @@ export function ProgressiveReflection({
     }, staggerMs);
 
     return () => clearInterval(timer);
-  }, [reflection, staggerMs, paragraphs.length]);
+    // reflection est la source de vérité ; paragraphs.length suit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reflection, staggerMs]);
+
+  if (!reflection.trim()) {
+    return null;
+  }
 
   const shown =
     paragraphs.length > 1
-      ? paragraphs.slice(0, visibleCount)
-      : [reflection];
+      ? paragraphs.slice(0, Math.max(visibleCount, 1))
+      : paragraphs.length === 1
+        ? paragraphs
+        : [reflection.trim()];
 
   return (
     <View>
       {shown.map((paragraph, index) => (
         <Text
-          key={`${index}-${paragraph.slice(0, 12)}`}
+          key={`${index}-${paragraph.slice(0, 24)}`}
           className={`text-sand-700 text-base leading-7 ${
             index < shown.length - 1 ? "mb-4" : "mb-4"
           }`}

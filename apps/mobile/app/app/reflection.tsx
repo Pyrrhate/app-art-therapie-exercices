@@ -774,6 +774,7 @@ export default function ReflectionScreen() {
 
   async function handleDeepenReflection() {
     if (!reflection?.trim() || loadingReflection) return;
+    const previousMirror = reflection.trim();
     const { generation } = startWork();
     setLoadingReflection(true);
     setNotice({
@@ -781,22 +782,48 @@ export default function ReflectionScreen() {
       message: "Approfondissement du miroir en cours…",
     });
     try {
+      const deepenWritten = [
+        writtenText.trim() || null,
+        `[Demande d'approfondissement du miroir créatif]\nMiroir précédent à prolonger (ne pas recopier) :\n« ${previousMirror.slice(0, 3500)} »`,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
       const result = await withTimeout(
         analyzeArtwork({
-          impulse,
+          impulse: (impulse || "Approfondir le miroir").slice(0, 200),
           technique: technique ?? undefined,
-          exercise,
+          exercise: exercise?.slice(0, 3000),
           durationMinutes,
-          previousReflection: reflection,
-          writtenText: writtenText.trim() || undefined,
-          colorContext: colorContext ?? undefined,
+          previousReflection: previousMirror.slice(0, 6000),
+          writtenText: deepenWritten.slice(0, 8000),
+          colorContext:
+            colorContext && colorContext.trim().length >= 10
+              ? colorContext.trim().slice(0, 2000)
+              : undefined,
+          // Réutilise la photo déjà préparée si disponible pour enrichir l'approfondissement.
+          imageBase64: photoDataUrl?.startsWith("data:")
+            ? photoDataUrl
+            : undefined,
         }),
         90_000
       );
       if (isStale(generation)) return;
+
+      const nextReflection = (result.reflection ?? "").trim();
+      if (nextReflection.length < 40) {
+        setNotice({
+          type: "error",
+          message:
+            result.analysisNote?.trim() ||
+            "L'approfondissement n'a pas renvoyé de texte exploitable. Réessayez dans un instant.",
+        });
+        return;
+      }
+
       setReflection(
-        result.reflection,
-        result.openQuestions,
+        nextReflection,
+        result.openQuestions ?? [],
         result.followUpExercise ?? null
       );
       setReflectionSource(result.source);
@@ -1482,10 +1509,15 @@ export default function ReflectionScreen() {
                 )}
               </View>
               {displayReflectionBody ? (
-                <ProgressiveReflection reflection={displayReflectionBody} />
+                <ProgressiveReflection
+                  key={displayReflectionBody.slice(0, 64)}
+                  reflection={displayReflectionBody}
+                />
               ) : (
                 <Text className="text-sand-600 text-sm leading-6">
-                  Votre réflexion est prête — explorez les invitations ci-dessous.
+                  {reflection?.trim()
+                    ? reflection
+                    : "Votre réflexion est prête — explorez les invitations ci-dessous."}
                 </Text>
               )}
             </View>

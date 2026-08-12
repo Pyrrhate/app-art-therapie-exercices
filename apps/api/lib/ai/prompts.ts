@@ -102,18 +102,29 @@ function formatReflectionContext(ctx: ReflectionPromptContext): string {
 
 export function buildWarmReflectionPrompt(ctx: ReflectionPromptContext): string {
   const contextBlock = formatReflectionContext(ctx);
-  const deepenHint = ctx.previousReflection?.trim()
-    ? `\nMode approfondissement : partez du miroir déjà proposé, enrichissez la symbolique douce et proposez des questions plus précises — sans reformuler à l'identique.\n`
+  const isDeepen = Boolean(ctx.previousReflection?.trim());
+  const deepenHint = isDeepen
+    ? `
+Mode APPROFONDISSEMENT (obligatoire) :
+- Le miroir précédent est fourni : partez de lui pour aller plus loin.
+- Rédigez 3 ou 4 NOUVEAUX paragraphes (séparés par \\n\\n), substantiels (50 à 70 mots chacun).
+- Ne recopiez pas le miroir précédent ; enrichissez la symbolique douce, le ressenti et les pistes créatives.
+- Une image ou un nouveau texte n'est PAS requis pour approfondir : le miroir précédent suffit comme matière.
+`
     : "";
+
+  const fidelityHint = isDeepen
+    ? `Ancrez-vous dans le miroir précédent et, s'ils sont fournis, dans l'image ou le texte. N'inventez pas d'éléments absents.`
+    : `Fidélité : ne décrivez que ce qui est visible dans l'image ou le texte fourni. Si les observations indiquent un accord_exercice faible ou partiel, accueillez la création telle qu'elle est (« votre geste semble avoir pris un autre chemin que l'intitulé… ») puis parlez de ce qui est montré.
+
+Si un texte écrit est fourni, accueillez aussi les mots et leur rythme.`;
 
   return `DONNÉES DE LA SÉANCE :
 ${contextBlock}
 ${deepenHint}
 Avant de rédiger, vérifiez mentalement que votre ton n'est ni trop clinique, ni trop professoral — accueil chaleureux avant tout.
 
-Fidélité : ne décrivez que ce qui est visible dans l'image ou le texte fourni. Si les observations indiquent un accord_exercice faible ou partiel, accueillez la création telle qu'elle est (« votre geste semble avoir pris un autre chemin que l'intitulé… ») puis parlez de ce qui est montré.
-
-Si un texte écrit est fourni, accueillez aussi les mots et leur rythme.
+${fidelityHint}
 
 Interdit : « L'œuvre présente », jargon d'expert, jugement sur la qualité artistique.
 

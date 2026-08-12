@@ -203,14 +203,21 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       colorContext,
       paletteColors: paletteColors ?? get().paletteColors,
     }),
-  setReflection: (reflection, openQuestions, followUpExercise) =>
+  setReflection: (reflection, openQuestions, followUpExercise) => {
+    const cleaned = sanitizeAiDisplayText(reflection);
+    // Ne jamais écraser un miroir existant par une chaîne vide (sanitize trop agressif).
+    const nextReflection =
+      cleaned.trim() ||
+      (typeof reflection === "string" ? reflection.trim() : "");
+    if (!nextReflection) return;
     set({
-      reflection: sanitizeAiDisplayText(reflection),
+      reflection: nextReflection,
       openQuestions: sanitizeQuestions(openQuestions),
       followUpExercise: followUpExercise
-        ? sanitizeAiDisplayText(followUpExercise)
+        ? sanitizeAiDisplayText(followUpExercise) || followUpExercise.trim()
         : null,
-    }),
+    });
+  },
   startFollowUpExercise: () => {
     const state = get();
     const follow = state.followUpExercise;
