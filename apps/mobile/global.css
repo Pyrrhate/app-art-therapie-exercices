@@ -39,6 +39,13 @@ html.dark body {
   background-color: #2a3f35;
 }
 
+/* Hero accueil — blocs texte en inline-block (web) */
+.landing-hero-inline-block {
+  display: inline-block;
+  max-width: 42rem;
+  width: fit-content;
+}
+
 /* Landing header — nav desktop sur une seule ligne (web) */
 @media (min-width: 768px) {
   .landing-desktop-nav {

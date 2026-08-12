@@ -38,7 +38,7 @@ export function LandingHero() {
         importantForAccessibility="no"
         imageStyle={
           Platform.OS === "web"
-            ? ({ objectPosition: "center 20%" } as const)
+            ? ({ objectPosition: "center center" } as const)
             : undefined
         }
         style={{ width: "100%", minHeight: heroMinHeight }}
@@ -59,22 +59,26 @@ export function LandingHero() {
             ))}
           </View>
 
-          <View className="self-center rounded-2xl bg-sage-600 px-5 py-5 md:px-8 md:py-6 max-w-2xl mb-8">
-            <SemanticWeb
-              tag="h1"
-              className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-tight text-white mb-4 text-center"
-            >
-              Libérez Votre Créativité, Un Exercice à la Fois
-            </SemanticWeb>
+          <View className="items-center gap-3 mb-8 w-full px-1">
+            <View className="landing-hero-inline-block self-center rounded-xl bg-sage-600 px-4 py-3 md:px-6 md:py-4">
+              <SemanticWeb
+                tag="h1"
+                className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-tight text-white text-center whitespace-pre-line"
+              >
+                {`Libérez Votre Créativité,\nUn Exercice à la Fois`}
+              </SemanticWeb>
+            </View>
 
-            <SemanticWeb
-              tag="p"
-              className="text-white/95 text-base md:text-lg leading-8 text-center"
-            >
-              Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
-              jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
-              clé IA reste chez vous (BYOK) ; vos traces restent locales.
-            </SemanticWeb>
+            <View className="landing-hero-inline-block self-center rounded-xl bg-sage-600 px-4 py-3 md:px-6 md:py-4">
+              <SemanticWeb
+                tag="p"
+                className="text-white text-base md:text-lg leading-8 text-center"
+              >
+                Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
+                jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
+                clé IA reste chez vous (BYOK) ; vos traces restent locales.
+              </SemanticWeb>
+            </View>
           </View>
 
           <View className="flex-row flex-wrap items-center justify-center gap-3 mb-8">
