@@ -39,7 +39,7 @@ html.dark body {
   background-color: #2a3f35;
 }
 
-/* Hero accueil — surlignement vert directement sur le texte */
+/* Hero accueil — surlignement vert léger via span */
 .landing-hero-copy-wrap {
   display: flex;
   flex-direction: column;
@@ -50,14 +50,16 @@ html.dark body {
   align-self: center;
 }
 
-.landing-hero-copy {
+.landing-hero-mark {
   display: inline;
-  background-color: var(--bark-green);
-  color: #ffffff;
-  padding: 0.2rem 0.45rem;
+  padding: 0.02rem 0.18rem;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  text-align: center;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 52%,
+    color-mix(in srgb, var(--bark-green) 36%, white) 52%
+  );
 }
 
 /* Landing header — nav desktop sur une seule ligne (web) */

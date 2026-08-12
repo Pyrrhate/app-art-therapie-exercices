@@ -57,7 +57,7 @@ export function LandingHero() {
           Platform.OS === "web"
             ? ({
                 objectPosition: "center center",
-                transform: `translateY(-${parallaxY}px) scale(1.06)`,
+                transform: [{ translateY: -parallaxY }, { scale: 1.06 }],
                 transition: "transform 90ms linear",
               } as const)
             : undefined
@@ -83,18 +83,32 @@ export function LandingHero() {
           <View className="landing-hero-copy-wrap mb-8 px-1">
             <SemanticWeb
               tag="h1"
-              className="landing-hero-copy font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-snug text-sand-900 text-center whitespace-pre-line"
+              className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-snug text-sand-900 text-center whitespace-pre-line"
             >
-              {`Libérez Votre Créativité,\nUn Exercice à la Fois`}
+              {Platform.OS === "web" ? (
+                <>
+                  <span className="landing-hero-mark">Libérez Votre Créativité,</span>
+                  <br />
+                  <span className="landing-hero-mark">Un Exercice à la Fois</span>
+                </>
+              ) : (
+                `Libérez Votre Créativité,\nUn Exercice à la Fois`
+              )}
             </SemanticWeb>
 
             <SemanticWeb
               tag="p"
-              className="landing-hero-copy text-base md:text-lg leading-8 text-sand-900 text-center"
+              className="text-base md:text-lg leading-8 text-sand-900 text-center"
             >
-              Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
-              jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
-              clé IA reste chez vous (BYOK) ; vos traces restent locales.
+              {Platform.OS === "web" ? (
+                <span className="landing-hero-mark">
+                  Pastek Art vous invite à explorer le dessin, la peinture et le collage comme
+                  un jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique.
+                  Votre clé IA reste chez vous (BYOK) ; vos traces restent locales.
+                </span>
+              ) : (
+                "Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre clé IA reste chez vous (BYOK) ; vos traces restent locales."
+              )}
             </SemanticWeb>
           </View>
 
