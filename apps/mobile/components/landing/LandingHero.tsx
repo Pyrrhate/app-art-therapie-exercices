@@ -43,7 +43,7 @@ export function LandingHero() {
         }
         style={{ width: "100%", minHeight: heroMinHeight }}
       >
-        <View className="absolute inset-0 bg-sand-50/78" />
+        <View className="absolute inset-0 bg-sand-50/50" />
 
         <View className="relative max-w-3xl mx-auto px-6 pt-10 pb-14 md:pt-12 md:pb-20 items-center">
           <View className="flex-row flex-wrap justify-center gap-2 mb-6">
@@ -59,21 +59,23 @@ export function LandingHero() {
             ))}
           </View>
 
-          <SemanticWeb
-            tag="h1"
-            className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-tight text-sand-900 mb-5 text-center"
-          >
-            Libérez Votre Créativité, Un Exercice à la Fois
-          </SemanticWeb>
+          <View className="self-center rounded-2xl bg-sage-600 px-5 py-5 md:px-8 md:py-6 max-w-2xl mb-8">
+            <SemanticWeb
+              tag="h1"
+              className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-tight text-white mb-4 text-center"
+            >
+              Libérez Votre Créativité, Un Exercice à la Fois
+            </SemanticWeb>
 
-          <SemanticWeb
-            tag="p"
-            className="text-sand-800 text-base md:text-lg leading-8 mb-8 max-w-2xl text-center"
-          >
-            Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
-            jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
-            clé IA reste chez vous (BYOK) ; vos traces restent locales.
-          </SemanticWeb>
+            <SemanticWeb
+              tag="p"
+              className="text-white/95 text-base md:text-lg leading-8 text-center"
+            >
+              Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
+              jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
+              clé IA reste chez vous (BYOK) ; vos traces restent locales.
+            </SemanticWeb>
+          </View>
 
           <View className="flex-row flex-wrap items-center justify-center gap-3 mb-8">
             <View className="rounded-full bg-mint-100/95 px-3 py-1.5 border border-sage-200">
