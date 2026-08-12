@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   ImageBackground,
   Platform,
@@ -17,14 +18,30 @@ const ctaShadow =
     : undefined;
 
 const TAGS = [
-  { label: "Lâcher-prise", decoration: "decoration-sage-500" },
-  { label: "Focus créatif", decoration: "decoration-melon-500" },
-  { label: "Expression", decoration: "decoration-sage-500" },
+  { label: "Lâcher-prise", bg: "bg-clay-400", text: "text-sand-900" },
+  { label: "Focus créatif", bg: "bg-sage-500", text: "text-white" },
+  { label: "Expression", bg: "bg-melon-500", text: "text-white" },
 ] as const;
 
 const heroMinHeight = Platform.OS === "web" ? 520 : 460;
 
 export function LandingHero() {
+  const [parallaxY, setParallaxY] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+
+    const onScroll = () => {
+      const y = window.scrollY || 0;
+      // Effet léger pour garder une lecture confortable du hero.
+      setParallaxY(Math.min(y * 0.12, 42));
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <SemanticWeb
       tag="section"
@@ -38,7 +55,11 @@ export function LandingHero() {
         importantForAccessibility="no"
         imageStyle={
           Platform.OS === "web"
-            ? ({ objectPosition: "center center" } as const)
+            ? ({
+                objectPosition: "center center",
+                transform: `translateY(-${parallaxY}px) scale(1.06)`,
+                transition: "transform 90ms linear",
+              } as const)
             : undefined
         }
         style={{ width: "100%", minHeight: heroMinHeight }}
@@ -46,14 +67,16 @@ export function LandingHero() {
         <View className="absolute inset-0 bg-sand-50/50" />
 
         <View className="relative max-w-3xl mx-auto px-6 pt-10 pb-14 md:pt-12 md:pb-20 items-center">
-          <View className="flex-row flex-wrap justify-center gap-4 mb-6">
+          <View className="flex-row flex-wrap justify-center gap-2 mb-6">
             {TAGS.map((tag) => (
-              <Text
+              <View
                 key={tag.label}
-                className={`text-sand-900 text-sm font-semibold underline decoration-2 underline-offset-4 ${tag.decoration}`}
+                className={`rounded-full px-3 py-1.5 ${tag.bg}`}
               >
-                {tag.label}
-              </Text>
+                <Text className={`text-xs font-semibold tracking-wide ${tag.text}`}>
+                  {tag.label}
+                </Text>
+              </View>
             ))}
           </View>
 
@@ -75,13 +98,15 @@ export function LandingHero() {
             </SemanticWeb>
           </View>
 
-          <View className="flex-row flex-wrap items-center justify-center gap-4 mb-8">
-            <Text className="text-sage-800 text-xs font-semibold underline decoration-sage-500 decoration-2 underline-offset-4">
-              100 % local & privé
-            </Text>
-            <Text className="text-sand-900 text-xs font-semibold underline decoration-melon-500 decoration-2 underline-offset-4">
-              BYOK activé
-            </Text>
+          <View className="flex-row flex-wrap items-center justify-center gap-3 mb-8">
+            <View className="rounded-full bg-mint-100/95 px-3 py-1.5 border border-sage-200">
+              <Text className="text-sage-800 text-xs font-semibold">
+                100 % local & privé
+              </Text>
+            </View>
+            <View className="rounded-full bg-melon-50/95 px-3 py-1.5 border border-melon-200">
+              <Text className="text-melon-700 text-xs font-semibold">BYOK activé</Text>
+            </View>
           </View>
 
           <Link href={ROUTES.home} asChild>
