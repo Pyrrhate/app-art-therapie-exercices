@@ -59,26 +59,22 @@ export function LandingHero() {
             ))}
           </View>
 
-          <View className="items-center gap-3 mb-8 w-full px-1">
-            <View className="landing-hero-inline-block self-center rounded-xl bg-sage-600 px-4 py-3 md:px-6 md:py-4">
-              <SemanticWeb
-                tag="h1"
-                className="font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-tight text-white text-center whitespace-pre-line"
-              >
-                {`Libérez Votre Créativité,\nUn Exercice à la Fois`}
-              </SemanticWeb>
-            </View>
+          <View className="landing-hero-copy-wrap mb-8 px-1">
+            <SemanticWeb
+              tag="h1"
+              className="landing-hero-copy font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-snug text-white text-center whitespace-pre-line bg-sage-600 px-2 py-1"
+            >
+              {`Libérez Votre Créativité,\nUn Exercice à la Fois`}
+            </SemanticWeb>
 
-            <View className="landing-hero-inline-block self-center rounded-xl bg-sage-600 px-4 py-3 md:px-6 md:py-4">
-              <SemanticWeb
-                tag="p"
-                className="text-white text-base md:text-lg leading-8 text-center"
-              >
-                Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
-                jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
-                clé IA reste chez vous (BYOK) ; vos traces restent locales.
-              </SemanticWeb>
-            </View>
+            <SemanticWeb
+              tag="p"
+              className="landing-hero-copy text-base md:text-lg leading-8 text-white text-center bg-sage-600 px-2 py-1"
+            >
+              Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
+              jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
+              clé IA reste chez vous (BYOK) ; vos traces restent locales.
+            </SemanticWeb>
           </View>
 
           <View className="flex-row flex-wrap items-center justify-center gap-3 mb-8">
