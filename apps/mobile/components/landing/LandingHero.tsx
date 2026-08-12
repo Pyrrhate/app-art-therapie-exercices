@@ -17,9 +17,9 @@ const ctaShadow =
     : undefined;
 
 const TAGS = [
-  { label: "Lâcher-prise", bg: "bg-clay-400", text: "text-sand-900" },
-  { label: "Focus créatif", bg: "bg-sage-500", text: "text-white" },
-  { label: "Expression", bg: "bg-melon-500", text: "text-white" },
+  { label: "Lâcher-prise", decoration: "decoration-sage-500" },
+  { label: "Focus créatif", decoration: "decoration-melon-500" },
+  { label: "Expression", decoration: "decoration-sage-500" },
 ] as const;
 
 const heroMinHeight = Platform.OS === "web" ? 520 : 460;
@@ -46,30 +46,28 @@ export function LandingHero() {
         <View className="absolute inset-0 bg-sand-50/50" />
 
         <View className="relative max-w-3xl mx-auto px-6 pt-10 pb-14 md:pt-12 md:pb-20 items-center">
-          <View className="flex-row flex-wrap justify-center gap-2 mb-6">
+          <View className="flex-row flex-wrap justify-center gap-4 mb-6">
             {TAGS.map((tag) => (
-              <View
+              <Text
                 key={tag.label}
-                className={`rounded-full px-3 py-1.5 ${tag.bg}`}
+                className={`text-sand-900 text-sm font-semibold underline decoration-2 underline-offset-4 ${tag.decoration}`}
               >
-                <Text className={`text-xs font-semibold tracking-wide ${tag.text}`}>
-                  {tag.label}
-                </Text>
-              </View>
+                {tag.label}
+              </Text>
             ))}
           </View>
 
           <View className="landing-hero-copy-wrap mb-8 px-1">
             <SemanticWeb
               tag="h1"
-              className="landing-hero-copy font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-snug text-white text-center whitespace-pre-line bg-sage-600 px-2 py-1"
+              className="landing-hero-copy font-display text-3xl md:text-4xl lg:text-[2.65rem] leading-snug text-sand-900 text-center whitespace-pre-line"
             >
               {`Libérez Votre Créativité,\nUn Exercice à la Fois`}
             </SemanticWeb>
 
             <SemanticWeb
               tag="p"
-              className="landing-hero-copy text-base md:text-lg leading-8 text-white text-center bg-sage-600 px-2 py-1"
+              className="landing-hero-copy text-base md:text-lg leading-8 text-sand-900 text-center"
             >
               Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un
               jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre
@@ -77,15 +75,13 @@ export function LandingHero() {
             </SemanticWeb>
           </View>
 
-          <View className="flex-row flex-wrap items-center justify-center gap-3 mb-8">
-            <View className="rounded-full bg-mint-100/95 px-3 py-1.5 border border-sage-200">
-              <Text className="text-sage-800 text-xs font-semibold">
-                100 % local & privé
-              </Text>
-            </View>
-            <View className="rounded-full bg-melon-50/95 px-3 py-1.5 border border-melon-200">
-              <Text className="text-melon-700 text-xs font-semibold">BYOK activé</Text>
-            </View>
+          <View className="flex-row flex-wrap items-center justify-center gap-4 mb-8">
+            <Text className="text-sage-800 text-xs font-semibold underline decoration-sage-500 decoration-2 underline-offset-4">
+              100 % local & privé
+            </Text>
+            <Text className="text-sand-900 text-xs font-semibold underline decoration-melon-500 decoration-2 underline-offset-4">
+              BYOK activé
+            </Text>
           </View>
 
           <Link href={ROUTES.home} asChild>

@@ -50,17 +50,10 @@ function NavLink({
   large?: boolean;
   itemClassName?: string;
 }) {
-  const textClass = large
-    ? "text-base font-semibold py-1"
-    : "text-sm font-medium";
-
-  if (isActive) {
-    return (
-      <View className={itemClassName}>
-        <Text className={`${textClass} text-sand-800`}>{item.label}</Text>
-      </View>
-    );
-  }
+  const textClass = large ? "text-base font-semibold py-1" : "text-sm font-medium";
+  const activeClass = isActive
+    ? "text-sand-900 border-b-2 border-sage-500 pb-0.5"
+    : "text-sand-800 border-b-2 border-transparent pb-0.5 web:hover:border-sage-500";
 
   return (
     <View className={itemClassName}>
@@ -71,7 +64,7 @@ function NavLink({
           accessibilityRole="link"
           accessibilityLabel={item.label}
         >
-          <Text className={`${textClass} text-sage-700`}>{item.label}</Text>
+          <Text className={`${textClass} ${activeClass}`}>{item.label}</Text>
         </Pressable>
       </Link>
     </View>
@@ -95,9 +88,7 @@ function CreateButton({
       className={`rounded-full bg-melon-500 active:bg-melon-600 px-4 py-2 min-h-[40px] justify-center shrink-0 web:hover:bg-melon-600 ${className}`}
       style={ctaShadow}
     >
-      <Text className="text-white text-sm font-semibold tracking-wide">
-        {label}
-      </Text>
+      <Text className="text-white text-sm font-semibold tracking-wide">{label}</Text>
     </Pressable>
   );
 }
@@ -108,8 +99,7 @@ export function LandingHeader({
   activeHref,
 }: LandingHeaderProps) {
   const { width } = useWindowDimensions();
-  const isNativeMobile =
-    Platform.OS !== "web" && width < MOBILE_BREAKPOINT;
+  const isNativeMobile = Platform.OS !== "web" && width < MOBILE_BREAKPOINT;
   const [menuOpen, setMenuOpen] = useState(false);
   const maxW = maxWidth === "3xl" ? "max-w-3xl" : "max-w-5xl";
 
@@ -143,7 +133,7 @@ export function LandingHeader({
   );
 
   const mobileNav = (
-  <>
+    <>
       <Pressable
         onPress={() => setMenuOpen(true)}
         accessibilityRole="button"
@@ -184,24 +174,13 @@ export function LandingHeader({
   );
 
   return (
-    <SemanticWeb
-      tag="header"
-      className="border-b border-sand-200/70 bg-sand-50/95"
-    >
-      <View
-        className={`${maxW} mx-auto px-6 py-4 flex-row items-center justify-between gap-3`}
-      >
-        <Link
-          href={ROUTES.landing}
-          accessibilityLabel="Retour à l'accueil pastek-art.eu"
-        >
+    <SemanticWeb tag="header" className="border-b border-sand-200/70 bg-sand-50/95">
+      <View className={`${maxW} mx-auto px-6 py-4 flex-row items-center justify-between gap-3`}>
+        <Link href={ROUTES.landing} accessibilityLabel="Retour à l'accueil pastek-art.eu">
           <View className="flex-row items-center gap-3 shrink min-w-0">
             <PastekLogoIcon size={36} accessibilityLabel="Logo Pastek Art" />
             <View className="min-w-0">
-              <SemanticWeb
-                tag="p"
-                className="font-display text-lg text-sand-900 leading-5"
-              >
+              <SemanticWeb tag="p" className="font-display text-lg text-sand-900 leading-5">
                 Pastek Art
               </SemanticWeb>
               <Text className="text-sage-600 text-[11px] tracking-wide hidden sm:flex">
@@ -256,10 +235,7 @@ export function LandingHeader({
 
             <View accessibilityRole="navigation" accessibilityLabel="Navigation mobile">
               {navItems.map((item) => (
-                <View
-                  key={item.href}
-                  className="border-b border-sand-100 py-3"
-                >
+                <View key={item.href} className="border-b border-sand-100 py-3">
                   <NavLink
                     item={item}
                     isActive={activeHref === item.href}
