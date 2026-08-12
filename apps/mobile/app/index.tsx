@@ -6,10 +6,10 @@ import { LandingPage } from "@/components/landing/LandingPage";
 import { ROUTES } from "@/lib/routes";
 
 const SEO_TITLE =
-  "Générateur d'Exercices Créatifs & Rituels Artistiques | Pastek Art";
+  "Pastek Art — Libérez Votre Créativité, Un Exercice à la Fois | pastek-art.eu";
 
 const SEO_DESCRIPTION =
-  "Besoin de décompresser ou de libérer votre créativité ? Découvrez notre générateur gratuit d'exercices créatifs et de rituels de dessin pour le lâcher-prise — sans prétendre remplacer un accompagnement professionnel.";
+  "Générateur d'exercices créatifs guidés : dessin, peinture, collage. Coach créatif bienveillant, 100 % local & BYOK — sans mur de connexion ni jargon clinique.";
 
 export default function MarketingHomeScreen() {
   useEffect(() => {

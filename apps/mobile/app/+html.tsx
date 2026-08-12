@@ -2,10 +2,10 @@ import { ScrollViewStyleReset } from "expo-router/html";
 import { type PropsWithChildren } from "react";
 
 const DEFAULT_TITLE =
-  "Générateur d'Exercices Créatifs & Rituels Artistiques | Pastek Art";
+  "Pastek Art — Libérez Votre Créativité, Un Exercice à la Fois | pastek-art.eu";
 
 const DEFAULT_DESCRIPTION =
-  "Besoin de décompresser ou de libérer votre créativité ? Découvrez notre générateur gratuit d'exercices créatifs et de rituels de dessin pour le lâcher-prise — sans prétendre remplacer un accompagnement professionnel.";
+  "Générateur d'exercices créatifs guidés : dessin, peinture, collage. Coach créatif bienveillant, 100 % local & BYOK — sans mur de connexion ni jargon clinique.";
 
 export default function Root({ children }: PropsWithChildren) {
   return (

@@ -13,6 +13,16 @@ export type ChangelogEntry = {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "creative-watermelon",
+    dateLabel: "août 2026",
+    title: "Identité Creative Watermelon",
+    highlights: [
+      "Nouvelle palette crème, pastèque et écorce sage — landing et app plus chaleureuses.",
+      "Navigation clarifiée : Exercices, Espace créatif, Config IA, À propos + CTA « Commencer ».",
+      "Badges 100 % local / BYOK visibles sur l’accueil et dans les moteurs IA.",
+    ],
+  },
+  {
     id: "exercice-creatif",
     dateLabel: "août 2026",
     title: "Positionnement exercices créatifs",

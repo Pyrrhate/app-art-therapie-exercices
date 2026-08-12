@@ -27,13 +27,13 @@ export function useIsDark(): boolean {
 
 export const THEME_COLORS = {
   light: {
-    root: "#F7F5F0",
-    screen: "#F7F5F0",
-    screenFocus: "#F0EBE4",
+    root: "#FAF5EF",
+    screen: "#FAF5EF",
+    screenFocus: "#F3EBE0",
   },
   dark: {
-    root: "#2A2F28",
-    screen: "#2A2F28",
-    screenFocus: "#3E342C",
+    root: "#2A3F35",
+    screen: "#2A3F35",
+    screenFocus: "#385547",
   },
 } as const;

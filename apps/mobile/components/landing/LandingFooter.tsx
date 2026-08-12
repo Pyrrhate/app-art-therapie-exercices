@@ -8,20 +8,26 @@ export function LandingFooter() {
 
   return (
     <SemanticWeb tag="footer" className="bg-sand-100 border-t border-sand-200">
-      <View className="max-w-5xl mx-auto px-6 py-8 gap-3">
+      <View className="max-w-5xl mx-auto px-6 py-8 gap-4">
         <View className="flex-row flex-wrap justify-center gap-4">
           <Link href={ROUTES.examples}>
-            <Text className="text-sage-600 text-sm">Exemples</Text>
-          </Link>
-          <Link href={ROUTES.changelog}>
-            <Text className="text-sage-600 text-sm">Mises à jour</Text>
+            <Text className="text-sage-700 text-sm font-medium">Exercices</Text>
           </Link>
           <Link href={ROUTES.home}>
-            <Text className="text-sage-600 text-sm">Application</Text>
+            <Text className="text-sage-700 text-sm font-medium">Espace créatif</Text>
+          </Link>
+          <Link href={ROUTES.aiEngines}>
+            <Text className="text-sage-700 text-sm font-medium">Config IA</Text>
+          </Link>
+          <Link href={ROUTES.changelog}>
+            <Text className="text-sage-700 text-sm font-medium">Mises à jour</Text>
+          </Link>
+          <Link href={ROUTES.privacy}>
+            <Text className="text-sage-700 text-sm font-medium">À propos</Text>
           </Link>
         </View>
         <Text className="text-sand-500 text-sm text-center leading-6">
-          Générateur d&apos;exercices créatifs — rituels pour le lâcher-prise. © {year}
+          Pastek Art · pastek-art.eu — générateur d&apos;exercices créatifs. © {year}
         </Text>
       </View>
     </SemanticWeb>

@@ -481,6 +481,39 @@ export function AISettings({
 
   return (
     <View className="gap-4 pb-10">
+      <View className="flex-row flex-wrap gap-2">
+        <View
+          className={`rounded-full px-3 py-1.5 border ${
+            isDark
+              ? "bg-sage-900/40 border-sage-700"
+              : "bg-mint-100 border-sage-200"
+          }`}
+        >
+          <Text
+            className={`text-xs font-semibold ${
+              isDark ? "text-sage-200" : "text-sage-800"
+            }`}
+          >
+            100 % local & privé
+          </Text>
+        </View>
+        <View
+          className={`rounded-full px-3 py-1.5 border ${
+            isDark
+              ? "bg-melon-700/30 border-melon-700"
+              : "bg-melon-50 border-melon-200"
+          }`}
+        >
+          <Text
+            className={`text-xs font-semibold ${
+              isDark ? "text-melon-200" : "text-melon-700"
+            }`}
+          >
+            BYOK activé
+          </Text>
+        </View>
+      </View>
+
       <View
         className={`rounded-3xl border px-5 py-4 ${
           isDark

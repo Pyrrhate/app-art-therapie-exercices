@@ -5,12 +5,23 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-cream-light: #faf5ef;
+  --watermelon-red: #f87a7a;
+  --bark-green: #78a58d;
+  --mint-soft: #d4edda;
+  --ochre-light: #e4c79f;
+  --seed-black: #333333;
+  --border-radius-lg: 16px;
+  --border-radius-sm: 8px;
+}
+
 /* React Native Web — hauteur viewport + défilement */
 html {
   height: 100%;
   min-height: 100vh;
   margin: 0;
-  background-color: #f7f5f0;
+  background-color: var(--bg-cream-light);
 }
 
 body {
@@ -18,13 +29,14 @@ body {
   min-height: 100vh;
   margin: 0;
   overflow: hidden;
-  background-color: #f7f5f0;
+  background-color: var(--bg-cream-light);
+  color: var(--seed-black);
   font-family: "Nunito Sans", system-ui, sans-serif;
 }
 
 html.dark,
 html.dark body {
-  background-color: #2a2f28;
+  background-color: #2a3f35;
 }
 
 #root {

@@ -1,7 +1,12 @@
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ROUTES } from "@/lib/routes";
+
+const ctaShadow =
+  Platform.OS === "web"
+    ? ({ boxShadow: "0 12px 32px -12px rgba(248, 122, 122, 0.45)" } as const)
+    : undefined;
 
 export function LandingHowItWorks() {
   return (
@@ -11,34 +16,63 @@ export function LandingHowItWorks() {
       aria-label="Fonctionnement du générateur"
     >
       <View className="max-w-3xl mx-auto px-6 py-14 md:py-16">
-        <SemanticWeb tag="h2" className="font-display text-2xl md:text-3xl text-sand-900 mb-6">
-          Comment fonctionne notre générateur d'exercices ?
+        <SemanticWeb
+          tag="h2"
+          className="font-display text-2xl md:text-3xl text-sand-900 mb-6 text-center"
+        >
+          Comment ça marche ?
         </SemanticWeb>
 
-        <SemanticWeb tag="p" className="text-sand-700 text-base leading-7 mb-5">
-          Vous n'avez pas besoin de matériel complexe. Munissez-vous simplement d'un carnet,
-          d'un stylo, de feutres, de pastels ou de quelques feuilles de récupération
-          (recycl'art), puis lancez le générateur.
+        <SemanticWeb
+          tag="p"
+          className="text-sand-700 text-base leading-7 mb-5 text-center"
+        >
+          Pas besoin de matériel complexe : un carnet, un stylo, des feutres, des pastels
+          ou quelques feuilles de récupération suffisent. Lancez le générateur et laissez
+          une consigne claire vous mettre en mouvement.
         </SemanticWeb>
 
-        <SemanticWeb tag="p" className="text-sand-700 text-base leading-7 mb-10">
-          Chaque clic vous propose une consigne précise, un univers coloré ou un thème
-          graphique adapté à votre état d'esprit du moment. Laissez-vous porter par la
-          suggestion, ajustez l'intensité visuelle si nécessaire, et accordez-vous ce moment
-          de déconnexion totale.
+        <SemanticWeb
+          tag="p"
+          className="text-sand-700 text-base leading-7 mb-8 text-center"
+        >
+          Chaque session propose une invitation créative adaptée à votre élan du moment,
+          puis un miroir bienveillant après la création — coach créatif, jamais diagnostic.
+          Apportez votre propre clé IA (BYOK) ou utilisez le mode gratuit.
         </SemanticWeb>
 
-        <Link href={ROUTES.home} asChild>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Accéder au générateur d'exercices créatifs"
-            className="self-start rounded-full border border-sage-400 bg-white px-7 py-3.5 min-h-[48px] justify-center web:transition-colors web:duration-200 web:hover:bg-sage-50"
-          >
-            <Text className="text-sage-600 text-sm font-semibold tracking-wide">
-              Lancer le générateur d'exercices
+        <View className="flex-row flex-wrap justify-center gap-2 mb-10">
+          <View className="rounded-2xl bg-mint-100 border border-sage-200 px-4 py-3">
+            <Text className="text-sage-800 text-xs font-semibold text-center">
+              Sans mur de connexion
             </Text>
-          </Pressable>
-        </Link>
+          </View>
+          <View className="rounded-2xl bg-clay-300/60 border border-clay-400 px-4 py-3">
+            <Text className="text-sand-800 text-xs font-semibold text-center">
+              Stockage local-first
+            </Text>
+          </View>
+          <View className="rounded-2xl bg-melon-50 border border-melon-200 px-4 py-3">
+            <Text className="text-melon-700 text-xs font-semibold text-center">
+              Drive optionnel
+            </Text>
+          </View>
+        </View>
+
+        <View className="items-center">
+          <Link href={ROUTES.home} asChild>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Commencer à créer"
+              className="rounded-full bg-melon-500 active:bg-melon-600 px-8 py-3.5 min-h-[48px] justify-center web:hover:bg-melon-600"
+              style={ctaShadow}
+            >
+              <Text className="text-white text-sm font-semibold tracking-wide">
+                Commencer à créer
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
       </View>
     </SemanticWeb>
   );

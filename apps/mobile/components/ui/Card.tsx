@@ -12,7 +12,7 @@ interface CardProps extends ViewProps {
 
 const webShadowStyle =
   Platform.OS === "web"
-    ? ({ boxShadow: "0 2px 20px rgba(73, 99, 73, 0.06)" } as const)
+    ? ({ boxShadow: "0 4px 24px rgba(120, 165, 141, 0.10)" } as const)
     : undefined;
 
 function variantClasses(variant: CardVariant, isDark: boolean): string {
