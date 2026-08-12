@@ -16,7 +16,7 @@ export function LandingHero() {
       className="bg-sand-50 border-b border-sand-200/80"
       aria-label="Présentation du générateur d'exercices créatifs"
     >
-      <View className="max-w-3xl mx-auto px-6 py-14 md:py-20">
+      <View className="max-w-3xl mx-auto px-6 pt-6 pb-14 md:pt-8 md:pb-20">
         <View className="items-center mb-8 md:mb-10">
           <PastekMascot size={Platform.OS === "web" ? 220 : 180} />
         </View>

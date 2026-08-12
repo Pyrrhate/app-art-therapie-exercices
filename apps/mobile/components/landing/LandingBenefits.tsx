@@ -32,12 +32,15 @@ export function LandingBenefits() {
       <View className="max-w-5xl mx-auto px-6 py-14 md:py-16">
         <SemanticWeb
           tag="h2"
-          className="font-display text-2xl md:text-3xl text-sand-900 mb-4"
+          className="font-display text-2xl md:text-3xl text-sand-900 mb-4 text-center"
         >
           Pourquoi intégrer un rituel créatif dans votre quotidien ?
         </SemanticWeb>
 
-        <SemanticWeb tag="p" className="text-sand-700 text-base leading-7 mb-10 max-w-3xl">
+        <SemanticWeb
+          tag="p"
+          className="text-sand-700 text-base leading-7 mb-10 max-w-3xl mx-auto text-center"
+        >
           Un exercice créatif n'exige aucune compétence technique ni talent particulier. Le
           but n'est pas de créer une œuvre esthétique, mais de vivre pleinement le processus
           de création. En pratiquant régulièrement, vous cultivez curiosité, lâcher-prise et
