@@ -54,7 +54,9 @@ function NavLink({
 
   if (isActive) {
     return (
-      <Text className={`${textClass} text-sand-800`}>{item.label}</Text>
+        <Text className={`${textClass} text-sand-800 whitespace-nowrap`}>
+          {item.label}
+        </Text>
     );
   }
 
@@ -66,7 +68,9 @@ function NavLink({
         accessibilityRole="link"
         accessibilityLabel={item.label}
       >
-        <Text className={`${textClass} text-sage-700`}>{item.label}</Text>
+        <Text className={`${textClass} text-sage-700 whitespace-nowrap`}>
+          {item.label}
+        </Text>
       </Pressable>
     </Link>
   );
@@ -97,13 +101,13 @@ export function LandingHeader({
       className="border-b border-sand-200/70 bg-sand-50/95"
     >
       <View
-        className={`${maxW} mx-auto px-6 py-4 flex-row items-center justify-between gap-4`}
+        className={`${maxW} mx-auto px-6 py-4 flex-row items-center justify-between gap-4 flex-nowrap`}
       >
         <Link
           href={ROUTES.landing}
           accessibilityLabel="Retour à l'accueil pastek-art.eu"
         >
-          <View className="flex-row items-center gap-3">
+          <View className="flex-row items-center gap-3 shrink-0">
             <PastekLogoIcon size={36} accessibilityLabel="Logo Pastek Art" />
             <View>
               <SemanticWeb
@@ -135,12 +139,12 @@ export function LandingHeader({
             </View>
           </Pressable>
         ) : (
-          <View className="flex-row items-center gap-5 justify-end">
+          <View className="flex-row items-center gap-4 justify-end flex-nowrap shrink-0">
             {navItems.length > 0 ? (
               <SemanticWeb
                 tag="nav"
                 aria-label="Navigation principale"
-                className="flex-row items-center gap-4"
+                className="flex-row items-center gap-4 flex-nowrap"
               >
                 {navItems.map((item) => (
                   <NavLink
@@ -156,10 +160,10 @@ export function LandingHeader({
               onPress={goCreate}
               accessibilityRole="button"
               accessibilityLabel="Commencer à créer"
-              className="rounded-full bg-melon-500 active:bg-melon-600 px-4 py-2 min-h-[40px] justify-center web:hover:bg-melon-600"
+              className="rounded-full bg-melon-500 active:bg-melon-600 px-4 py-2 min-h-[40px] justify-center shrink-0 web:hover:bg-melon-600"
               style={ctaShadow}
             >
-              <Text className="text-white text-sm font-semibold tracking-wide">
+              <Text className="text-white text-sm font-semibold tracking-wide whitespace-nowrap">
                 Commencer
               </Text>
             </Pressable>
