@@ -42,11 +42,13 @@ function NavLink({
   isActive,
   onPress,
   large = false,
+  itemClassName = "",
 }: {
   item: LandingNavItem;
   isActive: boolean;
   onPress?: () => void;
   large?: boolean;
+  itemClassName?: string;
 }) {
   const textClass = large
     ? "text-base font-semibold py-1"
@@ -54,25 +56,49 @@ function NavLink({
 
   if (isActive) {
     return (
-        <Text className={`${textClass} text-sand-800 whitespace-nowrap`}>
-          {item.label}
-        </Text>
+      <View className={itemClassName}>
+        <Text className={`${textClass} text-sand-800`}>{item.label}</Text>
+      </View>
     );
   }
 
   return (
-    <Link href={item.href} asChild>
-      <Pressable
-        hitSlop={8}
-        onPress={onPress}
-        accessibilityRole="link"
-        accessibilityLabel={item.label}
-      >
-        <Text className={`${textClass} text-sage-700 whitespace-nowrap`}>
-          {item.label}
-        </Text>
-      </Pressable>
-    </Link>
+    <View className={itemClassName}>
+      <Link href={item.href} asChild>
+        <Pressable
+          hitSlop={8}
+          onPress={onPress}
+          accessibilityRole="link"
+          accessibilityLabel={item.label}
+        >
+          <Text className={`${textClass} text-sage-700`}>{item.label}</Text>
+        </Pressable>
+      </Link>
+    </View>
+  );
+}
+
+function CreateButton({
+  label,
+  onPress,
+  className = "",
+}: {
+  label: string;
+  onPress: () => void;
+  className?: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Commencer à créer"
+      className={`rounded-full bg-melon-500 active:bg-melon-600 px-4 py-2 min-h-[40px] justify-center shrink-0 web:hover:bg-melon-600 ${className}`}
+      style={ctaShadow}
+    >
+      <Text className="text-white text-sm font-semibold tracking-wide">
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -82,7 +108,8 @@ export function LandingHeader({
   activeHref,
 }: LandingHeaderProps) {
   const { width } = useWindowDimensions();
-  const isMobile = width < MOBILE_BREAKPOINT;
+  const isNativeMobile =
+    Platform.OS !== "web" && width < MOBILE_BREAKPOINT;
   const [menuOpen, setMenuOpen] = useState(false);
   const maxW = maxWidth === "3xl" ? "max-w-3xl" : "max-w-5xl";
 
@@ -95,79 +122,102 @@ export function LandingHeader({
     router.push(ROUTES.home);
   }
 
+  const desktopNav = (
+    <View
+      className="landing-desktop-actions hidden md:flex"
+      accessibilityRole="navigation"
+      accessibilityLabel="Navigation principale"
+    >
+      <View className="landing-desktop-nav">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.href}
+            item={item}
+            isActive={activeHref === item.href}
+            itemClassName="landing-desktop-nav-item"
+          />
+        ))}
+      </View>
+      <CreateButton label="Commencer" onPress={goCreate} />
+    </View>
+  );
+
+  const mobileNav = (
+  <>
+      <Pressable
+        onPress={() => setMenuOpen(true)}
+        accessibilityRole="button"
+        accessibilityLabel="Ouvrir le menu"
+        accessibilityState={{ expanded: menuOpen }}
+        hitSlop={10}
+        className={`w-11 h-11 rounded-2xl border border-sand-200 bg-sand-50 items-center justify-center active:bg-mint-100 shrink-0 ${
+          Platform.OS === "web" ? "md:hidden" : isNativeMobile ? "" : "hidden"
+        }`}
+      >
+        <View className="gap-1.5 w-5">
+          <View className="h-0.5 rounded-full bg-sand-800" />
+          <View className="h-0.5 rounded-full bg-sand-800" />
+          <View className="h-0.5 rounded-full bg-melon-500" />
+        </View>
+      </Pressable>
+
+      {!isNativeMobile && Platform.OS !== "web" ? (
+        <View
+          className="flex-row items-center gap-3 shrink-0"
+          accessibilityRole="navigation"
+          accessibilityLabel="Navigation principale"
+        >
+          <View className="flex-row items-center gap-3">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.href}
+                item={item}
+                isActive={activeHref === item.href}
+                itemClassName="shrink-0"
+              />
+            ))}
+          </View>
+          <CreateButton label="Commencer" onPress={goCreate} />
+        </View>
+      ) : null}
+    </>
+  );
+
   return (
     <SemanticWeb
       tag="header"
       className="border-b border-sand-200/70 bg-sand-50/95"
     >
       <View
-        className={`${maxW} mx-auto px-6 py-4 flex-row items-center justify-between gap-4 flex-nowrap`}
+        className={`${maxW} mx-auto px-6 py-4 flex-row items-center justify-between gap-3`}
       >
         <Link
           href={ROUTES.landing}
           accessibilityLabel="Retour à l'accueil pastek-art.eu"
         >
-          <View className="flex-row items-center gap-3 shrink-0">
+          <View className="flex-row items-center gap-3 shrink min-w-0">
             <PastekLogoIcon size={36} accessibilityLabel="Logo Pastek Art" />
-            <View>
+            <View className="min-w-0">
               <SemanticWeb
                 tag="p"
                 className="font-display text-lg text-sand-900 leading-5"
               >
                 Pastek Art
               </SemanticWeb>
-              <Text className="text-sage-600 text-[11px] tracking-wide">
+              <Text className="text-sage-600 text-[11px] tracking-wide hidden sm:flex">
                 pastek-art.eu
               </Text>
             </View>
           </View>
         </Link>
 
-        {isMobile ? (
-          <Pressable
-            onPress={() => setMenuOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Ouvrir le menu"
-            accessibilityState={{ expanded: menuOpen }}
-            hitSlop={10}
-            className="w-11 h-11 rounded-2xl border border-sand-200 bg-sand-50 items-center justify-center active:bg-mint-100"
-          >
-            <View className="gap-1.5 w-5">
-              <View className="h-0.5 rounded-full bg-sand-800" />
-              <View className="h-0.5 rounded-full bg-sand-800" />
-              <View className="h-0.5 rounded-full bg-melon-500" />
-            </View>
-          </Pressable>
+        {Platform.OS === "web" ? (
+          <>
+            {mobileNav}
+            {desktopNav}
+          </>
         ) : (
-          <View className="flex-row items-center gap-4 justify-end flex-nowrap shrink-0">
-            {navItems.length > 0 ? (
-              <SemanticWeb
-                tag="nav"
-                aria-label="Navigation principale"
-                className="flex-row items-center gap-4 flex-nowrap"
-              >
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.href}
-                    item={item}
-                    isActive={activeHref === item.href}
-                  />
-                ))}
-              </SemanticWeb>
-            ) : null}
-
-            <Pressable
-              onPress={goCreate}
-              accessibilityRole="button"
-              accessibilityLabel="Commencer à créer"
-              className="rounded-full bg-melon-500 active:bg-melon-600 px-4 py-2 min-h-[40px] justify-center shrink-0 web:hover:bg-melon-600"
-              style={ctaShadow}
-            >
-              <Text className="text-white text-sm font-semibold tracking-wide whitespace-nowrap">
-                Commencer
-              </Text>
-            </Pressable>
-          </View>
+          mobileNav
         )}
       </View>
 
@@ -204,11 +254,7 @@ export function LandingHeader({
               </Pressable>
             </View>
 
-            <SemanticWeb
-              tag="nav"
-              aria-label="Navigation mobile"
-              className="gap-1"
-            >
+            <View accessibilityRole="navigation" accessibilityLabel="Navigation mobile">
               {navItems.map((item) => (
                 <View
                   key={item.href}
@@ -222,19 +268,13 @@ export function LandingHeader({
                   />
                 </View>
               ))}
-            </SemanticWeb>
+            </View>
 
-            <Pressable
+            <CreateButton
+              label="Commencer à créer"
               onPress={goCreate}
-              accessibilityRole="button"
-              accessibilityLabel="Commencer à créer"
-              className="mt-6 rounded-full bg-melon-500 active:bg-melon-600 px-5 py-3.5 min-h-[48px] items-center justify-center"
-              style={ctaShadow}
-            >
-              <Text className="text-white text-sm font-semibold tracking-wide">
-                Commencer à créer
-              </Text>
-            </Pressable>
+              className="mt-6 w-full items-center px-5 py-3.5 min-h-[48px]"
+            />
           </View>
         </View>
       </Modal>

@@ -39,6 +39,31 @@ html.dark body {
   background-color: #2a3f35;
 }
 
+/* Landing header — nav desktop sur une seule ligne (web) */
+@media (min-width: 768px) {
+  .landing-desktop-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .landing-desktop-nav-item {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .landing-desktop-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+}
+
 #root {
   display: flex;
   flex-direction: column;
