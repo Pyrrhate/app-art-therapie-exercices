@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Platform, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/lib/routes";
 import { SupportButton } from "@/components/SupportButton";
 import { AccountPanel } from "@/components/auth/AccountPanel";
@@ -10,7 +11,6 @@ import { LanguageToggle } from "@/components/i18n/LanguageToggle";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
-import { useTranslation } from "react-i18next";
 import { checkHealth } from "@/lib/api";
 import { summarizeBackup, parseAppBackupJson } from "@/lib/backup/build";
 import {
@@ -82,17 +82,19 @@ export default function SettingsScreen() {
     if (backupBusy) return;
     const confirmed =
       Platform.OS === "web"
-        ? window.confirm(
-            "Effacer toutes les données locales ?\n\nFil créatif, brouillon, préférences — tout sera supprimé sur cet appareil. Cette action est irréversible."
-          )
+        ? window.confirm(t("settings.eraseConfirmWeb"))
         : await new Promise<boolean>((resolve) => {
             Alert.alert(
-              "Effacer toutes les données ?",
-              "Fil créatif, brouillon et préférences seront supprimés sur cet appareil. Irréversible.",
+              t("settings.eraseConfirmTitle"),
+              t("settings.eraseConfirmBody"),
               [
-                { text: "Annuler", style: "cancel", onPress: () => resolve(false) },
                 {
-                  text: "Tout effacer",
+                  text: t("settings.cancel"),
+                  style: "cancel",
+                  onPress: () => resolve(false),
+                },
+                {
+                  text: t("settings.eraseConfirmAction"),
                   style: "destructive",
                   onPress: () => resolve(true),
                 },
@@ -103,11 +105,11 @@ export default function SettingsScreen() {
     setBackupBusy(true);
     try {
       await clearAllLocalData();
-      showAlert("Données effacées", "L'application a été réinitialisée sur cet appareil.");
+      showAlert(t("settings.eraseDoneTitle"), t("settings.eraseDoneBody"));
     } catch (err) {
       showAlert(
-        "Échec",
-        err instanceof Error ? err.message : "Impossible d'effacer les données."
+        t("settings.eraseFailTitle"),
+        err instanceof Error ? err.message : t("settings.eraseFailBody")
       );
     } finally {
       setBackupBusy(false);
@@ -119,11 +121,11 @@ export default function SettingsScreen() {
     setBackupBusy(true);
     try {
       const result = await exportAppBackup();
-      showAlert("Sauvegarde exportée", result.message);
+      showAlert(t("settings.exportDoneTitle"), result.message);
     } catch (error) {
       showAlert(
-        "Export impossible",
-        error instanceof Error ? error.message : "Réessayez dans un instant."
+        t("settings.exportFailTitle"),
+        error instanceof Error ? error.message : t("settings.exportFailBody")
       );
     } finally {
       setBackupBusy(false);
@@ -133,13 +135,19 @@ export default function SettingsScreen() {
   function confirmRestore(summary: ReturnType<typeof summarizeBackup>): Promise<boolean> {
     const message = formatRestoreConfirmMessage(summary);
     if (Platform.OS === "web") {
-      return Promise.resolve(window.confirm(`Restaurer cette sauvegarde ?\n\n${message}`));
+      return Promise.resolve(
+        window.confirm(`${t("settings.restoreConfirmTitle")}\n\n${message}`)
+      );
     }
     return new Promise((resolve) => {
-      Alert.alert("Restaurer cette sauvegarde ?", message, [
-        { text: "Annuler", style: "cancel", onPress: () => resolve(false) },
+      Alert.alert(t("settings.restoreConfirmTitle"), message, [
         {
-          text: "Remplacer",
+          text: t("settings.cancel"),
+          style: "cancel",
+          onPress: () => resolve(false),
+        },
+        {
+          text: t("settings.restoreConfirmAction"),
           style: "destructive",
           onPress: () => resolve(true),
         },
@@ -163,13 +171,13 @@ export default function SettingsScreen() {
       await restoreAppBackup(backup);
       await getTimerSound().then(setTimerSoundState);
       showAlert(
-        "Restauration terminée",
-        `${summary.filCount} trace${summary.filCount > 1 ? "s" : ""} récupérée${summary.filCount > 1 ? "s" : ""} dans le Fil créatif.`
+        t("settings.restoreDoneTitle"),
+        t("settings.restoreDoneBody", { count: summary.filCount })
       );
     } catch (error) {
       showAlert(
-        "Restauration impossible",
-        error instanceof Error ? error.message : "Fichier invalide ou corrompu."
+        t("settings.restoreFailTitle"),
+        error instanceof Error ? error.message : t("settings.restoreFailBody")
       );
     } finally {
       setBackupBusy(false);
@@ -200,10 +208,10 @@ export default function SettingsScreen() {
       <ScreenNavBar />
 
       <PastekScreenHero
-        label="Paramètres"
-        title="Vos "
-        accent="préférences"
-        description="Personnalisez l'app. Optionnel : sauvegardez votre Fil sur Google Drive."
+        label={t("settings.heroLabel")}
+        title={t("settings.heroTitle")}
+        accent={t("settings.heroAccent")}
+        description={t("settings.heroDescription")}
         className="mb-8"
       />
 
@@ -226,10 +234,10 @@ export default function SettingsScreen() {
         >
           <View className="flex-1 pr-3">
             <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-              Sauvegarde Google Drive
+              {t("settings.driveTitle")}
             </Text>
             <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-              Backup / restore local-first — sans compte Pastek
+              {t("settings.driveHint")}
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
@@ -241,10 +249,10 @@ export default function SettingsScreen() {
         >
           <View className="flex-1 pr-3">
             <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-              Moteurs IA (clé personnelle)
+              {t("settings.aiEnginesTitle")}
             </Text>
             <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-              Mistral, Claude ou OpenAI — clé stockée uniquement sur cet appareil
+              {t("settings.aiEnginesHint")}
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
@@ -256,10 +264,10 @@ export default function SettingsScreen() {
         >
           <View className="flex-1 pr-3">
             <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-              Prompts IA
+              {t("settings.promptsTitle")}
             </Text>
             <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-              Voir les consignes système et les personnaliser localement
+              {t("settings.promptsHint")}
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
@@ -271,10 +279,10 @@ export default function SettingsScreen() {
         >
           <View className="flex-1 pr-3">
             <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-              Techniques artistiques
+              {t("settings.techniquesTitle")}
             </Text>
             <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-              Activer, désactiver ou ajouter vos techniques
+              {t("settings.techniquesHint")}
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
@@ -286,10 +294,10 @@ export default function SettingsScreen() {
         >
           <View className="flex-1 pr-3">
             <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-              Questions du parcours profond
+              {t("settings.deepQuestionsTitle")}
             </Text>
             <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-              Personnaliser les trois questions d&apos;ancrage
+              {t("settings.deepQuestionsHint")}
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
@@ -297,11 +305,10 @@ export default function SettingsScreen() {
 
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
-            Apparence
+            {t("settings.appearanceTitle")}
           </Text>
           <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
-            Thème clair (crème & pastèque) ou foncé (écorce & menthe) pour toute
-            l&apos;application.
+            {t("settings.appearanceHint")}
           </Text>
           <ThemePicker selected={theme} onSelect={handleThemeChange} />
         </View>
@@ -312,10 +319,10 @@ export default function SettingsScreen() {
         >
           <View>
             <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-              Fil créatif
+              {t("settings.filTitle")}
             </Text>
             <Text className={`text-sm ${textSecondary(isDark)}`}>
-              Toutes vos traces — rituels et amorces
+              {t("settings.filHint")}
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
@@ -327,10 +334,10 @@ export default function SettingsScreen() {
         >
           <View>
             <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-              Mises à jour
+              {t("settings.updatesTitle")}
             </Text>
             <Text className={`text-sm ${textSecondary(isDark)}`}>
-              Grandes évolutions du produit
+              {t("settings.updatesHint")}
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
@@ -342,10 +349,10 @@ export default function SettingsScreen() {
         >
           <View>
             <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
-              Confidentialité & mentions légales
+              {t("settings.privacyTitle")}
             </Text>
             <Text className={`text-sm ${textSecondary(isDark)}`}>
-              Données locales, envoi IA, vos droits
+              {t("settings.privacyHint")}
             </Text>
           </View>
           <Text className="text-sage-500 text-lg">→</Text>
@@ -353,10 +360,10 @@ export default function SettingsScreen() {
 
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
-            Son de fin de timer
+            {t("settings.timerTitle")}
           </Text>
           <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
-            Un signal doux lorsque le temps créatif est écoulé.
+            {t("settings.timerHint")}
           </Text>
           <TimerSoundPicker
             selected={timerSound}
@@ -365,7 +372,9 @@ export default function SettingsScreen() {
         </View>
 
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
-          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>Connexion API</Text>
+          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
+            {t("settings.apiTitle")}
+          </Text>
           <Text className={`text-xs mb-3 ${textMuted(isDark)}`} numberOfLines={2}>
             {apiUrl ||
               "(proxy local → " +
@@ -382,8 +391,10 @@ export default function SettingsScreen() {
                 />
                 <Text className={`text-sm ${textSecondary(isDark)}`}>
                   {apiOk
-                    ? `Connecté${provider ? ` (${provider})` : ""}`
-                    : "Serveur inaccessible — vérifiez l'URL ou le réseau"}
+                    ? t("settings.apiConnected", {
+                        provider: provider ? ` (${provider})` : "",
+                      })
+                    : t("settings.apiDown")}
                 </Text>
               </>
             )}
@@ -395,48 +406,44 @@ export default function SettingsScreen() {
           )}
           {apiOk && aiConfigured === false && (
             <Text className="text-amber-700 text-xs mt-3 leading-5">
-              IA non configurée (HF_TOKEN manquant sur Vercel). Exercices et
-              réflexion photo utilisent le mode secours.
+              {t("settings.apiAiMissing")}
             </Text>
           )}
           {apiOk && aiConfigured && (
             <Text className={`text-xs mt-2 leading-5 ${textMuted(isDark)}`}>
-              Texte : {textModel ?? "—"}
-              {"\n"}Vision : {visionModel ?? "—"}
+              {t("settings.apiText", { model: textModel ?? "—" })}
+              {"\n"}
+              {t("settings.apiVision", { model: visionModel ?? "—" })}
               {reflectionPipeline
-                ? `\nRéflexion : ${reflectionPipeline}`
+                ? `\n${t("settings.apiReflection", { pipeline: reflectionPipeline })}`
                 : ""}
               {"\n"}
-              Recommandé : zai-org/GLM-4.5V:novita pour l'analyse photo.
+              {t("settings.apiRecommended")}
             </Text>
           )}
           {!apiOk && apiOk !== null && (
             <Text className={`text-xs mt-3 leading-5 ${textMuted(isDark)}`}>
-              Web local : relancez avec npm run mobile:web:clear après npm
-              install. Sur téléphone : utilisez l'IP locale du PC dans
-              EXPO_PUBLIC_API_URL. Vérifiez aussi ALLOWED_ORIGINS sur Vercel.
+              {t("settings.apiTroubleshoot")}
             </Text>
           )}
         </View>
 
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
-            Sauvegarde & restauration
+            {t("settings.backupTitle")}
           </Text>
           <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
-            Exportez votre Fil créatif, vos préférences et votre brouillon de
-            rituel dans un fichier JSON — uniquement chez vous. Restaurez-le sur
-            un autre appareil sans compte ni serveur Pastek Art.
+            {t("settings.backupHint")}
           </Text>
           <View className="gap-3">
             <PrimaryButton
-              label={backupBusy ? "…" : "Exporter ma pratique"}
+              label={backupBusy ? "…" : t("settings.backupExport")}
               onPress={() => void handleExportBackup()}
               disabled={backupBusy}
               align="stretch"
             />
             <PrimaryButton
-              label="Restaurer depuis un fichier"
+              label={t("settings.backupRestore")}
               onPress={() => void handleRestoreBackup()}
               variant="ghost"
               disabled={backupBusy}
@@ -446,25 +453,23 @@ export default function SettingsScreen() {
         </View>
 
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
-          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>Stockage local</Text>
+          <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
+            {t("settings.localTitle")}
+          </Text>
           <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-            Toutes vos traces sont enregistrées automatiquement dans le Fil
-            créatif sur cet appareil. Pour changer de téléphone ou tablette,
-            exportez puis restaurez une sauvegarde.
+            {t("settings.localHint")}
           </Text>
         </View>
 
         <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
           <Text className={`font-medium mb-2 ${textPrimary(isDark)}`}>
-            Effacer toutes les données
+            {t("settings.eraseTitle")}
           </Text>
           <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
-            Supprime le Fil créatif, le brouillon de rituel et les préférences
-            sur cet appareil. Exportez d&apos;abord une sauvegarde si vous
-            souhaitez conserver vos traces.
+            {t("settings.eraseHint")}
           </Text>
           <PrimaryButton
-            label="Tout effacer sur cet appareil…"
+            label={t("settings.eraseButton")}
             onPress={() => void handleClearAllData()}
             variant="ghost"
             disabled={backupBusy}
@@ -475,7 +480,7 @@ export default function SettingsScreen() {
         <SupportButton />
 
         <Text className={`text-xs text-center mt-4 ${textMuted(isDark)}`}>
-          Pastek Art · v0.1.0 · MVP
+          {t("settings.version")}
         </Text>
       </View>
     </ScreenContainer>

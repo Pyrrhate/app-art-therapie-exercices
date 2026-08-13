@@ -1,24 +1,27 @@
 import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { DonateRow } from "@/components/ui/DonateRow";
 import { navigateBackOrHome, navigateHome } from "@/lib/navigation";
 import { textMuted } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
 interface ScreenNavBarProps {
-  /** Libellé du lien retour (défaut : « ← Retour ») */
+  /** Libellé du lien retour (défaut traduit : « ← Retour » / « ← Back ») */
   backLabel?: string;
   /** Action retour personnalisée */
   onBack?: () => void;
-  /** Afficher le lien « Accueil » à droite (défaut : oui) */
+  /** Afficher le lien Accueil à droite (défaut : oui) */
   showHome?: boolean;
 }
 
 export function ScreenNavBar({
-  backLabel = "← Retour",
+  backLabel,
   onBack = navigateBackOrHome,
   showHome = true,
 }: ScreenNavBarProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
+  const resolvedBack = backLabel ?? t("nav.back");
 
   return (
     <View className="mb-4">
@@ -27,12 +30,12 @@ export function ScreenNavBar({
         <Pressable
           onPress={onBack}
           accessibilityRole="button"
-          accessibilityLabel={backLabel}
+          accessibilityLabel={resolvedBack}
           hitSlop={8}
           className="shrink min-w-0"
         >
           <Text className="text-sage-500 text-sm" numberOfLines={1}>
-            {backLabel}
+            {resolvedBack}
           </Text>
         </Pressable>
 
@@ -41,11 +44,11 @@ export function ScreenNavBar({
             <Pressable
               onPress={navigateHome}
               accessibilityRole="button"
-              accessibilityLabel="Retour à l'accueil"
+              accessibilityLabel={t("header.backHome")}
               hitSlop={8}
             >
               <Text className={`text-sm font-medium ${textMuted(isDark)}`}>
-                Accueil
+                {t("nav.home")}
               </Text>
             </Pressable>
           ) : null}

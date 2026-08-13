@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { ThemePreference } from "@/lib/preferences";
 import { textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -10,24 +11,24 @@ interface ThemePickerProps {
 
 const OPTIONS: {
   id: ThemePreference;
-  label: string;
-  hint: string;
+  labelKey: "settings.themeLight" | "settings.themeDark";
+  hintKey: "settings.themeLightHint" | "settings.themeDarkHint";
   previewBg: string;
   previewBorder: string;
   swatches: string[];
 }[] = [
   {
     id: "light",
-    label: "Clair",
-    hint: "Crème & pastèque",
+    labelKey: "settings.themeLight",
+    hintKey: "settings.themeLightHint",
     previewBg: "bg-sand-50",
     previewBorder: "border-sand-200",
     swatches: ["bg-melon-500", "bg-sage-500", "bg-clay-400"],
   },
   {
     id: "dark",
-    label: "Foncé",
-    hint: "Écorce & menthe",
+    labelKey: "settings.themeDark",
+    hintKey: "settings.themeDarkHint",
     previewBg: "bg-sage-900",
     previewBorder: "border-sage-700",
     swatches: ["bg-mint-100", "bg-melon-400", "bg-sage-500"],
@@ -36,6 +37,7 @@ const OPTIONS: {
 
 export function ThemePicker({ selected, onSelect }: ThemePickerProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
 
   return (
     <View className="flex-row gap-3">
@@ -93,14 +95,14 @@ export function ThemePicker({ selected, onSelect }: ThemePickerProps) {
                   isSelected ? "text-white" : textPrimary(isDark)
                 }`}
               >
-                {option.label}
+                {t(option.labelKey)}
               </Text>
               <Text
                 className={`text-[11px] ${
                   isSelected ? "text-white/85" : textSecondary(isDark)
                 }`}
               >
-                {option.hint}
+                {t(option.hintKey)}
               </Text>
             </View>
           </Pressable>

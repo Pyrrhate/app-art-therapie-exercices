@@ -1,9 +1,11 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/Button";
 import { showAlert } from "@/lib/alert";
 import { formatSessionDate } from "@/constants";
+import { useLanguageStore } from "@/lib/i18n/languageStore";
 import {
   backupLocalDataToGoogleDrive,
   connectGoogleDrive,
@@ -21,6 +23,8 @@ import { useIsDark } from "@/lib/themeStore";
  */
 export function StorageSettings({ className = "" }: { className?: string }) {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
+  const language = useLanguageStore((s) => s.language);
   const [connected, setConnected] = useState(false);
   const [configured, setConfigured] = useState(isGoogleDriveClientConfigured());
   const [meta, setMeta] = useState<GoogleDriveMeta | null>(null);
@@ -45,13 +49,13 @@ export function StorageSettings({ className = "" }: { className?: string }) {
       await connectGoogleDrive();
       await refresh();
       showAlert(
-        "Google Drive connecté",
-        "Vos données restent sur cet appareil. Vous pouvez sauvegarder ou restaurer quand vous voulez."
+        t("settings.driveConnected"),
+        t("settings.storageBody")
       );
     } catch (error) {
       showAlert(
-        "Connexion Drive",
-        error instanceof Error ? error.message : "Impossible de connecter."
+        t("settings.driveTitle"),
+        error instanceof Error ? error.message : t("settings.eraseFailBody")
       );
     } finally {
       setBusy(null);
@@ -63,11 +67,11 @@ export function StorageSettings({ className = "" }: { className?: string }) {
     try {
       await disconnectGoogleDrive();
       await refresh();
-      showAlert("Déconnecté", "Mode local uniquement — aucune donnée n'a été effacée ici.");
+      showAlert(t("settings.driveLocalOnly"), t("settings.storageStatusLocal"));
     } catch (error) {
       showAlert(
-        "Déconnexion",
-        error instanceof Error ? error.message : "Impossible de déconnecter."
+        t("settings.storageDisconnectDrive"),
+        error instanceof Error ? error.message : t("settings.eraseFailBody")
       );
     } finally {
       setBusy(null);
@@ -80,13 +84,13 @@ export function StorageSettings({ className = "" }: { className?: string }) {
       const result = await backupLocalDataToGoogleDrive();
       await refresh();
       showAlert(
-        "Sauvegarde envoyée",
-        `${result.filCount} trace${result.filCount > 1 ? "s" : ""} dans le dossier « Pastek Art » sur Drive.`
+        t("settings.exportDoneTitle"),
+        t("settings.restoreDoneBody", { count: result.filCount })
       );
     } catch (error) {
       showAlert(
-        "Sauvegarde",
-        error instanceof Error ? error.message : "Échec de la sauvegarde."
+        t("settings.backupTitle"),
+        error instanceof Error ? error.message : t("settings.exportFailBody")
       );
     } finally {
       setBusy(null);
@@ -99,13 +103,13 @@ export function StorageSettings({ className = "" }: { className?: string }) {
       const result = await restoreLocalDataFromGoogleDrive();
       await refresh();
       showAlert(
-        "Restauration terminée",
-        `${result.filCount} trace${result.filCount > 1 ? "s" : ""} restaurée${result.filCount > 1 ? "s" : ""} (export du ${formatSessionDate(result.exportedAt)}).`
+        t("settings.restoreDoneTitle"),
+        t("settings.restoreDoneBody", { count: result.filCount })
       );
     } catch (error) {
       showAlert(
-        "Restauration",
-        error instanceof Error ? error.message : "Échec de la restauration."
+        t("settings.restoreFailTitle"),
+        error instanceof Error ? error.message : t("settings.restoreFailBody")
       );
     } finally {
       setBusy(null);
@@ -114,21 +118,22 @@ export function StorageSettings({ className = "" }: { className?: string }) {
 
   const statusLabel = connected
     ? meta?.lastSyncAt
-      ? `Connecté à Google Drive · Dernière sync : ${formatSessionDate(meta.lastSyncAt)}`
-      : "Connecté à Google Drive (pas encore synchronisé)"
-    : "Local uniquement (non synchronisé)";
+      ? t("settings.storageStatusSynced", {
+          date: formatSessionDate(meta.lastSyncAt, language),
+        })
+      : t("settings.storageStatusConnected")
+    : t("settings.storageStatusLocal");
 
   return (
     <View className={`rounded-3xl border px-5 py-5 gap-4 ${panelBg(isDark)} ${className}`}>
       <Text className="text-xs uppercase tracking-widest text-sage-500 font-medium">
-        Stockage
+        {t("settings.storageLabel")}
       </Text>
       <Text className={`font-medium ${textPrimary(isDark)}`}>
-        Local-first · Google Drive optionnel
+        {t("settings.storageTitle")}
       </Text>
       <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-        Par défaut, tout reste sur cet appareil. Connectez votre Drive pour une
-        sauvegarde personnelle — sans compte Pastek, sans base serveur.
+        {t("settings.storageBody")}
       </Text>
 
       <View
@@ -148,9 +153,7 @@ export function StorageSettings({ className = "" }: { className?: string }) {
 
       {!configured ? (
         <Text className="text-amber-700 text-xs leading-5">
-          Ajoutez EXPO_PUBLIC_GOOGLE_DRIVE_CLIENT_ID au build web — le même Client
-          ID Google que GOOGLE_DRIVE_CLIENT_ID sur l&apos;API (avec secret). URI
-          de redirection : origine du site + /app/premium-cloud.
+          {t("settings.storageConfigHint")}
         </Text>
       ) : null}
 
@@ -158,25 +161,41 @@ export function StorageSettings({ className = "" }: { className?: string }) {
 
       {!connected ? (
         <PrimaryButton
-          label={busy === "connect" ? "Connexion…" : "Connecter Google Drive"}
+          label={
+            busy === "connect"
+              ? t("settings.storageConnecting")
+              : t("settings.driveConnect")
+          }
           onPress={() => void handleConnect()}
           disabled={!configured || busy !== null}
         />
       ) : (
         <View className="gap-3">
           <PrimaryButton
-            label={busy === "backup" ? "Sauvegarde…" : "Sauvegarder vers Drive"}
+            label={
+              busy === "backup"
+                ? t("settings.storageBackingUp")
+                : t("settings.driveBackup")
+            }
             onPress={() => void handleBackup()}
             disabled={busy !== null}
           />
           <PrimaryButton
-            label={busy === "restore" ? "Restauration…" : "Restaurer depuis Drive"}
+            label={
+              busy === "restore"
+                ? t("settings.storageRestoring")
+                : t("settings.driveRestore")
+            }
             onPress={() => void handleRestore()}
             disabled={busy !== null}
             variant="secondary"
           />
           <PrimaryButton
-            label={busy === "disconnect" ? "Déconnexion…" : "Déconnecter Google Drive"}
+            label={
+              busy === "disconnect"
+                ? t("settings.storageDisconnecting")
+                : t("settings.storageDisconnectDrive")
+            }
             onPress={() => void handleDisconnect()}
             disabled={busy !== null}
             variant="ghost"

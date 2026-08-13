@@ -1,10 +1,14 @@
 import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { TimerSoundId } from "@/lib/sounds";
 
-const OPTIONS: { id: TimerSoundId; label: string }[] = [
-  { id: "gong", label: "Gong" },
-  { id: "chime", label: "Carillon" },
-  { id: "none", label: "Silencieux" },
+const OPTIONS: {
+  id: TimerSoundId;
+  labelKey: "settings.soundGong" | "settings.soundChime" | "settings.soundNone";
+}[] = [
+  { id: "gong", labelKey: "settings.soundGong" },
+  { id: "chime", labelKey: "settings.soundChime" },
+  { id: "none", labelKey: "settings.soundNone" },
 ];
 
 interface TimerSoundPickerProps {
@@ -13,6 +17,8 @@ interface TimerSoundPickerProps {
 }
 
 export function TimerSoundPicker({ selected, onSelect }: TimerSoundPickerProps) {
+  const { t } = useTranslation("app");
+
   return (
     <View className="flex-row flex-wrap gap-3">
       {OPTIONS.map((opt) => {
@@ -32,7 +38,7 @@ export function TimerSoundPicker({ selected, onSelect }: TimerSoundPickerProps) 
                 isSelected ? "text-white" : "text-sand-700"
               }`}
             >
-              {opt.label}
+              {t(opt.labelKey)}
             </Text>
           </Pressable>
         );
