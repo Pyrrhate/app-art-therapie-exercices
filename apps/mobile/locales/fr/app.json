@@ -1,0 +1,43 @@
+{
+  "header": {
+    "fil": "Fil",
+    "settings": "Réglages",
+    "backHome": "Retour à l'accueil"
+  },
+  "home": {
+    "label": "Pastek Art",
+    "titleWide": "Trouver une impulsion,\n",
+    "accentWide": "puis créer",
+    "titleNarrow": "Impulsion & ",
+    "accentNarrow": "création",
+    "descriptionWide": "Un parcours guidé pour amorcer votre créativité, mener un exercice en douceur, puis garder trace de vos pratiques — le tout sur cet appareil.",
+    "startExercise": "Commencer un exercice",
+    "customMode": "Mode Sur-Mesure",
+    "season": "Saison créative",
+    "seasonOngoing": "Saison en cours",
+    "seasonDay": "{{title}} — jour {{day}}/{{total}}",
+    "seasonPracticedToday": " · séance d'aujourd'hui notée",
+    "seasonSee": "Voir",
+    "draftTitle": "Reprendre votre rituel",
+    "draftAbandon": "Abandonner",
+    "draftStepReflection": "Étape : capture & réflexion",
+    "draftStepExercise": "Étape : exercice en cours",
+    "amorcesLabel": "Amorces créatives",
+    "amorcesTitle": "Des parcours légers pour faire émerger ",
+    "amorcesAccent": "une impulsion",
+    "amorcesEnd": " avant l'acte.",
+    "tracesLabel": "Vos traces",
+    "tracesTitle": "Le Fil créatif — ",
+    "tracesAccent": "mémoire automatique",
+    "tracesEnd": " de vos pratiques sur cet appareil.",
+    "openFil": "Ouvrir le Fil créatif",
+    "filEmpty": "Vos rituels et amorces laissent une trace ici, automatiquement.",
+    "settingsLink": "Paramètres",
+    "updatesLink": "Mises à jour",
+    "privacyLink": "Confidentialité"
+  },
+  "settings": {
+    "languageTitle": "Langue de l'interface",
+    "languageHint": "Les miroirs et consignes déjà générés restent dans leur langue d'origine. Les prochaines invitations suivront ce choix une fois branchés (prochaine étape)."
+  }
+}

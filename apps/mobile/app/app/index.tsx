@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { ModuleCard } from "@/components/home/ModuleCard";
 import { ModuleQuickTile } from "@/components/home/ModuleQuickTile";
 import { AppHeader } from "@/components/ui/AppHeader";
@@ -27,6 +28,7 @@ import { getRitualDraft, type RitualDraft } from "@/lib/ritualDraft";
 import { textMuted, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 import { useRitualStore } from "@/lib/store";
+import { useLanguageStore } from "@/lib/i18n/languageStore";
 
 type ModuleDef = {
   title: string;
@@ -66,6 +68,8 @@ const WIDE_LAYOUT_MIN = 720;
 
 export default function WelcomeScreen() {
   const isDark = useIsDark();
+  const { t } = useTranslation(["app", "common"]);
+  const language = useLanguageStore((s) => s.language);
   const { width } = useWindowDimensions();
   const isWide = width >= WIDE_LAYOUT_MIN;
   const scrollRef = useRef<ScrollView>(null);
@@ -107,14 +111,10 @@ export default function WelcomeScreen() {
       <AppHeader compact onNavigateTraces={scrollToTraces} />
 
       <PastekScreenHero
-        label="Pastek Art"
-        title={isWide ? "Trouver une impulsion,\n" : "Impulsion & "}
-        accent={isWide ? "puis créer" : "création"}
-        description={
-          isWide
-            ? "Un parcours guidé pour amorcer votre créativité, mener un exercice en douceur, puis garder trace de vos pratiques — le tout sur cet appareil."
-            : undefined
-        }
+        label={t("home.label")}
+        title={isWide ? t("home.titleWide") : t("home.titleNarrow")}
+        accent={isWide ? t("home.accentWide") : t("home.accentNarrow")}
+        description={isWide ? t("home.descriptionWide") : undefined}
         onDescriptionPress={navigateSiteHome}
         size={isWide ? "lg" : "md"}
         className={isWide ? "mb-6" : "mb-4"}
@@ -123,7 +123,7 @@ export default function WelcomeScreen() {
       {draft && (
         <AccentCard className={`gap-2 ${isWide ? "mb-6" : "mb-3"}`}>
           <Text className="text-sage-600 font-medium text-sm">
-            Reprendre votre rituel
+            {t("home.draftTitle")}
           </Text>
           <Text
             className={`text-sm leading-5 ${textSecondary(isDark)}`}
@@ -134,21 +134,21 @@ export default function WelcomeScreen() {
           {!isWide ? null : (
             <Text className={`text-xs ${textMuted(isDark)}`}>
               {draft.step === "reflection"
-                ? "Étape : capture & réflexion"
-                : "Étape : exercice en cours"}
+                ? t("home.draftStepReflection")
+                : t("home.draftStepExercise")}
             </Text>
           )}
           <View className={isWide ? "gap-3" : "flex-row gap-2 mt-1"}>
-            <View className={isWide ? undefined : { flex: 1 }}>
+            <View className={isWide ? undefined : "flex-1"}>
               <PrimaryButton
-                label="Continuer"
+                label={t("common:actions.continue")}
                 onPress={handleContinueDraft}
                 align="stretch"
               />
             </View>
-            <View className={isWide ? undefined : { flex: 1 }}>
+            <View className={isWide ? undefined : "flex-1"}>
               <PrimaryButton
-                label="Abandonner"
+                label={t("home.draftAbandon")}
                 onPress={handleDismissDraft}
                 variant="ghost"
                 align="stretch"
@@ -161,21 +161,23 @@ export default function WelcomeScreen() {
       {season ? (
         <AccentCard className={`gap-2 ${isWide ? "mb-6" : "mb-3"}`}>
           <Text className="text-sage-600 font-medium text-sm">
-            Saison en cours
+            {t("home.seasonOngoing")}
           </Text>
           <Text className={`text-base font-medium ${textSecondary(isDark)}`}>
-            {season.title} — jour{" "}
-            {Math.min(seasonDayIndex(season), season.durationDays)}/
-            {season.durationDays}
+            {t("home.seasonDay", {
+              title: season.title,
+              day: Math.min(seasonDayIndex(season), season.durationDays),
+              total: season.durationDays,
+            })}
           </Text>
           <Text className={`text-sm leading-5 ${textMuted(isDark)}`} numberOfLines={2}>
             {season.constraint}
-            {practicedToday(season) ? " · séance d'aujourd'hui notée" : ""}
+            {practicedToday(season) ? t("home.seasonPracticedToday") : ""}
           </Text>
           <View className={isWide ? "gap-3" : "flex-row gap-2 mt-1"}>
             <View className={isWide ? undefined : "flex-1"}>
               <PrimaryButton
-                label="Continuer"
+                label={t("common:actions.continue")}
                 onPress={() => {
                   void applyActiveSeasonToRitual().then(() => {
                     router.push(ROUTES.ritual);
@@ -186,7 +188,7 @@ export default function WelcomeScreen() {
             </View>
             <View className={isWide ? undefined : "flex-1"}>
               <PrimaryButton
-                label="Voir"
+                label={t("home.seasonSee")}
                 onPress={() => router.push(ROUTES.seasons)}
                 variant="ghost"
                 align="stretch"
@@ -198,20 +200,20 @@ export default function WelcomeScreen() {
 
       <View className="gap-3">
         <PrimaryButton
-          label="Commencer un exercice"
+          label={t("home.startExercise")}
           onPress={() => router.push(ROUTES.ritual)}
           showArrow
           align="stretch"
         />
         <PrimaryButton
-          label="Mode Sur-Mesure"
+          label={t("home.customMode")}
           onPress={() => router.push(ROUTES.custom)}
           variant="secondary"
           align="stretch"
         />
         {!season ? (
           <PrimaryButton
-            label="Saison créative"
+            label={t("home.season")}
             onPress={() => router.push(ROUTES.seasons)}
             variant="ghost"
             align="stretch"
@@ -222,16 +224,16 @@ export default function WelcomeScreen() {
       <View className={isWide ? "mt-8 mb-2" : "mt-5 mb-1"}>
         {isWide ? (
           <SectionHeader
-            label="Amorces créatives"
-            title="Des parcours légers pour faire émerger "
-            accent="une impulsion"
-            titleEnd=" avant l'acte."
+            label={t("home.amorcesLabel")}
+            title={t("home.amorcesTitle")}
+            accent={t("home.amorcesAccent")}
+            titleEnd={t("home.amorcesEnd")}
           />
         ) : (
           <Text
             className={`text-xs uppercase tracking-[0.18em] font-medium mb-3 ${textMuted(isDark)}`}
           >
-            Amorces créatives
+            {t("home.amorcesLabel")}
           </Text>
         )}
 
@@ -254,25 +256,27 @@ export default function WelcomeScreen() {
       >
         {isWide ? (
           <SectionHeader
-            label="Vos traces"
-            title="Le Fil créatif — "
-            accent="mémoire automatique"
-            titleEnd=" de vos pratiques sur cet appareil."
+            label={t("home.tracesLabel")}
+            title={t("home.tracesTitle")}
+            accent={t("home.tracesAccent")}
+            titleEnd={t("home.tracesEnd")}
           />
         ) : (
           <View className="flex-row items-center justify-between mb-1">
             <Text className={`text-xs uppercase tracking-[0.18em] font-medium ${textMuted(isDark)}`}>
-              Fil créatif
+              {t("header.fil")}
             </Text>
             <Pressable onPress={() => router.push(ROUTES.fil)} hitSlop={8}>
-              <Text className="text-sage-500 text-sm font-medium">Tout voir →</Text>
+              <Text className="text-sage-500 text-sm font-medium">
+                {t("common:actions.seeAll")}
+              </Text>
             </Pressable>
           </View>
         )}
 
         {isWide ? (
           <PrimaryButton
-            label="Ouvrir le Fil créatif"
+            label={t("home.openFil")}
             onPress={() => router.push(ROUTES.fil)}
             align="stretch"
           />
@@ -298,7 +302,7 @@ export default function WelcomeScreen() {
                   />
                   <View className="flex-1 min-w-0">
                     <Text className={`text-xs ${textMuted(isDark)}`} numberOfLines={1}>
-                      {formatSessionDate(entry.createdAt)} · {meta.label}
+                      {formatSessionDate(entry.createdAt, language)} · {meta.label}
                     </Text>
                     <Text
                       className={`text-sm font-medium ${textSecondary(isDark)}`}
@@ -319,20 +323,20 @@ export default function WelcomeScreen() {
             }`}
           >
             <Text className={`text-sm text-center leading-5 ${textMuted(isDark)}`}>
-              Vos rituels et amorces laissent une trace ici, automatiquement.
+              {t("home.filEmpty")}
             </Text>
           </Pressable>
         )}
 
         <View className="flex-row justify-center gap-8 pt-2 pb-2">
           <Pressable onPress={() => router.push(ROUTES.settings)} hitSlop={8}>
-            <Text className={`text-sm ${textMuted(isDark)}`}>Paramètres</Text>
+            <Text className={`text-sm ${textMuted(isDark)}`}>{t("home.settingsLink")}</Text>
           </Pressable>
           <Pressable onPress={() => router.push(ROUTES.changelog)} hitSlop={8}>
-            <Text className={`text-sm ${textMuted(isDark)}`}>Mises à jour</Text>
+            <Text className={`text-sm ${textMuted(isDark)}`}>{t("home.updatesLink")}</Text>
           </Pressable>
           <Pressable onPress={() => router.push(ROUTES.privacy)} hitSlop={8}>
-            <Text className={`text-sm ${textMuted(isDark)}`}>Confidentialité</Text>
+            <Text className={`text-sm ${textMuted(isDark)}`}>{t("home.privacyLink")}</Text>
           </Pressable>
         </View>
       </View>

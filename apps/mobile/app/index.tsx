@@ -2,16 +2,15 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 import Head from "expo-router/head";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { ROUTES } from "@/lib/routes";
-
-const SEO_TITLE =
-  "Pastek Art — Libérez Votre Créativité, Un Exercice à la Fois | pastek-art.eu";
-
-const SEO_DESCRIPTION =
-  "Générateur d'exercices créatifs guidés : dessin, peinture, collage. Coach créatif bienveillant, 100 % local & BYOK — sans mur de connexion ni jargon clinique.";
+import { useLanguageStore } from "@/lib/i18n/languageStore";
 
 export default function MarketingHomeScreen() {
+  const { t, i18n } = useTranslation("landing");
+  const language = useLanguageStore((s) => s.language);
+
   useEffect(() => {
     if (Platform.OS !== "web") {
       router.replace(ROUTES.home);
@@ -22,13 +21,17 @@ export default function MarketingHomeScreen() {
     return null;
   }
 
+  const title = t("seo.title");
+  const description = t("seo.description");
+
   return (
     <>
-      <Head>
-        <title>{SEO_TITLE}</title>
-        <meta name="description" content={SEO_DESCRIPTION} />
-        <meta property="og:title" content={SEO_TITLE} />
-        <meta property="og:description" content={SEO_DESCRIPTION} />
+      <Head key={language}>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:locale" content={i18n.language === "en" ? "en_GB" : "fr_FR"} />
         <meta property="og:type" content="website" />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://pastek-art.eu/" />

@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "examples": "Exemples",
+    "features": "Fonctionnalités",
+    "studio": "Espace créatif",
+    "aiConfig": "Config IA",
+    "about": "À propos",
+    "updates": "Mises à jour",
+    "menu": "Menu",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "mainNav": "Navigation principale",
+    "mobileNav": "Navigation mobile"
+  },
+  "hero": {
+    "aria": "Présentation du générateur d'exercices créatifs Pastek Art",
+    "tagLetGo": "Lâcher-prise",
+    "tagFocus": "Focus créatif",
+    "tagExpression": "Expression",
+    "titleLine1": "Libérez Votre Créativité,",
+    "titleLine2": "Un Exercice à la Fois",
+    "lead": "Pastek Art vous invite à explorer le dessin, la peinture et le collage comme un jeu bienveillant — consignes guidées, miroir créatif, et rien de clinique. Votre clé IA reste chez vous (BYOK) ; vos traces restent locales.",
+    "badgeLocal": "100 % local & privé",
+    "badgeByok": "BYOK activé",
+    "cta": "Commencer à créer"
+  },
+  "benefits": {
+    "aria": "Bénéfices d'un rituel créatif au quotidien",
+    "title": "Pourquoi intégrer un rituel créatif dans votre quotidien ?",
+    "intro": "Un exercice créatif n'exige aucune compétence technique ni talent particulier. Le but n'est pas de créer une œuvre esthétique, mais de vivre pleinement le processus de création. En pratiquant régulièrement, vous cultivez curiosité, lâcher-prise et bien-être au quotidien :",
+    "item1Pill": "Lâcher-prise",
+    "item1Title": "Un moment pour ralentir",
+    "item1Body": "Focaliser son attention sur les lignes, les formes et les couleurs aide à poser le rythme et à se recentrer.",
+    "item2Pill": "Focus",
+    "item2Title": "Dépassement du blocage créatif",
+    "item2Body": "Des consignes simples et intuitives permettent de briser la peur de la page blanche.",
+    "item3Pill": "Expression",
+    "item3Title": "Exploration personnelle",
+    "item3Body": "Laisser le geste guider la découverte — curiosité, jeu et matière avant tout jugement."
+  },
+  "how": {
+    "aria": "Fonctionnement du générateur",
+    "title": "Comment ça marche ?",
+    "p1": "Pas besoin de matériel complexe : un carnet, un stylo, des feutres, des pastels ou quelques feuilles de récupération suffisent. Lancez le générateur et laissez une consigne claire vous mettre en mouvement.",
+    "p2": "Chaque session propose une invitation créative adaptée à votre élan du moment, puis un miroir bienveillant après la création — coach créatif, jamais diagnostic. Apportez votre propre clé IA (BYOK) ou utilisez le mode gratuit.",
+    "badgeNoWall": "Sans mur de connexion",
+    "badgeLocal": "Stockage local-first",
+    "badgeDrive": "Drive optionnel",
+    "cta": "Commencer à créer"
+  },
+  "ctaBand": {
+    "title": "Voir un exemple de parcours",
+    "body": "Impulsion, consigne IA, création et miroir créatif — découvrez à quoi ressemble un rituel complet avant de vous lancer.",
+    "examples": "Parcourir les exemples →",
+    "features": "Lire les fonctionnalités →"
+  },
+  "footer": {
+    "tagline": "Pastek Art · pastek-art.eu — générateur d'exercices créatifs. © {{year}}"
+  },
+  "seo": {
+    "title": "Pastek Art — Libérez Votre Créativité, Un Exercice à la Fois | pastek-art.eu",
+    "description": "Générateur d'exercices créatifs guidés : dessin, peinture, collage. Coach créatif bienveillant, 100 % local & BYOK — sans mur de connexion ni jargon clinique."
+  }
+}

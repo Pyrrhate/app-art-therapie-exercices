@@ -1,0 +1,43 @@
+{
+  "header": {
+    "fil": "Thread",
+    "settings": "Settings",
+    "backHome": "Back to home"
+  },
+  "home": {
+    "label": "Pastek Art",
+    "titleWide": "Find an impulse,\n",
+    "accentWide": "then create",
+    "titleNarrow": "Impulse & ",
+    "accentNarrow": "making",
+    "descriptionWide": "A guided path to spark creativity, move through an exercise gently, then keep a trace of your practice — all on this device.",
+    "startExercise": "Start an exercise",
+    "customMode": "Custom mode",
+    "season": "Creative season",
+    "seasonOngoing": "Season in progress",
+    "seasonDay": "{{title}} — day {{day}}/{{total}}",
+    "seasonPracticedToday": " · today's session noted",
+    "seasonSee": "View",
+    "draftTitle": "Resume your ritual",
+    "draftAbandon": "Discard",
+    "draftStepReflection": "Step: capture & reflection",
+    "draftStepExercise": "Step: exercise in progress",
+    "amorcesLabel": "Creative starters",
+    "amorcesTitle": "Light paths to bring forth ",
+    "amorcesAccent": "an impulse",
+    "amorcesEnd": " before you make.",
+    "tracesLabel": "Your traces",
+    "tracesTitle": "The Creative Thread — ",
+    "tracesAccent": "automatic memory",
+    "tracesEnd": " of your practice on this device.",
+    "openFil": "Open the Creative Thread",
+    "filEmpty": "Your rituals and starters leave a trace here, automatically.",
+    "settingsLink": "Settings",
+    "updatesLink": "Updates",
+    "privacyLink": "Privacy"
+  },
+  "settings": {
+    "languageTitle": "Interface language",
+    "languageHint": "Mirrors and prompts already generated stay in their original language. Future invitations will follow this choice once wired (next step)."
+  }
+}

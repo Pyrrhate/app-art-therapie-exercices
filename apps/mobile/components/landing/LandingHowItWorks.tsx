@@ -1,5 +1,6 @@
 import { Platform, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ROUTES } from "@/lib/routes";
 
@@ -9,52 +10,50 @@ const ctaShadow =
     : undefined;
 
 export function LandingHowItWorks() {
+  const { t } = useTranslation("landing");
+
   return (
     <SemanticWeb
       tag="section"
       className="bg-sand-50 border-t border-sand-200/80"
-      aria-label="Fonctionnement du générateur"
+      aria-label={t("how.aria")}
     >
       <View className="max-w-3xl mx-auto px-6 py-14 md:py-16">
         <SemanticWeb
           tag="h2"
           className="font-display text-2xl md:text-3xl text-sand-900 mb-6 text-center"
         >
-          Comment ça marche ?
+          {t("how.title")}
         </SemanticWeb>
 
         <SemanticWeb
           tag="p"
           className="text-sand-700 text-base leading-7 mb-5 text-center"
         >
-          Pas besoin de matériel complexe : un carnet, un stylo, des feutres, des pastels
-          ou quelques feuilles de récupération suffisent. Lancez le générateur et laissez
-          une consigne claire vous mettre en mouvement.
+          {t("how.p1")}
         </SemanticWeb>
 
         <SemanticWeb
           tag="p"
           className="text-sand-700 text-base leading-7 mb-8 text-center"
         >
-          Chaque session propose une invitation créative adaptée à votre élan du moment,
-          puis un miroir bienveillant après la création — coach créatif, jamais diagnostic.
-          Apportez votre propre clé IA (BYOK) ou utilisez le mode gratuit.
+          {t("how.p2")}
         </SemanticWeb>
 
         <View className="flex-row flex-wrap justify-center gap-2 mb-10">
           <View className="rounded-2xl bg-mint-100 border border-sage-200 px-4 py-3">
             <Text className="text-sage-800 text-xs font-semibold text-center">
-              Sans mur de connexion
+              {t("how.badgeNoWall")}
             </Text>
           </View>
           <View className="rounded-2xl bg-clay-300/60 border border-clay-400 px-4 py-3">
             <Text className="text-sand-800 text-xs font-semibold text-center">
-              Stockage local-first
+              {t("how.badgeLocal")}
             </Text>
           </View>
           <View className="rounded-2xl bg-melon-50 border border-melon-200 px-4 py-3">
             <Text className="text-melon-700 text-xs font-semibold text-center">
-              Drive optionnel
+              {t("how.badgeDrive")}
             </Text>
           </View>
         </View>
@@ -63,12 +62,12 @@ export function LandingHowItWorks() {
           <Link href={ROUTES.home} asChild>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Commencer à créer"
+              accessibilityLabel={t("how.cta")}
               className="rounded-full bg-melon-500 active:bg-melon-600 px-8 py-3.5 min-h-[48px] justify-center web:hover:bg-melon-600"
               style={ctaShadow}
             >
               <Text className="text-white text-sm font-semibold tracking-wide">
-                Commencer à créer
+                {t("how.cta")}
               </Text>
             </Pressable>
           </Link>

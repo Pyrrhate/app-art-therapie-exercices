@@ -1,0 +1,21 @@
+{
+  "language": {
+    "label": "Language",
+    "fr": "Français",
+    "en": "English",
+    "switchTo": "Switch to {{lang}}"
+  },
+  "brand": {
+    "name": "Pastek Art",
+    "domain": "pastek-art.eu"
+  },
+  "actions": {
+    "start": "Get started",
+    "startCreating": "Start creating",
+    "back": "Back",
+    "home": "Home",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "seeAll": "See all →"
+  }
+}

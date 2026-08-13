@@ -6,9 +6,11 @@ import { SupportButton } from "@/components/SupportButton";
 import { AccountPanel } from "@/components/auth/AccountPanel";
 import { ThemePicker } from "@/components/ThemePicker";
 import { TimerSoundPicker } from "@/components/TimerSoundPicker";
+import { LanguageToggle } from "@/components/i18n/LanguageToggle";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
+import { useTranslation } from "react-i18next";
 import { checkHealth } from "@/lib/api";
 import { summarizeBackup, parseAppBackupJson } from "@/lib/backup/build";
 import {
@@ -26,6 +28,7 @@ import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClass
 import { useThemeStore } from "@/lib/themeStore";
 
 export default function SettingsScreen() {
+  const { t } = useTranslation("app");
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const isDark = theme === "dark";
@@ -206,6 +209,16 @@ export default function SettingsScreen() {
 
       <View className="gap-4 pb-8">
         <AccountPanel />
+
+        <View className={`rounded-2xl border px-5 py-5 ${panelBg(isDark)}`}>
+          <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
+            {t("settings.languageTitle")}
+          </Text>
+          <Text className={`text-sm leading-5 mb-4 ${textSecondary(isDark)}`}>
+            {t("settings.languageHint")}
+          </Text>
+          <LanguageToggle variant="settings" />
+        </View>
 
         <Pressable
           onPress={() => router.push(ROUTES.premiumCloud)}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { Link } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { LandingBenefits } from "@/components/landing/LandingBenefits";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
@@ -11,6 +12,7 @@ import { ROUTES } from "@/lib/routes";
 
 /** Page marketing SEO — contenu entièrement rendu côté serveur / DOM initial. */
 export function LandingPage() {
+  const { t } = useTranslation("landing");
   const [scrollY, setScrollY] = useState(0);
 
   return (
@@ -38,27 +40,26 @@ export function LandingPage() {
               tag="h2"
               className="font-display text-2xl text-sand-900 mb-3 text-center"
             >
-              Voir un exemple de parcours
+              {t("ctaBand.title")}
             </SemanticWeb>
             <SemanticWeb
               tag="p"
               className="text-sand-600 text-base leading-7 mb-5 text-center"
             >
-              Impulsion, consigne IA, création et miroir créatif — découvrez à quoi
-              ressemble un rituel complet avant de vous lancer.
+              {t("ctaBand.body")}
             </SemanticWeb>
             <View className="flex-row flex-wrap justify-center gap-3">
               <Link href={ROUTES.examples} asChild>
                 <Pressable className="rounded-full border border-sage-400 bg-sand-50 px-5 py-2.5">
                   <Text className="text-sage-700 text-sm font-semibold">
-                    Parcourir les exemples →
+                    {t("ctaBand.examples")}
                   </Text>
                 </Pressable>
               </Link>
               <Link href={ROUTES.features} asChild>
                 <Pressable className="rounded-full bg-sage-500 px-5 py-2.5">
                   <Text className="text-white text-sm font-semibold">
-                    Lire les fonctionnalités →
+                    {t("ctaBand.features")}
                   </Text>
                 </Pressable>
               </Link>

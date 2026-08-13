@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "examples": "Examples",
+    "features": "Features",
+    "studio": "Creative space",
+    "aiConfig": "AI setup",
+    "about": "About",
+    "updates": "Updates",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mainNav": "Main navigation",
+    "mobileNav": "Mobile navigation"
+  },
+  "hero": {
+    "aria": "Introduction to the Pastek Art creative exercise generator",
+    "tagLetGo": "Letting go",
+    "tagFocus": "Creative focus",
+    "tagExpression": "Expression",
+    "titleLine1": "Free Your Creativity,",
+    "titleLine2": "One Exercise at a Time",
+    "lead": "Pastek Art invites you to explore drawing, painting and collage as a gentle game — guided prompts, a creative mirror, nothing clinical. Your AI key stays with you (BYOK); your traces stay local.",
+    "badgeLocal": "100% local & private",
+    "badgeByok": "BYOK ready",
+    "cta": "Start creating"
+  },
+  "benefits": {
+    "aria": "Benefits of a daily creative ritual",
+    "title": "Why bring a creative ritual into your day?",
+    "intro": "A creative exercise asks for no technical skill and no special talent. The point is not a polished artwork, but fully inhabiting the process. Practiced regularly, it grows curiosity, ease and everyday wellbeing:",
+    "item1Pill": "Letting go",
+    "item1Title": "A moment to slow down",
+    "item1Body": "Attending to lines, shapes and colours helps settle the pace and come back to yourself.",
+    "item2Pill": "Focus",
+    "item2Title": "Past the blank-page block",
+    "item2Body": "Simple, intuitive prompts make it easier to leave the fear of the empty page behind.",
+    "item3Pill": "Expression",
+    "item3Title": "Personal exploration",
+    "item3Body": "Let the gesture lead the discovery — curiosity, play and materials before judgment."
+  },
+  "how": {
+    "aria": "How the generator works",
+    "title": "How it works",
+    "p1": "No complex kit required: a notebook, a pen, markers, pastels or a few scrap sheets are enough. Start the generator and let a clear prompt set you in motion.",
+    "p2": "Each session offers a creative invitation matched to your impulse of the moment, then a kind mirror after you create — a creative coach, never a diagnosis. Bring your own AI key (BYOK) or use the free mode.",
+    "badgeNoWall": "No login wall",
+    "badgeLocal": "Local-first storage",
+    "badgeDrive": "Optional Drive",
+    "cta": "Start creating"
+  },
+  "ctaBand": {
+    "title": "See a sample journey",
+    "body": "Impulse, AI prompt, making, and creative mirror — see what a full ritual looks like before you begin.",
+    "examples": "Browse examples →",
+    "features": "Read the features →"
+  },
+  "footer": {
+    "tagline": "Pastek Art · pastek-art.eu — creative exercise generator. © {{year}}"
+  },
+  "seo": {
+    "title": "Pastek Art — Free Your Creativity, One Exercise at a Time | pastek-art.eu",
+    "description": "Guided creative exercises: drawing, painting, collage. A kind creative coach, 100% local & BYOK — no login wall, no clinical jargon."
+  }
+}

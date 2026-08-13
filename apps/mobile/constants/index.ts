@@ -20,8 +20,12 @@ export const STORAGE_KEYS = {
   seasons: "@art_therapie/seasons_v1",
 } as const;
 
-export function formatSessionDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
+export function formatSessionDate(
+  iso: string,
+  language: "fr" | "en" = "fr"
+): string {
+  const locale = language === "en" ? "en-GB" : "fr-FR";
+  return new Date(iso).toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",

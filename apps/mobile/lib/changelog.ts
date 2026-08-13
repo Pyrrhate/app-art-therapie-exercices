@@ -13,6 +13,15 @@ export type ChangelogEntry = {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "i18n-fr-en",
+    dateLabel: "août 2026",
+    title: "Interface FR / EN",
+    highlights: [
+      "Bascule Français / English dans la navigation et les réglages (préférence locale).",
+      "Landing et chrome de l'app traduits ; le reste (Fil, saisons, prompts IA) suivra.",
+    ],
+  },
+  {
     id: "fil-saisons-lecture",
     dateLabel: "août 2026",
     title: "Fil mosaïque, tags & saisons créatives",

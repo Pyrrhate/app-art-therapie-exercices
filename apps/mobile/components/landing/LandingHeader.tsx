@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Modal,
   Platform,
@@ -8,7 +8,9 @@ import {
   View,
 } from "react-native";
 import { Link, router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { PastekLogoIcon } from "@/components/brand/PastekBrandImage";
+import { LanguageToggle } from "@/components/i18n/LanguageToggle";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ROUTES } from "@/lib/routes";
 
@@ -16,14 +18,6 @@ type LandingNavItem = {
   label: string;
   href: string;
 };
-
-const DEFAULT_NAV: LandingNavItem[] = [
-  { label: "Exemples", href: ROUTES.examples },
-  { label: "Fonctionnalités", href: ROUTES.features },
-  { label: "Espace créatif", href: ROUTES.home },
-  { label: "Config IA", href: ROUTES.aiEngines },
-  { label: "À propos", href: ROUTES.privacy },
-];
 
 interface LandingHeaderProps {
   maxWidth?: "3xl" | "5xl";
@@ -85,7 +79,7 @@ function CreateButton({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel="Commencer à créer"
+      accessibilityLabel={label}
       className={`rounded-full bg-melon-500 active:bg-melon-600 px-4 py-2 min-h-[40px] justify-center shrink-0 web:hover:bg-melon-600 ${className}`}
       style={ctaShadow}
     >
@@ -96,13 +90,26 @@ function CreateButton({
 
 export function LandingHeader({
   maxWidth = "3xl",
-  navItems = DEFAULT_NAV,
+  navItems,
   activeHref,
 }: LandingHeaderProps) {
+  const { t } = useTranslation(["landing", "common"]);
   const { width } = useWindowDimensions();
   const isNativeMobile = Platform.OS !== "web" && width < MOBILE_BREAKPOINT;
   const [menuOpen, setMenuOpen] = useState(false);
   const maxW = maxWidth === "3xl" ? "max-w-3xl" : "max-w-3xl";
+
+  const defaultNav = useMemo<LandingNavItem[]>(
+    () => [
+      { label: t("landing:nav.examples"), href: ROUTES.examples },
+      { label: t("landing:nav.features"), href: ROUTES.features },
+      { label: t("landing:nav.studio"), href: ROUTES.home },
+      { label: t("landing:nav.aiConfig"), href: ROUTES.aiEngines },
+      { label: t("landing:nav.about"), href: ROUTES.privacy },
+    ],
+    [t]
+  );
+  const items = navItems ?? defaultNav;
 
   function closeMenu() {
     setMenuOpen(false);
@@ -117,10 +124,10 @@ export function LandingHeader({
     <View
       className="landing-desktop-actions hidden md:flex"
       accessibilityRole="navigation"
-      accessibilityLabel="Navigation principale"
+      accessibilityLabel={t("landing:nav.mainNav")}
     >
       <View className="landing-desktop-nav">
-        {navItems.map((item) => (
+        {items.map((item) => (
           <NavLink
             key={item.href}
             item={item}
@@ -129,7 +136,8 @@ export function LandingHeader({
           />
         ))}
       </View>
-      <CreateButton label="Commencer" onPress={goCreate} />
+      <LanguageToggle />
+      <CreateButton label={t("common:actions.start")} onPress={goCreate} />
     </View>
   );
 
@@ -138,7 +146,7 @@ export function LandingHeader({
       <Pressable
         onPress={() => setMenuOpen(true)}
         accessibilityRole="button"
-        accessibilityLabel="Ouvrir le menu"
+        accessibilityLabel={t("landing:nav.openMenu")}
         accessibilityState={{ expanded: menuOpen }}
         hitSlop={10}
         className={`w-11 h-11 rounded-2xl border border-sand-200 bg-sand-50 items-center justify-center active:bg-mint-100 shrink-0 ${
@@ -156,10 +164,10 @@ export function LandingHeader({
         <View
           className="flex-row items-center gap-3 shrink-0"
           accessibilityRole="navigation"
-          accessibilityLabel="Navigation principale"
+          accessibilityLabel={t("landing:nav.mainNav")}
         >
           <View className="flex-row items-center gap-3">
-            {navItems.map((item) => (
+            {items.map((item) => (
               <NavLink
                 key={item.href}
                 item={item}
@@ -168,7 +176,8 @@ export function LandingHeader({
               />
             ))}
           </View>
-          <CreateButton label="Commencer" onPress={goCreate} />
+          <LanguageToggle />
+          <CreateButton label={t("common:actions.start")} onPress={goCreate} />
         </View>
       ) : null}
     </>
@@ -177,15 +186,15 @@ export function LandingHeader({
   return (
     <SemanticWeb tag="header" className="border-b border-sand-200/70 bg-sand-50/95">
       <View className={`${maxW} mx-auto px-6 py-4 flex-row items-center justify-between gap-3`}>
-        <Link href={ROUTES.landing} accessibilityLabel="Retour à l'accueil pastek-art.eu">
+        <Link href={ROUTES.landing} accessibilityLabel={t("common:actions.home")}>
           <View className="flex-row items-center gap-3 shrink min-w-0">
-            <PastekLogoIcon size={36} accessibilityLabel="Logo Pastek Art" />
+            <PastekLogoIcon size={36} accessibilityLabel={t("common:brand.name")} />
             <View className="min-w-0">
               <SemanticWeb tag="p" className="font-display text-lg text-sand-900 leading-5">
-                Pastek Art
+                {t("common:brand.name")}
               </SemanticWeb>
               <Text className="text-sage-600 text-[11px] tracking-wide hidden sm:flex">
-                pastek-art.eu
+                {t("common:brand.domain")}
               </Text>
             </View>
           </View>
@@ -211,7 +220,7 @@ export function LandingHeader({
           <Pressable
             className="absolute inset-0 bg-sand-900/40"
             onPress={closeMenu}
-            accessibilityLabel="Fermer le menu"
+            accessibilityLabel={t("landing:nav.closeMenu")}
           />
           <View
             className="bg-sand-50 border-b border-sand-200 px-6 pt-5 pb-8 rounded-b-3xl"
@@ -222,11 +231,13 @@ export function LandingHeader({
             }
           >
             <View className="flex-row items-center justify-between mb-6">
-              <Text className="font-display text-xl text-sand-900">Menu</Text>
+              <Text className="font-display text-xl text-sand-900">
+                {t("landing:nav.menu")}
+              </Text>
               <Pressable
                 onPress={closeMenu}
                 accessibilityRole="button"
-                accessibilityLabel="Fermer le menu"
+                accessibilityLabel={t("landing:nav.closeMenu")}
                 hitSlop={10}
                 className="w-10 h-10 rounded-full bg-mint-100 items-center justify-center"
               >
@@ -234,8 +245,12 @@ export function LandingHeader({
               </Pressable>
             </View>
 
-            <View accessibilityRole="navigation" accessibilityLabel="Navigation mobile">
-              {navItems.map((item) => (
+            <View className="mb-4">
+              <LanguageToggle />
+            </View>
+
+            <View accessibilityRole="navigation" accessibilityLabel={t("landing:nav.mobileNav")}>
+              {items.map((item) => (
                 <View key={item.href} className="border-b border-sand-100 py-3">
                   <NavLink
                     item={item}
@@ -248,7 +263,7 @@ export function LandingHeader({
             </View>
 
             <CreateButton
-              label="Commencer à créer"
+              label={t("common:actions.startCreating")}
               onPress={goCreate}
               className="mt-6 w-full items-center px-5 py-3.5 min-h-[48px]"
             />
