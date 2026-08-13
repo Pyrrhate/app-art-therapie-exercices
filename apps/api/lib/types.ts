@@ -37,6 +37,8 @@ export interface ReflectionRequest {
   colorContext?: string;
   /** Miroir précédent à approfondir. */
   previousReflection?: string;
+  /** Échos du Fil créatif (traces locales) pour un miroir longitudinal. */
+  practiceContext?: string;
   /** Overrides locaux des prompts système (BYOP — jamais stockés serveur). */
   promptOverrides?: PromptOverrides;
 }

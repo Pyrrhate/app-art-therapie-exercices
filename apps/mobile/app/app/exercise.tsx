@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, StatusBar, Text, View } from "react-native";
 import { router } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { DurationPicker } from "@/components/DurationPicker";
@@ -35,6 +35,8 @@ export default function ExerciseScreen() {
   const [completionSound, setCompletionSound] = useState<TimerSoundId>("gong");
   const [ready, setReady] = useState(false);
   const [byokConfigured, setByokConfigured] = useState(false);
+  const [silenceMode, setSilenceMode] = useState(false);
+  const [peekConsigne, setPeekConsigne] = useState(false);
 
   useEffect(() => {
     getTimerSound().then(setCompletionSound);
@@ -75,6 +77,72 @@ export default function ExerciseScreen() {
     byokConfigured,
   });
 
+  const keywordPreview =
+    exerciseKeywords.length > 0
+      ? exerciseKeywords.slice(0, 4).join(" · ")
+      : impulse;
+
+  if (silenceMode) {
+    return (
+      <View className="flex-1 bg-[#1C1916] px-6 pt-14 pb-10 justify-between">
+        <StatusBar barStyle="light-content" />
+        <View className="items-center gap-3">
+          <Text className="text-sand-400 text-xs uppercase tracking-[0.2em]">
+            Silence créatif
+          </Text>
+          <Text className="text-sand-200 text-sm text-center leading-6 px-4">
+            {keywordPreview}
+          </Text>
+          <Pressable
+            onPress={() => setPeekConsigne((v) => !v)}
+            className="rounded-full border border-sand-600/80 px-4 py-2"
+            accessibilityRole="button"
+            accessibilityLabel={
+              peekConsigne ? "Masquer la consigne" : "Aperçu de la consigne"
+            }
+          >
+            <Text className="text-sand-300 text-xs">
+              {peekConsigne ? "Masquer la consigne" : "Aperçu consigne"}
+            </Text>
+          </Pressable>
+          {peekConsigne ? (
+            <ScrollView
+              className="max-h-40 w-full rounded-2xl border border-sand-700 bg-sand-900/80 px-4 py-3"
+              showsVerticalScrollIndicator={false}
+            >
+              <Text className="text-sand-300 text-sm leading-6">{exercise}</Text>
+            </ScrollView>
+          ) : null}
+        </View>
+
+        <GentleTimer
+          durationMinutes={durationMinutes}
+          completionSound={completionSound}
+          silence
+        />
+
+        <View className="gap-3">
+          <PrimaryButton
+            label="J'ai terminé — capturer mon œuvre"
+            onPress={() => {
+              setPeekConsigne(false);
+              setSilenceMode(false);
+              router.push(ROUTES.reflection);
+            }}
+          />
+          <PrimaryButton
+            label="Quitter le silence"
+            onPress={() => {
+              setPeekConsigne(false);
+              setSilenceMode(false);
+            }}
+            variant="ghost"
+          />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <ScreenContainer
       variant="focus"
@@ -82,10 +150,20 @@ export default function ExerciseScreen() {
       compactTop
       fixedHeader={<ScreenNavBar backLabel="← Rituel" />}
       stickyFooter={
-        <PrimaryButton
-          label="J'ai terminé — capturer mon œuvre"
-          onPress={() => router.push(ROUTES.reflection)}
-        />
+        <View className="gap-3">
+          <PrimaryButton
+            label="Mode silence — créer sans distraction"
+            onPress={() => {
+              setPeekConsigne(false);
+              setSilenceMode(true);
+            }}
+            variant="secondary"
+          />
+          <PrimaryButton
+            label="J'ai terminé — capturer mon œuvre"
+            onPress={() => router.push(ROUTES.reflection)}
+          />
+        </View>
       }
     >
       <PastekScreenHero
@@ -158,6 +236,12 @@ export default function ExerciseScreen() {
         durationMinutes={durationMinutes}
         completionSound={completionSound}
       />
+
+      <Text className="text-sand-500 text-xs leading-5 text-center mt-2 mb-4 px-2">
+        Le mode silence assombrit l&apos;écran et ne garde que le timer — idéal
+        pour démarrer votre temps de création. Touchez « Consigne » pour un
+        aperçu discret.
+      </Text>
     </ScreenContainer>
   );
 }

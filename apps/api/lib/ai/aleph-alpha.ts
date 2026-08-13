@@ -133,6 +133,7 @@ export class AlephAlphaProvider implements AIProvider {
         durationMinutes: input.durationMinutes,
         colorContext: input.colorContext,
         previousReflection: input.previousReflection,
+        practiceContext: input.practiceContext,
         visualNotes: input.imageBase64
           ? "(Image fournie — Aleph Alpha texte seul : décrivez librement votre ressenti.)"
           : undefined,

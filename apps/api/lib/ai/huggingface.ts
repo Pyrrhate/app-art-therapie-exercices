@@ -276,6 +276,7 @@ export class HuggingFaceProvider implements AIProvider {
         durationMinutes: input.durationMinutes,
         colorContext: input.colorContext,
         previousReflection: input.previousReflection,
+        practiceContext: input.practiceContext,
       };
 
       let warmRaw = await this.callTextModel(

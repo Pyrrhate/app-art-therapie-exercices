@@ -130,6 +130,7 @@ export class OllamaProvider implements AIProvider {
         durationMinutes: input.durationMinutes,
         colorContext: input.colorContext,
         previousReflection: input.previousReflection,
+        practiceContext: input.practiceContext,
         visualNotes: input.imageBase64
           ? "(Image fournie — Ollama texte : appuyez-vous sur le ressenti décrit.)"
           : undefined,

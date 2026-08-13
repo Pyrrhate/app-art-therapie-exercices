@@ -238,6 +238,7 @@ export async function analyzeArtwork(context: {
   writtenText?: string;
   colorContext?: string;
   previousReflection?: string;
+  practiceContext?: string;
 }): Promise<ReflectionResponse> {
   return request<ReflectionResponse>("/api/reflection/analyze", {
     method: "POST",

@@ -4,6 +4,7 @@ import {
   Image,
   Platform,
   Pressable,
+  Switch,
   Text,
   TextInput,
   View,
@@ -35,6 +36,12 @@ import { analyzeArtwork, ApiError, generateAugmentedExercise, transcribeHandwrit
 import { resolveByokCredentials } from "@/lib/aiKeys";
 import { exportSessionPdf } from "@/lib/sessionExport";
 import { showAlert } from "@/lib/alert";
+import { getFilEntries } from "@/lib/fil/storage";
+import {
+  buildPracticeContextFromFil,
+  countUsableFilTraces,
+  PRACTICE_CONTEXT_MAX_ENTRIES,
+} from "@/lib/fil/practiceContext";
 import {
   extractImageFileFromDataTransfer,
   formatImageSize,
@@ -177,6 +184,19 @@ export default function ReflectionScreen() {
       .catch(() => setByokConfigured(false));
   }, []);
 
+  useEffect(() => {
+    void getFilEntries()
+      .then((entries) => {
+        const count = countUsableFilTraces(entries);
+        setFilTraceCount(count);
+        if (count === 0) setUseFilMemory(false);
+      })
+      .catch(() => {
+        setFilTraceCount(0);
+        setUseFilMemory(false);
+      });
+  }, []);
+
   const supportsAiAnalysis = technique
     ? isAiAnalysisSupported(technique) || byokConfigured
     : true;
@@ -199,6 +219,8 @@ export default function ReflectionScreen() {
   const [deepenedOpenQuestions, setDeepenedOpenQuestions] = useState<string[]>(
     []
   );
+  const [useFilMemory, setUseFilMemory] = useState(false);
+  const [filTraceCount, setFilTraceCount] = useState(0);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [loadingAugmentedExercise, setLoadingAugmentedExercise] = useState(false);
   const [notice, setNotice] = useState<{
@@ -572,6 +594,22 @@ export default function ReflectionScreen() {
               ? writtenText.trim()
               : undefined;
 
+      let practiceContext: string | undefined;
+      if (useFilMemory) {
+        try {
+          const entries = await getFilEntries();
+          const built = buildPracticeContextFromFil(entries, {
+            technique,
+            maxEntries: PRACTICE_CONTEXT_MAX_ENTRIES,
+          });
+          if (built.trim().length >= 20) {
+            practiceContext = built.slice(0, 4000);
+          }
+        } catch {
+          /* Fil optionnel */
+        }
+      }
+
       const result = await withTimeout(
         analyzeArtwork({
           imageBase64,
@@ -581,6 +619,7 @@ export default function ReflectionScreen() {
           durationMinutes,
           writtenText: textForApi,
           colorContext: colorContext ?? undefined,
+          practiceContext,
         }),
         90_000
       );
@@ -1501,6 +1540,28 @@ Miroir initial (à conserver — ne pas recopier) :
               disabled={busy}
             />
           )}
+
+          {filTraceCount > 0 ? (
+            <View className="rounded-2xl border border-sage-100 bg-sage-50/80 px-4 py-3 flex-row items-center gap-3">
+              <View className="flex-1">
+                <Text className="text-sage-800 text-sm font-medium mb-1">
+                  Tenir compte de mon Fil
+                </Text>
+                <Text className="text-sage-700 text-xs leading-5">
+                  Croiser jusqu&apos;à {PRACTICE_CONTEXT_MAX_ENTRIES} traces
+                  locales ({filTraceCount} disponibles) — opt-in, sans envoyer
+                  vos photos.
+                </Text>
+              </View>
+              <Switch
+                value={useFilMemory}
+                onValueChange={setUseFilMemory}
+                disabled={busy}
+                accessibilityLabel="Tenir compte des traces du Fil créatif"
+              />
+            </View>
+          ) : null}
+
           <PrimaryButton
             label={
               loadingReflection
@@ -1508,7 +1569,9 @@ Miroir initial (à conserver — ne pas recopier) :
                 : preparingPhoto
                   ? "Préparation..."
                   : supportsAiAnalysis
-                    ? "Demander une réflexion bienveillante"
+                    ? useFilMemory
+                      ? "Demander un miroir (avec Fil)"
+                      : "Demander une réflexion bienveillante"
                     : "Accueillir mon ressenti"
             }
             onPress={handleRequestReflection}
@@ -1531,7 +1594,7 @@ Miroir initial (à conserver — ne pas recopier) :
                 )}
                 {reflectionSource === "ai" && (
                   <Text className="text-sage-500 text-xs font-medium">
-                    Analyse IA
+                    {useFilMemory ? "Analyse IA · Fil" : "Analyse IA"}
                   </Text>
                 )}
               </View>

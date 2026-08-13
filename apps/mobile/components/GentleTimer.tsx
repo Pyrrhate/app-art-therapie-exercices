@@ -14,6 +14,8 @@ interface GentleTimerProps {
   onComplete?: () => void;
   autoStart?: boolean;
   completionSound?: "gong" | "chime" | "none";
+  /** Mode silence : pas de phrases zen, contraste clair sur fond sombre. */
+  silence?: boolean;
 }
 
 const PHRASE_ROTATION_MS = 22_000;
@@ -40,6 +42,7 @@ export function GentleTimer({
   onComplete,
   autoStart = true,
   completionSound = "gong",
+  silence = false,
 }: GentleTimerProps) {
   const totalSeconds = durationMinutes * 60;
   const [elapsed, setElapsed] = useState(0);
@@ -147,6 +150,24 @@ export function GentleTimer({
   const remaining = Math.max(totalSeconds - elapsed, 0);
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
+  const trackStroke = silence ? "#3A342E" : "#E8DDD4";
+  const progressStroke = isComplete
+    ? silence
+      ? "#C4A484"
+      : "#A8856A"
+    : silence
+      ? "#8FBC9A"
+      : "#6B8F71";
+  const timeClass = silence
+    ? "text-sand-100 text-3xl font-light"
+    : "text-sand-700 text-2xl font-light";
+  const controlClass = silence
+    ? "px-5 py-2 rounded-full bg-sand-800 border border-sand-600"
+    : "px-5 py-2 rounded-full bg-sand-100 border border-sand-200";
+  const controlTextClass = silence ? "text-sand-200 text-sm" : "text-sand-600 text-sm";
+  const resetClass = silence
+    ? "w-10 h-10 rounded-full bg-sand-800 border border-sand-600 items-center justify-center"
+    : "w-10 h-10 rounded-full bg-sand-100 border border-sand-200 items-center justify-center";
 
   return (
     <View className="items-center justify-center py-5">
@@ -156,7 +177,7 @@ export function GentleTimer({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke="#E8DDD4"
+            stroke={trackStroke}
             strokeWidth={stroke}
             fill="none"
           />
@@ -164,7 +185,7 @@ export function GentleTimer({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke={isComplete ? "#A8856A" : "#6B8F71"}
+            stroke={progressStroke}
             strokeWidth={stroke}
             fill="none"
             strokeDasharray={circumference}
@@ -175,7 +196,7 @@ export function GentleTimer({
           />
         </Svg>
         <View className="absolute inset-0 items-center justify-center">
-          <Text className="text-sand-700 text-2xl font-light">
+          <Text className={timeClass}>
             {isComplete
               ? "0:00"
               : `${mins}:${secs.toString().padStart(2, "0")}`}
@@ -185,11 +206,8 @@ export function GentleTimer({
 
       <View className="flex-row items-center gap-3 mt-4">
         {!isComplete && (
-          <Pressable
-            onPress={togglePause}
-            className="px-5 py-2 rounded-full bg-sand-100 border border-sand-200"
-          >
-            <Text className="text-sand-600 text-sm">
+          <Pressable onPress={togglePause} className={controlClass}>
+            <Text className={controlTextClass}>
               {running ? "Pause" : "Reprendre"}
             </Text>
           </Pressable>
@@ -199,20 +217,30 @@ export function GentleTimer({
           onPress={handleReset}
           accessibilityRole="button"
           accessibilityLabel="Remise à zéro du timer"
-          className="w-10 h-10 rounded-full bg-sand-100 border border-sand-200 items-center justify-center"
+          className={resetClass}
         >
-          <ResetIcon />
+          <ResetIcon color={silence ? "#C9B8A8" : "#8A7A6E"} />
         </Pressable>
       </View>
 
-      {!isComplete && (
+      {!silence && !isComplete && (
         <Text className="text-sand-500 text-sm mt-4 text-center leading-6 px-6 min-h-[48px]">
           {ZEN_TIMER_PHRASES[phraseIndex]}
         </Text>
       )}
 
+      {silence && !isComplete && (
+        <Text className="text-sand-500 text-sm mt-6 text-center px-6">
+          Laissez le geste guider — l&apos;écran se tait.
+        </Text>
+      )}
+
       {isComplete && (
-        <Text className="text-sage-500 text-sm mt-4 text-center px-6">
+        <Text
+          className={`text-sm mt-4 text-center px-6 ${
+            silence ? "text-sage-300" : "text-sage-500"
+          }`}
+        >
           Moment terminé — prenez le temps de respirer
         </Text>
       )}

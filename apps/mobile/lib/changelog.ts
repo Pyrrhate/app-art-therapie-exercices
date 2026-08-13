@@ -13,6 +13,15 @@ export type ChangelogEntry = {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "silence-fil-miroir",
+    dateLabel: "août 2026",
+    title: "Silence créatif & miroir longitudinal",
+    highlights: [
+      "Mode silence sur l'exercice : écran assombri, timer seul, aperçu discret de la consigne.",
+      "Option « Tenir compte de mon Fil » : le miroir peut croiser jusqu'à 5 traces locales (opt-in, sans photos).",
+    ],
+  },
+  {
     id: "rituel-approfondi",
     dateLabel: "août 2026",
     title: "Rituel enrichi & Fil analytique",

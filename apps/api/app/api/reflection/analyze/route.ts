@@ -32,6 +32,7 @@ const bodySchema = z
       .optional(),
     colorContext: z.string().min(1).max(2000).optional(),
     previousReflection: z.string().min(20).max(8000).optional(),
+    practiceContext: z.string().min(20).max(4000).optional(),
     promptOverrides: promptOverridesSchema,
     byok: byokBodySchema,
   })

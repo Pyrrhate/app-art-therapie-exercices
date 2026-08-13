@@ -72,6 +72,8 @@ export interface ReflectionPromptContext {
   colorContext?: string;
   /** Miroir créatif déjà reçu — à approfondir. */
   previousReflection?: string;
+  /** Échos du Fil (traces locales récentes). */
+  practiceContext?: string;
 }
 
 function formatReflectionContext(ctx: ReflectionPromptContext): string {
@@ -95,6 +97,9 @@ function formatReflectionContext(ctx: ReflectionPromptContext): string {
       : null,
     ctx.previousReflection
       ? `Miroir créatif déjà proposé (à approfondir — allez plus loin, sans répéter) :\n« ${ctx.previousReflection.slice(0, 2500)} »`
+      : null,
+    ctx.practiceContext
+      ? `Mémoire de pratique (Fil local — croiser avec douceur, au conditionnel, sans dresser de profil psychologique) :\n${ctx.practiceContext.slice(0, 2800)}`
       : null,
   ].filter(Boolean);
   return lines.join("\n\n");
