@@ -21,6 +21,8 @@ import { resolveByokCredentials } from "@/lib/aiKeys";
 import { ApiError, generateExercise } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
 import { localExerciseBannerMessage } from "@/lib/localExerciseBanner";
+import { applyActiveSeasonToRitual } from "@/lib/seasons/apply";
+import type { SeasonRun } from "@/lib/seasons/types";
 import { useRitualStore } from "@/lib/store";
 import { useEnabledTechniques } from "@/lib/techniques/managed";
 
@@ -44,11 +46,13 @@ export default function RitualScreen() {
   const [offlineMode, setOfflineMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [byokConfigured, setByokConfigured] = useState(false);
+  const [activeSeason, setActiveSeason] = useState<SeasonRun | null>(null);
 
   useEffect(() => {
     void resolveByokCredentials()
       .then((c) => setByokConfigured(Boolean(c)))
       .catch(() => setByokConfigured(false));
+    void applyActiveSeasonToRitual().then(setActiveSeason);
   }, []);
 
   async function handleContinue() {
@@ -111,6 +115,15 @@ export default function RitualScreen() {
         value={experienceMode}
         onChange={setExperienceMode}
       />
+
+      {activeSeason ? (
+        <AccentCard className="mb-6">
+          <Text className="text-sage-700 text-sm leading-6">
+            Saison « {activeSeason.title} » — la contrainte sera visible dans
+            l&apos;énoncé, sans être envoyée comme directive à l&apos;IA.
+          </Text>
+        </AccentCard>
+      ) : null}
 
       {impulsePrefilled && (
         <AccentCard className="mb-6">

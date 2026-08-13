@@ -17,6 +17,7 @@ export const STORAGE_KEYS = {
   ritualDraft: "@art_therapie/ritual_draft",
   creativeFil: "@art_therapie/creative_fil",
   sessionLogs: "@art_therapie/session_logs",
+  seasons: "@art_therapie/seasons_v1",
 } as const;
 
 export function formatSessionDate(iso: string): string {

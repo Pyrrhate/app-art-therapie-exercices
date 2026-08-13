@@ -25,6 +25,8 @@ export async function persistRitualDraft(step: RitualDraftStep): Promise<void> {
     writtenText: state.writtenText,
     colorContext: state.colorContext,
     paletteColors: state.paletteColors.length ? state.paletteColors : undefined,
+    seasonRunId: state.seasonRunId,
+    seasonTitle: state.seasonTitle,
     updatedAt: new Date().toISOString(),
   };
 
@@ -55,5 +57,8 @@ export function hydrateRitualFromDraft(draft: RitualDraft): void {
   if (draft.writtenText) store.setWrittenText(draft.writtenText);
   if (draft.colorContext || draft.paletteColors?.length) {
     store.setColorContext(draft.colorContext ?? null, draft.paletteColors);
+  }
+  if (draft.seasonRunId || draft.seasonTitle) {
+    store.setSeason(draft.seasonRunId ?? null, draft.seasonTitle ?? null);
   }
 }

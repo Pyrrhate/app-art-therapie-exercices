@@ -28,6 +28,7 @@ export default function AppStackLayout() {
       />
       <Stack.Screen name="fil/index" options={{ title: "Fil créatif" }} />
       <Stack.Screen name="fil/[id]" />
+      <Stack.Screen name="saisons/index" options={{ title: "Saisons" }} />
       <Stack.Screen name="exercise" />
       <Stack.Screen name="reflection" />
       <Stack.Screen

@@ -18,6 +18,8 @@ export interface RitualDraft {
   writtenText?: string;
   colorContext?: string | null;
   paletteColors?: string[];
+  seasonRunId?: string | null;
+  seasonTitle?: string | null;
   updatedAt: string;
 }
 

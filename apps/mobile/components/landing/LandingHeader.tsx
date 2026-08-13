@@ -18,7 +18,8 @@ type LandingNavItem = {
 };
 
 const DEFAULT_NAV: LandingNavItem[] = [
-  { label: "Exercices", href: ROUTES.examples },
+  { label: "Exemples", href: ROUTES.examples },
+  { label: "Fonctionnalités", href: ROUTES.features },
   { label: "Espace créatif", href: ROUTES.home },
   { label: "Config IA", href: ROUTES.aiEngines },
   { label: "À propos", href: ROUTES.privacy },

@@ -8,9 +8,14 @@ import { ROUTES } from "@/lib/routes";
 interface ExamplesShellProps {
   children: React.ReactNode;
   breadcrumb?: { label: string; href: string }[];
+  activeHref?: string;
 }
 
-export function ExamplesShell({ children, breadcrumb }: ExamplesShellProps) {
+export function ExamplesShell({
+  children,
+  breadcrumb,
+  activeHref = ROUTES.examples,
+}: ExamplesShellProps) {
   return (
     <View className="flex-1 bg-sand-50">
       <ScrollView
@@ -18,7 +23,7 @@ export function ExamplesShell({ children, breadcrumb }: ExamplesShellProps) {
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={Platform.OS === "web"}
       >
-        <LandingHeader maxWidth="3xl" activeHref={ROUTES.examples} />
+        <LandingHeader maxWidth="3xl" activeHref={activeHref} />
 
         {breadcrumb && breadcrumb.length > 0 ? (
           <SemanticWeb

@@ -15,6 +15,13 @@ import { getFilEntries } from "@/lib/fil/storage";
 import { FIL_SOURCE_META, type FilEntry } from "@/lib/fil/types";
 import { navigateSiteHome } from "@/lib/navigation";
 import { ROUTES, type ModuleAmorceRoute } from "@/lib/routes";
+import {
+  getActiveSeasonRun,
+  practicedToday,
+  seasonDayIndex,
+} from "@/lib/seasons/storage";
+import { applyActiveSeasonToRitual } from "@/lib/seasons/apply";
+import type { SeasonRun } from "@/lib/seasons/types";
 import { hydrateRitualFromDraft } from "@/lib/ritualPersistence";
 import { getRitualDraft, type RitualDraft } from "@/lib/ritualDraft";
 import { textMuted, textSecondary } from "@/lib/themeClasses";
@@ -65,11 +72,13 @@ export default function WelcomeScreen() {
   const [tracesY, setTracesY] = useState(0);
   const [draft, setDraft] = useState<RitualDraft | null>(null);
   const [recentFil, setRecentFil] = useState<FilEntry[]>([]);
+  const [season, setSeason] = useState<SeasonRun | null>(null);
 
   const loadDraft = useCallback(async () => {
     setDraft(await getRitualDraft());
     const fil = await getFilEntries();
     setRecentFil(fil.slice(0, isWide ? 3 : 2));
+    setSeason(await getActiveSeasonRun());
   }, [isWide]);
 
   useFocusEffect(
@@ -149,6 +158,44 @@ export default function WelcomeScreen() {
         </AccentCard>
       )}
 
+      {season ? (
+        <AccentCard className={`gap-2 ${isWide ? "mb-6" : "mb-3"}`}>
+          <Text className="text-sage-600 font-medium text-sm">
+            Saison en cours
+          </Text>
+          <Text className={`text-base font-medium ${textSecondary(isDark)}`}>
+            {season.title} — jour{" "}
+            {Math.min(seasonDayIndex(season), season.durationDays)}/
+            {season.durationDays}
+          </Text>
+          <Text className={`text-sm leading-5 ${textMuted(isDark)}`} numberOfLines={2}>
+            {season.constraint}
+            {practicedToday(season) ? " · séance d'aujourd'hui notée" : ""}
+          </Text>
+          <View className={isWide ? "gap-3" : "flex-row gap-2 mt-1"}>
+            <View className={isWide ? undefined : "flex-1"}>
+              <PrimaryButton
+                label="Continuer"
+                onPress={() => {
+                  void applyActiveSeasonToRitual().then(() => {
+                    router.push(ROUTES.ritual);
+                  });
+                }}
+                align="stretch"
+              />
+            </View>
+            <View className={isWide ? undefined : "flex-1"}>
+              <PrimaryButton
+                label="Voir"
+                onPress={() => router.push(ROUTES.seasons)}
+                variant="ghost"
+                align="stretch"
+              />
+            </View>
+          </View>
+        </AccentCard>
+      ) : null}
+
       <View className="gap-3">
         <PrimaryButton
           label="Commencer un exercice"
@@ -162,6 +209,14 @@ export default function WelcomeScreen() {
           variant="secondary"
           align="stretch"
         />
+        {!season ? (
+          <PrimaryButton
+            label="Saison créative"
+            onPress={() => router.push(ROUTES.seasons)}
+            variant="ghost"
+            align="stretch"
+          />
+        ) : null}
       </View>
 
       <View className={isWide ? "mt-8 mb-2" : "mt-5 mb-1"}>

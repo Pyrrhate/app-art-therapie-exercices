@@ -82,4 +82,6 @@ export interface RitualState {
   colorContext: string | null;
   /** Hex de la palette explorée — affichage Fil et réutilisation. */
   paletteColors: string[];
+  seasonRunId: string | null;
+  seasonTitle: string | null;
 }

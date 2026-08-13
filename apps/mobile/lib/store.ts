@@ -59,6 +59,7 @@ interface RitualStore extends RitualState {
   ensureSessionExerciseId: () => string;
   setCustomSessionConfig: (patch: Partial<CustomSessionConfig>) => void;
   setColorContext: (colorContext: string | null, paletteColors?: string[]) => void;
+  setSeason: (runId: string | null, title: string | null) => void;
   reset: () => void;
 }
 
@@ -91,6 +92,8 @@ const initialState: RitualState = {
   customSessionConfig: { ...EMPTY_CUSTOM_SESSION_CONFIG },
   colorContext: null,
   paletteColors: [],
+  seasonRunId: null,
+  seasonTitle: null,
 };
 
 export const useRitualStore = create<RitualStore>((set, get) => ({
@@ -203,6 +206,11 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       colorContext,
       paletteColors: paletteColors ?? get().paletteColors,
     }),
+  setSeason: (seasonRunId, seasonTitle) =>
+    set({
+      seasonRunId: seasonRunId?.trim() || null,
+      seasonTitle: seasonTitle?.trim() || null,
+    }),
   setReflection: (reflection, openQuestions, followUpExercise) => {
     const cleaned = sanitizeAiDisplayText(reflection);
     // Ne jamais écraser un miroir existant par une chaîne vide (sanitize trop agressif).
@@ -225,7 +233,7 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
     set({
       exercise: sanitizeAiDisplayText(follow),
       exerciseDevelopment: null,
-      moduleStatement: null,
+      moduleStatement: state.seasonRunId ? state.moduleStatement : null,
       exerciseKeywords: deriveExerciseKeywords(state.impulse, state.technique),
       reflection: null,
       openQuestions: [],
@@ -269,6 +277,8 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       exerciseFallbackNote: null,
       colorContext: buildColorContextFromMetadata(m) ?? null,
       paletteColors: m.colors ?? [],
+      seasonRunId: m.seasonId ?? null,
+      seasonTitle: m.seasonTitle ?? null,
     });
   },
   restoreFromSession: (session) =>

@@ -68,6 +68,7 @@ export function buildPracticeContextFromFil(
         ? `Technique : ${getTechniqueLabel(m.technique)}`
         : null,
       m?.impulse ? `Impulsion : ${m.impulse.slice(0, impulseLen)}` : null,
+      entry.tags?.length ? `Tags : ${entry.tags.slice(0, 4).join(", ")}` : null,
       !compact && m?.exercise
         ? `Consigne (extrait) : ${m.exercise.slice(0, exerciseLen)}`
         : null,

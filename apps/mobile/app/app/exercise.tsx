@@ -22,6 +22,7 @@ export default function ExerciseScreen() {
   const exercise = useRitualStore((s) => s.exercise);
   const exerciseDevelopment = useRitualStore((s) => s.exerciseDevelopment);
   const moduleStatement = useRitualStore((s) => s.moduleStatement);
+  const seasonTitle = useRitualStore((s) => s.seasonTitle);
   const durationMinutes = useRitualStore((s) => s.durationMinutes);
   const impulse = useRitualStore((s) => s.impulse);
   const technique = useRitualStore((s) => s.technique);
@@ -214,7 +215,9 @@ export default function ExerciseScreen() {
           {moduleStatement?.trim() ? (
             <View className="pt-2 border-t border-sand-100">
               <Text className="text-sand-500 text-xs uppercase tracking-wider mb-1">
-                Contexte du module
+                {seasonTitle?.trim()
+                  ? `Saison — ${seasonTitle}`
+                  : "Contexte du module"}
               </Text>
               <Text className="text-sand-600 text-sm leading-6">
                 {moduleStatement}

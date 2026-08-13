@@ -33,6 +33,8 @@ export interface FilMetadata {
   writtenText?: string;
   followUpExercise?: string;
   photoUri?: string;
+  seasonId?: string;
+  seasonTitle?: string;
 }
 
 export interface FilEntry {
@@ -41,6 +43,8 @@ export interface FilEntry {
   summary: string;
   detail?: string;
   metadata?: FilMetadata;
+  /** Tags libres ajoutés par l'utilisateur (en plus de la technique). */
+  tags?: string[];
   createdAt: string;
   /** true après envoi réussi vers Supabase creative_threads */
   synced?: boolean;

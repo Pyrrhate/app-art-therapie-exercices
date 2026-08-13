@@ -11,7 +11,10 @@ export function LandingFooter() {
       <View className="max-w-3xl mx-auto px-6 py-8 gap-4">
         <View className="flex-row flex-wrap justify-center gap-4">
           <Link href={ROUTES.examples}>
-            <Text className="text-sage-700 text-sm font-medium">Exercices</Text>
+            <Text className="text-sage-700 text-sm font-medium">Exemples</Text>
+          </Link>
+          <Link href={ROUTES.features}>
+            <Text className="text-sage-700 text-sm font-medium">Fonctionnalités</Text>
           </Link>
           <Link href={ROUTES.home}>
             <Text className="text-sage-700 text-sm font-medium">Espace créatif</Text>

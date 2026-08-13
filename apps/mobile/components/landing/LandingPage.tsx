@@ -47,13 +47,22 @@ export function LandingPage() {
               Impulsion, consigne IA, création et miroir créatif — découvrez à quoi
               ressemble un rituel complet avant de vous lancer.
             </SemanticWeb>
-            <Link href={ROUTES.examples} asChild>
-              <Pressable className="rounded-full border border-sage-400 bg-sand-50 px-5 py-2.5">
-                <Text className="text-sage-700 text-sm font-semibold">
-                  Parcourir les exercices →
-                </Text>
-              </Pressable>
-            </Link>
+            <View className="flex-row flex-wrap justify-center gap-3">
+              <Link href={ROUTES.examples} asChild>
+                <Pressable className="rounded-full border border-sage-400 bg-sand-50 px-5 py-2.5">
+                  <Text className="text-sage-700 text-sm font-semibold">
+                    Parcourir les exemples →
+                  </Text>
+                </Pressable>
+              </Link>
+              <Link href={ROUTES.features} asChild>
+                <Pressable className="rounded-full bg-sage-500 px-5 py-2.5">
+                  <Text className="text-white text-sm font-semibold">
+                    Lire les fonctionnalités →
+                  </Text>
+                </Pressable>
+              </Link>
+            </View>
           </View>
         </SemanticWeb>
 

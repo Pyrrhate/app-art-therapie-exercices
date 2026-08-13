@@ -13,6 +13,16 @@ export type ChangelogEntry = {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    id: "fil-saisons-lecture",
+    dateLabel: "août 2026",
+    title: "Fil mosaïque, tags & saisons créatives",
+    highlights: [
+      "Le Fil se parcourt en mosaïque visuelle : photos, couleurs, tags (technique + les vôtres).",
+      "Saisons de 7 à 14 jours : une contrainte douce (couleur, format, technique) pour installer une habitude, sans streak.",
+      "Page Fonctionnalités pour lire l'atelier — et « Exemples » dans la navigation du site.",
+    ],
+  },
+  {
     id: "silence-fil-miroir",
     dateLabel: "août 2026",
     title: "Silence créatif & miroir longitudinal",

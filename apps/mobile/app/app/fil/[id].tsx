@@ -11,8 +11,11 @@ import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
+import { FilTagEditor } from "@/components/fil/FilTagEditor";
+import { FilTagChip } from "@/components/fil/FilTagChip";
+import { visualTags } from "@/lib/fil/tags";
 import { formatSessionDate, getTechniqueLabel, type RitualDuration } from "@/constants";
-import { deleteFilEntry, getFilEntryById } from "@/lib/fil/storage";
+import { deleteFilEntry, getFilEntryById, patchFilEntry } from "@/lib/fil/storage";
 import { confirmDeleteFilEntry } from "@/lib/fil/deleteConfirm";
 import {
   FIL_SOURCE_META,
@@ -99,6 +102,12 @@ export default function FilDetailScreen() {
     }
   }
 
+  async function handleTagsChange(tags: string[]) {
+    if (!entry) return;
+    const updated = await patchFilEntry(entry.id, { tags });
+    if (updated) setEntry(updated);
+  }
+
   async function handleDelete() {
     if (!entry) return;
     const confirmed = await confirmDeleteFilEntry(entry.summary);
@@ -175,10 +184,18 @@ export default function FilDetailScreen() {
       ) : null}
 
       {m?.technique ? (
-        <Text className={`text-sm mb-4 ${textSecondary(isDark)}`}>
+        <Text className={`text-sm mb-3 ${textSecondary(isDark)}`}>
           {getTechniqueLabel(m.technique)}
           {m.durationMinutes ? ` · ${m.durationMinutes} min` : ""}
         </Text>
+      ) : null}
+
+      {visualTags(entry).length > 0 ? (
+        <View className="flex-row flex-wrap gap-2 mb-5">
+          {visualTags(entry).map((tag) => (
+            <FilTagChip key={tag} label={tag} />
+          ))}
+        </View>
       ) : null}
 
       {exercise ? (
@@ -252,6 +269,10 @@ export default function FilDetailScreen() {
           ))}
         </View>
       ) : null}
+
+      <View className="mb-6">
+        <FilTagEditor tags={entry.tags ?? []} onChange={(tags) => void handleTagsChange(tags)} />
+      </View>
 
       <View className="gap-3 pb-4">
         {ritual && (

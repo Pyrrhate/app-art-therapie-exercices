@@ -32,6 +32,7 @@ export async function addFilEntry(
     summary: entry.summary,
     detail: entry.detail,
     metadata: entry.metadata,
+    tags: entry.tags,
   };
   const existing = await getFilEntriesRaw();
   const next = [full, ...existing].slice(0, MAX_ENTRIES);
@@ -66,6 +67,24 @@ export async function replaceFilEntries(entries: FilEntry[]): Promise<void> {
     STORAGE_KEYS.creativeFil,
     JSON.stringify(entries.slice(0, MAX_ENTRIES))
   );
+}
+
+export async function patchFilEntry(
+  id: string,
+  patch: Partial<Pick<FilEntry, "tags" | "metadata" | "summary" | "detail">>
+): Promise<FilEntry | null> {
+  const existing = await getFilEntriesRaw();
+  const index = existing.findIndex((e) => e.id === id);
+  if (index < 0) return null;
+  const next = [...existing];
+  next[index] = {
+    ...next[index],
+    ...patch,
+    synced: false,
+    syncedAt: undefined,
+  };
+  await AsyncStorage.setItem(STORAGE_KEYS.creativeFil, JSON.stringify(next));
+  return next[index];
 }
 
 function sessionToFilEntry(session: SavedSession): FilEntry {
