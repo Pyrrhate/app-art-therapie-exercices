@@ -1,4 +1,5 @@
 import { Pressable, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { textPrimary } from "@/lib/themeClasses";
@@ -6,6 +7,7 @@ import { useIsDark } from "@/lib/themeStore";
 
 /** Raccourci vers les réglages (sauvegarde Drive) — plus de login compte. */
 export function AuthNavButton({ compact = true }: { compact?: boolean }) {
+  const { t } = useTranslation("app");
   const isDark = useIsDark();
 
   return (
@@ -13,7 +15,7 @@ export function AuthNavButton({ compact = true }: { compact?: boolean }) {
       onPress={() => router.push(ROUTES.settings)}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel="Réglages et sauvegarde"
+      accessibilityLabel={t("auth.navSettingsA11y")}
       className={`rounded-full border px-3 py-1.5 ${
         isDark
           ? "border-sand-600 bg-sand-800/80"
@@ -24,7 +26,7 @@ export function AuthNavButton({ compact = true }: { compact?: boolean }) {
         className={`text-sm font-medium ${textPrimary(isDark)}`}
         numberOfLines={1}
       >
-        {compact ? "Réglages" : "Sauvegarde"}
+        {compact ? t("auth.navSettings") : t("auth.navBackup")}
       </Text>
     </Pressable>
   );

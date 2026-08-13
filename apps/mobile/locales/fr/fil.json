@@ -1,0 +1,105 @@
+{
+  "source": {
+    "ritual": "Rituel",
+    "mandala": "Mandala",
+    "nuances": "Nuances",
+    "ping-pong": "Ping-Pong",
+    "color-journey": "Assistant palette",
+    "emotion-explorer": "Explorateur émotionnel",
+    "zen-garden": "Jardin zen"
+  },
+  "nav": {
+    "backHome": "← Accueil",
+    "backFil": "← Fil"
+  },
+  "list": {
+    "heroLabel": "Fil créatif",
+    "heroTitle": "Mosaïque de vos ",
+    "heroAccent": "pratiques",
+    "heroDescription": "Vue visuelle — photos, couleurs, tags. Opt-in, sur cet appareil.",
+    "loading": "Chargement…",
+    "empty": "Rien ici pour l'instant. Terminez un exercice ou une amorce — une trace s'ajoutera toute seule.",
+    "prepareExercise": "Préparer un exercice",
+    "backHome": "Retour à l'accueil",
+    "nearLimit": "{{used}} / {{max}} traces — la plus ancienne sera retirée automatiquement au prochain ajout.",
+    "searchPlaceholder": "Rechercher…",
+    "filterAll": "Tout",
+    "noMatch": "Aucune trace ne correspond.",
+    "selectStart": "Analyser le Fil (max {{max}})",
+    "selectCancel": "Annuler la sélection",
+    "selectHint": "Sélectionnez jusqu'à {{max}} traces ({{used}}/{{max}}).",
+    "analyzeBusy": "Analyse en cours…",
+    "analyze_one": "Analyser {{count}} trace",
+    "analyze_other": "Analyser {{count}} traces",
+    "crossReading": "Lecture croisée",
+    "clearAll": "Effacer tout le Fil…"
+  },
+  "detail": {
+    "notFound": "Trace introuvable.",
+    "exercise": "Exercice",
+    "mirror": "Miroir créatif",
+    "colorReading": "Lecture chromatique",
+    "harmony": "Harmonie : {{name}}",
+    "duration": " · {{minutes}} min",
+    "redoExercise": "Refaire cet exercice",
+    "reuseNuancier": "Créer avec ce nuancier",
+    "goToExercise": "Passer à l'exercice",
+    "exportBusy": "Export…",
+    "exportPdf": "Exporter en PDF (impression)",
+    "remove": "Retirer du Fil",
+    "defaultImpulse": "Harmonie chromatique"
+  },
+  "tile": {
+    "fallbackLabel": "Trace du Fil",
+    "selected": "sélectionnée",
+    "unselected": "non sélectionnée"
+  },
+  "tags": {
+    "title": "Vos tags",
+    "hint": "Ajoutez des mots à vous — en plus de la technique, qui s'affiche toute seule.",
+    "remove": "Retirer le tag {{tag}}",
+    "none": "Aucun tag personnel pour l'instant.",
+    "placeholder": "ex. nocturne, A6, encre…",
+    "add": "Ajouter le tag",
+    "max": "Maximum {{max}} tags par trace."
+  },
+  "cta": {
+    "a11y": "Connecter Google Drive pour sauvegarder votre Fil",
+    "kicker": "Sauvegarde",
+    "title": "Vos créations sont stockées sur cet appareil.",
+    "body": "Connectez Google Drive pour une copie de secours personnelle — sans compte Pastek.",
+    "action": "Sauvegarde Drive →",
+    "footnote": "Local-first · BYOK · zéro connaissance serveur"
+  },
+  "alerts": {
+    "selectionTitle": "Sélection",
+    "selectionMax": "Vous pouvez analyser au maximum {{max}} traces.",
+    "analysisTitle": "Analyse",
+    "analysisFallback": "Analyse en mode secours — vérifiez votre clé IA.",
+    "analysisFailedTitle": "Analyse impossible",
+    "continueFailedTitle": "Impossible de continuer",
+    "exportTitle": "Export",
+    "exportFailedTitle": "Export impossible",
+    "retry": "Réessayez dans un instant."
+  },
+  "confirm": {
+    "cancel": "Annuler",
+    "deleteTitle": "Supprimer cette trace ?",
+    "deleteBody": "Cette trace sera définitivement retirée de votre Fil sur cet appareil.",
+    "deleteBodyExcerpt": "« {{excerpt}} » sera définitivement retirée de votre Fil sur cet appareil.",
+    "delete": "Supprimer",
+    "count_one": "1 trace",
+    "count_other": "{{count}} traces",
+    "clearTitleWeb": "Effacer tout le Fil créatif ?",
+    "clearBodyWeb": "{{countLabel}} seront supprimées.\n\nVous pouvez aussi retirer les traces une par une depuis leur fiche.",
+    "clearTitle": "Effacer tout le Fil ?",
+    "clearBody": "{{countLabel}} seront supprimées de cet appareil.\n\nPour un contrôle fin, retirez les traces une par une depuis leur fiche.",
+    "clearContinue": "Continuer",
+    "finalTitle": "Dernière confirmation",
+    "finalBody": "Effacer définitivement {{countLabel}} ? Cette action est irréversible.",
+    "clearConfirm": "Tout effacer"
+  },
+  "defaults": {
+    "ritualTitle": "Rituel créatif"
+  }
+}

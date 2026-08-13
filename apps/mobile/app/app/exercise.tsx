@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StatusBar, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { DurationPicker } from "@/components/DurationPicker";
@@ -19,6 +20,7 @@ import type { TimerSoundId } from "@/lib/sounds";
 import { useRitualStore } from "@/lib/store";
 
 export default function ExerciseScreen() {
+  const { t } = useTranslation("ritual");
   const exercise = useRitualStore((s) => s.exercise);
   const exerciseDevelopment = useRitualStore((s) => s.exerciseDevelopment);
   const moduleStatement = useRitualStore((s) => s.moduleStatement);
@@ -89,7 +91,7 @@ export default function ExerciseScreen() {
         <StatusBar barStyle="light-content" />
         <View className="items-center gap-3">
           <Text className="text-sand-400 text-xs uppercase tracking-[0.2em]">
-            Silence créatif
+            {t("exercise.silenceLabel")}
           </Text>
           <Text className="text-sand-200 text-sm text-center leading-6 px-4">
             {keywordPreview}
@@ -99,11 +101,13 @@ export default function ExerciseScreen() {
             className="rounded-full border border-sand-600/80 px-4 py-2"
             accessibilityRole="button"
             accessibilityLabel={
-              peekConsigne ? "Masquer la consigne" : "Aperçu de la consigne"
+              peekConsigne
+                ? t("exercise.peekHide")
+                : t("exercise.peekShowA11y")
             }
           >
             <Text className="text-sand-300 text-xs">
-              {peekConsigne ? "Masquer la consigne" : "Aperçu consigne"}
+              {peekConsigne ? t("exercise.peekHide") : t("exercise.peekShow")}
             </Text>
           </Pressable>
           {peekConsigne ? (
@@ -124,7 +128,7 @@ export default function ExerciseScreen() {
 
         <View className="gap-3">
           <PrimaryButton
-            label="J'ai terminé — capturer mon œuvre"
+            label={t("exercise.doneCta")}
             onPress={() => {
               setPeekConsigne(false);
               setSilenceMode(false);
@@ -132,7 +136,7 @@ export default function ExerciseScreen() {
             }}
           />
           <PrimaryButton
-            label="Quitter le silence"
+            label={t("exercise.silenceExit")}
             onPress={() => {
               setPeekConsigne(false);
               setSilenceMode(false);
@@ -149,11 +153,11 @@ export default function ExerciseScreen() {
       variant="focus"
       refreshable
       compactTop
-      fixedHeader={<ScreenNavBar backLabel="← Rituel" />}
+      fixedHeader={<ScreenNavBar backLabel={t("nav.backRitual")} />}
       stickyFooter={
         <View className="gap-3">
           <PrimaryButton
-            label="Mode silence — créer sans distraction"
+            label={t("exercise.silenceCta")}
             onPress={() => {
               setPeekConsigne(false);
               setSilenceMode(true);
@@ -161,16 +165,16 @@ export default function ExerciseScreen() {
             variant="secondary"
           />
           <PrimaryButton
-            label="J'ai terminé — capturer mon œuvre"
+            label={t("exercise.doneCta")}
             onPress={() => router.push(ROUTES.reflection)}
           />
         </View>
       }
     >
       <PastekScreenHero
-        label="Exercice"
-        title="Votre "
-        accent="exercice"
+        label={t("exercise.heroLabel")}
+        title={t("exercise.heroTitle")}
+        accent={t("exercise.heroAccent")}
         centered={false}
         size="md"
         className="mb-3"
@@ -194,7 +198,7 @@ export default function ExerciseScreen() {
 
       <ContentCard className="mb-4 px-4 py-3">
         <Text className="text-sand-500 text-xs uppercase tracking-wider mb-2">
-          Impulsion · {impulse}
+          {t("exercise.impulsePrefix", { impulse })}
         </Text>
         <ScrollView
           style={{ maxHeight: 220 }}
@@ -205,7 +209,7 @@ export default function ExerciseScreen() {
           {exerciseDevelopment?.trim() ? (
             <View className="mb-3">
               <Text className="text-sand-500 text-xs uppercase tracking-wider mb-1">
-                Développer la consigne
+                {t("exercise.developLabel")}
               </Text>
               <Text className="text-sand-700 text-sm leading-6">
                 {exerciseDevelopment}
@@ -216,8 +220,8 @@ export default function ExerciseScreen() {
             <View className="pt-2 border-t border-sand-100">
               <Text className="text-sand-500 text-xs uppercase tracking-wider mb-1">
                 {seasonTitle?.trim()
-                  ? `Saison — ${seasonTitle}`
-                  : "Contexte du module"}
+                  ? t("exercise.seasonLabel", { title: seasonTitle })
+                  : t("exercise.moduleLabel")}
               </Text>
               <Text className="text-sand-600 text-sm leading-6">
                 {moduleStatement}
@@ -228,7 +232,7 @@ export default function ExerciseScreen() {
       </ContentCard>
 
       <Text className="text-sand-600 text-sm mb-2 font-medium">
-        Durée du timer
+        {t("exercise.timerLabel")}
       </Text>
       <DurationPicker
         selected={durationMinutes}
@@ -241,9 +245,7 @@ export default function ExerciseScreen() {
       />
 
       <Text className="text-sand-500 text-xs leading-5 text-center mt-2 mb-4 px-2">
-        Le mode silence assombrit l&apos;écran et ne garde que le timer — idéal
-        pour démarrer votre temps de création. Touchez « Consigne » pour un
-        aperçu discret.
+        {t("exercise.silenceHint")}
       </Text>
     </ScreenContainer>
   );

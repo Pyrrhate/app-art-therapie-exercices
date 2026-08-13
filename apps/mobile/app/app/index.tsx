@@ -11,11 +11,20 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { ModuleIconId } from "@/components/ui/ModuleIcon";
-import { formatSessionDate, getTechniqueLabel } from "@/constants";
+import { formatSessionDate } from "@/constants";
+import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import { getFilEntries } from "@/lib/fil/storage";
-import { FIL_SOURCE_META, type FilEntry } from "@/lib/fil/types";
+import {
+  FIL_SOURCE_META,
+  getFilSourceLabel,
+  type FilEntry,
+} from "@/lib/fil/types";
 import { navigateSiteHome } from "@/lib/navigation";
 import { ROUTES, type ModuleAmorceRoute } from "@/lib/routes";
+import {
+  getSeasonRunConstraint,
+  getSeasonRunTitle,
+} from "@/lib/seasons/catalog";
 import {
   getActiveSeasonRun,
   practicedToday,
@@ -37,39 +46,35 @@ type ModuleDef = {
   route: ModuleAmorceRoute;
 };
 
-const MODULES: ModuleDef[] = [
+const MODULE_DEFS: {
+  key: string;
+  icon: ModuleIconId;
+  route: ModuleAmorceRoute;
+}[] = [
+  { key: "pingPong", icon: "ping-pong", route: ROUTES.pingPong },
+  { key: "colorJourney", icon: "color-journey", route: ROUTES.colorJourney },
   {
-    title: "Ping-Pong créatif",
-    icon: "ping-pong",
-    description: "Amorce rapide — quelques mots, puis l'exercice.",
-    route: ROUTES.pingPong,
-  },
-  {
-    title: "Assistant palette",
-    icon: "color-journey",
-    description: "Primaires, secondaires, tertiaires — palette peinture RYB.",
-    route: ROUTES.colorJourney,
-  },
-  {
-    title: "Explorateur émotionnel",
+    key: "emotionExplorer",
     icon: "emotion-explorer",
-    description: "Quatre zones de ressenti, un mot précis, puis créer.",
     route: ROUTES.emotionExplorer,
   },
-  {
-    title: "Chercheur de Nuances",
-    icon: "nuance-finder",
-    description: "Puzzle couleur sans IA — se détendre avant de créer.",
-    route: ROUTES.nuanceFinder,
-  },
+  { key: "nuanceFinder", icon: "nuance-finder", route: ROUTES.nuanceFinder },
 ];
 
 const WIDE_LAYOUT_MIN = 720;
 
 export default function WelcomeScreen() {
   const isDark = useIsDark();
-  const { t } = useTranslation(["app", "common"]);
+  const { t } = useTranslation(["app", "common", "amorces"]);
+  const { t: tFil } = useTranslation("fil");
+  const { t: tSeasons } = useTranslation("seasons");
   const language = useLanguageStore((s) => s.language);
+  const modules: ModuleDef[] = MODULE_DEFS.map((mod) => ({
+    icon: mod.icon,
+    route: mod.route,
+    title: t(`amorces:modules.${mod.key}.title`),
+    description: t(`amorces:modules.${mod.key}.description`),
+  }));
   const { width } = useWindowDimensions();
   const isWide = width >= WIDE_LAYOUT_MIN;
   const scrollRef = useRef<ScrollView>(null);
@@ -129,7 +134,7 @@ export default function WelcomeScreen() {
             className={`text-sm leading-5 ${textSecondary(isDark)}`}
             numberOfLines={isWide ? undefined : 2}
           >
-            {draft.impulse} · {getTechniqueLabel(draft.technique)}
+            {draft.impulse} · {localizedTechniqueLabel(draft.technique)}
           </Text>
           {!isWide ? null : (
             <Text className={`text-xs ${textMuted(isDark)}`}>
@@ -165,13 +170,13 @@ export default function WelcomeScreen() {
           </Text>
           <Text className={`text-base font-medium ${textSecondary(isDark)}`}>
             {t("home.seasonDay", {
-              title: season.title,
+              title: getSeasonRunTitle(season, tSeasons),
               day: Math.min(seasonDayIndex(season), season.durationDays),
               total: season.durationDays,
             })}
           </Text>
           <Text className={`text-sm leading-5 ${textMuted(isDark)}`} numberOfLines={2}>
-            {season.constraint}
+            {getSeasonRunConstraint(season, tSeasons)}
             {practicedToday(season) ? t("home.seasonPracticedToday") : ""}
           </Text>
           <View className={isWide ? "gap-3" : "flex-row gap-2 mt-1"}>
@@ -238,7 +243,7 @@ export default function WelcomeScreen() {
         )}
 
         <View className="flex-row flex-wrap gap-2.5 items-stretch">
-          {MODULES.map((mod) =>
+          {modules.map((mod) =>
             isWide ? (
               <ModuleCard key={mod.route} {...mod} />
             ) : (
@@ -302,7 +307,8 @@ export default function WelcomeScreen() {
                   />
                   <View className="flex-1 min-w-0">
                     <Text className={`text-xs ${textMuted(isDark)}`} numberOfLines={1}>
-                      {formatSessionDate(entry.createdAt, language)} · {meta.label}
+                      {formatSessionDate(entry.createdAt, language)} ·{" "}
+                      {getFilSourceLabel(entry.source, tFil)}
                     </Text>
                     <Text
                       className={`text-sm font-medium ${textSecondary(isDark)}`}

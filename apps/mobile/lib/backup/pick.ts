@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import i18n from "@/lib/i18n";
 import { readBackupFileFromUri } from "./export";
 
 export async function pickBackupFileContents(): Promise<string | null> {
@@ -45,8 +46,6 @@ async function pickBackupOnNative(): Promise<string | null> {
 
     return readBackupFileFromUri(result.assets[0].uri);
   } catch {
-    throw new Error(
-      "Sélection de fichier indisponible. Réinstallez l'application ou utilisez la version web."
-    );
+    throw new Error(i18n.t("app:settings.backupPickUnavailable"));
   }
 }

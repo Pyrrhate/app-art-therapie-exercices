@@ -1,0 +1,195 @@
+{
+  "modules": {
+    "pingPong": {
+      "title": "Ping-Pong créatif",
+      "description": "Amorce rapide — quelques mots, puis l'exercice."
+    },
+    "colorJourney": {
+      "title": "Assistant palette",
+      "description": "Primaires, secondaires, tertiaires — palette peinture RYB."
+    },
+    "emotionExplorer": {
+      "title": "Explorateur émotionnel",
+      "description": "Quatre zones de ressenti, un mot précis, puis créer."
+    },
+    "nuanceFinder": {
+      "title": "Chercheur de Nuances",
+      "description": "Puzzle couleur sans IA — se détendre avant de créer."
+    }
+  },
+  "nav": {
+    "home": "← Accueil",
+    "back": "← Retour"
+  },
+  "errors": {
+    "cannotContinue": "Impossible de continuer",
+    "generic": "Une erreur est survenue. Réessayez dans un instant."
+  },
+  "outcome": {
+    "title": "Poursuivre votre création",
+    "description": "Choisissez technique et durée, puis le parcours rituel (avec choix d'expérience) ou l'exercice direct. Le contexte du module reste visible dans l'énoncé — il n'est pas envoyé comme directive à l'IA.",
+    "technique": "Technique",
+    "duration": "Durée",
+    "ritual": "Parcours rituel",
+    "direct": "Exercice direct",
+    "preparing": "Préparation…"
+  },
+  "pingPong": {
+    "heroLabel": "Ping-Pong créatif",
+    "heroTitle": "Laissez les mots ",
+    "heroAccent": "danser",
+    "heroDescription": "5 étapes en alternance : vous, puis l'IA (mot logique + idée suggérée), et ainsi de suite.",
+    "aiSuggestions": "Suggestions IA",
+    "localWords": "Mots locaux — connexion indisponible.",
+    "inputPlaceholder": "Un mot…",
+    "sendWord": "Envoyer ce mot",
+    "step": "Étape {{current}} / {{total}}",
+    "yourTurn": " · votre tour",
+    "aiTurn": " · réponse IA",
+    "toExercise": "Passer à l'exercice",
+    "emptyHint": "Tapez un premier mot — un arbre, une couleur, un ressenti… L'IA répondra par un mot logique et une idée suggérée.",
+    "aiTurnLabel": "Mot logique · idée suggérée",
+    "chainTitle": "Votre cheminement",
+    "bridgeTitle": "Votre impulsion est prête",
+    "bridgeSubtitle": "Transformez cette chaîne de mots en matière, couleur ou geste — l'exercice vous attend.",
+    "suggestionUnavailableTitle": "Suggestion indisponible",
+    "suggestionUnavailableBody": "Des mots locaux prennent le relais — vous pouvez continuer l'amorce.",
+    "filSummary": "Amorce ping-pong"
+  },
+  "colorJourney": {
+    "heroLabel": "Assistant palette",
+    "heroTitle": "Construisez votre ",
+    "heroAccent": "palette peinture",
+    "heroDescription": "Primaires, secondaires et tertiaires — théorie RYB et recettes de mélange pour le dessin et la peinture.",
+    "progressStep": "Étape {{current}} / {{total}}",
+    "progressFallback": "Palette",
+    "proposalsPrimary": "Couleurs primaires RYB",
+    "proposalsSecondary": "Secondaires — mélanges de primaires",
+    "proposalsTertiary": "Tertiaires — nuances d'accord",
+    "mirrorPreparing": "Préparation du miroir…",
+    "seePalette": "Voir ma palette",
+    "nextColor": "Couleur suivante",
+    "paletteTitle": "Votre palette peinture",
+    "aiAdvice": "Conseil peinture personnalisé",
+    "impulseTitle": "Votre impulsion",
+    "restart": "Recommencer",
+    "wheelHint": "Touchez la roue, puis ajustez la luminosité",
+    "wheelLabel": "Roue chromatique",
+    "wheelConfirm": "Valider cette teinte",
+    "lightnessLight": "Clair",
+    "lightnessMedium": "Moyen",
+    "lightnessDeep": "Profond",
+    "mixRecipe": "Recette de mélange",
+    "adviceLoading": "Conseil en cours…",
+    "adviceAsk": "Conseil peinture personnalisé",
+    "adviceGiven": "Conseil personnalisé",
+    "filSummaryPartial_one": "Assistant palette — {{count}} teinte",
+    "filSummaryPartial_other": "Assistant palette — {{count}} teintes",
+    "filSummaryComplete": "Assistant palette — parcours complet",
+    "filContextHeader": "Assistant palette peinture Pastek Art (RYB).",
+    "guidance": {
+      "or": "ou",
+      "primarySubtitle": "Choisissez votre couleur primaire dominante — rouge, jaune ou bleu. C'est la base de votre palette peinture.",
+      "primaryTheory": "En peinture (modèle RYB), les trois primaires ne se mélangent pas entre elles : elles servent de point de départ pour créer toutes les autres teintes.",
+      "secondarySubtitle": "Mélangez deux primaires pour obtenir une secondaire complémentaire à votre {{primary}}.",
+      "secondaryTheory": "Les secondaires (orange, vert, violet) naissent du mélange de deux primaires. Face au {{primary}}, choisissez {{options}}.",
+      "tertiarySubtitle": "Une teinte tertiaire entre votre primaire et secondaire — idéale pour ombres, accents et transitions.",
+      "tertiaryTheory": "Les tertiaires (rouge-orange, jaune-vert, bleu-violet…) enrichissent la palette sans la surcharger. Pensez ratio 60 % primaire · 30 % secondaire · 10 % tertiaire."
+    },
+    "proposals": {
+      "primaryHint": "Primaire RYB — teinte pure",
+      "tertiaryNearPrimary": "Proche du {{color}} — ombres et profondeur",
+      "tertiaryNearSecondary": "Proche du {{color}} — accents et lumières",
+      "tertiaryMix": "Mélange {{primary}} + {{secondary}} ({{bias}})",
+      "biasPrimary": "dominante primaire",
+      "biasSecondary": "dominante secondaire",
+      "nearPrimary": "Proche du {{color}} — primaire RYB",
+      "tertiaryFallback": "Tertiaire — nuance d'accord",
+      "wheelHint": "Teinte {{label}} — {{preset}}"
+    },
+    "tips": {
+      "1": "Utilisez cette primaire pour les grandes masses (~60 % de la surface).",
+      "2": "La secondaire équilibre la primaire — réservée aux zones médianes (~30 %).",
+      "3": "La tertiaire sert aux accents, contours et détails (~10 %)."
+    },
+    "questions": {
+      "1": "Testez la teinte sur une bande d'essai avant de couvrir la toile.",
+      "2": "Mélangez sur la palette avec un couteau — pas directement sur le papier.",
+      "3": "Un peu de blanc adoucit la tertiaire sans la désaturer entièrement."
+    },
+    "reflection": "{{label}} rejoint votre palette — {{practical}}",
+    "synthesis": {
+      "full": "Primaire, secondaire et tertiaire forment une palette peinture équilibrée (ratio 60·30·10).",
+      "partial": "Primaire et secondaire suffisent pour démarrer — vous pouvez ajouter une tertiaire ou passer à l'exercice.",
+      "single": "Une primaire pose la base — poursuivez pour construire votre palette.",
+      "summary": "{{relations}} Votre palette : {{labels}}.",
+      "impulse": "Palette peinture : {{labels}}",
+      "impulseEmpty": "Palette peinture"
+    },
+    "usageLine": "{{role}} ({{ratio}}) : {{label}} ({{hex}}){{recipe}}",
+    "mirror": {
+      "synthesisWithLabels": "Votre palette peinture ({{labels}}) est prête — primaire pour les masses, secondaire pour l'équilibre, tertiaire pour les accents.",
+      "synthesisEmpty": "Votre palette est prête — testez chaque teinte sur une bande d'essai avant de peindre.",
+      "turn": "{{chosen}} ({{dim}}) rejoint votre palette — pensez au ratio 60·30·10 selon le rôle de chaque teinte.",
+      "thisShade": "cette teinte"
+    },
+    "context": {
+      "header": "Assistant palette peinture Pastek Art — théorie RYB (primaires, secondaires, tertiaires).",
+      "scheme": "Schéma : {{scheme}}.",
+      "ratio": "Ratio conseillé : 60 % primaire · 30 % secondaire · 10 % tertiaire."
+    }
+  },
+  "emotionExplorer": {
+    "heroLabel": "Explorateur émotionnel",
+    "quadrantTitle": "Comment vous\n",
+    "quadrantAccent": "sentez-vous ?",
+    "emotionTitle": "Précisez ",
+    "emotionAccent": "votre émotion",
+    "emotionDescription": "{{quadrant}} — choisissez le mot qui se rapproche le plus de votre ressenti.",
+    "noWrongChoice": "Prenez le temps qu'il faut. Aucun mauvais choix.",
+    "pickerHint": "Touchez la zone qui correspond le mieux — rouge (tension), jaune (élan), bleu (calme), mauve (lourdeur), ou le centre si c'est incertain.",
+    "searchPlaceholder": "Rechercher une émotion…",
+    "searchLabel": "Rechercher une émotion",
+    "youChose": "Vous avez choisi",
+    "techniqueLine": "Technique {{technique}} — guidée par votre ressenti.",
+    "preparing": "Préparation…",
+    "toExercise": "Passer à l'exercice",
+    "filSummary": "Explorateur — {{label}}",
+    "impulse": "Émotion ressentie : {{label}} — {{description}}"
+  },
+  "nuanceFinder": {
+    "heroLabel": "Le Chercheur de Nuances",
+    "heroTitle": "Affiner le regard,\n",
+    "heroAccent": "puis créer",
+    "heroDescription": "Découvrez terre, feu et eau cachés dans la grille — nommez votre harmonie, puis choisissez rituel ou exercice.",
+    "introBefore": "Touchez les cases pour révéler les teintes. {{lotus}} lotus élémentaires",
+    "introAfter": "sont cachés : ils dévoilent les couleurs alentour en onde. Appui long : poser un galet.",
+    "cellLotus": "Lotus caché",
+    "cell": "Case",
+    "lotusHint": "{{icon}} Lotus {{element}} — {{quality}}",
+    "harmonyFound": "Harmonie trouvée",
+    "nameHint": "Donnez un nom à cette harmonie (optionnel)",
+    "namePlaceholder": "Ex. Brume du matin, Élan doux…",
+    "mirrorTitle": "Lecture de l'harmonie",
+    "mirrorLoading": "Le miroir chromatique se forme…",
+    "revealed": "{{shown}} / {{total}} teintes révélées",
+    "newGrid": "Nouvelle grille",
+    "filHarmonyNamed": "Harmonie : {{name}}",
+    "filHarmony": "Harmonie chromatique trouvée",
+    "filDetail": "{{cells}} cases · {{lotus}} lotus",
+    "filContextHeader": "Chercheur de Nuances Pastek Art.",
+    "defaultHarmony": "Harmonie chromatique",
+    "context": {
+      "header": "Chercheur de Nuances Pastek Art — harmonie chromatique révélée.",
+      "progress": "Progression : {{shown}}/{{total}} teintes.",
+      "named": "Nom donné : {{name}}.",
+      "tones": "Teintes dominantes : {{names}}.",
+      "lotus": "Lotus découverts : {{elements}}."
+    },
+    "mirror": {
+      "named": "« {{harmony}} » réunit {{names}} — laissez cette harmonie infuser votre geste sans chercher la perfection.",
+      "tones": "Vos teintes ({{names}}) forment une carte intérieure — accueillez ce que ces nuances éveillent en vous.",
+      "empty": "Votre grille révèle un paysage chromatique singulier — laissez ces nuances guider votre prochain geste."
+    }
+  }
+}

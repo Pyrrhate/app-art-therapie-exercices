@@ -1,7 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/constants";
+import i18n from "@/lib/i18n";
+import type { AppLanguage } from "@/lib/i18n/types";
 import type { ArtisticTechnique } from "@/lib/types";
-import { SEASON_CATALOG } from "./catalog";
+import {
+  getSeasonRunConstraint,
+  getSeasonRunTitle,
+  SEASON_CATALOG,
+} from "./catalog";
 import type {
   SeasonDefinition,
   SeasonDuration,
@@ -39,9 +45,23 @@ export function practicedToday(run: SeasonRun, now = new Date()): boolean {
   return run.completedDates.includes(localDateKey(now));
 }
 
-export function buildSeasonStatement(run: SeasonRun, now = new Date()): string {
+/**
+ * Énoncé de saison injecté dans l'exercice, dans la langue de l'interface
+ * (les saisons du catalogue sont traduites, une saison perso garde ses mots).
+ */
+export function buildSeasonStatement(
+  run: SeasonRun,
+  now = new Date(),
+  language?: AppLanguage
+): string {
+  const t = i18n.getFixedT(language ?? i18n.language, "seasons");
   const day = Math.min(seasonDayIndex(run, now), run.durationDays);
-  return `Saison « ${run.title} » — jour ${day}/${run.durationDays}. ${run.constraint}`;
+  return t("statement", {
+    title: getSeasonRunTitle(run, t),
+    day,
+    total: run.durationDays,
+    constraint: getSeasonRunConstraint(run, t),
+  });
 }
 
 async function readState(): Promise<SeasonsState> {
@@ -114,7 +134,7 @@ export async function startCatalogSeason(
   catalogId: string
 ): Promise<SeasonRun> {
   const def = SEASON_CATALOG.find((s) => s.id === catalogId);
-  if (!def) throw new Error("Saison introuvable");
+  if (!def) throw new Error(i18n.t("seasons:errors.notFound"));
   const state = await readState();
   let next = state;
   if (state.active) {
@@ -131,10 +151,11 @@ export async function startCustomSeason(input: {
   durationDays: SeasonDuration;
   suggestedTechnique?: ArtisticTechnique;
 }): Promise<SeasonRun> {
-  const title = input.title.trim().slice(0, 48) || "Ma saison";
+  const title =
+    input.title.trim().slice(0, 48) || i18n.t("seasons:custom.defaultTitle");
   const constraint = input.constraint.trim().slice(0, 280);
   if (constraint.length < 8) {
-    throw new Error("Écrivez une contrainte d'au moins quelques mots.");
+    throw new Error(i18n.t("seasons:errors.constraintTooShort"));
   }
   const state = await readState();
   let next = state;

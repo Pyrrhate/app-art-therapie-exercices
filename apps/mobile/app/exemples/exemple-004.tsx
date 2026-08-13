@@ -2,22 +2,28 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 import Head from "expo-router/head";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { ExampleDetailPage } from "@/components/examples/ExampleDetailPage";
 import { ExamplesShell } from "@/components/examples/ExamplesShell";
-import { EXEMPLE_004 } from "@/lib/examples/catalog";
+import { getExampleBySlug } from "@/lib/examples/catalog";
+import { useLanguageStore } from "@/lib/i18n/languageStore";
 import { ROUTES } from "@/lib/routes";
 
 const SITE = "https://pastek-art.eu";
-const example = EXEMPLE_004;
+const SLUG = "exemple-004";
 
 export default function Exemple004Screen() {
+  const { t } = useTranslation("examples");
+  const language = useLanguageStore((s) => s.language);
+  const example = getExampleBySlug(SLUG, language);
+
   useEffect(() => {
     if (Platform.OS !== "web") {
       router.replace(ROUTES.home);
     }
   }, []);
 
-  if (Platform.OS !== "web") {
+  if (Platform.OS !== "web" || !example) {
     return null;
   }
 
@@ -32,9 +38,9 @@ export default function Exemple004Screen() {
     publisher: { "@type": "Organization", name: "Pastek Art" },
     mainEntityOfPage: canonical,
     about: [
-      "exercice créatif",
-      "exercice de peinture",
-      "expression des émotions",
+      t("jsonLd.about1"),
+      t("jsonLd.about2"),
+      t("jsonLd.about3Emotions"),
       example.technique,
     ],
   };
@@ -53,8 +59,8 @@ export default function Exemple004Screen() {
       </Head>
       <ExamplesShell
         breadcrumb={[
-          { label: "Accueil", href: ROUTES.landing },
-          { label: "Exemples", href: ROUTES.examples },
+          { label: t("breadcrumb.home"), href: ROUTES.landing },
+          { label: t("breadcrumb.examples"), href: ROUTES.examples },
           { label: example.title, href: ROUTES.example(example.slug) },
         ]}
       >

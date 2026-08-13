@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -25,6 +26,7 @@ export function PastekScreenHero({
   className = "mb-8",
   onDescriptionPress,
 }: PastekScreenHeroProps) {
+  const { t } = useTranslation("app");
   const isDark = useIsDark();
   const titleSize = size === "lg" ? "text-4xl" : "text-3xl";
   const align = centered ? "text-center items-center" : "";
@@ -54,7 +56,7 @@ export function PastekScreenHero({
             onPress={onDescriptionPress}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="Retour à l'accueil"
+            accessibilityLabel={t("a11y.backHome")}
           >
             <Text
               className={`text-base leading-7 mt-4 max-w-lg ${centered ? "text-center" : ""} ${textSecondary(isDark)}`}

@@ -1,10 +1,12 @@
+import type { LocalizedText } from "@/lib/i18n/types";
+import { pickLocalized } from "@/lib/i18n/localize";
 import type { Rgb } from "./colors";
 
 export type ElementKind = "earth" | "fire" | "water" | "air";
 
 export interface ElementSource {
   kind: ElementKind;
-  label: string;
+  label: LocalizedText;
   hex: string;
   rgb: Rgb;
   /** Quatre teintes déployées aux points cardinaux autour de la source */
@@ -14,28 +16,28 @@ export interface ElementSource {
 export const ELEMENTAL_SOURCES: ElementSource[] = [
   {
     kind: "earth",
-    label: "Terre",
+    label: { fr: "Terre", en: "Earth" },
     hex: "#8B7355",
     rgb: { r: 139, g: 115, b: 85 },
     deploy: ["#6B5344", "#A0826D", "#C4A484", "#4A3728"],
   },
   {
     kind: "fire",
-    label: "Feu",
+    label: { fr: "Feu", en: "Fire" },
     hex: "#E2552D",
     rgb: { r: 226, g: 85, b: 45 },
     deploy: ["#FF6B35", "#C04000", "#FFB347", "#8B2500"],
   },
   {
     kind: "water",
-    label: "Eau",
+    label: { fr: "Eau", en: "Water" },
     hex: "#5B9AA9",
     rgb: { r: 91, g: 154, b: 169 },
     deploy: ["#2E6B7A", "#87CEEB", "#4682B4", "#B0E0E6"],
   },
   {
     kind: "air",
-    label: "Air",
+    label: { fr: "Air", en: "Air" },
     hex: "#9DB4C8",
     rgb: { r: 157, g: 180, b: 200 },
     deploy: ["#E8F4F8", "#A8C5DA", "#7EB6D4", "#F0F8FF"],
@@ -43,46 +45,82 @@ export const ELEMENTAL_SOURCES: ElementSource[] = [
 ];
 
 export const LOTUS_SOURCE = {
-  label: "Lotus",
+  label: { fr: "Lotus", en: "Lotus" } satisfies LocalizedText,
   hex: "#F5E6F0",
   rgb: { r: 245, g: 230, b: 240 },
 };
 
 /** Qualités invitées quand un lotus-élément est découvert. */
-export const ELEMENT_QUALITIES: Record<ElementKind, string> = {
-  earth: "ancrage, matière, lenteur",
-  fire: "élan, chaleur, transformation",
-  water: "fluidité, profondeur, intuition",
-  air: "légèreté, souffle, espace",
+export const ELEMENT_QUALITIES: Record<ElementKind, LocalizedText> = {
+  earth: {
+    fr: "ancrage, matière, lenteur",
+    en: "grounding, matter, slowness",
+  },
+  fire: {
+    fr: "élan, chaleur, transformation",
+    en: "drive, warmth, transformation",
+  },
+  water: {
+    fr: "fluidité, profondeur, intuition",
+    en: "fluidity, depth, intuition",
+  },
+  air: {
+    fr: "légèreté, souffle, espace",
+    en: "lightness, breath, space",
+  },
 };
 
 export const LOTUS_ELEMENT_KINDS: ElementKind[] = ["earth", "fire", "water"];
 
 export const ELEMENT_VISUALS: Record<
   ElementKind,
-  { icon: string; label: string; ringColors: [string, string, string, string] }
+  {
+    icon: string;
+    label: LocalizedText;
+    ringColors: [string, string, string, string];
+  }
 > = {
   earth: {
     icon: "🌍",
-    label: "Terre",
+    label: { fr: "Terre", en: "Earth" },
     ringColors: ["#6B5344", "#A0826D", "#C4A484", "#8B7355"],
   },
   fire: {
     icon: "🔥",
-    label: "Feu",
+    label: { fr: "Feu", en: "Fire" },
     ringColors: ["#FF6B35", "#E2552D", "#FFB347", "#C04000"],
   },
   water: {
     icon: "💧",
-    label: "Eau",
+    label: { fr: "Eau", en: "Water" },
     ringColors: ["#2E6B7A", "#5B9AA9", "#87CEEB", "#4682B4"],
   },
   air: {
     icon: "🌬️",
-    label: "Air",
+    label: { fr: "Air", en: "Air" },
     ringColors: ["#A8C5DA", "#9DB4C8", "#E8F4F8", "#7EB6D4"],
   },
 };
+
+export function elementLabel(
+  kind: ElementKind,
+  language?: import("@/lib/i18n/types").AppLanguage
+): string {
+  return pickLocalized(ELEMENT_VISUALS[kind].label, language);
+}
+
+export function elementQuality(
+  kind: ElementKind,
+  language?: import("@/lib/i18n/types").AppLanguage
+): string {
+  return pickLocalized(ELEMENT_QUALITIES[kind], language);
+}
+
+export function lotusLabel(
+  language?: import("@/lib/i18n/types").AppLanguage
+): string {
+  return pickLocalized(LOTUS_SOURCE.label, language);
+}
 
 export function getDeployElementForCell(
   row: number,

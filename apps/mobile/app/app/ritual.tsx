@@ -5,6 +5,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
@@ -27,6 +28,7 @@ import { useRitualStore } from "@/lib/store";
 import { useEnabledTechniques } from "@/lib/techniques/managed";
 
 export default function RitualScreen() {
+  const { t } = useTranslation("ritual");
   const {
     impulse,
     technique,
@@ -81,11 +83,9 @@ export default function RitualScreen() {
       router.push(ROUTES.exercise);
     } catch (err) {
       const message =
-        err instanceof ApiError
-          ? err.message
-          : "Une erreur inattendue est survenue. Réessayez dans un instant.";
+        err instanceof ApiError ? err.message : t("impulse.errorUnexpected");
       setError(message);
-      showAlert("Impossible de continuer", message);
+      showAlert(t("impulse.errorTitle"), message);
     } finally {
       setLoading(false);
     }
@@ -94,17 +94,17 @@ export default function RitualScreen() {
   const canContinue = impulse.trim().length > 0 && technique !== null;
 
   const subtitle = impulsePrefilled
-    ? "Choisissez votre technique et la durée, puis passez à l'exercice."
-    : "Quel mot, idée ou couleur vous appelle aujourd'hui ? Choisissez ensuite votre technique et la durée, puis passez à l'exercice.";
+    ? t("impulse.subtitlePrefilled")
+    : t("impulse.subtitle");
 
   return (
     <ScreenContainer refreshable compactTop>
-      <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
+      <ScreenNavBar backLabel={t("nav.backHome")} onBack={navigateHome} />
 
       <PastekScreenHero
-        label="Rituel créatif"
-        title="L'"
-        accent="Impulsion"
+        label={t("impulse.heroLabel")}
+        title={t("impulse.heroTitle")}
+        accent={t("impulse.heroAccent")}
         description={subtitle}
         className="mb-4"
       />
@@ -119,8 +119,7 @@ export default function RitualScreen() {
       {activeSeason ? (
         <AccentCard className="mb-6">
           <Text className="text-sage-700 text-sm leading-6">
-            Saison « {activeSeason.title} » — la contrainte sera visible dans
-            l&apos;énoncé, sans être envoyée comme directive à l&apos;IA.
+            {t("impulse.seasonNotice", { title: activeSeason.title })}
           </Text>
         </AccentCard>
       ) : null}
@@ -128,8 +127,7 @@ export default function RitualScreen() {
       {impulsePrefilled && (
         <AccentCard className="mb-6">
           <Text className="text-sage-700 text-sm leading-6">
-            Votre impulsion est prête — choisissez technique et durée, puis
-            passez à l&apos;exercice.
+            {t("impulse.readyNotice")}
           </Text>
         </AccentCard>
       )}
@@ -147,16 +145,16 @@ export default function RitualScreen() {
         <TextInput
           value={impulse}
           onChangeText={setImpulse}
-          placeholder="Une couleur, une affirmation, un thème…"
+          placeholder={t("impulse.placeholder")}
           placeholderTextColor="#B8A090"
           multiline
-          accessibilityLabel="Votre impulsion créative"
+          accessibilityLabel={t("impulse.inputA11y")}
           className="px-5 py-4 text-sand-800 text-base min-h-[100px]"
         />
       </ContentCard>
 
       <Text className="text-sand-600 text-sm mb-2 font-medium">
-        Technique artistique
+        {t("impulse.techniqueLabel")}
       </Text>
       <TechniquePicker
         selected={technique}
@@ -167,20 +165,17 @@ export default function RitualScreen() {
 
       {technique && !isAiAnalysisSupported(technique) && !byokConfigured && (
         <Text className="text-amber-700 text-xs mt-2 mb-1 leading-5">
-          Sans clé IA, cette technique propose un miroir textuel local. Ajoutez
-          une clé personnelle (Réglages) pour recevoir une analyse bienveillante
-          à partir de votre ressenti.
+          {t("impulse.noKeyNotice")}
         </Text>
       )}
       {technique && !isAiAnalysisSupported(technique) && byokConfigured && (
         <Text className="text-sage-700 text-xs mt-2 mb-1 leading-5">
-          Clé IA détectée — vous pourrez demander une analyse à partir de votre
-          description / ressenti (photo optionnelle).
+          {t("impulse.keyNotice")}
         </Text>
       )}
 
       <Text className="text-sand-600 text-sm mb-2 mt-5 font-medium">
-        Durée du rituel
+        {t("impulse.durationLabel")}
       </Text>
       <DurationPicker
         selected={durationMinutes}
@@ -194,7 +189,7 @@ export default function RitualScreen() {
           </Text>
         )}
         <PrimaryButton
-          label={loading ? "Préparation…" : "Passer à l'exercice"}
+          label={loading ? t("impulse.ctaLoading") : t("impulse.cta")}
           onPress={handleContinue}
           disabled={!canContinue || loading}
         />

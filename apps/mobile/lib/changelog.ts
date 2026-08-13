@@ -1,3 +1,5 @@
+import type { AppLanguage } from "@/lib/i18n/types";
+
 /** Entrée de changelog produit — mises à jour majeures uniquement. */
 export type ChangelogEntry = {
   id: string;
@@ -7,197 +9,390 @@ export type ChangelogEntry = {
   highlights: string[];
 };
 
+/** Même entrée, avec les textes disponibles dans chaque langue. */
+export type LocalizedChangelogEntry = {
+  id: string;
+  dateLabel: Record<AppLanguage, string>;
+  title: Record<AppLanguage, string>;
+  highlights: Record<AppLanguage, string[]>;
+};
+
 /**
  * Grandes mises à jour Pastek Art, du plus récent au plus ancien.
  * Les petits correctifs et commits techniques ne sont pas listés ici.
  */
-export const CHANGELOG: ChangelogEntry[] = [
+export const CHANGELOG_CATALOG: LocalizedChangelogEntry[] = [
   {
     id: "i18n-fr-en",
-    dateLabel: "août 2026",
-    title: "Interface FR / EN",
-    highlights: [
-      "Bascule Français / English dans la navigation et les réglages (préférence locale).",
-      "Landing et chrome de l'app traduits ; le reste (Fil, saisons, prompts IA) suivra.",
-    ],
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: { fr: "Interface FR / EN", en: "FR / EN interface" },
+    highlights: {
+      fr: [
+        "Bascule Français / English dans la navigation et les réglages (préférence locale).",
+        "Landing et chrome de l'app traduits ; le reste (Fil, saisons, prompts IA) suivra.",
+      ],
+      en: [
+        "A Français / English switch in the navigation and settings (kept on your device).",
+        "Landing page and app chrome translated; the rest (Thread, seasons, AI prompts) will follow.",
+      ],
+    },
   },
   {
     id: "fil-saisons-lecture",
-    dateLabel: "août 2026",
-    title: "Fil mosaïque, tags & saisons créatives",
-    highlights: [
-      "Le Fil se parcourt en mosaïque visuelle : photos, couleurs, tags (technique + les vôtres).",
-      "Saisons de 7 à 14 jours : une contrainte douce (couleur, format, technique) pour installer une habitude, sans streak.",
-      "Page Fonctionnalités pour lire l'atelier — et « Exemples » dans la navigation du site.",
-    ],
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Fil mosaïque, tags & saisons créatives",
+      en: "Thread mosaic, tags & creative seasons",
+    },
+    highlights: {
+      fr: [
+        "Le Fil se parcourt en mosaïque visuelle : photos, couleurs, tags (technique + les vôtres).",
+        "Saisons de 7 à 14 jours : une contrainte douce (couleur, format, technique) pour installer une habitude, sans streak.",
+        "Page Fonctionnalités pour lire l'atelier — et « Exemples » dans la navigation du site.",
+      ],
+      en: [
+        "Browse the Thread as a visual mosaic: photos, colours, tags (technique plus your own).",
+        "Seasons of 7 to 14 days: one gentle constraint (colour, format, technique) to settle into a habit, with no streaks.",
+        "A Features page to read about the studio — and “Examples” in the site navigation.",
+      ],
+    },
   },
   {
     id: "silence-fil-miroir",
-    dateLabel: "août 2026",
-    title: "Silence créatif & miroir longitudinal",
-    highlights: [
-      "Mode silence sur l'exercice : écran assombri, timer seul, aperçu discret de la consigne.",
-      "Option « Tenir compte de mon Fil » : le miroir peut croiser jusqu'à 5 traces locales (opt-in, sans photos).",
-    ],
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Silence créatif & miroir longitudinal",
+      en: "Creative silence & a mirror across time",
+    },
+    highlights: {
+      fr: [
+        "Mode silence sur l'exercice : écran assombri, timer seul, aperçu discret de la consigne.",
+        "Option « Tenir compte de mon Fil » : le miroir peut croiser jusqu'à 5 traces locales (opt-in, sans photos).",
+      ],
+      en: [
+        "Silent mode during the exercise: dimmed screen, timer alone, a discreet glimpse of the brief.",
+        "An opt-in “Take my Thread into account”: the mirror can draw on up to 5 local traces (no photos).",
+      ],
+    },
   },
   {
     id: "rituel-approfondi",
-    dateLabel: "août 2026",
-    title: "Rituel enrichi & Fil analytique",
-    highlights: [
-      "Énoncé d'exercice développé (consigne + paragraphe), contexte des modules visible sans être envoyé comme directive IA.",
-      "Bouton Approfondir après le miroir, questions profondes personnalisables, techniques activables / personnalisées.",
-      "Analyse IA possible pour vidéo / musique / danse / théâtre avec une clé perso ; export PDF en fin d'exercice ; analyse croisée du Fil (max 5).",
-    ],
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Rituel enrichi & Fil analytique",
+      en: "A richer ritual & a Thread that reads back",
+    },
+    highlights: {
+      fr: [
+        "Énoncé d'exercice développé (consigne + paragraphe), contexte des modules visible sans être envoyé comme directive IA.",
+        "Bouton Approfondir après le miroir, questions profondes personnalisables, techniques activables / personnalisées.",
+        "Analyse IA possible pour vidéo / musique / danse / théâtre avec une clé perso ; export PDF en fin d'exercice ; analyse croisée du Fil (max 5).",
+      ],
+      en: [
+        "A fuller exercise brief (instruction plus a paragraph); module context stays visible without being sent to the AI as an instruction.",
+        "A “Go deeper” button after the mirror, customisable deep questions, and techniques you can enable or create.",
+        "AI reading for video / music / dance / theatre with your own key; PDF export at the end of an exercise; a cross-reading of the Thread (up to 5).",
+      ],
+    },
   },
   {
     id: "creative-watermelon",
-    dateLabel: "août 2026",
-    title: "Identité Creative Watermelon",
-    highlights: [
-      "Nouvelle palette crème, pastèque et écorce sage — landing et app plus chaleureuses.",
-      "Navigation clarifiée : Exercices, Espace créatif, Config IA, À propos + CTA « Commencer ».",
-      "Badges 100 % local / BYOK visibles sur l’accueil et dans les moteurs IA.",
-    ],
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Identité Creative Watermelon",
+      en: "The Creative Watermelon identity",
+    },
+    highlights: {
+      fr: [
+        "Nouvelle palette crème, pastèque et écorce sage — landing et app plus chaleureuses.",
+        "Navigation clarifiée : Exercices, Espace créatif, Config IA, À propos + CTA « Commencer ».",
+        "Badges 100 % local / BYOK visibles sur l’accueil et dans les moteurs IA.",
+      ],
+      en: [
+        "A new cream, watermelon and sage-rind palette — a warmer landing page and app.",
+        "Clearer navigation: Exercises, Creative space, AI setup, About, plus a “Start” call to action.",
+        "100% local / BYOK badges visible on the home page and in the AI engines screen.",
+      ],
+    },
   },
   {
     id: "exercice-creatif",
-    dateLabel: "août 2026",
-    title: "Positionnement exercices créatifs",
-    highlights: [
-      "Le langage produit parle d’exercices et de rituels créatifs — sans se présenter comme de l’art-thérapie clinique.",
-      "Prompts IA et écrans mis à jour : coach / miroir créatif, disclaimer inchangé (ne remplace pas une thérapie).",
-      "Landing et SEO recentrés sur le geste, le jeu et le lâcher-prise.",
-    ],
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Positionnement exercices créatifs",
+      en: "Positioned around creative exercises",
+    },
+    highlights: {
+      fr: [
+        "Le langage produit parle d’exercices et de rituels créatifs — sans se présenter comme de l’art-thérapie clinique.",
+        "Prompts IA et écrans mis à jour : coach / miroir créatif, disclaimer inchangé (ne remplace pas une thérapie).",
+        "Landing et SEO recentrés sur le geste, le jeu et le lâcher-prise.",
+      ],
+      en: [
+        "The product language speaks of creative exercises and rituals — never presenting itself as clinical art therapy.",
+        "AI prompts and screens updated: creative coach / mirror, with the same disclaimer (not a replacement for therapy).",
+        "Landing page and SEO refocused on gesture, play and letting go.",
+      ],
+    },
   },
   {
     id: "local-first-drive",
-    dateLabel: "août 2026",
-    title: "Local-first & sauvegarde Google Drive",
-    highlights: [
-      "Plus de mur de connexion ni de compte Pastek obligatoire : l’app fonctionne d’abord sur l’appareil.",
-      "Sauvegarde et restauration du Fil via Google Drive côté client (OAuth local), sans sync serveur des traces.",
-      "Vos rituels restent chez vous ; le cloud n’est qu’une option de backup.",
-    ],
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Local-first & sauvegarde Google Drive",
+      en: "Local-first & Google Drive backup",
+    },
+    highlights: {
+      fr: [
+        "Plus de mur de connexion ni de compte Pastek obligatoire : l’app fonctionne d’abord sur l’appareil.",
+        "Sauvegarde et restauration du Fil via Google Drive côté client (OAuth local), sans sync serveur des traces.",
+        "Vos rituels restent chez vous ; le cloud n’est qu’une option de backup.",
+      ],
+      en: [
+        "No sign-in wall and no mandatory Pastek account: the app works on your device first.",
+        "Back up and restore the Thread through Google Drive on the client side (local OAuth), with no server sync of your traces.",
+        "Your rituals stay with you; the cloud is only a backup option.",
+      ],
+    },
   },
   {
     id: "byok-moteurs",
-    dateLabel: "août 2026",
-    title: "Vos clés IA (BYOK) & moteurs souverains",
-    highlights: [
-      "Apportez votre propre clé API : elle reste sur l’appareil et n’est jamais stockée par Pastek Art.",
-      "Fournisseurs européens & souverains : Mistral, Scaleway, OVHcloud, Aleph Alpha, Ollama (local).",
-      "Fournisseurs globaux : OpenAI, Anthropic (Claude), Google Gemini — avec test de connexion dans les réglages.",
-    ],
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Vos clés IA (BYOK) & moteurs souverains",
+      en: "Your own AI keys (BYOK) & sovereign engines",
+    },
+    highlights: {
+      fr: [
+        "Apportez votre propre clé API : elle reste sur l’appareil et n’est jamais stockée par Pastek Art.",
+        "Fournisseurs européens & souverains : Mistral, Scaleway, OVHcloud, Aleph Alpha, Ollama (local).",
+        "Fournisseurs globaux : OpenAI, Anthropic (Claude), Google Gemini — avec test de connexion dans les réglages.",
+      ],
+      en: [
+        "Bring your own API key: it stays on your device and is never stored by Pastek Art.",
+        "European & sovereign providers: Mistral, Scaleway, OVHcloud, Aleph Alpha, Ollama (local).",
+        "Global providers: OpenAI, Anthropic (Claude), Google Gemini — with a connection test in the settings.",
+      ],
+    },
   },
   {
     id: "gratuit-prompts",
-    dateLabel: "août 2026",
-    title: "Accès libre & prompts personnalisables",
-    highlights: [
-      "Le générateur est utilisable sans crédits Premium : mode gratuit (Hugging Face) ou votre clé personnelle.",
-      "Consultation et personnalisation locale des prompts système (exercice, miroir, vision, OCR).",
-      "Export PDF des rituels du Fil avec la photo de votre création.",
-    ],
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Accès libre & prompts personnalisables",
+      en: "Free access & customisable prompts",
+    },
+    highlights: {
+      fr: [
+        "Le générateur est utilisable sans crédits Premium : mode gratuit (Hugging Face) ou votre clé personnelle.",
+        "Consultation et personnalisation locale des prompts système (exercice, miroir, vision, OCR).",
+        "Export PDF des rituels du Fil avec la photo de votre création.",
+      ],
+      en: [
+        "The generator works without Premium credits: free mode (Hugging Face) or your own key.",
+        "Read and edit the system prompts on your device (exercise, mirror, vision, OCR).",
+        "PDF export of Thread rituals, including the photo of your work.",
+      ],
+    },
   },
   {
     id: "assistant-palette",
-    dateLabel: "juillet 2026",
-    title: "Assistant palette peinture",
-    highlights: [
-      "L'ancienne Palette intérieure devient un assistant RYB : primaires, secondaires, tertiaires.",
-      "Recettes de mélange et ratio 60·30·10 pour le dessin et la peinture.",
-      "Conseils peinture personnalisés par IA à chaque étape.",
-    ],
+    dateLabel: { fr: "juillet 2026", en: "July 2026" },
+    title: {
+      fr: "Assistant palette peinture",
+      en: "Painting palette assistant",
+    },
+    highlights: {
+      fr: [
+        "L'ancienne Palette intérieure devient un assistant RYB : primaires, secondaires, tertiaires.",
+        "Recettes de mélange et ratio 60·30·10 pour le dessin et la peinture.",
+        "Conseils peinture personnalisés par IA à chaque étape.",
+      ],
+      en: [
+        "The old Inner Palette becomes an RYB assistant: primaries, secondaries, tertiaries.",
+        "Mixing recipes and the 60·30·10 ratio for drawing and painting.",
+        "Personalised painting advice from the AI at every step.",
+      ],
+    },
   },
   {
     id: "express-profond",
-    dateLabel: "juin 2026",
-    title: "Parcours Express & Profond",
-    highlights: [
-      "Choix du rythme dès l'impulsion : parcours rapide ou guidé en profondeur.",
-      "Mode Profond : questionnaire d'ancrage avant le miroir créatif, puis pistes d'intégration pour clore la séance.",
-      "Passerelle discrète depuis l'express pour basculer vers le profond à la réflexion.",
-    ],
+    dateLabel: { fr: "juin 2026", en: "June 2026" },
+    title: {
+      fr: "Parcours Express & Profond",
+      en: "Express & Deep journeys",
+    },
+    highlights: {
+      fr: [
+        "Choix du rythme dès l'impulsion : parcours rapide ou guidé en profondeur.",
+        "Mode Profond : questionnaire d'ancrage avant le miroir créatif, puis pistes d'intégration pour clore la séance.",
+        "Passerelle discrète depuis l'express pour basculer vers le profond à la réflexion.",
+      ],
+      en: [
+        "Choose your pace right from the impulse: a quick path or a deeply guided one.",
+        "Deep mode: grounding questions before the creative mirror, then ways to integrate what came up.",
+        "A quiet bridge from express to deep at the reflection step.",
+      ],
+    },
   },
   {
     id: "sur-mesure",
-    dateLabel: "juin 2026",
-    title: "Mode Sur-Mesure & second tour augmenté",
-    highlights: [
-      "Nouveau parcours personnalisé : filtres, tags et intention pour générer un exercice sur mesure.",
-      "Second tour de création enrichi selon ce qui a évolué pendant la réflexion.",
-      "Passerelle express → profond renforcée pour prolonger une séance déjà commencée.",
-    ],
+    dateLabel: { fr: "juin 2026", en: "June 2026" },
+    title: {
+      fr: "Mode Sur-Mesure & second tour augmenté",
+      en: "Custom mode & a richer second round",
+    },
+    highlights: {
+      fr: [
+        "Nouveau parcours personnalisé : filtres, tags et intention pour générer un exercice sur mesure.",
+        "Second tour de création enrichi selon ce qui a évolué pendant la réflexion.",
+        "Passerelle express → profond renforcée pour prolonger une séance déjà commencée.",
+      ],
+      en: [
+        "A new tailored path: filters, tags and intention to generate an exercise made for you.",
+        "A second round of making, shaped by what shifted during the reflection.",
+        "A stronger express → deep bridge to extend a session already under way.",
+      ],
+    },
   },
   {
     id: "site-seo",
-    dateLabel: "juin 2026",
-    title: "Site pastek-art.eu & application sous /app",
-    highlights: [
-      "Page d'accueil SEO à la racine du domaine, avec présentation des exercices créatifs.",
-      "Application interactive déplacée sous /app pour séparer marketing et outil.",
-      "Logo et baseline cliquables pour revenir à l'accueil du site.",
-    ],
+    dateLabel: { fr: "juin 2026", en: "June 2026" },
+    title: {
+      fr: "Site pastek-art.eu & application sous /app",
+      en: "The pastek-art.eu site & the app under /app",
+    },
+    highlights: {
+      fr: [
+        "Page d'accueil SEO à la racine du domaine, avec présentation des exercices créatifs.",
+        "Application interactive déplacée sous /app pour séparer marketing et outil.",
+        "Logo et baseline cliquables pour revenir à l'accueil du site.",
+      ],
+      en: [
+        "An SEO home page at the domain root, introducing the creative exercises.",
+        "The interactive app moved under /app, separating the marketing site from the tool.",
+        "Clickable logo and tagline to get back to the site home.",
+      ],
+    },
   },
   {
     id: "fil-memoire",
-    dateLabel: "juin 2026",
-    title: "Fil créatif & mémoire des pratiques",
-    highlights: [
-      "Enregistrement automatique de chaque rituel et amorce dans le Fil créatif.",
-      "Export et restauration manuelle de votre Fil (fichier local, sans compte).",
-      "Vue détaillée par trace : impulsion, technique, réflexion et source.",
-    ],
+    dateLabel: { fr: "juin 2026", en: "June 2026" },
+    title: {
+      fr: "Fil créatif & mémoire des pratiques",
+      en: "The Creative Thread & a memory of your practice",
+    },
+    highlights: {
+      fr: [
+        "Enregistrement automatique de chaque rituel et amorce dans le Fil créatif.",
+        "Export et restauration manuelle de votre Fil (fichier local, sans compte).",
+        "Vue détaillée par trace : impulsion, technique, réflexion et source.",
+      ],
+      en: [
+        "Every ritual and starter is saved automatically to the Creative Thread.",
+        "Export and restore your Thread by hand (a local file, no account).",
+        "A detailed view for each trace: impulse, technique, reflection and source.",
+      ],
+    },
   },
   {
     id: "identite-pastek",
-    dateLabel: "juin 2026",
-    title: "Identité visuelle Pastek Art",
-    highlights: [
-      "Refonte complète : typographies Lora & Nunito Sans, palette crème et sauge.",
-      "Accueil repensé avec modules en cartes, CTA rituel mis en avant.",
-      "Boutons pill, icônes unifiées et design cohérent sur tous les écrans.",
-    ],
+    dateLabel: { fr: "juin 2026", en: "June 2026" },
+    title: {
+      fr: "Identité visuelle Pastek Art",
+      en: "The Pastek Art visual identity",
+    },
+    highlights: {
+      fr: [
+        "Refonte complète : typographies Lora & Nunito Sans, palette crème et sauge.",
+        "Accueil repensé avec modules en cartes, CTA rituel mis en avant.",
+        "Boutons pill, icônes unifiées et design cohérent sur tous les écrans.",
+      ],
+      en: [
+        "A full redesign: Lora & Nunito Sans typefaces, a cream and sage palette.",
+        "A reworked home screen with module cards and the ritual call to action up front.",
+        "Pill buttons, unified icons and a consistent design across every screen.",
+      ],
+    },
   },
   {
     id: "explorateur-emotionnel",
-    dateLabel: "juin 2026",
-    title: "Explorateur émotionnel",
-    highlights: [
-      "Amorce inspirée des cartes de ressenti : quatre zones, un mot précis.",
-      "Quadrant neutre et animations douces pour parcourir les émotions sans jugement.",
-      "Enchaînement direct vers le rituel créatif.",
-    ],
+    dateLabel: { fr: "juin 2026", en: "June 2026" },
+    title: { fr: "Explorateur émotionnel", en: "Emotion explorer" },
+    highlights: {
+      fr: [
+        "Amorce inspirée des cartes de ressenti : quatre zones, un mot précis.",
+        "Quadrant neutre et animations douces pour parcourir les émotions sans jugement.",
+        "Enchaînement direct vers le rituel créatif.",
+      ],
+      en: [
+        "A starter inspired by feeling cards: four zones, one precise word.",
+        "A neutral quadrant and gentle animations to move through emotions without judgement.",
+        "A direct step into the creative ritual.",
+      ],
+    },
   },
   {
     id: "parcours-rituel",
-    dateLabel: "juin 2026",
-    title: "Parcours rituel clarifié",
-    highlights: [
-      "Barre Impulsion · Exercice · Réflexion sur tout le flux.",
-      "Mots-clés visibles dès l'exercice, timer zen précis avec son de fin configurable.",
-      "Écran réflexion repensé : miroir créatif, questions ouvertes et suivi d'exercice séparés.",
-    ],
+    dateLabel: { fr: "juin 2026", en: "June 2026" },
+    title: { fr: "Parcours rituel clarifié", en: "A clearer ritual journey" },
+    highlights: {
+      fr: [
+        "Barre Impulsion · Exercice · Réflexion sur tout le flux.",
+        "Mots-clés visibles dès l'exercice, timer zen précis avec son de fin configurable.",
+        "Écran réflexion repensé : miroir créatif, questions ouvertes et suivi d'exercice séparés.",
+      ],
+      en: [
+        "An Impulse · Exercise · Reflection bar across the whole flow.",
+        "Keywords visible from the exercise on, and a precise calm timer with a configurable end sound.",
+        "A reworked reflection screen: creative mirror, open questions and follow-up exercise kept apart.",
+      ],
+    },
   },
   {
     id: "amorces",
-    dateLabel: "juin 2026",
-    title: "Amorces créatives",
-    highlights: [
-      "Palette intérieure : trois teintes, miroir chromatique IA optionnel.",
-      "Ping-Pong créatif : amorce rapide en quelques mots.",
-      "Chercheur de Nuances : lotus élémentaires et pont rituel ou exercice.",
-    ],
+    dateLabel: { fr: "juin 2026", en: "June 2026" },
+    title: { fr: "Amorces créatives", en: "Creative starters" },
+    highlights: {
+      fr: [
+        "Palette intérieure : trois teintes, miroir chromatique IA optionnel.",
+        "Ping-Pong créatif : amorce rapide en quelques mots.",
+        "Chercheur de Nuances : lotus élémentaires et pont rituel ou exercice.",
+      ],
+      en: [
+        "Inner Palette: three shades, with an optional AI chromatic mirror.",
+        "Creative Ping-Pong: a quick starter in a few words.",
+        "Nuance Seeker: elemental lotuses and a bridge to a ritual or an exercise.",
+      ],
+    },
   },
   {
     id: "mvp-fil",
-    dateLabel: "juin 2026",
-    title: "Lancement du générateur d'exercices",
-    highlights: [
-      "Rituel en trois temps : impulsion, exercice chronométré, capture & réflexion.",
-      "Génération d'exercices par IA (Hugging Face) avec repli local hors ligne.",
-      "Onze techniques artistiques, durées 15 / 30 / 45 minutes.",
-    ],
+    dateLabel: { fr: "juin 2026", en: "June 2026" },
+    title: {
+      fr: "Lancement du générateur d'exercices",
+      en: "The exercise generator launches",
+    },
+    highlights: {
+      fr: [
+        "Rituel en trois temps : impulsion, exercice chronométré, capture & réflexion.",
+        "Génération d'exercices par IA (Hugging Face) avec repli local hors ligne.",
+        "Onze techniques artistiques, durées 15 / 30 / 45 minutes.",
+      ],
+      en: [
+        "A ritual in three movements: impulse, timed exercise, capture & reflection.",
+        "AI-generated exercises (Hugging Face) with a local offline fallback.",
+        "Eleven art techniques, and 15 / 30 / 45 minute lengths.",
+      ],
+    },
   },
 ];
+
+export function getChangelog(language: AppLanguage): ChangelogEntry[] {
+  return CHANGELOG_CATALOG.map((entry) => ({
+    id: entry.id,
+    dateLabel: entry.dateLabel[language],
+    title: entry.title[language],
+    highlights: entry.highlights[language],
+  }));
+}

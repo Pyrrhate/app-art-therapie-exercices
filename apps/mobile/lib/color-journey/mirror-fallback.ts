@@ -1,13 +1,5 @@
+import i18n from "@/lib/i18n";
 import { getDimensionLabel } from "./painting-theory";
-
-const DIMENSION_LABELS: Record<string, string> = {
-  primary: "Primaire",
-  secondary: "Secondaire",
-  tertiary: "Tertiaire",
-  anchor: "Primaire",
-  complement: "Secondaire",
-  closure: "Tertiaire",
-};
 
 export function buildLocalColorMirror(payload: {
   mode: "turn" | "synthesis";
@@ -18,13 +10,12 @@ export function buildLocalColorMirror(payload: {
 
   if (payload.mode === "synthesis") {
     return labels
-      ? `Votre palette peinture (${labels}) est prête — primaire pour les masses, secondaire pour l'équilibre, tertiaire pour les accents.`
-      : "Votre palette est prête — testez chaque teinte sur une bande d'essai avant de peindre.";
+      ? i18n.t("amorces:colorJourney.mirror.synthesisWithLabels", { labels })
+      : i18n.t("amorces:colorJourney.mirror.synthesisEmpty");
   }
 
-  const chosen = payload.chosen?.label ?? "cette teinte";
+  const chosen =
+    payload.chosen?.label ?? i18n.t("amorces:colorJourney.mirror.thisShade");
   const dim = getDimensionLabel(payload.chosen?.dimensionId ?? "");
-  return `${chosen} (${dim}) rejoint votre palette — pensez au ratio 60·30·10 selon le rôle de chaque teinte.`;
+  return i18n.t("amorces:colorJourney.mirror.turn", { chosen, dim });
 }
-
-export { DIMENSION_LABELS };

@@ -1,5 +1,6 @@
+import i18n from "@/lib/i18n";
 import { resolveColorLabel, type ColorForImpulse } from "@/lib/color-names";
-import { ELEMENT_VISUALS, type ElementKind } from "@/lib/nuance-finder/elements";
+import { elementLabel, type ElementKind } from "@/lib/nuance-finder/elements";
 import type { FilEntry, FilMetadata } from "./types";
 
 export function isNuancierFilEntry(entry: FilEntry): boolean {
@@ -16,27 +17,45 @@ export function buildColorContextFromMetadata(
 
   const lines: string[] = [];
   if (metadata.paletteSource === "color-journey") {
-    lines.push("Assistant palette peinture Pastek Art (RYB).");
+    lines.push(i18n.t("amorces:colorJourney.filContextHeader"));
   } else if (metadata.paletteSource === "nuances") {
-    lines.push("Chercheur de Nuances Pastek Art.");
+    lines.push(i18n.t("amorces:nuanceFinder.filContextHeader"));
   }
 
   if (metadata.harmonyName?.trim()) {
-    lines.push(`Harmonie : ${metadata.harmonyName.trim()}.`);
+    lines.push(
+      i18n.t("amorces:nuanceFinder.context.named", {
+        name: metadata.harmonyName.trim(),
+      })
+    );
   }
 
   const labels = metadata.paletteLabels?.filter(Boolean);
   if (labels?.length) {
-    lines.push(`Teintes : ${labels.join(", ")}.`);
+    lines.push(
+      i18n.t("amorces:nuanceFinder.context.tones", {
+        names: labels.join(", "),
+      })
+    );
   } else if (metadata.colors?.length) {
     const names = metadata.colors
       .map((hex) => resolveColorLabel(hex))
       .slice(0, 5);
-    if (names.length) lines.push(`Teintes : ${names.join(", ")}.`);
+    if (names.length) {
+      lines.push(
+        i18n.t("amorces:nuanceFinder.context.tones", {
+          names: names.join(", "),
+        })
+      );
+    }
   }
 
   if (metadata.discoveredElements?.length) {
-    lines.push(`Lotus : ${metadata.discoveredElements.join(", ")}.`);
+    lines.push(
+      i18n.t("amorces:nuanceFinder.context.lotus", {
+        elements: metadata.discoveredElements.join(", "),
+      })
+    );
   }
 
   return lines.length > 0 ? lines.join("\n") : undefined;
@@ -65,5 +84,5 @@ export function colorsToFilMetadata(
 }
 
 export function elementKindsToLabels(kinds: ElementKind[]): string[] {
-  return kinds.map((kind) => ELEMENT_VISUALS[kind].label);
+  return kinds.map((kind) => elementLabel(kind));
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { AmorceOutcomePanel } from "@/components/amorce/AmorceOutcomePanel";
 import { ChromaticWheel } from "@/components/color-journey/ChromaticWheel";
 import { ColorProposalCard } from "@/components/color-journey/ColorProposalCard";
@@ -34,6 +35,7 @@ import { colorsToFilMetadata } from "@/lib/fil/nuancier";
 import { navigateHome } from "@/lib/navigation";
 
 export default function ColorJourneyScreen() {
+  const { t, i18n } = useTranslation("amorces");
   const [phase, setPhase] = useState<ColorJourneyPhase>("choosing");
   const [turn, setTurn] = useState(1);
   const [history, setHistory] = useState<ColorChoice[]>([]);
@@ -46,8 +48,14 @@ export default function ColorJourneyScreen() {
   const filRecordedRef = useRef(false);
   const filPartialRef = useRef(false);
 
-  const guidance = getTurnGuidance(turn, history);
-  const proposals = getTurnProposals(turn, history);
+  const guidance = useMemo(
+    () => getTurnGuidance(turn, history),
+    [turn, history, i18n.language]
+  );
+  const proposals = useMemo(
+    () => getTurnProposals(turn, history),
+    [turn, history, i18n.language]
+  );
   const canExitEarly = history.length >= 2;
   const augmentationContext = buildPaletteAugmentationContext(history);
   const impulse = buildPaletteImpulse(history);
@@ -119,7 +127,6 @@ export default function ColorJourneyScreen() {
           hex: lastReflection.chosen.hex,
           label: lastReflection.chosen.label,
           dimensionId: getDimensionForTurn(lastReflection.turn).id,
-          mixRecipe: lastReflection.mixRecipe,
         },
         history,
       });
@@ -148,7 +155,7 @@ export default function ColorJourneyScreen() {
     );
     void recordFilEntry({
       source: "color-journey",
-      summary: `Assistant palette — ${history.length} teinte${history.length > 1 ? "s" : ""}`,
+      summary: t("colorJourney.filSummaryPartial", { count: history.length }),
       detail: buildPaletteImpulse(history).slice(0, 200),
       metadata: {
         ...paletteMeta,
@@ -167,7 +174,7 @@ export default function ColorJourneyScreen() {
     );
     void recordFilEntry({
       source: "color-journey",
-      summary: "Assistant palette — parcours complet",
+      summary: t("colorJourney.filSummaryComplete"),
       detail: synthesis.summary.slice(0, 200),
       metadata: {
         ...paletteMeta,
@@ -193,13 +200,13 @@ export default function ColorJourneyScreen() {
 
   return (
     <ScreenContainer scrollable refreshable contentMaxWidth={720} compactTop>
-      <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
+      <ScreenNavBar backLabel={t("nav.home")} onBack={navigateHome} />
 
       <PastekScreenHero
-        label="Assistant palette"
-        title="Construisez votre "
-        accent="palette peinture"
-        description="Primaires, secondaires et tertiaires — théorie RYB et recettes de mélange pour le dessin et la peinture."
+        label={t("colorJourney.heroLabel")}
+        title={t("colorJourney.heroTitle")}
+        accent={t("colorJourney.heroAccent")}
+        description={t("colorJourney.heroDescription")}
         className="mb-4"
       />
 
@@ -232,10 +239,10 @@ export default function ColorJourneyScreen() {
                 <View className="mt-4">
                   <Text className="text-sand-500 text-xs uppercase tracking-wider mb-2 px-1">
                     {turn === 1
-                      ? "Couleurs primaires RYB"
+                      ? t("colorJourney.proposalsPrimary")
                       : turn === 2
-                        ? "Secondaires — mélanges de primaires"
-                        : "Tertiaires — nuances d'accord"}
+                        ? t("colorJourney.proposalsSecondary")
+                        : t("colorJourney.proposalsTertiary")}
                   </Text>
                   {proposals.map((proposal) => (
                     <ColorProposalCard
@@ -270,9 +277,9 @@ export default function ColorJourneyScreen() {
                 label={
                   turn >= COLOR_JOURNEY_TURN_COUNT
                     ? synthesisLoading
-                      ? "Préparation du miroir…"
-                      : "Voir ma palette"
-                    : "Couleur suivante"
+                      ? t("colorJourney.mirrorPreparing")
+                      : t("colorJourney.seePalette")
+                    : t("colorJourney.nextColor")
                 }
                 onPress={handleContinueAfterReflection}
                 disabled={synthesisLoading}
@@ -300,7 +307,7 @@ export default function ColorJourneyScreen() {
 
           <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mb-4">
             <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-              Votre palette peinture
+              {t("colorJourney.paletteTitle")}
             </Text>
             <View className="flex-row flex-wrap gap-3 mb-4">
               {history.map((choice, index) => (
@@ -310,7 +317,7 @@ export default function ColorJourneyScreen() {
                     {choice.label}
                   </Text>
                   <Text className="text-sand-400 text-[10px] text-center capitalize">
-                    {getDimensionForTurn(index + 1).title.split(" ").pop()}
+                    {getDimensionForTurn(index + 1).shortTitle}
                   </Text>
                 </View>
               ))}
@@ -319,13 +326,15 @@ export default function ColorJourneyScreen() {
               {synthesis.summary}
             </Text>
             {synthesis.source === "ai" ? (
-              <Text className="text-sage-500 text-xs mt-2">Conseil peinture personnalisé</Text>
+              <Text className="text-sage-500 text-xs mt-2">
+                {t("colorJourney.aiAdvice")}
+              </Text>
             ) : null}
           </View>
 
           <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-4 mb-4">
             <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
-              Votre impulsion
+              {t("colorJourney.impulseTitle")}
             </Text>
             <Text className="text-sand-800 text-lg font-light leading-7">
               {synthesis.suggestedImpulse}
@@ -343,7 +352,7 @@ export default function ColorJourneyScreen() {
 
           <View className="mt-4">
             <PrimaryButton
-              label="Recommencer"
+              label={t("colorJourney.restart")}
               onPress={handleRestart}
               variant="ghost"
             />

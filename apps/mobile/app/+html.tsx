@@ -1,11 +1,17 @@
 import { ScrollViewStyleReset } from "expo-router/html";
 import { type PropsWithChildren } from "react";
 
+/**
+ * Shell HTML statique Expo (SSR / premier paint).
+ * Langue produit par défaut : FR (DEFAULT_LANGUAGE).
+ * Le toggle in-app met à jour `document.documentElement.lang` via syncDocumentLanguage ;
+ * le contenu de l'app suit i18n — ce shell SEO reste FR.
+ */
 const DEFAULT_TITLE =
-  "Pastek Art — Libérez Votre Créativité, Un Exercice à la Fois | pastek-art.eu";
+  "Pastek Art — Libérez Votre Créativité / Unleash Your Creativity | pastek-art.eu";
 
 const DEFAULT_DESCRIPTION =
-  "Générateur d'exercices créatifs guidés : dessin, peinture, collage. Coach créatif bienveillant, 100 % local & BYOK — sans mur de connexion ni jargon clinique.";
+  "Exercices créatifs guidés (dessin, peinture, collage) · Guided creative exercises. Coach local & BYOK — sans mur de connexion / no login wall.";
 
 export default function Root({ children }: PropsWithChildren) {
   return (

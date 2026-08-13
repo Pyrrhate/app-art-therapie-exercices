@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { AnalysisLoadingState } from "@/components/multimodal/AnalysisLoadingState";
 import { ContextQuestionnaireStep } from "@/components/multimodal/ContextQuestionnaireStep";
 import { MediaSelectorStep } from "@/components/multimodal/MediaSelectorStep";
@@ -21,24 +22,24 @@ import { EMPTY_USER_ANSWERS } from "@/lib/multimodal/types";
 import { textMuted } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
-const STEP_HEADERS: Record<
+const STEP_HEADER_KEYS: Record<
   Exclude<MultimodalWorkflowStep, "analyzing">,
-  { label: string; title: string; accent?: string }
+  { label: string; title: string; accent: string }
 > = {
   media: {
-    label: "Étape 1",
-    title: "Votre ",
-    accent: "expression",
+    label: "multimodal.step1Label",
+    title: "multimodal.step1Title",
+    accent: "multimodal.step1Accent",
   },
   questionnaire: {
-    label: "Étape 2",
-    title: "Ancrer votre ",
-    accent: "ressenti",
+    label: "multimodal.step2Label",
+    title: "multimodal.step2Title",
+    accent: "multimodal.step2Accent",
   },
   upload: {
-    label: "Étape 3",
-    title: "Partager votre ",
-    accent: "création",
+    label: "multimodal.step3Label",
+    title: "multimodal.step3Title",
+    accent: "multimodal.step3Accent",
   },
 };
 
@@ -73,6 +74,7 @@ export function MultimodalExerciseWorkspace({
   className = "",
 }: MultimodalExerciseWorkspaceProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("ritual");
   const [step, setStep] = useState<MultimodalWorkflowStep>("media");
   const [mediaType, setMediaType] = useState<ExpressionMediaType | null>(null);
   const [answers, setAnswers] = useState<MultimodalUserAnswers>(EMPTY_USER_ANSWERS);
@@ -90,13 +92,13 @@ export function MultimodalExerciseWorkspace({
     (selected: MultimodalMediaFile) => {
       if (!mediaType) return;
       if (!isFileAllowedForMedia(selected.name, selected.mimeType, mediaType)) {
-        setFileError("Format de fichier non compatible avec ce type d'expression.");
+        setFileError(t("multimodal.fileNotSupported"));
         return;
       }
       setFileError(null);
       setFile(selected);
     },
-    [mediaType]
+    [mediaType, t]
   );
 
   const goNext = useCallback(() => {
@@ -138,9 +140,7 @@ export function MultimodalExerciseWorkspace({
     } catch (err) {
       setStep("upload");
       setSubmitError(
-        err instanceof Error
-          ? err.message
-          : "L'analyse n'a pas pu aboutir. Réessayez dans un instant."
+        err instanceof Error ? err.message : t("multimodal.analysisFailed")
       );
     }
   }, [
@@ -150,6 +150,7 @@ export function MultimodalExerciseWorkspace({
     exerciseData,
     onAnalyze,
     onAnalysisComplete,
+    t,
   ]);
 
   const canContinue =
@@ -159,16 +160,16 @@ export function MultimodalExerciseWorkspace({
 
   return (
     <View
-      accessibilityLabel="Espace d'expression multimodale"
+      accessibilityLabel={t("multimodal.workspaceA11y")}
       className={className}
     >
       <StepIndicator current={step} />
 
       {step !== "analyzing" ? (
         <SectionHeader
-          label={STEP_HEADERS[step].label}
-          title={STEP_HEADERS[step].title}
-          accent={STEP_HEADERS[step].accent}
+          label={t(STEP_HEADER_KEYS[step].label)}
+          title={t(STEP_HEADER_KEYS[step].title)}
+          accent={t(STEP_HEADER_KEYS[step].accent)}
           className="mb-6"
         />
       ) : null}
@@ -200,13 +201,13 @@ export function MultimodalExerciseWorkspace({
         <View className="mt-10 gap-3">
           {step === "upload" ? (
             <PrimaryButton
-              label="Lancer l'analyse bienveillante"
+              label={t("multimodal.analyzeCta")}
               onPress={() => void handleSubmit()}
               disabled={!file}
             />
           ) : (
             <PrimaryButton
-              label="Continuer"
+              label={t("multimodal.continue")}
               onPress={goNext}
               disabled={!canContinue}
               showArrow
@@ -215,7 +216,7 @@ export function MultimodalExerciseWorkspace({
 
           {step !== "media" ? (
             <PrimaryButton
-              label="Retour"
+              label={t("multimodal.back")}
               onPress={goBack}
               variant="ghost"
               align="stretch"
@@ -227,7 +228,7 @@ export function MultimodalExerciseWorkspace({
               className={`text-xs text-center mt-2 leading-5 px-2 ${textMuted(isDark)}`}
               numberOfLines={3}
             >
-              Consigne : {exerciseData.exercise}
+              {t("multimodal.briefPrefix", { exercise: exerciseData.exercise })}
             </Text>
           ) : null}
         </View>

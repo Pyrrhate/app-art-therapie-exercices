@@ -1,4 +1,5 @@
-import type { SeasonDefinition } from "./types";
+import type { TFunction } from "i18next";
+import type { SeasonDefinition, SeasonRun } from "./types";
 
 export const SEASON_CATALOG: SeasonDefinition[] = [
   {
@@ -70,4 +71,47 @@ export const SEASON_CATALOG: SeasonDefinition[] = [
 
 export function getSeasonDefinition(id: string): SeasonDefinition | undefined {
   return SEASON_CATALOG.find((s) => s.id === id);
+}
+
+/** `t` du namespace `seasons` (hook ou i18n.getFixedT(lng, "seasons")). */
+export type SeasonTranslator = TFunction<"seasons">;
+
+type SeasonTextField = "title" | "constraint" | "invitation";
+
+/**
+ * Texte du catalogue dans la langue courante. Le catalogue reste la source
+ * de vérité (ids, durées, accents) ; les libellés viennent de seasons.json.
+ */
+export function getSeasonCatalogText(
+  id: string,
+  field: SeasonTextField,
+  t: SeasonTranslator,
+  fallback?: string
+): string {
+  const def = getSeasonDefinition(id);
+  return t(`catalog.${id}.${field}`, {
+    defaultValue: fallback ?? def?.[field] ?? "",
+  });
+}
+
+/** Une saison écrite par l'utilisateur garde ses propres mots. */
+export function isCustomSeasonRun(run: SeasonRun): boolean {
+  return (
+    run.custom === true ||
+    run.catalogId === "custom" ||
+    !getSeasonDefinition(run.catalogId)
+  );
+}
+
+export function getSeasonRunTitle(run: SeasonRun, t: SeasonTranslator): string {
+  if (isCustomSeasonRun(run)) return run.title;
+  return getSeasonCatalogText(run.catalogId, "title", t, run.title);
+}
+
+export function getSeasonRunConstraint(
+  run: SeasonRun,
+  t: SeasonTranslator
+): string {
+  if (isCustomSeasonRun(run)) return run.constraint;
+  return getSeasonCatalogText(run.catalogId, "constraint", t, run.constraint);
 }

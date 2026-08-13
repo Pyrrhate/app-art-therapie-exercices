@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { DurationPicker } from "@/components/DurationPicker";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { PrimaryButton } from "@/components/ui/Button";
@@ -34,6 +35,7 @@ export function AmorceOutcomePanel({
   colorHints,
   disabled = false,
 }: AmorceOutcomePanelProps) {
+  const { t } = useTranslation("amorces");
   const techniques = useEnabledTechniques();
   const [technique, setTechnique] = useState<ArtisticTechnique | null>(
     "painting"
@@ -61,12 +63,12 @@ export function AmorceOutcomePanel({
       );
     } catch (error) {
       showAlert(
-        "Impossible de continuer",
+        t("errors.cannotContinue"),
         error instanceof ApiError
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Une erreur est survenue. Réessayez dans un instant."
+            : t("errors.generic")
       );
     } finally {
       setBusy(false);
@@ -87,18 +89,15 @@ export function AmorceOutcomePanel({
   return (
     <View className="gap-4 bg-sage-50/80 rounded-2xl border border-sage-100 px-4 py-4">
       <Text className="text-sage-700 text-sm font-medium">
-        Poursuivre votre création
+        {t("outcome.title")}
       </Text>
       <Text className="text-sand-600 text-xs leading-5">
-        Choisissez technique et durée, puis le parcours rituel (avec choix
-        d&apos;expérience) ou l&apos;exercice direct. Le contexte du module
-        reste visible dans l&apos;énoncé — il n&apos;est pas envoyé comme
-        directive à l&apos;IA.
+        {t("outcome.description")}
       </Text>
 
       <View>
         <Text className="text-sand-600 text-xs uppercase tracking-wider mb-2">
-          Technique
+          {t("outcome.technique")}
         </Text>
         <TechniquePicker
           selected={technique}
@@ -109,7 +108,7 @@ export function AmorceOutcomePanel({
 
       <View>
         <Text className="text-sand-600 text-xs uppercase tracking-wider mb-2">
-          Durée
+          {t("outcome.duration")}
         </Text>
         <DurationPicker selected={duration} onSelect={setDuration} />
       </View>
@@ -117,7 +116,7 @@ export function AmorceOutcomePanel({
       <View className="flex-row gap-3">
         <View className="flex-1">
           <PrimaryButton
-            label="Parcours rituel"
+            label={t("outcome.ritual")}
             onPress={handleRitual}
             variant="ghost"
             disabled={isDisabled}
@@ -125,7 +124,7 @@ export function AmorceOutcomePanel({
         </View>
         <View className="flex-1">
           <PrimaryButton
-            label={busy ? "Préparation…" : "Exercice direct"}
+            label={busy ? t("outcome.preparing") : t("outcome.direct")}
             onPress={() => void handleExercise()}
             disabled={isDisabled}
           />

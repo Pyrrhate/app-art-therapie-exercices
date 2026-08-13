@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { Alert, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { TechniquePicker } from "@/components/TechniquePicker";
 import { AccentCard } from "@/components/ui/Card";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -8,7 +9,13 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
-import { SEASON_CATALOG } from "@/lib/seasons/catalog";
+import {
+  getSeasonCatalogText,
+  getSeasonRunConstraint,
+  getSeasonRunTitle,
+  SEASON_CATALOG,
+  type SeasonTranslator,
+} from "@/lib/seasons/catalog";
 import { applyActiveSeasonToRitual } from "@/lib/seasons/apply";
 import {
   abandonActiveSeason,
@@ -26,46 +33,61 @@ import { useIsDark } from "@/lib/themeStore";
 
 const DURATIONS: SeasonDuration[] = [7, 10, 14];
 
-async function confirmAbandon(title: string): Promise<boolean> {
-  const message = `La saison « ${title} » sera clôturée. Vous pourrez en commencer une autre.`;
+async function confirmAbandon(
+  title: string,
+  t: SeasonTranslator
+): Promise<boolean> {
+  const message = t("confirm.leaveBody", { title });
   if (Platform.OS === "web") {
-    return window.confirm(`Quitter cette saison ?\n\n${message}`);
+    return window.confirm(`${t("confirm.leaveTitle")}\n\n${message}`);
   }
   return new Promise((resolve) => {
-    Alert.alert("Quitter cette saison ?", message, [
-      { text: "Rester", style: "cancel", onPress: () => resolve(false) },
-      { text: "Quitter", style: "destructive", onPress: () => resolve(true) },
+    Alert.alert(t("confirm.leaveTitle"), message, [
+      {
+        text: t("confirm.stay"),
+        style: "cancel",
+        onPress: () => resolve(false),
+      },
+      {
+        text: t("confirm.leave"),
+        style: "destructive",
+        onPress: () => resolve(true),
+      },
     ]);
   });
 }
 
 function SeasonProgress({ run }: { run: SeasonRun }) {
   const isDark = useIsDark();
+  const { t } = useTranslation("seasons");
   const day = Math.min(seasonDayIndex(run), run.durationDays);
   const sessions = run.completedDates.length;
   const todayDone = practicedToday(run);
+  const title = getSeasonRunTitle(run, t);
 
   return (
     <AccentCard className="gap-3 mb-6">
       <Text className="text-sage-600 text-xs uppercase tracking-wider">
-        Saison en cours
+        {t("progress.label")}
       </Text>
       <Text className={`font-display text-2xl ${textPrimary(isDark)}`}>
-        {run.title}
+        {title}
       </Text>
       <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-        Jour {day}/{run.durationDays}
+        {t("progress.day", { day, total: run.durationDays })}
         {" · "}
         {sessions === 0
-          ? "aucune séance encore"
-          : `${sessions} séance${sessions > 1 ? "s" : ""}`}
-        {todayDone ? " · aujourd'hui, c'est fait" : ""}
+          ? t("progress.noSession")
+          : t("progress.sessions", { count: sessions })}
+        {todayDone ? t("progress.todayDone") : ""}
       </Text>
       <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-        {run.constraint}
+        {getSeasonRunConstraint(run, t)}
       </Text>
       <PrimaryButton
-        label={todayDone ? "Créer encore aujourd'hui" : "Continuer la saison"}
+        label={
+          todayDone ? t("progress.continueToday") : t("progress.continue")
+        }
         onPress={() => {
           void applyActiveSeasonToRitual().then(() => {
             router.push(ROUTES.ritual);
@@ -73,11 +95,11 @@ function SeasonProgress({ run }: { run: SeasonRun }) {
         }}
       />
       <PrimaryButton
-        label="Quitter cette saison"
+        label={t("progress.leave")}
         variant="ghost"
         onPress={() => {
           void (async () => {
-            const ok = await confirmAbandon(run.title);
+            const ok = await confirmAbandon(title, t);
             if (!ok) return;
             await abandonActiveSeason();
             router.replace(ROUTES.seasons);
@@ -90,6 +112,7 @@ function SeasonProgress({ run }: { run: SeasonRun }) {
 
 export default function SeasonsScreen() {
   const isDark = useIsDark();
+  const { t } = useTranslation("seasons");
   const techniques = useEnabledTechniques();
   const [state, setState] = useState<SeasonsState | null>(null);
   const [showCustom, setShowCustom] = useState(false);
@@ -113,7 +136,7 @@ export default function SeasonsScreen() {
 
   async function beginCatalog(id: string) {
     if (active) {
-      const ok = await confirmAbandon(active.title);
+      const ok = await confirmAbandon(getSeasonRunTitle(active, t), t);
       if (!ok) return;
     }
     setBusy(true);
@@ -123,7 +146,7 @@ export default function SeasonsScreen() {
       await applyActiveSeasonToRitual({ preferSuggestedImpulse: true });
       router.push(ROUTES.ritual);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Impossible de démarrer.");
+      setError(err instanceof Error ? err.message : t("errors.startFailed"));
     } finally {
       setBusy(false);
     }
@@ -131,7 +154,7 @@ export default function SeasonsScreen() {
 
   async function beginCustom() {
     if (active) {
-      const ok = await confirmAbandon(active.title);
+      const ok = await confirmAbandon(getSeasonRunTitle(active, t), t);
       if (!ok) return;
     }
     setBusy(true);
@@ -146,7 +169,7 @@ export default function SeasonsScreen() {
       await applyActiveSeasonToRitual({ preferSuggestedImpulse: false });
       router.push(ROUTES.ritual);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Impossible de démarrer.");
+      setError(err instanceof Error ? err.message : t("errors.startFailed"));
     } finally {
       setBusy(false);
     }
@@ -157,20 +180,20 @@ export default function SeasonsScreen() {
 
   return (
     <ScreenContainer scrollable refreshable onRefresh={load} compactTop>
-      <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
+      <ScreenNavBar backLabel={t("nav.backHome")} onBack={navigateHome} />
 
       <PastekScreenHero
-        label="Saisons"
-        title="Une contrainte douce, "
-        accent="plusieurs jours"
-        description="Sept à quatorze jours. Pas un défi : une habitude légère. Les jours manqués ne cassent rien."
+        label={t("hero.label")}
+        title={t("hero.title")}
+        accent={t("hero.accent")}
+        description={t("hero.description")}
         className="mb-6"
       />
 
       {active ? <SeasonProgress run={active} /> : null}
 
       <Text className={`text-xs uppercase tracking-[0.18em] font-medium mb-3 ${textMuted(isDark)}`}>
-        {active ? "Après celle-ci" : "Saisons proposées"}
+        {active ? t("list.afterThisOne") : t("list.proposed")}
       </Text>
 
       <View className="gap-3 mb-8">
@@ -181,20 +204,27 @@ export default function SeasonsScreen() {
           >
             <View className="flex-row items-center justify-between mb-2">
               <Text className={`font-display text-xl ${textPrimary(isDark)}`}>
-                {def.title}
+                {getSeasonCatalogText(def.id, "title", t, def.title)}
               </Text>
               <Text className={`text-xs ${textMuted(isDark)}`}>
-                {def.durationDays} jours
+                {t("list.days", { count: def.durationDays })}
               </Text>
             </View>
             <Text className={`text-sm leading-6 mb-3 ${textSecondary(isDark)}`}>
-              {def.invitation}
+              {getSeasonCatalogText(def.id, "invitation", t, def.invitation)}
             </Text>
             <Text className={`text-xs leading-5 mb-4 ${textMuted(isDark)}`}>
-              Contrainte : {def.constraint}
+              {t("list.constraint", {
+                constraint: getSeasonCatalogText(
+                  def.id,
+                  "constraint",
+                  t,
+                  def.constraint
+                ),
+              })}
             </Text>
             <PrimaryButton
-              label={active ? "Remplacer et commencer" : "Commencer"}
+              label={active ? t("list.replaceAndStart") : t("list.start")}
               onPress={() => void beginCatalog(def.id)}
               disabled={busy}
               variant={active ? "ghost" : "primary"}
@@ -205,7 +235,7 @@ export default function SeasonsScreen() {
 
       <Pressable onPress={() => setShowCustom((v) => !v)} className="mb-3">
         <Text className="text-sage-600 text-sm font-medium">
-          {showCustom ? "Masquer ma saison" : "Créer la mienne"}
+          {showCustom ? t("custom.hide") : t("custom.show")}
         </Text>
       </Pressable>
 
@@ -214,7 +244,7 @@ export default function SeasonsScreen() {
           <TextInput
             value={customTitle}
             onChangeText={setCustomTitle}
-            placeholder="Titre (ex. Encres d'hiver)"
+            placeholder={t("custom.titlePlaceholder")}
             placeholderTextColor={isDark ? "#8A8078" : "#B8A090"}
             className={`rounded-2xl border px-4 py-3 text-base ${
               isDark
@@ -225,7 +255,7 @@ export default function SeasonsScreen() {
           <TextInput
             value={customConstraint}
             onChangeText={setCustomConstraint}
-            placeholder="La contrainte, en une ou deux phrases…"
+            placeholder={t("custom.constraintPlaceholder")}
             placeholderTextColor={isDark ? "#8A8078" : "#B8A090"}
             multiline
             className={`rounded-2xl border px-4 py-3 text-base min-h-[88px] ${
@@ -252,13 +282,13 @@ export default function SeasonsScreen() {
                     customDays === d ? "text-white font-medium" : textMuted(isDark)
                   }`}
                 >
-                  {d} jours
+                  {t("list.days", { count: d })}
                 </Text>
               </Pressable>
             ))}
           </View>
           <Text className={`text-sm font-medium ${textSecondary(isDark)}`}>
-            Technique suggérée (optionnel)
+            {t("custom.techniqueLabel")}
           </Text>
           <TechniquePicker
             selected={customTechnique}
@@ -268,7 +298,7 @@ export default function SeasonsScreen() {
             techniques={techniques}
           />
           <PrimaryButton
-            label="Démarrer ma saison"
+            label={t("custom.start")}
             onPress={() => void beginCustom()}
             disabled={busy}
           />
@@ -284,18 +314,21 @@ export default function SeasonsScreen() {
           <Text
             className={`text-xs uppercase tracking-[0.18em] font-medium mb-3 ${textMuted(isDark)}`}
           >
-            Saisons passées
+            {t("history.title")}
           </Text>
           {history.map((run) => (
             <View key={run.id} className="mb-3">
               <Text className={`text-sm font-medium ${textPrimary(isDark)}`}>
-                {run.title}
+                {getSeasonRunTitle(run, t)}
               </Text>
               <Text className={`text-xs leading-5 ${textMuted(isDark)}`}>
-                {run.status === "completed" ? "Terminée" : "Interrompue"} ·{" "}
-                {run.completedDates.length} séance
-                {run.completedDates.length > 1 ? "s" : ""} · {run.durationDays}{" "}
-                jours
+                {run.status === "completed"
+                  ? t("history.completed")
+                  : t("history.abandoned")}
+                {" · "}
+                {t("progress.sessions", { count: run.completedDates.length })}
+                {" · "}
+                {t("list.days", { count: run.durationDays })}
               </Text>
             </View>
           ))}

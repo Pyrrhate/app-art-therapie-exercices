@@ -1,4 +1,5 @@
 import { Platform, Pressable, Text, View, type ViewStyle } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { CustomSessionConfig } from "@/lib/custom/types";
 import {
   CUSTOM_EMOTIONS,
@@ -22,7 +23,7 @@ const TAG_PADDING: ViewStyle = {
 interface FilterGroupProps {
   label: string;
   accessibilityLabel: string;
-  options: readonly string[] | { id: string; label: string }[];
+  options: readonly { id: string; label: string }[];
   selected: string;
   onSelect: (value: string) => void;
 }
@@ -47,8 +48,7 @@ function FilterGroup({
       </Text>
       <View className="flex-row flex-wrap gap-2">
         {options.map((option) => {
-          const id = typeof option === "string" ? option : option.id;
-          const displayLabel = typeof option === "string" ? option : option.label;
+          const { id, label: displayLabel } = option;
           const isSelected = selected === id;
 
           return (
@@ -94,41 +94,56 @@ export function CustomExerciseFilters({
   onChange,
 }: CustomExerciseFiltersProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("ritual");
+
+  /** Les valeurs stockées restent en français (envoyées à l'IA) ; seul l'affichage est traduit. */
+  const localizedOptions = (options: readonly string[]) =>
+    options.map((option) => ({
+      id: option,
+      label: t(`custom.options.${option}`, { defaultValue: option }),
+    }));
+
+  const techniqueCategories = CUSTOM_TECHNIQUE_CATEGORIES.map((category) => ({
+    id: category.id,
+    label: t(`custom.techniqueCategories.${category.id}`, {
+      defaultValue: category.label,
+    }),
+  }));
 
   return (
     <View>
       <Text className={`text-xs uppercase tracking-[0.16em] font-medium mb-4 ${textMuted(isDark)}`}>
-        Vos critères
+        {t("custom.filtersTitle")}
       </Text>
 
       <FilterGroup
-        label="Thématique"
-        accessibilityLabel="Choisir une thématique"
-        options={CUSTOM_THEMES}
+        label={t("custom.themeLabel")}
+        accessibilityLabel={t("custom.themeA11y")}
+        options={localizedOptions(CUSTOM_THEMES)}
         selected={value.theme}
         onSelect={(theme) => onChange({ theme })}
       />
 
       <FilterGroup
-        label="Spectre émotionnel"
-        accessibilityLabel="Choisir une émotion"
-        options={CUSTOM_EMOTIONS}
+        label={t("custom.emotionLabel")}
+        accessibilityLabel={t("custom.emotionA11y")}
+        options={localizedOptions(CUSTOM_EMOTIONS)}
         selected={value.emotion}
         onSelect={(emotion) => onChange({ emotion })}
       />
 
       <FilterGroup
-        label="Intention créative"
-        accessibilityLabel="Choisir une intention créative"
-        options={CUSTOM_GOALS}
+        label={t("custom.goalLabel")}
+        accessibilityLabel={t("custom.goalA11y")}
+        options={localizedOptions(CUSTOM_GOALS)}
         selected={value.goal}
         onSelect={(goal) => onChange({ goal })}
       />
 
       <FilterGroup
-        label="Technique artistique"
-        accessibilityLabel="Choisir une catégorie de technique artistique"
-        options={CUSTOM_TECHNIQUE_CATEGORIES}
+        label={t("custom.techniqueLabel")}
+        accessibilityLabel={t("custom.techniqueA11y")}
+        options={techniqueCategories}
         selected={value.technique}
         onSelect={(technique) => onChange({ technique })}
       />

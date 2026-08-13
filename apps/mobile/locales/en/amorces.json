@@ -1,0 +1,195 @@
+{
+  "modules": {
+    "pingPong": {
+      "title": "Creative Ping-Pong",
+      "description": "A quick starter — a few words, then the exercise."
+    },
+    "colorJourney": {
+      "title": "Palette assistant",
+      "description": "Primaries, secondaries, tertiaries — an RYB painting palette."
+    },
+    "emotionExplorer": {
+      "title": "Emotion explorer",
+      "description": "Four zones of feeling, one precise word, then create."
+    },
+    "nuanceFinder": {
+      "title": "Nuance Seeker",
+      "description": "A colour puzzle without AI — unwind before you create."
+    }
+  },
+  "nav": {
+    "home": "← Home",
+    "back": "← Back"
+  },
+  "errors": {
+    "cannotContinue": "Can't continue",
+    "generic": "Something went wrong. Try again in a moment."
+  },
+  "outcome": {
+    "title": "Carry your creation forward",
+    "description": "Pick a technique and a length, then choose the full ritual (with its experience options) or a direct exercise. The module's context stays visible in the brief — it is never sent to the AI as an instruction.",
+    "technique": "Technique",
+    "duration": "Length",
+    "ritual": "Full ritual",
+    "direct": "Direct exercise",
+    "preparing": "Getting ready…"
+  },
+  "pingPong": {
+    "heroLabel": "Creative Ping-Pong",
+    "heroTitle": "Let the words ",
+    "heroAccent": "dance",
+    "heroDescription": "5 alternating steps: you, then the AI (a logical word + a suggested idea), and so on.",
+    "aiSuggestions": "AI suggestions",
+    "localWords": "Local words — no connection available.",
+    "inputPlaceholder": "One word…",
+    "sendWord": "Send this word",
+    "step": "Step {{current}} / {{total}}",
+    "yourTurn": " · your turn",
+    "aiTurn": " · AI reply",
+    "toExercise": "Move on to the exercise",
+    "emptyHint": "Type a first word — a tree, a colour, a feeling… The AI will answer with a logical word and a suggested idea.",
+    "aiTurnLabel": "Logical word · suggested idea",
+    "chainTitle": "Your trail of words",
+    "bridgeTitle": "Your impulse is ready",
+    "bridgeSubtitle": "Turn this chain of words into material, colour or gesture — the exercise is waiting.",
+    "suggestionUnavailableTitle": "Suggestion unavailable",
+    "suggestionUnavailableBody": "Local words are stepping in — you can keep going.",
+    "filSummary": "Ping-pong starter"
+  },
+  "colorJourney": {
+    "heroLabel": "Palette assistant",
+    "heroTitle": "Build your ",
+    "heroAccent": "painting palette",
+    "heroDescription": "Primaries, secondaries and tertiaries — RYB theory and mixing recipes for drawing and painting.",
+    "progressStep": "Step {{current}} / {{total}}",
+    "progressFallback": "Palette",
+    "proposalsPrimary": "RYB primary colours",
+    "proposalsSecondary": "Secondaries — mixes of primaries",
+    "proposalsTertiary": "Tertiaries — harmonising shades",
+    "mirrorPreparing": "Preparing the mirror…",
+    "seePalette": "See my palette",
+    "nextColor": "Next colour",
+    "paletteTitle": "Your painting palette",
+    "aiAdvice": "Personalised painting advice",
+    "impulseTitle": "Your impulse",
+    "restart": "Start again",
+    "wheelHint": "Touch the wheel, then adjust the lightness",
+    "wheelLabel": "Colour wheel",
+    "wheelConfirm": "Confirm this shade",
+    "lightnessLight": "Light",
+    "lightnessMedium": "Medium",
+    "lightnessDeep": "Deep",
+    "mixRecipe": "Mixing recipe",
+    "adviceLoading": "Advice on its way…",
+    "adviceAsk": "Personalised painting advice",
+    "adviceGiven": "Personalised advice",
+    "filSummaryPartial_one": "Palette assistant — {{count}} shade",
+    "filSummaryPartial_other": "Palette assistant — {{count}} shades",
+    "filSummaryComplete": "Palette assistant — full journey",
+    "filContextHeader": "Pastek Art painting palette assistant (RYB).",
+    "guidance": {
+      "or": "or",
+      "primarySubtitle": "Choose your dominant primary colour — red, yellow or blue. This is the base of your painting palette.",
+      "primaryTheory": "In painting (RYB model), the three primaries are not mixed into each other: they are the starting point for every other hue.",
+      "secondarySubtitle": "Mix two primaries to get a secondary that complements your {{primary}}.",
+      "secondaryTheory": "Secondaries (orange, green, violet) come from mixing two primaries. Facing {{primary}}, choose {{options}}.",
+      "tertiarySubtitle": "A tertiary shade between your primary and secondary — ideal for shadows, accents and transitions.",
+      "tertiaryTheory": "Tertiaries (red-orange, yellow-green, blue-violet…) enrich the palette without overcrowding it. Think 60 % primary · 30 % secondary · 10 % tertiary."
+    },
+    "proposals": {
+      "primaryHint": "RYB primary — pure hue",
+      "tertiaryNearPrimary": "Close to {{color}} — shadows and depth",
+      "tertiaryNearSecondary": "Close to {{color}} — accents and highlights",
+      "tertiaryMix": "Mix {{primary}} + {{secondary}} ({{bias}})",
+      "biasPrimary": "primary-dominant",
+      "biasSecondary": "secondary-dominant",
+      "nearPrimary": "Close to {{color}} — RYB primary",
+      "tertiaryFallback": "Tertiary — harmonising shade",
+      "wheelHint": "{{label}} hue — {{preset}}"
+    },
+    "tips": {
+      "1": "Use this primary for the large masses (~60 % of the surface).",
+      "2": "The secondary balances the primary — keep it for mid-areas (~30 %).",
+      "3": "The tertiary is for accents, edges and details (~10 %)."
+    },
+    "questions": {
+      "1": "Test the hue on a swatch strip before covering the canvas.",
+      "2": "Mix on the palette with a knife — not directly on the paper.",
+      "3": "A touch of white softens the tertiary without fully desaturating it."
+    },
+    "reflection": "{{label}} joins your palette — {{practical}}",
+    "synthesis": {
+      "full": "Primary, secondary and tertiary form a balanced painting palette (60·30·10 ratio).",
+      "partial": "Primary and secondary are enough to start — you can add a tertiary or move on to the exercise.",
+      "single": "A primary sets the base — continue to build your palette.",
+      "summary": "{{relations}} Your palette: {{labels}}.",
+      "impulse": "Painting palette: {{labels}}",
+      "impulseEmpty": "Painting palette"
+    },
+    "usageLine": "{{role}} ({{ratio}}): {{label}} ({{hex}}){{recipe}}",
+    "mirror": {
+      "synthesisWithLabels": "Your painting palette ({{labels}}) is ready — primary for masses, secondary for balance, tertiary for accents.",
+      "synthesisEmpty": "Your palette is ready — test each hue on a swatch strip before painting.",
+      "turn": "{{chosen}} ({{dim}}) joins your palette — keep the 60·30·10 ratio in mind for each role.",
+      "thisShade": "this shade"
+    },
+    "context": {
+      "header": "Pastek Art painting palette assistant — RYB theory (primaries, secondaries, tertiaries).",
+      "scheme": "Scheme: {{scheme}}.",
+      "ratio": "Suggested ratio: 60 % primary · 30 % secondary · 10 % tertiary."
+    }
+  },
+  "emotionExplorer": {
+    "heroLabel": "Emotion explorer",
+    "quadrantTitle": "How are you\n",
+    "quadrantAccent": "feeling?",
+    "emotionTitle": "Name ",
+    "emotionAccent": "your emotion",
+    "emotionDescription": "{{quadrant}} — choose the word that comes closest to what you feel.",
+    "noWrongChoice": "Take all the time you need. There is no wrong choice.",
+    "pickerHint": "Touch the zone that fits best — red (tension), yellow (drive), blue (calm), purple (heaviness), or the centre if it feels unclear.",
+    "searchPlaceholder": "Search for an emotion…",
+    "searchLabel": "Search for an emotion",
+    "youChose": "You chose",
+    "techniqueLine": "{{technique}} — guided by what you feel.",
+    "preparing": "Getting ready…",
+    "toExercise": "Move on to the exercise",
+    "filSummary": "Explorer — {{label}}",
+    "impulse": "Feeling right now: {{label}} — {{description}}"
+  },
+  "nuanceFinder": {
+    "heroLabel": "The Nuance Seeker",
+    "heroTitle": "Sharpen your eye,\n",
+    "heroAccent": "then create",
+    "heroDescription": "Uncover earth, fire and water hidden in the grid — name your harmony, then choose a ritual or an exercise.",
+    "introBefore": "Tap the tiles to reveal the shades. {{lotus}} elemental lotuses",
+    "introAfter": "are hidden: they unveil the colours around them in a ripple. Long press to drop a pebble.",
+    "cellLotus": "Hidden lotus",
+    "cell": "Tile",
+    "lotusHint": "{{icon}} {{element}} lotus — {{quality}}",
+    "harmonyFound": "Harmony found",
+    "nameHint": "Give this harmony a name (optional)",
+    "namePlaceholder": "E.g. Morning mist, Gentle drive…",
+    "mirrorTitle": "Reading the harmony",
+    "mirrorLoading": "The chromatic mirror is forming…",
+    "revealed": "{{shown}} / {{total}} shades revealed",
+    "newGrid": "New grid",
+    "filHarmonyNamed": "Harmony: {{name}}",
+    "filHarmony": "Chromatic harmony found",
+    "filDetail": "{{cells}} tiles · {{lotus}} lotuses",
+    "filContextHeader": "Pastek Art Nuance Seeker.",
+    "defaultHarmony": "Chromatic harmony",
+    "context": {
+      "header": "Pastek Art Nuance Seeker — chromatic harmony revealed.",
+      "progress": "Progress: {{shown}}/{{total}} shades.",
+      "named": "Name given: {{name}}.",
+      "tones": "Dominant hues: {{names}}.",
+      "lotus": "Lotuses found: {{elements}}."
+    },
+    "mirror": {
+      "named": "“{{harmony}}” brings together {{names}} — let this harmony infuse your gesture without chasing perfection.",
+      "tones": "Your hues ({{names}}) form an inner map — welcome what these nuances awaken in you.",
+      "empty": "Your grid reveals a singular chromatic landscape — let these nuances guide your next gesture."
+    }
+  }
+}

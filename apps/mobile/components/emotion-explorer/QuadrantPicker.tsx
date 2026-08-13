@@ -1,5 +1,6 @@
 import { Text, useWindowDimensions, View } from "react-native";
 import Svg, { Polygon } from "react-native-svg";
+import { useTranslation } from "react-i18next";
 import { HoverScale } from "@/components/emotion-explorer/HoverScale";
 import type { EmotionQuadrant, EmotionQuadrantId } from "@/lib/emotion-explorer";
 import { textMuted } from "@/lib/themeClasses";
@@ -146,6 +147,7 @@ export function QuadrantPicker({
   fillHeight = false,
 }: QuadrantPickerProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("amorces");
   const { width } = useWindowDimensions();
   const byId = Object.fromEntries(quadrants.map((q) => [q.id, q])) as Record<
     EmotionQuadrantId,
@@ -184,9 +186,7 @@ export function QuadrantPicker({
         <Text
           className={`text-[13px] leading-6 text-center ${textMuted(isDark)}`}
         >
-          Touchez la zone qui correspond le mieux — rouge (tension), jaune
-          (élan), bleu (calme), mauve (lourdeur), ou le centre si c&apos;est
-          incertain.
+          {t("emotionExplorer.pickerHint")}
         </Text>
       </View>
 

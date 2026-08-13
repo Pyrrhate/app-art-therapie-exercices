@@ -1,8 +1,11 @@
-const PROVIDER_LABELS: Record<string, string> = {
-  google: "Google",
-  azure: "Microsoft",
-  email: "Email (lien magique)",
-};
+import i18n from "@/lib/i18n";
+
+function providerLabel(provider?: "google" | "azure" | "email"): string {
+  if (provider === "google") return i18n.t("app:auth.providerGoogle");
+  if (provider === "azure") return i18n.t("app:auth.providerMicrosoft");
+  if (provider === "email") return i18n.t("app:auth.providerEmail");
+  return i18n.t("app:auth.providerGeneric");
+}
 
 export function formatAuthError(
   error: unknown,
@@ -16,14 +19,15 @@ export function formatAuthError(
           "msg" in error &&
           typeof (error as { msg: unknown }).msg === "string"
         ? (error as { msg: string }).msg
-        : "Connexion impossible.";
+        : i18n.t("app:auth.errorGeneric");
 
   if (
     raw.includes("provider is not enabled") ||
     raw.includes("Unsupported provider")
   ) {
-    const label = provider ? PROVIDER_LABELS[provider] : "Ce mode de connexion";
-    return `${label} n'est pas activé dans votre projet Supabase.\n\nDashboard → Authentication → Providers → activez-le.\n\nEn attendant, utilisez le lien magique par email.`;
+    return i18n.t("app:auth.errorProviderDisabled", {
+      label: providerLabel(provider),
+    });
   }
 
   const lower = raw.toLowerCase();
@@ -31,7 +35,7 @@ export function formatAuthError(
     lower.includes("no api key found") ||
     lower.includes("invalid api key")
   ) {
-    return "Clé Supabase invalide ou incomplète.\n\nDans Vercel (projet API), recopiez la clé anon complète depuis Supabase → Project Settings → API (elle commence par eyJhbGci...).";
+    return i18n.t("app:auth.errorInvalidApiKey");
   }
 
   if (
@@ -39,7 +43,7 @@ export function formatAuthError(
     lower.includes("flow state") ||
     lower.includes("invalid flow state")
   ) {
-    return "La session Google a expiré pendant la redirection.\n\nRéessayez depuis https://pastek-art.eu (sans www), puis sélectionnez à nouveau votre compte Google.";
+    return i18n.t("app:auth.errorFlowExpired");
   }
 
   return raw;

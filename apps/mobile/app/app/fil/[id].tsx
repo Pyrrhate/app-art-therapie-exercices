@@ -6,6 +6,7 @@ import {
   View,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/lib/routes";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -14,11 +15,13 @@ import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { FilTagEditor } from "@/components/fil/FilTagEditor";
 import { FilTagChip } from "@/components/fil/FilTagChip";
 import { visualTags } from "@/lib/fil/tags";
-import { formatSessionDate, getTechniqueLabel, type RitualDuration } from "@/constants";
+import { formatSessionDate, type RitualDuration } from "@/constants";
+import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import { deleteFilEntry, getFilEntryById, patchFilEntry } from "@/lib/fil/storage";
 import { confirmDeleteFilEntry } from "@/lib/fil/deleteConfirm";
 import {
   FIL_SOURCE_META,
+  getFilSourceLabel,
   isRitualFilEntry,
   type FilEntry,
 } from "@/lib/fil/types";
@@ -28,6 +31,7 @@ import {
   isNuancierFilEntry,
 } from "@/lib/fil/nuancier";
 import { showAlert } from "@/lib/alert";
+import { useLanguageStore } from "@/lib/i18n/languageStore";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { exportFilRitualPdf } from "@/lib/sessionExport";
 import { useRitualStore } from "@/lib/store";
@@ -36,6 +40,8 @@ import { useIsDark } from "@/lib/themeStore";
 
 export default function FilDetailScreen() {
   const isDark = useIsDark();
+  const { t } = useTranslation("fil");
+  const language = useLanguageStore((s) => s.language);
   const { id } = useLocalSearchParams<{ id: string }>();
   const restoreFromFilEntry = useRitualStore((s) => s.restoreFromFilEntry);
   const [entry, setEntry] = useState<FilEntry | null>(null);
@@ -77,8 +83,8 @@ export default function FilDetailScreen() {
       );
     } catch (error) {
       showAlert(
-        "Impossible de continuer",
-        error instanceof Error ? error.message : "Réessayez dans un instant."
+        t("alerts.continueFailedTitle"),
+        error instanceof Error ? error.message : t("alerts.retry")
       );
     }
   }
@@ -87,7 +93,7 @@ export default function FilDetailScreen() {
     const meta = entry?.metadata;
     if (!meta) return;
     const impulse =
-      meta.impulse ?? entry?.summary ?? "Harmonie chromatique";
+      meta.impulse ?? entry?.summary ?? t("detail.defaultImpulse");
     const colorContext = buildColorContextFromMetadata(meta);
     try {
       await startExerciseFromImpulse(impulse, "painting", 15, colorContext, {
@@ -96,8 +102,8 @@ export default function FilDetailScreen() {
       });
     } catch (error) {
       showAlert(
-        "Impossible de continuer",
-        error instanceof Error ? error.message : "Réessayez dans un instant."
+        t("alerts.continueFailedTitle"),
+        error instanceof Error ? error.message : t("alerts.retry")
       );
     }
   }
@@ -121,11 +127,11 @@ export default function FilDetailScreen() {
     setExporting(true);
     try {
       const result = await exportFilRitualPdf(entry);
-      showAlert("Export", result.message);
+      showAlert(t("alerts.exportTitle"), result.message);
     } catch (error) {
       showAlert(
-        "Export impossible",
-        error instanceof Error ? error.message : "Réessayez dans un instant."
+        t("alerts.exportFailedTitle"),
+        error instanceof Error ? error.message : t("alerts.retry")
       );
     } finally {
       setExporting(false);
@@ -135,7 +141,7 @@ export default function FilDetailScreen() {
   if (loading) {
     return (
       <ScreenContainer scrollable={false} compactTop>
-        <ScreenNavBar backLabel="← Fil" />
+        <ScreenNavBar backLabel={t("nav.backFil")} />
         <ActivityIndicator color="#6B8F71" className="mt-12" />
       </ScreenContainer>
     );
@@ -144,8 +150,10 @@ export default function FilDetailScreen() {
   if (!entry) {
     return (
       <ScreenContainer scrollable compactTop>
-        <ScreenNavBar backLabel="← Fil" />
-        <Text className={`mt-8 ${textMuted(isDark)}`}>Trace introuvable.</Text>
+        <ScreenNavBar backLabel={t("nav.backFil")} />
+        <Text className={`mt-8 ${textMuted(isDark)}`}>
+          {t("detail.notFound")}
+        </Text>
       </ScreenContainer>
     );
   }
@@ -162,14 +170,14 @@ export default function FilDetailScreen() {
 
   return (
     <ScreenContainer scrollable compactTop>
-      <ScreenNavBar backLabel="← Fil" />
+      <ScreenNavBar backLabel={t("nav.backFil")} />
 
       <PastekIcon id={meta.icon} boxSize={44} size={30} className="mb-4" />
 
       <PastekScreenHero
-        label={meta.label}
+        label={getFilSourceLabel(entry.source, t)}
         title={entry.summary}
-        description={formatSessionDate(entry.createdAt)}
+        description={formatSessionDate(entry.createdAt, language)}
         centered={false}
         size="md"
         className="mb-6"
@@ -185,8 +193,10 @@ export default function FilDetailScreen() {
 
       {m?.technique ? (
         <Text className={`text-sm mb-3 ${textSecondary(isDark)}`}>
-          {getTechniqueLabel(m.technique)}
-          {m.durationMinutes ? ` · ${m.durationMinutes} min` : ""}
+          {localizedTechniqueLabel(m.technique, m.techniqueLabel)}
+          {m.durationMinutes
+            ? t("detail.duration", { minutes: m.durationMinutes })
+            : ""}
         </Text>
       ) : null}
 
@@ -201,7 +211,7 @@ export default function FilDetailScreen() {
       {exercise ? (
         <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
           <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-            Exercice
+            {t("detail.exercise")}
           </Text>
           <Text className={`text-base leading-7 ${textPrimary(isDark)}`}>
             {exercise}
@@ -218,7 +228,7 @@ export default function FilDetailScreen() {
       {paragraphs.length > 0 && ritual && (
         <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
           <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-            Miroir créatif
+            {t("detail.mirror")}
           </Text>
           {paragraphs.map((p, i) => (
             <Text
@@ -244,7 +254,7 @@ export default function FilDetailScreen() {
       {m?.colorMirror ? (
         <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
           <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-            Lecture chromatique
+            {t("detail.colorReading")}
           </Text>
           <Text className={`text-base leading-7 italic ${textSecondary(isDark)}`}>
             {sanitizeAiDisplayText(m.colorMirror)}
@@ -254,7 +264,7 @@ export default function FilDetailScreen() {
 
       {m?.harmonyName ? (
         <Text className={`text-sm mb-4 ${textSecondary(isDark)}`}>
-          Harmonie : {m.harmonyName}
+          {t("detail.harmony", { name: m.harmonyName })}
         </Text>
       ) : null}
 
@@ -277,32 +287,32 @@ export default function FilDetailScreen() {
       <View className="gap-3 pb-4">
         {ritual && (
           <PrimaryButton
-            label="Refaire cet exercice"
+            label={t("detail.redoExercise")}
             onPress={handleRedoExercise}
           />
         )}
         {!ritual && nuancier && m?.impulse && (
           <PrimaryButton
-            label="Créer avec ce nuancier"
+            label={t("detail.reuseNuancier")}
             onPress={() => void handleReuseNuancier()}
           />
         )}
         {!ritual && !nuancier && m?.impulse && m.technique && (
           <PrimaryButton
-            label="Passer à l'exercice"
+            label={t("detail.goToExercise")}
             onPress={() => void handleRedoFromAmorce()}
           />
         )}
         {ritual && (
           <PrimaryButton
-            label={exporting ? "Export…" : "Exporter en PDF (impression)"}
+            label={exporting ? t("detail.exportBusy") : t("detail.exportPdf")}
             onPress={handleExportPdf}
             variant="secondary"
             disabled={exporting}
           />
         )}
         <PrimaryButton
-          label="Retirer du Fil"
+          label={t("detail.remove")}
           onPress={() => void handleDelete()}
           variant="ghost"
         />

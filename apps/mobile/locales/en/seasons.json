@@ -1,0 +1,84 @@
+{
+  "nav": {
+    "backHome": "← Home"
+  },
+  "hero": {
+    "label": "Seasons",
+    "title": "A gentle constraint, ",
+    "accent": "several days",
+    "description": "Seven to fourteen days. Not a challenge: a light habit. Missed days break nothing."
+  },
+  "progress": {
+    "label": "Season in progress",
+    "day": "Day {{day}}/{{total}}",
+    "noSession": "no session yet",
+    "sessions_one": "{{count}} session",
+    "sessions_other": "{{count}} sessions",
+    "todayDone": " · today, it's done",
+    "continueToday": "Create again today",
+    "continue": "Continue the season",
+    "leave": "Leave this season"
+  },
+  "list": {
+    "afterThisOne": "After this one",
+    "proposed": "Suggested seasons",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "constraint": "Constraint: {{constraint}}",
+    "start": "Start",
+    "replaceAndStart": "Replace and start"
+  },
+  "custom": {
+    "show": "Create my own",
+    "hide": "Hide my season",
+    "titlePlaceholder": "Title (e.g. Winter inks)",
+    "constraintPlaceholder": "The constraint, in one or two sentences…",
+    "techniqueLabel": "Suggested technique (optional)",
+    "start": "Start my season",
+    "defaultTitle": "My season"
+  },
+  "history": {
+    "title": "Past seasons",
+    "completed": "Completed",
+    "abandoned": "Interrupted"
+  },
+  "confirm": {
+    "leaveTitle": "Leave this season?",
+    "leaveBody": "The season “{{title}}” will be closed. You can begin another one.",
+    "stay": "Stay",
+    "leave": "Leave"
+  },
+  "errors": {
+    "startFailed": "Could not start.",
+    "notFound": "Season not found",
+    "constraintTooShort": "Write a constraint of at least a few words."
+  },
+  "statement": "Season “{{title}}” — day {{day}}/{{total}}. {{constraint}}",
+  "catalog": {
+    "une-dominante": {
+      "title": "One dominant colour",
+      "constraint": "A single dominant colour. The others appear only in touches — or not at all.",
+      "invitation": "Seven days to inhabit one hue. Choose it this morning — a blue, an ochre, a tired green — and let it decide the rest. The background, the silences, what you don't yet dare."
+    },
+    "poche-a6": {
+      "title": "Pocket format",
+      "constraint": "A pocket-sized support (A6, a card, an envelope, the corner of a notebook). Nothing bigger.",
+      "invitation": "A small rectangle. No mural ambition. The gesture narrows, the time fits in your palm. Seven days of formats you could slip into a pocket."
+    },
+    "rien-que-collage": {
+      "title": "Collage only",
+      "constraint": "Collage only: papers, magazines, tickets, leftovers. Assembling rather than drawing.",
+      "invitation": "Ten days with no compulsory pencil. You cut, you tear, you place. The composition comes from the accidents of paper — an advert, a ticket, a sky already printed."
+    },
+    "trait-continu": {
+      "title": "The line that never lifts",
+      "constraint": "One line, as continuous as possible. If it leaves the paper, that's a fresh start, not a mistake.",
+      "invitation": "The pencil stays in contact. The line searches, hesitates, comes back. Seven days to unlearn “pretty” and find the movement again."
+    },
+    "terres": {
+      "title": "Earths",
+      "constraint": "An earth palette: ochre, sienna, umber, cream. Little or no cool colours.",
+      "invitation": "A fortnight in warm browns. Soil pigments, yellowed papers, afternoon light. Time enough to settle in — then to see what remains once blue steps away."
+    }
+  }
+}

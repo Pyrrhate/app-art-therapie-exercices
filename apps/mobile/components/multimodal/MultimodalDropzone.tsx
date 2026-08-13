@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { MEDIA_TYPE_CONFIG } from "@/lib/multimodal/mediaConfig";
@@ -21,12 +22,6 @@ interface MultimodalDropzoneProps {
   error?: string | null;
   onFileSelected: (file: MultimodalMediaFile) => void;
   onClear: () => void;
-}
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
 async function fileToDataUrl(file: File): Promise<string> {
@@ -47,9 +42,32 @@ export function MultimodalDropzone({
   onClear,
 }: MultimodalDropzoneProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("ritual");
   const config = MEDIA_TYPE_CONFIG[mediaType];
   const dropRef = useRef<View>(null);
   const webInputRef = useRef<HTMLInputElement | null>(null);
+
+  const mediaTitle = t(`multimodal.media.${mediaType}.title`, {
+    defaultValue: config.title,
+  });
+  const dropHint = t(`multimodal.media.${mediaType}.dropHint`, {
+    defaultValue: config.dropHint,
+  });
+  const iconLabel = t(`multimodal.media.${mediaType}.iconLabel`, {
+    defaultValue: config.iconLabel,
+  });
+
+  function formatSize(bytes: number): string {
+    if (bytes < 1024) return t("multimodal.sizeBytes", { value: bytes });
+    if (bytes < 1024 * 1024) {
+      return t("multimodal.sizeKilobytes", {
+        value: (bytes / 1024).toFixed(1),
+      });
+    }
+    return t("multimodal.sizeMegabytes", {
+      value: (bytes / (1024 * 1024)).toFixed(1),
+    });
+  }
 
   const processWebFile = useCallback(
     async (raw: File) => {
@@ -168,7 +186,10 @@ export function MultimodalDropzone({
         onPress={openPicker}
         disabled={busy}
         accessibilityRole="button"
-        accessibilityLabel={`Zone de dépôt — ${config.title}. ${config.dropHint}`}
+        accessibilityLabel={t("multimodal.dropzoneA11y", {
+          title: mediaTitle,
+          hint: dropHint,
+        })}
         className={`rounded-2xl border-2 ${borderClass} px-6 py-10 items-center justify-center min-h-[200px] ${
           isDark ? "bg-sand-800/40" : "bg-sand-50"
         } ${Platform.OS === "web" ? "web:cursor-pointer web:hover:bg-sand-100/80 web:transition-colors" : ""}`}
@@ -180,18 +201,18 @@ export function MultimodalDropzone({
             source={{ uri: file.uri }}
             className="w-full max-h-48 rounded-xl"
             resizeMode="contain"
-            accessibilityLabel="Aperçu de votre création visuelle"
+            accessibilityLabel={t("multimodal.previewA11y")}
           />
         ) : (
           <>
             <Text
-              accessibilityLabel={config.iconLabel}
+              accessibilityLabel={iconLabel}
               className="text-sage-500 text-4xl mb-3"
             >
               {config.icon}
             </Text>
             <Text className={`text-sm font-medium text-center ${textPrimary(isDark)}`}>
-              {config.dropHint}
+              {dropHint}
             </Text>
             <Text className={`text-xs text-center mt-2 ${textMuted(isDark)}`}>
               {config.extensions.join(" · ")}
@@ -214,9 +235,11 @@ export function MultimodalDropzone({
             onPress={onClear}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="Retirer le fichier sélectionné"
+            accessibilityLabel={t("multimodal.removeA11y")}
           >
-            <Text className="text-sage-500 text-sm">Retirer</Text>
+            <Text className="text-sage-500 text-sm">
+              {t("multimodal.remove")}
+            </Text>
           </Pressable>
         </View>
       ) : null}
@@ -228,8 +251,7 @@ export function MultimodalDropzone({
       ) : null}
 
       <Text className={`text-xs leading-5 ${textSecondary(isDark)}`}>
-        Votre fichier reste sur cet appareil jusqu'à l'envoi pour l'analyse. Formats
-        acceptés selon le type d'expression choisi.
+        {t("multimodal.privacyHint")}
       </Text>
     </View>
   );

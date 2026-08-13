@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import {
   EUROPEAN_BYOK_PROVIDERS,
   GLOBAL_BYOK_PROVIDERS,
@@ -36,14 +37,12 @@ import {
 } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
+/** Métadonnées non traduisibles : nom du produit, URL de doc, type de champ. */
 type ProviderMeta = {
   id: AiKeyProvider;
   title: string;
-  badge: string;
-  why: string;
   docsUrl: string;
   docsLabel: string;
-  placeholder: string;
   /** Champ = URL plutôt que clé secrète */
   isUrl?: boolean;
 };
@@ -52,79 +51,59 @@ const PROVIDER_META: Record<AiKeyProvider, ProviderMeta> = {
   mistral: {
     id: "mistral",
     title: "Mistral AI",
-    badge: "Recommandé (FR)",
-    why: "Modèles francophones fluides pour consignes et miroir créatif.",
     docsUrl: "https://console.mistral.ai/api-keys",
     docsLabel: "console.mistral.ai",
-    placeholder: "Coller votre clé Mistral…",
   },
   scaleway: {
     id: "scaleway",
     title: "Scaleway Generative",
-    badge: "Souverain UE",
-    why: "API generative européenne (OpenAI-compatible). Utilisez une clé secrète IAM Scaleway (SCW_SECRET_KEY), pas une clé publique.",
     docsUrl: "https://console.scaleway.com/iam/api-keys",
     docsLabel: "console.scaleway.com/iam",
-    placeholder: "Clé secrète Scaleway (SCW_SECRET_KEY)…",
   },
   ovhcloud: {
     id: "ovhcloud",
     title: "OVHcloud AI Endpoints",
-    badge: "Souverain UE",
-    why: "Endpoints IA OVHcloud (compatible OpenAI), données en Europe.",
     docsUrl: "https://endpoints.ai.cloud.ovh.net/",
     docsLabel: "endpoints.ai.cloud.ovh.net",
-    placeholder: "Jeton OVHcloud AI…",
   },
   alephalpha: {
     id: "alephalpha",
     title: "Aleph Alpha",
-    badge: "Souverain UE",
-    why: "LLM européen (Allemagne) pour une exploration créative souveraine.",
     docsUrl: "https://app.aleph-alpha.com/",
     docsLabel: "app.aleph-alpha.com",
-    placeholder: "Clé Aleph Alpha…",
   },
   ollama: {
     id: "ollama",
     title: "Ollama (local)",
-    badge: "Hors ligne",
-    why: "Modèle sur votre machine — aucune clé cloud. Indiquez l’URL du service. Sur API hébergée (Vercel), Ollama doit être joignable depuis le serveur (tunnel / IP), pas seulement localhost du téléphone.",
     docsUrl: "https://ollama.com/",
     docsLabel: "ollama.com",
-    placeholder: "http://127.0.0.1:11434",
     isUrl: true,
   },
   openai: {
     id: "openai",
     title: "OpenAI",
-    badge: "Global",
-    why: "Alternative polyvalente texte / image si vous avez déjà un compte.",
     docsUrl: "https://platform.openai.com/api-keys",
     docsLabel: "platform.openai.com",
-    placeholder: "Clé OpenAI…",
   },
   anthropic: {
     id: "anthropic",
     title: "Anthropic (Claude)",
-    badge: "Vision",
-    why: "Claude Haiku 4.5 / Sonnet 5 — excellent pour observer une œuvre avec nuance, sans jugement esthétique.",
     docsUrl: "https://console.anthropic.com/settings/keys",
     docsLabel: "console.anthropic.com",
-    placeholder: "Clé Anthropic…",
   },
   gemini: {
     id: "gemini",
     title: "Google Gemini",
-    badge: "Créatif / rapide",
-    why: "Modèles Gemini actuels (3.5 Flash, secours 3.6 / 3.1 Lite). Clé AI Studio sans restriction HTTP/IP — Pastek relaie depuis le serveur.",
     docsUrl: "https://aistudio.google.com/apikey",
     docsLabel: "aistudio.google.com",
-    placeholder: "Clé Google AI…",
   },
 };
 
-async function openDocs(url: string): Promise<void> {
+async function openDocs(
+  url: string,
+  alertTitle: string,
+  alertBody: string
+): Promise<void> {
   try {
     const canOpen = await Linking.canOpenURL(url);
     if (canOpen) {
@@ -138,7 +117,7 @@ async function openDocs(url: string): Promise<void> {
     window.open(url, "_blank", "noopener,noreferrer");
     return;
   }
-  showAlert("Lien indisponible", "Ouvrez le tableau de bord API dans votre navigateur.");
+  showAlert(alertTitle, alertBody);
 }
 
 function emptySavedMap(): Record<AiKeyProvider, boolean> {
@@ -179,6 +158,7 @@ function ProviderCard({
   onTest: () => void;
 }) {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
   const minLen = meta.isUrl ? 7 : 8;
 
   return (
@@ -188,12 +168,14 @@ function ProviderCard({
           <Text className={`font-medium text-base ${textPrimary(isDark)}`}>
             {meta.title}
           </Text>
-          <Text className="text-sage-600 text-xs mt-1">{meta.badge}</Text>
+          <Text className="text-sage-600 text-xs mt-1">
+            {t(`aiSettings.providers.${meta.id}.badge`)}
+          </Text>
         </View>
         {saved ? (
           <View className="rounded-full bg-sage-100 px-3 py-1">
             <Text className="text-sage-700 text-xs font-medium">
-              {meta.isUrl ? "URL enregistrée" : "Clé enregistrée"}
+              {meta.isUrl ? t("aiSettings.urlSaved") : t("aiSettings.keySaved")}
             </Text>
           </View>
         ) : (
@@ -203,39 +185,47 @@ function ProviderCard({
             }`}
           >
             <Text className={`text-xs ${textMuted(isDark)}`}>
-              {meta.isUrl ? "Aucune URL" : "Aucune clé"}
+              {meta.isUrl ? t("aiSettings.noUrl") : t("aiSettings.noKey")}
             </Text>
           </View>
         )}
       </View>
 
       <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-        {meta.why}
+        {t(`aiSettings.providers.${meta.id}.why`)}
       </Text>
 
       <Pressable
-        onPress={() => void openDocs(meta.docsUrl)}
+        onPress={() =>
+          void openDocs(
+            meta.docsUrl,
+            t("aiSettings.linkUnavailableTitle"),
+            t("aiSettings.linkUnavailableBody")
+          )
+        }
         accessibilityRole="link"
-        accessibilityLabel={`Documentation ${meta.title}`}
+        accessibilityLabel={t("aiSettings.docsA11y", { provider: meta.title })}
       >
         <Text className="text-sage-600 text-sm underline">
-          Documentation → {meta.docsLabel}
+          {t("aiSettings.docs", { label: meta.docsLabel })}
         </Text>
       </Pressable>
 
       {saved ? (
         <View className="gap-3">
           <Text className={`text-xs leading-5 ${textMuted(isDark)}`}>
-            Stockage local
             {Platform.OS === "web"
-              ? " (navigateur)."
-              : " (coffre sécurisé)."}{" "}
-            Pastek Art ne conserve jamais la clé sur ses serveurs.
+              ? t("aiSettings.storageWeb")
+              : t("aiSettings.storageNative")}
           </Text>
           <View className="flex-row gap-3 flex-wrap">
             <View className="flex-1 min-w-[140px]">
               <PrimaryButton
-                label={selected ? "Moteur actif" : "Utiliser ce moteur"}
+                label={
+                  selected
+                    ? t("aiSettings.engineActive")
+                    : t("aiSettings.useEngine")
+                }
                 onPress={onSelect}
                 variant={selected ? "secondary" : "primary"}
                 disabled={selected}
@@ -243,7 +233,11 @@ function ProviderCard({
             </View>
             <View className="flex-1 min-w-[140px]">
               <PrimaryButton
-                label={testing ? "Test…" : "Tester la connexion"}
+                label={
+                  testing
+                    ? t("aiSettings.testing")
+                    : t("aiSettings.testConnection")
+                }
                 onPress={onTest}
                 variant="secondary"
                 disabled={testing}
@@ -251,7 +245,7 @@ function ProviderCard({
             </View>
             <View className="flex-1 min-w-[140px]">
               <PrimaryButton
-                label="Supprimer"
+                label={t("aiSettings.remove")}
                 onPress={onRemove}
                 variant="ghost"
               />
@@ -263,7 +257,7 @@ function ProviderCard({
           <TextInput
             value={draft}
             onChangeText={onDraftChange}
-            placeholder={meta.placeholder}
+            placeholder={t(`aiSettings.providers.${meta.id}.placeholder`)}
             placeholderTextColor="#A89F91"
             secureTextEntry={!meta.isUrl}
             autoCapitalize="none"
@@ -276,20 +270,24 @@ function ProviderCard({
                 : "bg-sand-50 border-sand-200 text-sand-800"
             }`}
             accessibilityLabel={
-              meta.isUrl ? `URL ${meta.title}` : `Clé API ${meta.title}`
+              meta.isUrl
+                ? t("aiSettings.urlFieldLabel", { provider: meta.title })
+                : t("aiSettings.keyFieldLabel", { provider: meta.title })
             }
           />
           <View className="flex-row gap-3">
             <View className="flex-1">
               <PrimaryButton
-                label={saving ? "Enregistrement…" : "Sauvegarder localement"}
+                label={
+                  saving ? t("aiSettings.saving") : t("aiSettings.saveLocally")
+                }
                 onPress={onSave}
                 disabled={saving || draft.trim().length < minLen}
               />
             </View>
             <View className="flex-1">
               <PrimaryButton
-                label={testing ? "Test…" : "Tester"}
+                label={testing ? t("aiSettings.testing") : t("aiSettings.test")}
                 onPress={onTest}
                 variant="secondary"
                 disabled={testing || draft.trim().length < minLen}
@@ -328,6 +326,7 @@ export function AISettings({
   onRefreshReady?: (refresh: () => Promise<void>) => void;
 }) {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
   const [savedMap, setSavedMap] =
     useState<Record<AiKeyProvider, boolean>>(emptySavedMap);
   const [drafts, setDrafts] =
@@ -375,14 +374,11 @@ export function AISettings({
       setDrafts((prev) => ({ ...prev, [provider]: "" }));
       setSelected(provider);
       await refresh();
-      showAlert(
-        "Enregistré localement",
-        "La valeur reste sur cet appareil. Pastek Art ne la stocke pas."
-      );
+      showAlert(t("aiSettings.savedTitle"), t("aiSettings.savedBody"));
     } catch (error) {
       showAlert(
-        "Impossible d'enregistrer",
-        error instanceof Error ? error.message : "Vérifiez la valeur et réessayez."
+        t("aiSettings.saveFailTitle"),
+        error instanceof Error ? error.message : t("aiSettings.saveFailBody")
       );
     } finally {
       setSavingProvider(null);
@@ -393,11 +389,11 @@ export function AISettings({
     try {
       await removeAiKey(provider);
       await refresh();
-      showAlert("Supprimé", "Ce moteur n'est plus disponible localement.");
+      showAlert(t("aiSettings.removedTitle"), t("aiSettings.removedBody"));
     } catch (error) {
       showAlert(
-        "Suppression impossible",
-        error instanceof Error ? error.message : "Réessayez dans un instant."
+        t("aiSettings.removeFailTitle"),
+        error instanceof Error ? error.message : t("aiSettings.retryLater")
       );
     }
   }
@@ -406,8 +402,10 @@ export function AISettings({
     await setSelectedAiProvider(provider);
     setSelected(provider);
     showAlert(
-      "Moteur sélectionné",
-      `${PROVIDER_META[provider].title} sera utilisé pour vos prochaines générations.`
+      t("aiSettings.selectedTitle"),
+      t("aiSettings.selectedBody", {
+        provider: PROVIDER_META[provider].title,
+      })
     );
   }
 
@@ -417,7 +415,10 @@ export function AISettings({
       const key =
         (await getAiKey(provider))?.trim() || drafts[provider].trim();
       if (!key) {
-        showAlert("Rien à tester", "Enregistrez ou saisissez une clé / URL.");
+        showAlert(
+          t("aiSettings.nothingToTestTitle"),
+          t("aiSettings.nothingToTestBody")
+        );
         return;
       }
 
@@ -432,18 +433,16 @@ export function AISettings({
         message?: string;
       };
       showAlert(
-        data.ok ? "Connexion OK" : "Échec du test",
+        data.ok ? t("aiSettings.testOkTitle") : t("aiSettings.testFailTitle"),
         data.message ??
           (data.ok
-            ? "Le fournisseur a répondu."
-            : "Vérifiez la clé, le modèle et le réseau.")
+            ? t("aiSettings.testOkBody")
+            : t("aiSettings.testFailBody"))
       );
     } catch (error) {
       showAlert(
-        "Test impossible",
-        error instanceof Error
-          ? error.message
-          : "Impossible de joindre l’API Pastek."
+        t("aiSettings.testErrorTitle"),
+        error instanceof Error ? error.message : t("aiSettings.testErrorBody")
       );
     } finally {
       setTestingProvider(null);
@@ -474,7 +473,7 @@ export function AISettings({
   if (loading) {
     return (
       <Text className={`text-sm ${textMuted(isDark)}`}>
-        Chargement des moteurs…
+        {t("aiSettings.loading")}
       </Text>
     );
   }
@@ -494,7 +493,7 @@ export function AISettings({
               isDark ? "text-sage-200" : "text-sage-800"
             }`}
           >
-            100 % local & privé
+            {t("aiSettings.badgeLocal")}
           </Text>
         </View>
         <View
@@ -509,7 +508,7 @@ export function AISettings({
               isDark ? "text-melon-200" : "text-melon-700"
             }`}
           >
-            BYOK activé
+            {t("aiSettings.badgeByok")}
           </Text>
         </View>
       </View>
@@ -522,21 +521,19 @@ export function AISettings({
         }`}
       >
         <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-          Cette application est un outil de génération d&apos;exercices créatifs
-          et d&apos;exploration personnelle. Elle ne remplace pas une thérapie
-          médicale ou psychologique.
+          {t("aiSettings.disclaimer")}
         </Text>
       </View>
 
       <SectionTitle
-        title="🇪🇺 Fournisseurs européens & souverains"
-        subtitle="Mistral, Scaleway, OVHcloud, Aleph Alpha, Ollama local."
+        title={t("aiSettings.europeanTitle")}
+        subtitle={t("aiSettings.europeanSubtitle")}
       />
       {renderGroup(european)}
 
       <SectionTitle
-        title="🌐 Fournisseurs globaux"
-        subtitle="OpenAI, Anthropic, Google Gemini."
+        title={t("aiSettings.globalTitle")}
+        subtitle={t("aiSettings.globalSubtitle")}
       />
       {renderGroup(global)}
     </View>

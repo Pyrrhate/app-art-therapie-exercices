@@ -17,5 +17,27 @@
     "cancel": "Annuler",
     "continue": "Continuer",
     "seeAll": "Tout voir →"
+  },
+  "sizes": {
+    "bytes": "{{n}} o",
+    "kb": "{{n}} Ko",
+    "mb": "{{n}} Mo"
+  },
+  "imageErrors": {
+    "tooLarge": "Impossible de réduire la photo sous {{max}}. Essayez une capture plus légère.",
+    "tooLargeDetail": "Impossible de réduire sous {{max}} (actuel : {{current}}).",
+    "sourceTooLarge": "Fichier trop lourd ({{size}}). Maximum : {{max}}.",
+    "compressionFailed": "Compression de la photo impossible.",
+    "aborted": "Traitement de la photo annulé.",
+    "cloudFile": "Cette photo n'est pas disponible localement (OneDrive nuage). Copiez-la sur le Bureau ou glissez-la dans la zone prévue.",
+    "readTimeout": "Lecture de la photo trop lente. Copiez-la sur le Bureau ou glissez-la dans la zone prévue."
+  },
+  "aiKeys": {
+    "ollamaUrlRequired": "Indiquez l’URL Ollama (ex. http://127.0.0.1:11434).",
+    "keyTooShort": "La clé API semble trop courte. Vérifiez la copie."
+  },
+  "techniques": {
+    "nameTooShort": "Nom trop court",
+    "cannotDeleteBuiltIn": "Les techniques intégrées ne peuvent pas être supprimées."
   }
 }

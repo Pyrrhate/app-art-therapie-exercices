@@ -1,3 +1,4 @@
+import i18n from "@/lib/i18n";
 import { getDimensionForTurn } from "./dimensions";
 import { buildPaletteUsageGuide } from "./theory";
 import type { ColorChoice } from "./types";
@@ -11,14 +12,18 @@ export function buildPaletteAugmentationContext(
   const usage = buildPaletteUsageGuide(history);
 
   return [
-    "Assistant palette peinture Pastek Art — théorie RYB (primaires, secondaires, tertiaires).",
+    i18n.t("amorces:colorJourney.context.header"),
     usage,
-    `Schéma : ${history.map((_, i) => getDimensionForTurn(i + 1).title).join(" → ")}.`,
-    "Ratio conseillé : 60 % primaire · 30 % secondaire · 10 % tertiaire.",
+    i18n.t("amorces:colorJourney.context.scheme", {
+      scheme: history.map((_, i) => getDimensionForTurn(i + 1).title).join(" → "),
+    }),
+    i18n.t("amorces:colorJourney.context.ratio"),
   ].join("\n");
 }
 
 export function buildPaletteImpulse(history: ColorChoice[]): string {
   const labels = history.map((h) => h.label).join(", ");
-  return labels ? `Palette peinture : ${labels}` : "Palette peinture";
+  return labels
+    ? i18n.t("amorces:colorJourney.synthesis.impulse", { labels })
+    : i18n.t("amorces:colorJourney.synthesis.impulseEmpty");
 }

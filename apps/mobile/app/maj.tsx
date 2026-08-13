@@ -1,28 +1,30 @@
 import { Platform, ScrollView, Text, View } from "react-native";
 import Head from "expo-router/head";
 import { Link } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
-import { CHANGELOG } from "@/lib/changelog";
+import { getChangelog } from "@/lib/changelog";
+import { useLanguageStore } from "@/lib/i18n/languageStore";
 import { navigateSiteHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
 import { textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
-const SEO_TITLE = "Mises à jour Pastek Art — évolutions du générateur créatif";
-const SEO_DESCRIPTION =
-  "Les grandes évolutions de Pastek Art : local-first, clés IA personnelles (BYOK), sauvegarde Drive, prompts et accès libre — sans les petits correctifs du quotidien.";
 const CANONICAL = "https://pastek-art.eu/maj";
 
 function ChangelogList() {
   const isDark = useIsDark();
+  const { t } = useTranslation("legal");
+  const language = useLanguageStore((s) => s.language);
+  const changelog = getChangelog(language);
 
   return (
     <View className="gap-4">
-      {CHANGELOG.map((entry, index) => (
+      {changelog.map((entry, index) => (
         <View
           key={entry.id}
           className={`rounded-2xl border px-5 py-5 ${
@@ -40,7 +42,7 @@ function ChangelogList() {
             {index === 0 ? (
               <View className="bg-sage-100 rounded-full px-2.5 py-1 shrink-0">
                 <Text className="text-sage-700 text-[10px] font-semibold uppercase tracking-wider">
-                  Récent
+                  {t("updates.recent")}
                 </Text>
               </View>
             ) : null}
@@ -74,26 +76,27 @@ function ChangelogList() {
 
 function MajContent({ showAppLink }: { showAppLink?: boolean }) {
   const isDark = useIsDark();
+  const { t } = useTranslation("legal");
 
   return (
     <View className="gap-8">
       <View className="gap-3">
         <Text className="text-sage-600 text-xs uppercase tracking-wider font-medium">
-          Produit
+          {t("updates.label")}
         </Text>
         <Text
           className={`font-display text-3xl leading-tight ${textPrimary(isDark)}`}
         >
-          Mises à <Text className="text-sage-600">jour</Text>
+          {t("updates.title")}
+          <Text className="text-sage-600">{t("updates.titleAccent")}</Text>
         </Text>
         <Text className={`text-base leading-7 ${textSecondary(isDark)}`}>
-          Les grandes évolutions de Pastek Art — sans les petits correctifs du
-          quotidien.
+          {t("updates.description")}
         </Text>
         {showAppLink ? (
           <Link href={ROUTES.home}>
             <Text className="text-sage-600 text-sm underline mt-1">
-              Ouvrir l&apos;application →
+              {t("updates.openApp")}
             </Text>
           </Link>
         ) : null}
@@ -102,18 +105,22 @@ function MajContent({ showAppLink }: { showAppLink?: boolean }) {
       <ChangelogList />
 
       <Text className={`text-xs text-center leading-5 pb-4 ${textMuted(isDark)}`}>
-        Pastek Art · générateur d&apos;exercices créatifs
+        {t("updates.footer")}
       </Text>
     </View>
   );
 }
 
 export default function MajPage() {
+  const { t } = useTranslation(["legal", "app"]);
+  const seoTitle = t("legal:updates.seoTitle");
+  const seoDescription = t("legal:updates.seoDescription");
+
   if (Platform.OS !== "web") {
     return (
       <ScreenContainer scrollable compactTop>
         <ScreenNavBar
-          backLabel="← Accueil"
+          backLabel={t("app:nav.backHome")}
           onBack={navigateSiteHome}
           showHome={false}
         />
@@ -125,10 +132,10 @@ export default function MajPage() {
   return (
     <>
       <Head>
-        <title>{SEO_TITLE}</title>
-        <meta name="description" content={SEO_DESCRIPTION} />
-        <meta property="og:title" content={SEO_TITLE} />
-        <meta property="og:description" content={SEO_DESCRIPTION} />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
         <meta property="og:type" content="website" />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={CANONICAL} />

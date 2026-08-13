@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { formatSessionDate } from "@/constants";
 import type { CloudIntegrationStatus } from "@/lib/integrations/cloud";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
@@ -23,6 +24,7 @@ export function CloudProviderToggle({
   onConnect,
   onDisconnect,
 }: CloudProviderToggleProps) {
+  const { t } = useTranslation("app");
   const isDark = useIsDark();
   const connected = status?.connected ?? false;
 
@@ -42,17 +44,19 @@ export function CloudProviderToggle({
           </Text>
           {status && !status.configured ? (
             <Text className="text-amber-700 text-xs mt-2 leading-5">
-              OAuth serveur non configuré — connexion en attente de déploiement.
+              {t("cloudToggle.oauthNotConfigured")}
             </Text>
           ) : null}
           {connected && status?.providerAccountId ? (
             <Text className={`text-xs mt-2 ${textMuted(isDark)}`}>
-              Compte : {status.providerAccountId}
+              {t("cloudToggle.account", { id: status.providerAccountId })}
             </Text>
           ) : null}
           {connected && status?.connectedAt ? (
             <Text className={`text-xs ${textMuted(isDark)}`}>
-              Connecté le {formatSessionDate(status.connectedAt)}
+              {t("cloudToggle.connectedAt", {
+                date: formatSessionDate(status.connectedAt),
+              })}
             </Text>
           ) : null}
         </View>
@@ -79,7 +83,7 @@ export function CloudProviderToggle({
               : "text-white"
           }`}
         >
-          {connected ? "Déconnecter" : "Connecter"}
+          {connected ? t("cloudToggle.disconnect") : t("cloudToggle.connect")}
         </Text>
       </Pressable>
     </View>

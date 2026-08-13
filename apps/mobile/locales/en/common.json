@@ -17,5 +17,27 @@
     "cancel": "Cancel",
     "continue": "Continue",
     "seeAll": "See all →"
+  },
+  "sizes": {
+    "bytes": "{{n}} B",
+    "kb": "{{n}} KB",
+    "mb": "{{n}} MB"
+  },
+  "imageErrors": {
+    "tooLarge": "Could not shrink the photo under {{max}}. Try a lighter capture.",
+    "tooLargeDetail": "Could not shrink under {{max}} (current: {{current}}).",
+    "sourceTooLarge": "File too large ({{size}}). Maximum: {{max}}.",
+    "compressionFailed": "Could not compress the photo.",
+    "aborted": "Photo processing cancelled.",
+    "cloudFile": "This photo is not available locally (OneDrive cloud). Copy it to the Desktop or drop it into the drop zone.",
+    "readTimeout": "Reading the photo is too slow. Copy it to the Desktop or drop it into the drop zone."
+  },
+  "aiKeys": {
+    "ollamaUrlRequired": "Enter the Ollama URL (e.g. http://127.0.0.1:11434).",
+    "keyTooShort": "The API key looks too short. Check your copy."
+  },
+  "techniques": {
+    "nameTooShort": "Name too short",
+    "cannotDeleteBuiltIn": "Built-in techniques cannot be deleted."
   }
 }

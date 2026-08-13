@@ -1,4 +1,5 @@
 import { Image, Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { FIL_SOURCE_META, type FilEntry } from "@/lib/fil/types";
 import { visualTags } from "@/lib/fil/tags";
@@ -30,17 +31,23 @@ export function FilVisualTile({
   onPress,
 }: FilVisualTileProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("fil");
   const photo = entry.metadata?.photoUri;
   const colors = entry.metadata?.colors ?? [];
   const tags = visualTags(entry).slice(0, 4);
   const meta = FIL_SOURCE_META[entry.source];
+  const label = tags.length
+    ? tags.join(", ")
+    : entry.summary || t("tile.fallbackLabel");
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={
-        tags.length ? tags.join(", ") : entry.summary || "Trace du Fil"
+        selectMode
+          ? `${label} — ${t(selected ? "tile.selected" : "tile.unselected")}`
+          : label
       }
       className={`rounded-2xl overflow-hidden mb-2 ${
         selected ? "border-2 border-sage-500" : "border border-transparent"

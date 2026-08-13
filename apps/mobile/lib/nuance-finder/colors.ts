@@ -8,16 +8,21 @@ export interface Rgb {
 export const NEUTRAL_CREAM: Rgb = { r: 250, g: 247, b: 244 };
 
 export const PRIMARY_SOURCES = [
-  { id: "cyan", label: "Cyan", hex: "#00CED1", rgb: { r: 0, g: 206, b: 209 } },
+  {
+    id: "cyan",
+    label: { fr: "Cyan", en: "Cyan" },
+    hex: "#00CED1",
+    rgb: { r: 0, g: 206, b: 209 },
+  },
   {
     id: "magenta",
-    label: "Magenta",
+    label: { fr: "Magenta", en: "Magenta" },
     hex: "#FF1493",
     rgb: { r: 255, g: 20, b: 147 },
   },
   {
     id: "yellow",
-    label: "Jaune",
+    label: { fr: "Jaune", en: "Yellow" },
     hex: "#FFD700",
     rgb: { r: 255, g: 215, b: 0 },
   },
@@ -61,7 +66,7 @@ export function lerpRgb(a: Rgb, b: Rgb, t: number): Rgb {
 export interface ColorSource {
   hex: string;
   rgb: Rgb;
-  label?: string;
+  label?: string | { fr: string; en: string };
 }
 
 export interface SourcePoint {

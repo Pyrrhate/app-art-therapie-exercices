@@ -1,0 +1,55 @@
+{
+  "privacy": {
+    "heroLabel": "Privacy",
+    "heroTitle": "Legal notice & ",
+    "heroAccent": "privacy",
+    "heroDescription": "Last updated: June 2026",
+    "publisherTitle": "Publisher",
+    "publisherBody": "“Pastek Art” app — a guided creative ritual. Publisher: Guillot / Pastek Art. Contact: {{email}}.",
+    "dataTitle": "Data we collect",
+    "dataBody1": "No user account is needed. Your rituals (impulse, technique, exercise, photo, reflection) and your starters are saved automatically to the Creative Thread, locally on your device via AsyncStorage.",
+    "dataBody2": "You can export and restore your Creative Thread from the settings: the file stays with you (Drive, email, etc.) and is never sent to our servers.",
+    "dataBody3": "When you ask for an AI reflection, your photo is compressed and sent to our API server (Vercel), which passes it to Hugging Face for analysis. It is not kept on the server after processing. Starters that don't use AI (palette, emotions, nuances) send nothing to the server.",
+    "purposeTitle": "Purpose",
+    "purposeBody": "Generating creative exercises and offering a kind reading of your work. No data resale, no advertising profiling.",
+    "legalBasisTitle": "Legal basis (GDPR)",
+    "legalBasisBody": "Legitimate interest and delivery of the service you asked for. You can use the app without ever sending a photo to the AI.",
+    "rightsTitle": "Your rights",
+    "rightsBody": "Access, correction, erasure: remove traces from the Creative Thread, use “Erase everything on this device” in the settings, or uninstall the app. Any questions: {{email}}.",
+    "processorsTitle": "Processors",
+    "processorsBody": "API hosting: Vercel (vercel.com/legal/privacy-policy). AI models: Hugging Face (huggingface.co/privacy) — inference only, with no training on your content through this app. API keys stay on the server side.",
+    "cookiesTitle": "Cookies & web",
+    "cookiesBody": "The web app sets no advertising cookies. Only your browser's local storage may be used, for the Creative Thread and your preferences.",
+    "footer": "Simplified privacy policy — June 2026."
+  },
+  "updates": {
+    "label": "Product",
+    "title": "What's ",
+    "titleAccent": "new",
+    "description": "The bigger steps forward in Pastek Art — without the everyday small fixes.",
+    "openApp": "Open the app →",
+    "recent": "Latest",
+    "footer": "Pastek Art · creative exercise generator",
+    "seoTitle": "Pastek Art updates — how the creative generator evolves",
+    "seoDescription": "The bigger steps forward in Pastek Art: local-first, your own AI keys (BYOK), Drive backup, prompts and free access — without the everyday small fixes."
+  },
+  "notFound": {
+    "aria": "Page not found",
+    "code": "Error 404",
+    "title": "This page doesn't exist",
+    "body": "The link may be wrong, or the page has moved. No worries: your next creative ritual is one click away.",
+    "cta": "Open the exercise generator →",
+    "ctaLabel": "Open the exercise generator",
+    "home": "Home",
+    "examples": "Examples",
+    "seoTitle": "Page not found | Pastek Art",
+    "screenTitle": "Page not found"
+  },
+  "auth": {
+    "connecting": "Signing you in…",
+    "failedTitle": "Sign-in",
+    "failedBody": "Sign-in didn't go through. Try again with Google, or ask for a new magic link.",
+    "errorTitle": "Sign-in failed",
+    "backToSettings": "Head back to Settings to reconnect."
+  }
+}

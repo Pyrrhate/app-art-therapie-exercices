@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/Button";
 import { showAlert } from "@/lib/alert";
 import { signInWithMagicLink, signInWithOAuth } from "@/lib/supabase/auth";
@@ -29,6 +30,7 @@ interface AuthModalProps {
 type Step = "form" | "magic-link-sent";
 
 export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
+  const { t } = useTranslation("app");
   const isDark = useIsDark();
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<Step>("form");
@@ -51,7 +53,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
   async function handleMagicLink() {
     const trimmed = email.trim();
     if (!trimmed.includes("@")) {
-      showAlert("Email invalide", "Entrez une adresse email valide.");
+      showAlert(t("auth.invalidEmailTitle"), t("auth.invalidEmailBody"));
       return;
     }
 
@@ -60,7 +62,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
       await signInWithMagicLink(trimmed);
       setStep("magic-link-sent");
     } catch (error) {
-      showAlert("Lien magique", formatAuthError(error, "email"));
+      showAlert(t("auth.magicLinkAlertTitle"), formatAuthError(error, "email"));
     } finally {
       setBusy(null);
     }
@@ -73,7 +75,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
       onSuccess?.();
       onClose();
     } catch (error) {
-      showAlert("Connexion", formatAuthError(error, provider));
+      showAlert(t("auth.signInAlertTitle"), formatAuthError(error, provider));
     } finally {
       setBusy(null);
     }
@@ -110,13 +112,17 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
             <View className="flex-row justify-between items-start mb-4">
               <View className="flex-1 pr-4">
                 <Text className="text-xs uppercase tracking-widest text-sage-500 mb-1">
-                  Compte Pastek Art
+                  {t("auth.brand")}
                 </Text>
                 <Text className={`font-display text-xl ${textPrimary(isDark)}`}>
-                  Sécurisez votre Fil créatif
+                  {t("auth.title")}
                 </Text>
               </View>
-              <Pressable onPress={onClose} hitSlop={12} accessibilityLabel="Fermer">
+              <Pressable
+                onPress={onClose}
+                hitSlop={12}
+                accessibilityLabel={t("auth.close")}
+              >
                 <Text className={`text-lg ${textMuted(isDark)}`}>×</Text>
               </Pressable>
             </View>
@@ -124,12 +130,13 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
             {step === "magic-link-sent" ? (
               <View className="gap-4">
                 <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-                  Un lien de connexion a été envoyé à{" "}
-                  <Text className="font-medium">{email.trim()}</Text>. Ouvrez-le
-                  sur cet appareil pour activer votre compte et synchroniser
-                  votre historique.
+                  {t("auth.magicLinkSent", { email: email.trim() })}
                 </Text>
-                <PrimaryButton label="Fermer" onPress={onClose} variant="ghost" />
+                <PrimaryButton
+                  label={t("auth.close")}
+                  onPress={onClose}
+                  variant="ghost"
+                />
               </View>
             ) : (
               <View className="gap-4">
@@ -140,13 +147,12 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                 ) : (
                   <>
                 <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-                  Connexion sans mot de passe. Vos traces restent sur l&apos;appareil
-                  jusqu&apos;à la première synchronisation.
+                  {t("auth.intro")}
                 </Text>
 
                 <View>
                   <Text className={`text-xs mb-2 ${textMuted(isDark)}`}>
-                    Email — lien magique
+                    {t("auth.emailLabel")}
                   </Text>
                   <TextInput
                     value={email}
@@ -154,7 +160,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
-                    placeholder="vous@exemple.fr"
+                    placeholder={t("auth.emailPlaceholder")}
                     placeholderTextColor={isDark ? "#8A8078" : "#B8A090"}
                     className={`rounded-2xl border px-4 py-3 text-base ${
                       isDark
@@ -165,7 +171,9 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                 </View>
 
                 <PrimaryButton
-                  label={busy === "email" ? "Envoi…" : "Recevoir le lien magique"}
+                  label={
+                    busy === "email" ? t("auth.sending") : t("auth.sendLink")
+                  }
                   onPress={() => void handleMagicLink()}
                   disabled={busy !== null}
                 />
@@ -174,7 +182,9 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                   <View
                     className={`flex-1 h-px ${isDark ? "bg-sand-700" : "bg-sand-200"}`}
                   />
-                  <Text className={`text-xs ${textMuted(isDark)}`}>ou</Text>
+                  <Text className={`text-xs ${textMuted(isDark)}`}>
+                    {t("auth.or")}
+                  </Text>
                   <View
                     className={`flex-1 h-px ${isDark ? "bg-sand-700" : "bg-sand-200"}`}
                   />
@@ -182,14 +192,14 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
 
                 <View className="gap-3">
                   <OAuthButton
-                    label="Continuer avec Google"
+                    label={t("auth.continueGoogle")}
                     busy={busy === "google"}
                     disabled={busy !== null && busy !== "google"}
                     onPress={() => void handleOAuth("google")}
                     isDark={isDark}
                   />
                   <OAuthButton
-                    label="Continuer avec Microsoft"
+                    label={t("auth.continueMicrosoft")}
                     busy={busy === "azure"}
                     disabled={busy !== null && busy !== "azure"}
                     onPress={() => void handleOAuth("azure")}
@@ -198,7 +208,7 @@ export function AuthModal({ visible, onClose, onSuccess }: AuthModalProps) {
                 </View>
 
                 <Text className={`text-xs text-center leading-5 ${textMuted(isDark)}`}>
-                  Gratuit · sans carte bancaire · sans engagement
+                  {t("auth.footer")}
                 </Text>
                   </>
                 )}

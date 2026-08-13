@@ -2,20 +2,20 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 import Head from "expo-router/head";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { ExamplesIndexPage } from "@/components/examples/ExamplesIndexPage";
 import { ExamplesShell } from "@/components/examples/ExamplesShell";
-import { PASTEK_EXAMPLES } from "@/lib/examples/catalog";
+import { getExamples } from "@/lib/examples/catalog";
+import { useLanguageStore } from "@/lib/i18n/languageStore";
 import { ROUTES } from "@/lib/routes";
-
-const SEO_TITLE =
-  "Exemples d'exercices créatifs — parcours peinture, écriture, créativité | Pastek Art";
-
-const SEO_DESCRIPTION =
-  "Découvrez des exemples concrets du générateur Pastek Art : impulsion, consigne IA, création guidée et réflexion bienveillante. Inspirez-vous avant votre premier rituel créatif.";
 
 const CANONICAL = "https://pastek-art.eu/exemples";
 
 export default function ExamplesIndexScreen() {
+  const { t } = useTranslation("examples");
+  const language = useLanguageStore((s) => s.language);
+  const examples = getExamples(language);
+
   useEffect(() => {
     if (Platform.OS !== "web") {
       router.replace(ROUTES.home);
@@ -26,19 +26,22 @@ export default function ExamplesIndexScreen() {
     return null;
   }
 
+  const seoTitle = t("index.seoTitle");
+  const seoDescription = t("index.seoDescription");
+
   return (
     <>
       <Head>
-        <title>{SEO_TITLE}</title>
-        <meta name="description" content={SEO_DESCRIPTION} />
-        <meta property="og:title" content={SEO_TITLE} />
-        <meta property="og:description" content={SEO_DESCRIPTION} />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
         <meta property="og:type" content="website" />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={CANONICAL} />
       </Head>
       <ExamplesShell>
-        <ExamplesIndexPage examples={PASTEK_EXAMPLES} />
+        <ExamplesIndexPage examples={examples} />
       </ExamplesShell>
     </>
   );

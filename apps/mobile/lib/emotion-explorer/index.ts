@@ -1,6 +1,8 @@
 export {
-  EMOTION_QUADRANTS,
-  EMOTIONS,
+  EMOTION_CATALOG,
+  EMOTION_QUADRANT_CATALOG,
+  getEmotionQuadrants,
+  getEmotions,
   getEmotionsForQuadrant,
   getQuadrant,
   searchEmotions,
@@ -11,4 +13,7 @@ export type {
   EmotionExplorerPhase,
   EmotionQuadrant,
   EmotionQuadrantId,
+  LocalizedEmotion,
+  LocalizedEmotionQuadrant,
+  LocalizedText,
 } from "./types";

@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+
 export function buildLocalNuanceMirror(payload: {
   colors: Array<{ label: string }>;
   harmonyName?: string;
@@ -7,10 +9,10 @@ export function buildLocalNuanceMirror(payload: {
   const harmony = payload.harmonyName?.trim();
 
   if (harmony && names) {
-    return `« ${harmony} » réunit ${names} — laissez cette harmonie infuser votre geste sans chercher la perfection.`;
+    return i18n.t("amorces:nuanceFinder.mirror.named", { harmony, names });
   }
   if (names) {
-    return `Vos teintes (${names}) forment une carte intérieure — accueillez ce que ces nuances éveillent en vous.`;
+    return i18n.t("amorces:nuanceFinder.mirror.tones", { names });
   }
-  return "Votre grille révèle un paysage chromatique singulier — laissez ces nuances guider votre prochain geste.";
+  return i18n.t("amorces:nuanceFinder.mirror.empty");
 }

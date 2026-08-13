@@ -1,32 +1,16 @@
 import { Text, TextInput, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { IntegrationAnswers } from "@/lib/experience/types";
 import { textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
 const QUESTIONS: {
   key: keyof IntegrationAnswers;
-  label: string;
-  placeholder: string;
   required: boolean;
 }[] = [
-  {
-    key: "resonance",
-    label: "Ce qui résonne",
-    placeholder: "Qu'est-ce qui résonne en vous après cette réflexion ?",
-    required: true,
-  },
-  {
-    key: "intention",
-    label: "Intention pour la suite",
-    placeholder: "Quelle est votre intention pour la suite de cette journée ?",
-    required: true,
-  },
-  {
-    key: "keeper",
-    label: "À garder précieusement (optionnel)",
-    placeholder: "Y a-t-il un mot, une image ou une sensation à emporter ?",
-    required: false,
-  },
+  { key: "resonance", required: true },
+  { key: "intention", required: true },
+  { key: "keeper", required: false },
 ];
 
 interface IntegrationQuestionnaireStepProps {
@@ -39,6 +23,7 @@ export function IntegrationQuestionnaireStep({
   onChange,
 }: IntegrationQuestionnaireStepProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("ritual");
   const inputClass = `border rounded-2xl px-4 py-3 text-base min-h-[80px] ${
     isDark
       ? "border-sand-600 bg-sand-800 text-sand-100"
@@ -48,30 +33,34 @@ export function IntegrationQuestionnaireStep({
   return (
     <View accessibilityRole="form" className="gap-5">
       <Text className={`text-base leading-7 ${textSecondary(isDark)}`}>
-        Prenez un moment pour intégrer ce que vous venez de recevoir. Ces mots clôturent
-        votre séance en douceur.
+        {t("integration.intro")}
       </Text>
 
-      {QUESTIONS.map((q) => (
-        <View key={q.key} className="gap-2">
-          <Text className={`text-sm font-medium ${textPrimary(isDark)}`}>
-            {q.label}
-            {!q.required ? (
-              <Text className={`font-normal ${textSecondary(isDark)}`}> (optionnel)</Text>
-            ) : null}
-          </Text>
-          <TextInput
-            value={answers[q.key]}
-            onChangeText={(text) => onChange({ ...answers, [q.key]: text })}
-            placeholder={q.placeholder}
-            placeholderTextColor={isDark ? "#8A8478" : "#B8A090"}
-            multiline
-            textAlignVertical="top"
-            accessibilityLabel={q.placeholder}
-            className={inputClass}
-          />
-        </View>
-      ))}
+      {QUESTIONS.map((q) => {
+        const placeholder = t(`integration.${q.key}.placeholder`);
+        return (
+          <View key={q.key} className="gap-2">
+            <Text className={`text-sm font-medium ${textPrimary(isDark)}`}>
+              {t(`integration.${q.key}.label`)}
+              {!q.required ? (
+                <Text className={`font-normal ${textSecondary(isDark)}`}>
+                  {t("integration.optional")}
+                </Text>
+              ) : null}
+            </Text>
+            <TextInput
+              value={answers[q.key]}
+              onChangeText={(text) => onChange({ ...answers, [q.key]: text })}
+              placeholder={placeholder}
+              placeholderTextColor={isDark ? "#8A8478" : "#B8A090"}
+              multiline
+              textAlignVertical="top"
+              accessibilityLabel={placeholder}
+              className={inputClass}
+            />
+          </View>
+        );
+      })}
     </View>
   );
 }

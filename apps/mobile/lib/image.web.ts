@@ -1,5 +1,6 @@
 import type { ImagePickerAsset } from "expo-image-picker";
 import type { ImagePickerOptions } from "expo-image-picker";
+import i18n from "@/lib/i18n";
 import {
   assertSourceSize,
   type CompressTarget,
@@ -245,7 +246,10 @@ async function compressSource(
     }
 
     throw new ImageTooLargeError(
-      `Impossible de réduire sous ${formatImageSize(target.maxBytes)} (actuel : ${formatImageSize(getImageByteSize(last))}).`
+      i18n.t("common:imageErrors.tooLargeDetail", {
+        max: formatImageSize(target.maxBytes),
+        current: formatImageSize(getImageByteSize(last)),
+      })
     );
   } finally {
     releaseSource(source);

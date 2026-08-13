@@ -7,6 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
@@ -37,6 +38,7 @@ function buildHistory(turns: PingPongTurn[]): string[] {
 }
 
 export default function PingPongScreen() {
+  const { t } = useTranslation("amorces");
   const scrollRef = useRef<ScrollView>(null);
   const [turns, setTurns] = useState<PingPongTurn[]>([]);
   const [input, setInput] = useState("");
@@ -57,7 +59,7 @@ export default function PingPongScreen() {
     filRecordedRef.current = true;
     void recordFilEntry({
       source: "ping-pong",
-      summary: "Amorce ping-pong",
+      summary: t("pingPong.filSummary"),
       detail: chain,
       metadata: { chain },
     });
@@ -113,8 +115,8 @@ export default function PingPongScreen() {
       appendPartnerReply(word, history);
       if (!(error instanceof ApiError)) {
         showAlert(
-          "Suggestion indisponible",
-          "Des mots locaux prennent le relais — vous pouvez continuer l'amorce."
+          t("pingPong.suggestionUnavailableTitle"),
+          t("pingPong.suggestionUnavailableBody")
         );
       }
     } finally {
@@ -154,7 +156,7 @@ export default function PingPongScreen() {
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Un mot…"
+                placeholder={t("pingPong.inputPlaceholder")}
                 placeholderTextColor="#B8A090"
                 onSubmitEditing={handleSubmit}
                 returnKeyType="send"
@@ -164,21 +166,28 @@ export default function PingPongScreen() {
               <Pressable
                 onPress={handleSubmit}
                 disabled={!input.trim() || loading}
+                accessibilityRole="button"
+                accessibilityLabel={t("pingPong.sendWord")}
                 className={`rounded-2xl px-4 py-3 ${input.trim() && !loading ? "bg-sage-500" : "bg-sand-200"}`}
               >
                 <Text className="text-white font-medium">→</Text>
               </Pressable>
             </View>
             <Text className="text-sand-400 text-xs text-center">
-              Étape {currentStep} / {PING_PONG_TOTAL_STEPS}
-              {currentStep % 2 === 1 ? " · votre tour" : " · réponse IA"}
+              {t("pingPong.step", {
+                current: currentStep,
+                total: PING_PONG_TOTAL_STEPS,
+              })}
+              {currentStep % 2 === 1
+                ? t("pingPong.yourTurn")
+                : t("pingPong.aiTurn")}
             </Text>
           </>
         )}
 
         {canExitToExercise && (
           <PrimaryButton
-            label="Passer à l'exercice"
+            label={t("pingPong.toExercise")}
             onPress={handleCreateFromJourney}
             variant="ghost"
             align="center"
@@ -193,12 +202,12 @@ export default function PingPongScreen() {
       scrollRef={scrollRef}
       fixedHeader={
         <View>
-          <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
+          <ScreenNavBar backLabel={t("nav.home")} onBack={navigateHome} />
           <PastekScreenHero
-            label="Ping-Pong créatif"
-            title="Laissez les mots "
-            accent="danser"
-            description="5 étapes en alternance : vous, puis l'IA (mot logique + idée suggérée), et ainsi de suite."
+            label={t("pingPong.heroLabel")}
+            title={t("pingPong.heroTitle")}
+            accent={t("pingPong.heroAccent")}
+            description={t("pingPong.heroDescription")}
             className="mb-3"
           />
           <View className="flex-row items-center gap-2 mt-1 mb-2">
@@ -218,12 +227,12 @@ export default function PingPongScreen() {
                   useAiSuggestions ? "text-sage-700" : "text-sand-500"
                 }`}
               >
-                Suggestions IA
+                {t("pingPong.aiSuggestions")}
               </Text>
             </Pressable>
             {useAiSuggestions && usingLocalWords && (
               <Text className="text-amber-700 text-xs">
-                Mots locaux — connexion indisponible.
+                {t("pingPong.localWords")}
               </Text>
             )}
           </View>
@@ -235,8 +244,7 @@ export default function PingPongScreen() {
         {turns.length === 0 && (
           <View className="bg-white/80 rounded-2xl border border-dashed border-sand-300 px-5 py-8 items-center">
             <Text className="text-sand-400 text-center leading-6">
-              Tapez un premier mot — un arbre, une couleur, un ressenti…
-              L&apos;IA répondra par un mot logique et une idée suggérée.
+              {t("pingPong.emptyHint")}
             </Text>
           </View>
         )}
@@ -249,7 +257,7 @@ export default function PingPongScreen() {
             {turn.from === "ai" ? (
               <View className="bg-white border border-sand-200 rounded-2xl px-4 py-3">
                 <Text className="text-sage-600 text-[10px] uppercase tracking-wider mb-2">
-                  Mot logique · idée suggérée
+                  {t("pingPong.aiTurnLabel")}
                 </Text>
                 <Text className="text-sand-800 text-lg font-light tracking-wide">
                   {turn.logicalWord ?? turn.word}
@@ -284,17 +292,17 @@ export default function PingPongScreen() {
           <>
             <View className="bg-white rounded-2xl border border-sage-500/30 px-5 py-5 mt-2">
               <Text className="text-sand-700 font-medium mb-2">
-                Votre cheminement
+                {t("pingPong.chainTitle")}
               </Text>
               <Text className="text-sand-600 text-sm leading-6">{chain}</Text>
             </View>
 
             <CreativeBridge
-              title="Votre impulsion est prête"
-              subtitle="Transformez cette chaîne de mots en matière, couleur ou geste — l'exercice vous attend."
+              title={t("pingPong.bridgeTitle")}
+              subtitle={t("pingPong.bridgeSubtitle")}
               actions={[
                 {
-                  label: "Passer à l'exercice",
+                  label: t("pingPong.toExercise"),
                   onPress: handleCreateFromJourney,
                   variant: "primary",
                 },

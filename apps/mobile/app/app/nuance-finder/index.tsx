@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { NuanceFinder } from "@/components/nuance-finder/NuanceFinder";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { ScreenContainer } from "@/components/ui/Button";
@@ -6,15 +6,17 @@ import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { navigateHome } from "@/lib/navigation";
 
 export default function NuanceFinderScreen() {
+  const { t } = useTranslation("amorces");
+
   return (
     <ScreenContainer scrollable refreshable contentMaxWidth={720} compactTop>
-      <ScreenNavBar backLabel="← Retour" onBack={navigateHome} />
+      <ScreenNavBar backLabel={t("nav.back")} onBack={navigateHome} />
 
       <PastekScreenHero
-        label="Le Chercheur de Nuances"
-        title={"Affiner le regard,\n"}
-        accent="puis créer"
-        description="Découvrez terre, feu et eau cachés dans la grille — nommez votre harmonie, puis choisissez rituel ou exercice."
+        label={t("nuanceFinder.heroLabel")}
+        title={t("nuanceFinder.heroTitle")}
+        accent={t("nuanceFinder.heroAccent")}
+        description={t("nuanceFinder.heroDescription")}
         className="mb-8"
       />
 

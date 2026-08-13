@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { FilConversionCTA } from "@/components/fil/FilConversionCTA";
 import { FilMasonry } from "@/components/fil/FilMasonry";
 import { FilTagChip } from "@/components/fil/FilTagChip";
@@ -8,7 +9,7 @@ import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
-import { getTechniqueLabel } from "@/constants";
+import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import {
   clearFilEntries,
   FIL_MAX_ENTRIES,
@@ -17,7 +18,7 @@ import {
 } from "@/lib/fil/storage";
 import { confirmClearAllFil } from "@/lib/fil/deleteConfirm";
 import { collectFilterTags, entryMatchesTag } from "@/lib/fil/tags";
-import { FIL_SOURCE_META, type FilEntry } from "@/lib/fil/types";
+import { getFilSourceLabel, type FilEntry } from "@/lib/fil/types";
 import { analyzeFilSelection, ApiError } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
 import { navigateHome } from "@/lib/navigation";
@@ -30,6 +31,7 @@ const MAX_FIL_ANALYSIS = 5;
 
 export default function FilScreen() {
   const isDark = useIsDark();
+  const { t } = useTranslation("fil");
   const [entries, setEntries] = useState<FilEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -67,11 +69,10 @@ export default function FilScreen() {
         return false;
       }
       if (!q) return true;
-      const meta = FIL_SOURCE_META[entry.source];
       const haystack = [
         entry.summary,
         entry.detail,
-        meta.label,
+        getFilSourceLabel(entry.source, t),
         entry.metadata?.impulse,
         entry.metadata?.reflection,
         ...(entry.tags ?? []),
@@ -83,7 +84,7 @@ export default function FilScreen() {
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [entries, query, tagFilter]);
+  }, [entries, query, tagFilter, t]);
 
   const nearLimit = entries.length >= FIL_NEAR_LIMIT_THRESHOLD;
 
@@ -102,8 +103,8 @@ export default function FilScreen() {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
       if (prev.length >= MAX_FIL_ANALYSIS) {
         showAlert(
-          "Sélection",
-          `Vous pouvez analyser au maximum ${MAX_FIL_ANALYSIS} traces.`
+          t("alerts.selectionTitle"),
+          t("alerts.selectionMax", { max: MAX_FIL_ANALYSIS })
         );
         return prev;
       }
@@ -131,7 +132,7 @@ export default function FilScreen() {
           detail: e.detail,
           impulse: e.metadata?.impulse,
           technique: e.metadata?.technique
-            ? getTechniqueLabel(e.metadata.technique)
+            ? localizedTechniqueLabel(e.metadata.technique)
             : undefined,
           reflection: e.metadata?.reflection,
           exercise: e.metadata?.exercise,
@@ -140,19 +141,18 @@ export default function FilScreen() {
       setAnalysisResult(result.reflection);
       if (result.source === "fallback") {
         showAlert(
-          "Analyse",
-          result.analysisNote ??
-            "Analyse en mode secours — vérifiez votre clé IA."
+          t("alerts.analysisTitle"),
+          result.analysisNote ?? t("alerts.analysisFallback")
         );
       }
     } catch (error) {
       showAlert(
-        "Analyse impossible",
+        t("alerts.analysisFailedTitle"),
         error instanceof ApiError
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Réessayez dans un instant."
+            : t("alerts.retry")
       );
     } finally {
       setAnalyzing(false);
@@ -161,25 +161,24 @@ export default function FilScreen() {
 
   return (
     <ScreenContainer scrollable refreshable onRefresh={load} compactTop>
-      <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
+      <ScreenNavBar backLabel={t("nav.backHome")} onBack={navigateHome} />
 
       <PastekScreenHero
-        label="Fil créatif"
-        title="Mosaïque de vos "
-        accent="pratiques"
-        description="Vue visuelle — photos, couleurs, tags. Opt-in, sur cet appareil."
+        label={t("list.heroLabel")}
+        title={t("list.heroTitle")}
+        accent={t("list.heroAccent")}
+        description={t("list.heroDescription")}
         className="mb-6"
       />
 
       {loading ? (
-        <Text className={textMuted(isDark)}>Chargement…</Text>
+        <Text className={textMuted(isDark)}>{t("list.loading")}</Text>
       ) : entries.length === 0 ? (
         <View
           className={`rounded-3xl border border-dashed px-5 py-10 items-center ${panelBg(isDark)}`}
         >
           <Text className={`text-center leading-6 ${textMuted(isDark)}`}>
-            Rien ici pour l&apos;instant. Terminez un exercice ou une amorce — une
-            trace s&apos;ajoutera toute seule.
+            {t("list.empty")}
           </Text>
           {showDriveCta ? (
             <View className="mt-6 w-full">
@@ -188,11 +187,11 @@ export default function FilScreen() {
           ) : null}
           <View className="mt-6 w-full gap-3">
             <PrimaryButton
-              label="Préparer un exercice"
+              label={t("list.prepareExercise")}
               onPress={() => router.push(ROUTES.ritual)}
             />
             <PrimaryButton
-              label="Retour à l'accueil"
+              label={t("list.backHome")}
               onPress={navigateHome}
               variant="ghost"
             />
@@ -203,15 +202,19 @@ export default function FilScreen() {
           {nearLimit ? (
             <View className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-1">
               <Text className="text-amber-800 text-sm leading-5">
-                {entries.length} / {FIL_MAX_ENTRIES} traces — la plus ancienne sera
-                retirée automatiquement au prochain ajout.
+                {t("list.nearLimit", {
+                  used: entries.length,
+                  max: FIL_MAX_ENTRIES,
+                })}
               </Text>
             </View>
           ) : null}
 
           <PrimaryButton
             label={
-              selectMode ? "Annuler la sélection" : "Analyser le Fil (max 5)"
+              selectMode
+                ? t("list.selectCancel")
+                : t("list.selectStart", { max: MAX_FIL_ANALYSIS })
             }
             onPress={() => {
               setSelectMode((v) => !v);
@@ -223,15 +226,17 @@ export default function FilScreen() {
 
           {selectMode ? (
             <Text className={`text-xs mb-1 ${textMuted(isDark)}`}>
-              Sélectionnez jusqu&apos;à {MAX_FIL_ANALYSIS} traces (
-              {selectedIds.length}/{MAX_FIL_ANALYSIS}).
+              {t("list.selectHint", {
+                max: MAX_FIL_ANALYSIS,
+                used: selectedIds.length,
+              })}
             </Text>
           ) : null}
 
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Rechercher…"
+            placeholder={t("list.searchPlaceholder")}
             placeholderTextColor={isDark ? "#8A8078" : "#B8A090"}
             className={`rounded-2xl border px-4 py-3 text-base ${
               isDark
@@ -242,7 +247,7 @@ export default function FilScreen() {
 
           <View className="flex-row flex-wrap gap-2">
             <FilTagChip
-              label="Tout"
+              label={t("list.filterAll")}
               active={tagFilter === "all"}
               onPress={() => setTagFilter("all")}
             />
@@ -260,7 +265,7 @@ export default function FilScreen() {
 
           {filtered.length === 0 ? (
             <Text className={`text-sm text-center py-6 ${textMuted(isDark)}`}>
-              Aucune trace ne correspond.
+              {t("list.noMatch")}
             </Text>
           ) : (
             <>
@@ -283,10 +288,8 @@ export default function FilScreen() {
               <PrimaryButton
                 label={
                   analyzing
-                    ? "Analyse en cours…"
-                    : `Analyser ${selectedIds.length || ""} trace${
-                        selectedIds.length > 1 ? "s" : ""
-                      }`
+                    ? t("list.analyzeBusy")
+                    : t("list.analyze", { count: selectedIds.length })
                 }
                 onPress={() => void handleAnalyzeSelection()}
                 disabled={analyzing || selectedIds.length === 0}
@@ -296,7 +299,7 @@ export default function FilScreen() {
                   <Text
                     className={`text-xs uppercase tracking-wider mb-2 ${textMuted(isDark)}`}
                   >
-                    Lecture croisée
+                    {t("list.crossReading")}
                   </Text>
                   <ProgressiveReflection reflection={analysisResult} />
                 </View>
@@ -310,11 +313,11 @@ export default function FilScreen() {
             }`}
           >
             <PrimaryButton
-              label="Préparer un exercice"
+              label={t("list.prepareExercise")}
               onPress={() => router.push(ROUTES.ritual)}
             />
             <PrimaryButton
-              label="Effacer tout le Fil…"
+              label={t("list.clearAll")}
               onPress={() => void handleClear()}
               variant="ghost"
             />

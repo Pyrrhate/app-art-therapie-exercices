@@ -1,39 +1,41 @@
 import { hexToRgb, lerpRgb, rgbToHex, type Rgb } from "@/lib/nuance-finder/colors";
+import type { LocalizedText } from "@/lib/i18n/types";
+import { pickLocalized } from "@/lib/i18n/localize";
 
 export type PaintPrimaryId = "red" | "yellow" | "blue";
 export type PaintSecondaryId = "orange" | "green" | "violet";
 
 export interface PaintSwatch {
   id: string;
-  label: string;
+  label: LocalizedText;
   hex: string;
   rgb: Rgb;
   hue: number;
 }
 
 export interface MixRecipe {
-  parts: string;
-  description: string;
+  parts: LocalizedText;
+  description: LocalizedText;
 }
 
 export const RYB_PRIMARIES: PaintSwatch[] = [
   {
     id: "red",
-    label: "Rouge",
+    label: { fr: "Rouge", en: "Red" },
     hex: "#D62828",
     rgb: { r: 214, g: 40, b: 40 },
     hue: 0,
   },
   {
     id: "yellow",
-    label: "Jaune",
+    label: { fr: "Jaune", en: "Yellow" },
     hex: "#F4A825",
     rgb: { r: 244, g: 168, b: 37 },
     hue: 42,
   },
   {
     id: "blue",
-    label: "Bleu",
+    label: { fr: "Bleu", en: "Blue" },
     hex: "#1D6AA5",
     rgb: { r: 29, g: 106, b: 165 },
     hue: 210,
@@ -46,7 +48,7 @@ const PRIMARY_BY_ID = Object.fromEntries(
 
 export interface SecondaryDef {
   id: PaintSecondaryId;
-  label: string;
+  label: LocalizedText;
   mix: [PaintPrimaryId, PaintPrimaryId];
   recipe: MixRecipe;
 }
@@ -54,29 +56,47 @@ export interface SecondaryDef {
 export const RYB_SECONDARIES: SecondaryDef[] = [
   {
     id: "orange",
-    label: "Orange",
+    label: { fr: "Orange", en: "Orange" },
     mix: ["red", "yellow"],
     recipe: {
-      parts: "1 part rouge + 1 part jaune",
-      description: "Mélangez progressivement le jaune dans le rouge sur la palette.",
+      parts: {
+        fr: "1 part rouge + 1 part jaune",
+        en: "1 part red + 1 part yellow",
+      },
+      description: {
+        fr: "Mélangez progressivement le jaune dans le rouge sur la palette.",
+        en: "Gradually mix yellow into the red on the palette.",
+      },
     },
   },
   {
     id: "green",
-    label: "Vert",
+    label: { fr: "Vert", en: "Green" },
     mix: ["yellow", "blue"],
     recipe: {
-      parts: "1 part jaune + 1 part bleu",
-      description: "Le bleu domine vite — ajoutez-le par petites touches au jaune.",
+      parts: {
+        fr: "1 part jaune + 1 part bleu",
+        en: "1 part yellow + 1 part blue",
+      },
+      description: {
+        fr: "Le bleu domine vite — ajoutez-le par petites touches au jaune.",
+        en: "Blue takes over quickly — add it to the yellow in small touches.",
+      },
     },
   },
   {
     id: "violet",
-    label: "Violet",
+    label: { fr: "Violet", en: "Violet" },
     mix: ["blue", "red"],
     recipe: {
-      parts: "1 part bleu + 1 part rouge",
-      description: "Un violet chaud si le rouge domine, froid si le bleu domine.",
+      parts: {
+        fr: "1 part bleu + 1 part rouge",
+        en: "1 part blue + 1 part red",
+      },
+      description: {
+        fr: "Un violet chaud si le rouge domine, froid si le bleu domine.",
+        en: "A warm violet if red dominates, cool if blue does.",
+      },
     },
   },
 ];
@@ -90,6 +110,13 @@ export function getSecondariesForPrimary(
   primaryId: PaintPrimaryId
 ): SecondaryDef[] {
   return RYB_SECONDARIES.filter((s) => s.mix.includes(primaryId));
+}
+
+export function paintLabel(
+  paint: { label: LocalizedText },
+  language?: import("@/lib/i18n/types").AppLanguage
+): string {
+  return pickLocalized(paint.label, language);
 }
 
 export function mixSecondaryHex(secondary: SecondaryDef): string {
@@ -111,10 +138,14 @@ export function mixTertiaryHex(
 export function tertiaryLabel(
   primaryId: PaintPrimaryId,
   secondaryId: PaintSecondaryId,
-  bias: "primary" | "secondary"
+  bias: "primary" | "secondary",
+  language?: import("@/lib/i18n/types").AppLanguage
 ): string {
-  const primary = PRIMARY_BY_ID[primaryId].label.toLowerCase();
-  const secondary = SECONDARY_BY_ID[secondaryId].label.toLowerCase();
+  const primary = paintLabel(PRIMARY_BY_ID[primaryId], language).toLowerCase();
+  const secondary = paintLabel(
+    SECONDARY_BY_ID[secondaryId],
+    language
+  ).toLowerCase();
   return bias === "primary"
     ? `${primary}-${secondary}`
     : `${secondary}-${primary}`;
@@ -129,14 +160,18 @@ export function inferPrimaryFromHue(hue: number): PaintPrimaryId {
   return distances[0]!.id;
 }
 
-export function getDimensionLabel(dimensionId: string): string {
-  const labels: Record<string, string> = {
-    primary: "Primaire",
-    secondary: "Secondaire",
-    tertiary: "Tertiaire",
-    anchor: "Primaire",
-    complement: "Secondaire",
-    closure: "Tertiaire",
+export function getDimensionLabel(
+  dimensionId: string,
+  language?: import("@/lib/i18n/types").AppLanguage
+): string {
+  const labels: Record<string, LocalizedText> = {
+    primary: { fr: "Primaire", en: "Primary" },
+    secondary: { fr: "Secondaire", en: "Secondary" },
+    tertiary: { fr: "Tertiaire", en: "Tertiary" },
+    anchor: { fr: "Primaire", en: "Primary" },
+    complement: { fr: "Secondaire", en: "Secondary" },
+    closure: { fr: "Tertiaire", en: "Tertiary" },
   };
-  return labels[dimensionId] ?? dimensionId;
+  const text = labels[dimensionId];
+  return text ? pickLocalized(text, language) : dimensionId;
 }

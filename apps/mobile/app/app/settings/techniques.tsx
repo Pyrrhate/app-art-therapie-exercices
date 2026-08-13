@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
 import { Pressable, Switch, Text, TextInput, View } from "react-native";
 import { useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   ARTISTIC_TECHNIQUES,
-  TECHNIQUE_LABELS,
   isAiAnalysisSupported,
   type ArtisticTechnique,
 } from "@art-therapie/shared";
@@ -20,6 +20,7 @@ import {
   type CustomTechnique,
   type ManagedTechniquesState,
 } from "@/lib/techniques/managed";
+import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import {
   panelBg,
   textMuted,
@@ -30,6 +31,7 @@ import { useIsDark } from "@/lib/themeStore";
 
 export default function TechniquesSettingsScreen() {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
   const [state, setState] = useState<ManagedTechniquesState | null>(null);
   const [newLabel, setNewLabel] = useState("");
   const [mapsTo, setMapsTo] = useState<ArtisticTechnique>("mixed_media");
@@ -65,7 +67,10 @@ export default function TechniquesSettingsScreen() {
 
   async function handleAdd() {
     if (newLabel.trim().length < 2) {
-      showAlert("Technique", "Indiquez un nom d'au moins 2 caractères.");
+      showAlert(
+        t("techniquesPage.alertTitle"),
+        t("techniquesPage.nameTooShort")
+      );
       return;
     }
     setBusy(true);
@@ -80,8 +85,8 @@ export default function TechniquesSettingsScreen() {
       setNewLabel("");
     } catch (error) {
       showAlert(
-        "Technique",
-        error instanceof Error ? error.message : "Ajout impossible."
+        t("techniquesPage.alertTitle"),
+        error instanceof Error ? error.message : t("techniquesPage.addFailed")
       );
     } finally {
       setBusy(false);
@@ -94,8 +99,8 @@ export default function TechniquesSettingsScreen() {
       setState(await deleteCustomTechnique(tech.id));
     } catch (error) {
       showAlert(
-        "Technique",
-        error instanceof Error ? error.message : "Suppression impossible."
+        t("techniquesPage.alertTitle"),
+        error instanceof Error ? error.message : t("techniquesPage.deleteFailed")
       );
     } finally {
       setBusy(false);
@@ -105,25 +110,27 @@ export default function TechniquesSettingsScreen() {
   if (!state) {
     return (
       <ScreenContainer compactTop>
-        <ScreenNavBar backLabel="← Réglages" />
-        <Text className={textSecondary(isDark)}>Chargement…</Text>
+        <ScreenNavBar backLabel={t("nav.backSettings")} />
+        <Text className={textSecondary(isDark)}>
+          {t("techniquesPage.loading")}
+        </Text>
       </ScreenContainer>
     );
   }
 
   return (
     <ScreenContainer scrollable refreshable compactTop>
-      <ScreenNavBar backLabel="← Réglages" />
+      <ScreenNavBar backLabel={t("nav.backSettings")} />
       <PastekScreenHero
-        label="Techniques"
-        title="Gérer vos "
-        accent="techniques"
-        description="Désactivez celles que vous n'utilisez pas. Les techniques intégrées ne sont pas supprimables. Ajoutez les vôtres librement."
+        label={t("techniquesPage.heroLabel")}
+        title={t("techniquesPage.heroTitle")}
+        accent={t("techniquesPage.heroAccent")}
+        description={t("techniquesPage.heroDescription")}
         className="mb-6"
       />
 
       <Text className={`text-sm font-medium mb-3 ${textPrimary(isDark)}`}>
-        Techniques intégrées
+        {t("techniquesPage.builtinTitle")}
       </Text>
       <View className="gap-2 mb-8">
         {ARTISTIC_TECHNIQUES.map((id) => {
@@ -135,12 +142,12 @@ export default function TechniquesSettingsScreen() {
             >
               <View className="flex-1 pr-3">
                 <Text className={`font-medium ${textPrimary(isDark)}`}>
-                  {TECHNIQUE_LABELS[id]}
+                  {localizedTechniqueLabel(id)}
                 </Text>
                 <Text className={`text-xs mt-0.5 ${textMuted(isDark)}`}>
                   {isAiAnalysisSupported(id)
-                    ? "Analyse visuelle possible"
-                    : "Analyse via ressenti / clé IA"}
+                    ? t("techniquesPage.aiAnalysisYes")
+                    : t("techniquesPage.aiAnalysisNo")}
                 </Text>
               </View>
               <Switch
@@ -154,11 +161,11 @@ export default function TechniquesSettingsScreen() {
       </View>
 
       <Text className={`text-sm font-medium mb-3 ${textPrimary(isDark)}`}>
-        Techniques personnelles
+        {t("techniquesPage.customTitle")}
       </Text>
       {state.custom.length === 0 ? (
         <Text className={`text-sm mb-4 ${textSecondary(isDark)}`}>
-          Aucune technique perso pour l&apos;instant.
+          {t("techniquesPage.customEmpty")}
         </Text>
       ) : (
         <View className="gap-2 mb-4">
@@ -173,7 +180,9 @@ export default function TechniquesSettingsScreen() {
                     {tech.label}
                   </Text>
                   <Text className={`text-xs mt-0.5 ${textMuted(isDark)}`}>
-                    Basée sur {TECHNIQUE_LABELS[tech.mapsTo]}
+                    {t("techniquesPage.basedOn", {
+                      technique: localizedTechniqueLabel(tech.mapsTo),
+                    })}
                   </Text>
                 </View>
                 <Switch
@@ -184,7 +193,7 @@ export default function TechniquesSettingsScreen() {
               </View>
               <Pressable onPress={() => void handleDelete(tech)} disabled={busy}>
                 <Text className="text-red-500 text-xs font-medium">
-                  Supprimer
+                  {t("techniquesPage.delete")}
                 </Text>
               </Pressable>
             </View>
@@ -194,12 +203,12 @@ export default function TechniquesSettingsScreen() {
 
       <View className={`rounded-2xl border px-4 py-4 gap-3 mb-8 ${panelBg(isDark)}`}>
         <Text className={`font-medium ${textPrimary(isDark)}`}>
-          Ajouter une technique
+          {t("techniquesPage.addTitle")}
         </Text>
         <TextInput
           value={newLabel}
           onChangeText={setNewLabel}
-          placeholder="Ex. Aquarelle botanique"
+          placeholder={t("techniquesPage.addPlaceholder")}
           placeholderTextColor={isDark ? "#8A8478" : "#B8A090"}
           className={`border rounded-xl px-3 py-2 ${
             isDark
@@ -208,7 +217,9 @@ export default function TechniquesSettingsScreen() {
           }`}
         />
         <Text className={`text-xs ${textMuted(isDark)}`}>
-          Technique de base pour l&apos;IA : {TECHNIQUE_LABELS[mapsTo]}
+          {t("techniquesPage.baseTechnique", {
+            technique: localizedTechniqueLabel(mapsTo),
+          })}
         </Text>
         <View className="flex-row flex-wrap gap-2">
           {(["painting", "drawing", "writing", "mixed_media", "music", "video"] as ArtisticTechnique[]).map(
@@ -229,14 +240,14 @@ export default function TechniquesSettingsScreen() {
                     mapsTo === id ? "text-white" : textPrimary(isDark)
                   }`}
                 >
-                  {TECHNIQUE_LABELS[id]}
+                  {localizedTechniqueLabel(id)}
                 </Text>
               </Pressable>
             )
           )}
         </View>
         <PrimaryButton
-          label={busy ? "Ajout…" : "Ajouter"}
+          label={busy ? t("techniquesPage.adding") : t("techniquesPage.add")}
           onPress={() => void handleAdd()}
           disabled={busy}
         />

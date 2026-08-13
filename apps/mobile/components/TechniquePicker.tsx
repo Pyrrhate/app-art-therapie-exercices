@@ -3,6 +3,7 @@ import { HoverScale } from "@/components/emotion-explorer/HoverScale";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import type { TechniqueDefinition } from "@/constants";
 import type { ArtisticTechnique } from "@/lib/types";
+import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import { panelBg, textPrimary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -25,9 +26,12 @@ export function TechniquePicker({
   return (
     <View className="flex-row flex-wrap gap-2">
       {techniques.map((tech) => {
+        const label = localizedTechniqueLabel(tech.id, tech.label);
         const isSelected =
           selected === tech.id &&
-          (!selectedLabel || selectedLabel === tech.label);
+          (!selectedLabel ||
+            selectedLabel === tech.label ||
+            selectedLabel === label);
         const card = (
           <View
             className={`rounded-xl px-3 py-2 min-h-[68px] min-w-[92px] border justify-center ${
@@ -53,7 +57,7 @@ export function TechniquePicker({
                 isSelected ? "text-white" : textPrimary(isDark)
               }`}
             >
-              {tech.label}
+              {label}
             </Text>
           </View>
         );
@@ -65,7 +69,7 @@ export function TechniquePicker({
               onPress={() => onSelect(tech.id, tech.label)}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={tech.label}
+              accessibilityLabel={label}
               hoverScale={1.03}
             >
               {card}
@@ -79,7 +83,7 @@ export function TechniquePicker({
             onPress={() => onSelect(tech.id, tech.label)}
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
-            accessibilityLabel={tech.label}
+            accessibilityLabel={label}
           >
             {card}
           </Pressable>

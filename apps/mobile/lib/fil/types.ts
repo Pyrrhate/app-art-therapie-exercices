@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import type { PastekIconId } from "@/components/ui/ModuleIcon";
 import type { ArtisticTechnique } from "@/lib/types";
 
@@ -51,18 +52,32 @@ export interface FilEntry {
   syncedAt?: string;
 }
 
+/** `t` du namespace `fil` (hook ou i18n.getFixedT(lng, "fil")). */
+export type FilTranslator = TFunction<"fil">;
+
 export const FIL_SOURCE_META: Record<
   FilSource,
-  { label: string; icon: PastekIconId }
+  { labelKey: string; icon: PastekIconId }
 > = {
-  ritual: { label: "Rituel", icon: "ritual" },
-  mandala: { label: "Mandala", icon: "mandala" },
-  nuances: { label: "Nuances", icon: "nuance-finder" },
-  "ping-pong": { label: "Ping-Pong", icon: "ping-pong" },
-  "color-journey": { label: "Assistant palette", icon: "color-journey" },
-  "emotion-explorer": { label: "Explorateur émotionnel", icon: "emotion-explorer" },
-  "zen-garden": { label: "Jardin zen", icon: "zen-garden" },
+  ritual: { labelKey: "source.ritual", icon: "ritual" },
+  mandala: { labelKey: "source.mandala", icon: "mandala" },
+  nuances: { labelKey: "source.nuances", icon: "nuance-finder" },
+  "ping-pong": { labelKey: "source.ping-pong", icon: "ping-pong" },
+  "color-journey": { labelKey: "source.color-journey", icon: "color-journey" },
+  "emotion-explorer": {
+    labelKey: "source.emotion-explorer",
+    icon: "emotion-explorer",
+  },
+  "zen-garden": { labelKey: "source.zen-garden", icon: "zen-garden" },
 };
+
+/** Libellé traduit de la source d'une trace (namespace `fil`). */
+export function getFilSourceLabel(
+  source: FilSource,
+  t: FilTranslator
+): string {
+  return t(FIL_SOURCE_META[source].labelKey);
+}
 
 export function isRitualFilEntry(entry: FilEntry): boolean {
   return (

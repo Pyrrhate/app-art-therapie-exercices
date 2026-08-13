@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/constants";
+import i18n from "@/lib/i18n";
 import type { SavedSession } from "@/lib/types";
 import type { FilEntry } from "./types";
 
@@ -92,7 +93,7 @@ function sessionToFilEntry(session: SavedSession): FilEntry {
     id: session.id,
     createdAt: session.createdAt,
     source: "ritual",
-    summary: session.impulse || "Rituel créatif",
+    summary: session.impulse || i18n.t("fil:defaults.ritualTitle"),
     detail: session.reflection?.slice(0, 280),
     metadata: {
       impulse: session.impulse,

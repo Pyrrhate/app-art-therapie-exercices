@@ -1,4 +1,5 @@
 import { Platform, Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/Card";
 import {
   MEDIA_TYPE_CONFIG,
@@ -15,21 +16,33 @@ interface MediaSelectorStepProps {
 
 export function MediaSelectorStep({ selected, onSelect }: MediaSelectorStepProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("ritual");
 
   return (
     <View
       accessibilityRole="radiogroup"
-      accessibilityLabel="Choisir un type d'expression"
+      accessibilityLabel={t("multimodal.selectorA11y")}
       className="gap-4"
     >
       <Text className={`text-base leading-7 mb-2 ${textSecondary(isDark)}`}>
-        Comment souhaitez-vous exprimer ce que vous venez de vivre ? Choisissez le
-        canal qui correspond le mieux à votre création.
+        {t("multimodal.selectorIntro")}
       </Text>
 
       {MEDIA_TYPE_ORDER.map((type) => {
         const config = MEDIA_TYPE_CONFIG[type];
         const isSelected = selected === type;
+        const title = t(`multimodal.media.${type}.title`, {
+          defaultValue: config.title,
+        });
+        const subtitle = t(`multimodal.media.${type}.subtitle`, {
+          defaultValue: config.subtitle,
+        });
+        const examples = t(`multimodal.media.${type}.examples`, {
+          defaultValue: config.examples,
+        });
+        const iconLabel = t(`multimodal.media.${type}.iconLabel`, {
+          defaultValue: config.iconLabel,
+        });
 
         return (
           <Pressable
@@ -37,7 +50,7 @@ export function MediaSelectorStep({ selected, onSelect }: MediaSelectorStepProps
             onPress={() => onSelect(type)}
             accessibilityRole="radio"
             accessibilityState={{ selected: isSelected }}
-            accessibilityLabel={`${config.title} — ${config.subtitle}`}
+            accessibilityLabel={`${title} — ${subtitle}`}
             className="active:opacity-90"
           >
             <Card
@@ -48,20 +61,20 @@ export function MediaSelectorStep({ selected, onSelect }: MediaSelectorStepProps
             >
               <View className="flex-row items-start gap-4">
                 <Text
-                  accessibilityLabel={config.iconLabel}
+                  accessibilityLabel={iconLabel}
                   className="text-sage-500 text-3xl leading-none mt-0.5"
                 >
                   {config.icon}
                 </Text>
                 <View className="flex-1 gap-1">
                   <Text className={`font-semibold text-base ${textPrimary(isDark)}`}>
-                    {config.title}
+                    {title}
                   </Text>
                   <Text className={`text-sm ${textSecondary(isDark)}`}>
-                    {config.subtitle}
+                    {subtitle}
                   </Text>
                   <Text className={`text-xs mt-1 ${textMuted(isDark)}`}>
-                    {config.examples}
+                    {examples}
                   </Text>
                 </View>
               </View>

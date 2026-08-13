@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { StorageSettings } from "@/components/settings/StorageSettings";
 import { ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
@@ -16,42 +17,42 @@ import { useIsDark } from "@/lib/themeStore";
  */
 export default function PremiumCloudScreen() {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
   const params = useLocalSearchParams<{ connected?: string; code?: string }>();
 
   useEffect(() => {
     if (params.connected === "google_drive" || params.code) {
       showAlert(
-        "Google Drive",
-        "Si la connexion vient de se terminer, utilisez « Sauvegarder vers Drive » ci-dessous."
+        t("premiumCloud.driveAlertTitle"),
+        t("premiumCloud.driveAlertBody")
       );
     }
-  }, [params.connected, params.code]);
+  }, [params.connected, params.code, t]);
 
   return (
     <ScreenContainer scrollable compactTop>
       <ScreenNavBar
-        backLabel="← Réglages"
+        backLabel={t("nav.backSettings")}
         onBack={() => router.push(ROUTES.settings)}
       />
 
       <PastekScreenHero
-        label="Sauvegarde"
-        title="Votre "
-        accent="Drive"
-        description="Connexion directe à votre Google Drive depuis cet appareil. Pastek ne stocke ni compte ni jetons."
+        label={t("premiumCloud.heroLabel")}
+        title={t("premiumCloud.heroTitle")}
+        accent={t("premiumCloud.heroAccent")}
+        description={t("premiumCloud.heroDescription")}
         className="mb-6"
       />
 
       <Text className={`text-xs leading-5 px-1 mb-4 ${textMuted(isDark)}`}>
-        Les photos d&apos;œuvres peuvent aussi être copiées dans le dossier
-        « Pastek Art » après un rituel, si Drive est connecté.
+        {t("premiumCloud.photosHint")}
       </Text>
 
       <StorageSettings />
 
       <View className="mt-6 px-1">
         <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-          OneDrive, Infomaniak et Proton suivront le même modèle local-first.
+          {t("premiumCloud.roadmap")}
         </Text>
       </View>
     </ScreenContainer>

@@ -1,7 +1,10 @@
 import { Stack } from "expo-router";
 import { Platform } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function AppStackLayout() {
+  const { t } = useTranslation("app");
+
   return (
     <Stack
       screenOptions={{
@@ -14,21 +17,21 @@ export default function AppStackLayout() {
       <Stack.Screen name="ritual" />
       <Stack.Screen
         name="custom"
-        options={{ title: "Mode Sur-Mesure" }}
+        options={{ title: t("screens.custom") }}
       />
       <Stack.Screen name="ping-pong/index" />
       <Stack.Screen name="nuance-finder/index" />
       <Stack.Screen
         name="emotion-explorer/index"
-        options={{ title: "Explorateur émotionnel" }}
+        options={{ title: t("screens.emotionExplorer") }}
       />
       <Stack.Screen
         name="color-journey/index"
-        options={{ title: "Assistant palette" }}
+        options={{ title: t("screens.colorJourney") }}
       />
-      <Stack.Screen name="fil/index" options={{ title: "Fil créatif" }} />
+      <Stack.Screen name="fil/index" options={{ title: t("screens.fil") }} />
       <Stack.Screen name="fil/[id]" />
-      <Stack.Screen name="saisons/index" options={{ title: "Saisons" }} />
+      <Stack.Screen name="saisons/index" options={{ title: t("screens.seasons") }} />
       <Stack.Screen name="exercise" />
       <Stack.Screen name="reflection" />
       <Stack.Screen
@@ -43,16 +46,16 @@ export default function AppStackLayout() {
         name="settings/ai-engines"
         options={
           Platform.OS === "web"
-            ? { presentation: "card", title: "Moteurs IA" }
-            : { presentation: "modal", title: "Moteurs IA" }
+            ? { presentation: "card", title: t("screens.aiEngines") }
+            : { presentation: "modal", title: t("screens.aiEngines") }
         }
       />
       <Stack.Screen
         name="settings/prompts"
         options={
           Platform.OS === "web"
-            ? { presentation: "card", title: "Prompts IA" }
-            : { presentation: "modal", title: "Prompts IA" }
+            ? { presentation: "card", title: t("screens.prompts") }
+            : { presentation: "modal", title: t("screens.prompts") }
         }
       />
       <Stack.Screen

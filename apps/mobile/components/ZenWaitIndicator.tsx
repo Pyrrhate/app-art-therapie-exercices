@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -8,37 +9,31 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-const MESSAGES = [
-  "Respirez lentement…",
-  "Votre création mérite d'être accueillie.",
-  "Prenez ce temps pour vous.",
-  "L'analyse se tisse en douceur…",
-];
-
 interface ZenWaitIndicatorProps {
   active: boolean;
   /** Durée estimée en secondes (affichage approximatif). */
   estimatedSeconds?: number;
 }
 
-function formatApproxDuration(totalSeconds: number): string {
-  if (totalSeconds <= 50) {
-    return `Environ ${totalSeconds} s`;
-  }
-  const min = Math.max(1, Math.round(totalSeconds / 60));
-  const max = Math.max(min, Math.round((totalSeconds * 1.35) / 60));
-  if (min === max) {
-    return `Environ ${min} min`;
-  }
-  return `Environ ${min} à ${max} min`;
-}
-
 export function ZenWaitIndicator({
   active,
   estimatedSeconds = 75,
 }: ZenWaitIndicatorProps) {
+  const { t } = useTranslation("ritual");
   const [seconds, setSeconds] = useState(0);
   const breath = useSharedValue(0.85);
+
+  function formatApproxDuration(totalSeconds: number): string {
+    if (totalSeconds <= 50) {
+      return t("zen.approxSeconds", { seconds: totalSeconds });
+    }
+    const min = Math.max(1, Math.round(totalSeconds / 60));
+    const max = Math.max(min, Math.round((totalSeconds * 1.35) / 60));
+    if (min === max) {
+      return t("zen.approxMinutes", { minutes: min });
+    }
+    return t("zen.approxRange", { min, max });
+  }
 
   useEffect(() => {
     if (!active) {
@@ -64,7 +59,8 @@ export function ZenWaitIndicator({
 
   if (!active) return null;
 
-  const message = MESSAGES[Math.floor(seconds / 8) % MESSAGES.length];
+  const messages = t("zen.messages", { returnObjects: true }) as string[];
+  const message = messages[Math.floor(seconds / 8) % messages.length];
   const approxLabel = formatApproxDuration(estimatedSeconds);
   const nearingEnd =
     estimatedSeconds > 0 && seconds >= Math.round(estimatedSeconds * 0.85);
@@ -93,7 +89,7 @@ export function ZenWaitIndicator({
       </View>
       <Text className="text-sand-600 text-sm text-center leading-6 px-4">{message}</Text>
       <Text className="text-sand-400 text-xs mt-2">
-        {nearingEnd ? "Presque prêt…" : approxLabel}
+        {nearingEnd ? t("zen.almostReady") : approxLabel}
       </Text>
     </View>
   );

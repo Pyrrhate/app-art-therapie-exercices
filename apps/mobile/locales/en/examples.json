@@ -1,0 +1,34 @@
+{
+  "index": {
+    "title": "Examples of creative exercises",
+    "intro": "Walk through real journeys from the Pastek Art generator: impulse, a brief written for you, the making, and a kind reflection. A good way to understand the tool before you start — or to see what a ritual can actually offer.",
+    "cardMeta": "{{technique}} · {{minutes}} min",
+    "cardCta": "Read the example →",
+    "cta": "Try the generator",
+    "seoTitle": "Examples of creative exercises — painting, writing and creativity journeys | Pastek Art",
+    "seoDescription": "See concrete examples from the Pastek Art generator: impulse, AI brief, guided making and a kind reflection. Find inspiration before your first creative ritual."
+  },
+  "detail": {
+    "eyebrow": "Example journey · {{technique}}",
+    "meta": "{{minutes}} min · {{mode}} mode",
+    "modeExpress": "express",
+    "modeDeep": "deep",
+    "impulseCaptured": "Impulse entered",
+    "impulseWith": "Impulse · {{impulse}}",
+    "mirrorLabel": "Creative mirror · AI reading",
+    "questionsLabel": "Questions to explore",
+    "followUpLabel": "Carry the making forward",
+    "followUpTitle": "A new exercise for you",
+    "cta": "Start your own exercise →"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "examples": "Examples"
+  },
+  "jsonLd": {
+    "about1": "creative exercise",
+    "about2": "painting exercise",
+    "about3": "creative letting go",
+    "about3Emotions": "expressing emotions"
+  }
+}

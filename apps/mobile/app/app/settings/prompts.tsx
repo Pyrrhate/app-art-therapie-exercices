@@ -6,6 +6,7 @@ import {
   View,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   PROMPT_CATALOG,
   PROMPT_IDS,
@@ -52,6 +53,7 @@ function PromptCard({
   onReset: () => void;
 }) {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
   const entry = PROMPT_CATALOG[id];
   const hasOverride = Boolean(override);
   const charCount = draft.trim().length;
@@ -71,7 +73,7 @@ function PromptCard({
           {hasOverride ? (
             <View className="rounded-full bg-sage-100 px-3 py-1">
               <Text className="text-sage-700 text-xs font-medium">
-                Personnalisé
+                {t("prompts.custom")}
               </Text>
             </View>
           ) : (
@@ -80,19 +82,21 @@ function PromptCard({
                 isDark ? "bg-sand-700" : "bg-sand-100"
               }`}
             >
-              <Text className={`text-xs ${textMuted(isDark)}`}>Défaut</Text>
+              <Text className={`text-xs ${textMuted(isDark)}`}>
+                {t("prompts.default")}
+              </Text>
             </View>
           )}
         </View>
         <Text className="text-sage-600 text-xs mt-3">
-          {expanded ? "Masquer le prompt ▲" : "Voir / modifier le prompt ▼"}
+          {expanded ? t("prompts.hide") : t("prompts.show")}
         </Text>
       </Pressable>
 
       {expanded ? (
         <View className="gap-3 mt-1">
           <Text className={`text-xs uppercase tracking-wider ${textMuted(isDark)}`}>
-            Prompt actif
+            {t("prompts.activePrompt")}
           </Text>
           <TextInput
             value={draft}
@@ -104,19 +108,21 @@ function PromptCard({
                 ? "bg-sand-900 border-sand-600 text-sand-100"
                 : "bg-sand-50 border-sand-200 text-sand-800"
             }`}
-            accessibilityLabel={`Prompt ${entry.title}`}
+            accessibilityLabel={t("prompts.fieldLabel", { title: entry.title })}
           />
           <Text className={`text-xs ${textMuted(isDark)}`}>
-            {charCount} / {PROMPT_OVERRIDE_LIMITS.maxLength} caractères
-            {charCount > 0 &&
-            charCount < PROMPT_OVERRIDE_LIMITS.minLength
-              ? ` (minimum ${PROMPT_OVERRIDE_LIMITS.minLength})`
+            {t("prompts.charCount", {
+              chars: charCount,
+              max: PROMPT_OVERRIDE_LIMITS.maxLength,
+            })}
+            {charCount > 0 && charCount < PROMPT_OVERRIDE_LIMITS.minLength
+              ? t("prompts.minHint", { min: PROMPT_OVERRIDE_LIMITS.minLength })
               : ""}
           </Text>
           <View className="flex-row gap-3">
             <View className="flex-1">
               <PrimaryButton
-                label={saving ? "Enregistrement…" : "Enregistrer"}
+                label={saving ? t("prompts.saving") : t("prompts.save")}
                 onPress={onSave}
                 disabled={
                   saving ||
@@ -127,7 +133,11 @@ function PromptCard({
             </View>
             <View className="flex-1">
               <PrimaryButton
-                label={hasOverride ? "Revenir au défaut" : "Restaurer le texte"}
+                label={
+                  hasOverride
+                    ? t("prompts.backToDefault")
+                    : t("prompts.restoreText")
+                }
                 onPress={onReset}
                 variant="ghost"
                 disabled={saving}
@@ -142,6 +152,7 @@ function PromptCard({
 
 export default function PromptsSettingsScreen() {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
   const [overrides, setOverrides] = useState<
     Partial<Record<PromptId, string>>
   >({});
@@ -178,14 +189,11 @@ export default function PromptsSettingsScreen() {
     try {
       await savePromptOverride(id, drafts[id]);
       await refresh();
-      showAlert(
-        "Prompt enregistré",
-        "Il restera sur cet appareil et sera utilisé pour vos prochaines générations."
-      );
+      showAlert(t("prompts.savedTitle"), t("prompts.savedBody"));
     } catch (error) {
       showAlert(
-        "Impossible d'enregistrer",
-        error instanceof Error ? error.message : "Réessayez dans un instant."
+        t("prompts.saveFailTitle"),
+        error instanceof Error ? error.message : t("prompts.retryLater")
       );
     } finally {
       setSavingId(null);
@@ -200,14 +208,11 @@ export default function PromptsSettingsScreen() {
       }
       setDrafts((prev) => ({ ...prev, [id]: PROMPT_CATALOG[id].body }));
       await refresh();
-      showAlert(
-        "Prompt par défaut",
-        "La version Pastek Art est de nouveau active."
-      );
+      showAlert(t("prompts.resetTitle"), t("prompts.resetBody"));
     } catch (error) {
       showAlert(
-        "Impossible de restaurer",
-        error instanceof Error ? error.message : "Réessayez dans un instant."
+        t("prompts.resetFailTitle"),
+        error instanceof Error ? error.message : t("prompts.retryLater")
       );
     } finally {
       setSavingId(null);
@@ -217,15 +222,15 @@ export default function PromptsSettingsScreen() {
   return (
     <ScreenContainer scrollable refreshable onRefresh={refresh} compactTop>
       <ScreenNavBar
-        backLabel="← Réglages"
+        backLabel={t("nav.backSettings")}
         onBack={() => router.push(ROUTES.settings)}
       />
 
       <PastekScreenHero
-        label="Prompts IA"
-        title="Consultez et "
-        accent="personnalisez"
-        description="Les consignes système qui guident l'IA. Modifiez-les localement — elles ne sont jamais stockées sur nos serveurs."
+        label={t("prompts.heroLabel")}
+        title={t("prompts.heroTitle")}
+        accent={t("prompts.heroAccent")}
+        description={t("prompts.heroDescription")}
         className="mb-6"
       />
 
@@ -237,9 +242,7 @@ export default function PromptsSettingsScreen() {
         }`}
       >
         <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-          Sans modification, Pastek Art utilise les prompts bienveillants ci-dessous.
-          Vos versions personnalisées remplacent uniquement le texte système
-          (exercice, miroir, observation photo, OCR).
+          {t("prompts.intro")}
         </Text>
       </View>
 

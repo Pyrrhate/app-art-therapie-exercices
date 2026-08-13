@@ -1,4 +1,5 @@
 import { Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { ColorSwatch } from "@/components/color-journey/ColorSwatch";
 import { PrimaryButton } from "@/components/ui/Button";
 import type { JourneyReflection } from "@/lib/color-journey/types";
@@ -14,6 +15,8 @@ export function ReflectionPanel({
   onRequestMirror,
   mirrorLoading = false,
 }: ReflectionPanelProps) {
+  const { t } = useTranslation("amorces");
+
   return (
     <View className="bg-white rounded-2xl border border-sage-200 px-5 py-5 mb-4">
       <View className="flex-row items-center mb-3">
@@ -31,7 +34,7 @@ export function ReflectionPanel({
       {data.mixRecipe ? (
         <View className="bg-sage-50 rounded-xl px-3 py-2 mb-2">
           <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
-            Recette de mélange
+            {t("colorJourney.mixRecipe")}
           </Text>
           <Text className="text-sand-600 text-sm leading-5">{data.mixRecipe}</Text>
         </View>
@@ -47,7 +50,11 @@ export function ReflectionPanel({
       {onRequestMirror && !data.aiMirror ? (
         <View className="mt-4">
           <PrimaryButton
-            label={mirrorLoading ? "Conseil en cours…" : "Conseil peinture personnalisé"}
+            label={
+              mirrorLoading
+                ? t("colorJourney.adviceLoading")
+                : t("colorJourney.adviceAsk")
+            }
             onPress={onRequestMirror}
             variant="ghost"
             disabled={mirrorLoading}
@@ -56,7 +63,9 @@ export function ReflectionPanel({
         </View>
       ) : null}
       {data.aiMirror ? (
-        <Text className="text-sage-500 text-xs mt-3">Conseil personnalisé</Text>
+        <Text className="text-sage-500 text-xs mt-3">
+          {t("colorJourney.adviceGiven")}
+        </Text>
       ) : null}
     </View>
   );

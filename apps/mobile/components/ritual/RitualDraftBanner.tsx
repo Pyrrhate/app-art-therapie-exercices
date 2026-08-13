@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
 import { Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { router, useFocusEffect } from "expo-router";
 import { AccentCard } from "@/components/ui/Card";
 import { PrimaryButton } from "@/components/ui/Button";
-import { getTechniqueLabel } from "@/constants";
+import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import { hydrateRitualFromDraft } from "@/lib/ritualPersistence";
 import { getRitualDraft, type RitualDraft } from "@/lib/ritualDraft";
 import { ROUTES } from "@/lib/routes";
@@ -17,6 +18,7 @@ interface RitualDraftBannerProps {
 
 export function RitualDraftBanner({ className = "mb-4" }: RitualDraftBannerProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("ritual");
   const [draft, setDraft] = useState<RitualDraft | null>(null);
 
   useFocusEffect(
@@ -39,17 +41,22 @@ export function RitualDraftBanner({ className = "mb-4" }: RitualDraftBannerProps
 
   return (
     <AccentCard className={`gap-2 ${className}`}>
-      <Text className="text-sage-600 font-medium text-sm">Rituel en cours</Text>
+      <Text className="text-sage-600 font-medium text-sm">{t("draft.title")}</Text>
       <Text className={`text-sm leading-5 ${textSecondary(isDark)}`} numberOfLines={2}>
-        {draft.impulse} · {getTechniqueLabel(draft.technique)}
+        {draft.impulse} · {localizedTechniqueLabel(draft.technique)}
       </Text>
       <Text className={`text-xs ${textMuted(isDark)}`}>
         {draft.step === "reflection"
-          ? "Étape : capture & réflexion"
-          : "Étape : exercice"}
+          ? t("draft.stepReflection")
+          : t("draft.stepExercise")}
       </Text>
-      <PrimaryButton label="Reprendre" onPress={handleContinue} align="stretch" />
-      <PrimaryButton label="Abandonner" onPress={handleDismiss} variant="ghost" align="stretch" />
+      <PrimaryButton label={t("draft.resume")} onPress={handleContinue} align="stretch" />
+      <PrimaryButton
+        label={t("draft.dismiss")}
+        onPress={handleDismiss}
+        variant="ghost"
+        align="stretch"
+      />
     </AccentCard>
   );
 }

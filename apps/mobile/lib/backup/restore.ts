@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import i18n from "@/lib/i18n";
 import { replaceFilEntries } from "@/lib/fil/storage";
 import { clearRitualDraft, saveRitualDraft } from "@/lib/ritualDraft";
 import { setThemePreference, setTimerSound } from "@/lib/preferences";
@@ -54,8 +55,6 @@ async function restoreOptionalKey(
 
 export function assertBackupSize(json: string): void {
   if (json.length > MAX_BACKUP_BYTES) {
-    throw new Error(
-      "Sauvegarde trop volumineuse (photos incluses). Réduisez le Fil ou exportez sans les plus anciennes traces."
-    );
+    throw new Error(i18n.t("app:settings.backupTooLarge"));
   }
 }

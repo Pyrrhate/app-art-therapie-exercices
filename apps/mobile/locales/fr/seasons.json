@@ -1,0 +1,84 @@
+{
+  "nav": {
+    "backHome": "← Accueil"
+  },
+  "hero": {
+    "label": "Saisons",
+    "title": "Une contrainte douce, ",
+    "accent": "plusieurs jours",
+    "description": "Sept à quatorze jours. Pas un défi : une habitude légère. Les jours manqués ne cassent rien."
+  },
+  "progress": {
+    "label": "Saison en cours",
+    "day": "Jour {{day}}/{{total}}",
+    "noSession": "aucune séance encore",
+    "sessions_one": "{{count}} séance",
+    "sessions_other": "{{count}} séances",
+    "todayDone": " · aujourd'hui, c'est fait",
+    "continueToday": "Créer encore aujourd'hui",
+    "continue": "Continuer la saison",
+    "leave": "Quitter cette saison"
+  },
+  "list": {
+    "afterThisOne": "Après celle-ci",
+    "proposed": "Saisons proposées",
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours",
+    "constraint": "Contrainte : {{constraint}}",
+    "start": "Commencer",
+    "replaceAndStart": "Remplacer et commencer"
+  },
+  "custom": {
+    "show": "Créer la mienne",
+    "hide": "Masquer ma saison",
+    "titlePlaceholder": "Titre (ex. Encres d'hiver)",
+    "constraintPlaceholder": "La contrainte, en une ou deux phrases…",
+    "techniqueLabel": "Technique suggérée (optionnel)",
+    "start": "Démarrer ma saison",
+    "defaultTitle": "Ma saison"
+  },
+  "history": {
+    "title": "Saisons passées",
+    "completed": "Terminée",
+    "abandoned": "Interrompue"
+  },
+  "confirm": {
+    "leaveTitle": "Quitter cette saison ?",
+    "leaveBody": "La saison « {{title}} » sera clôturée. Vous pourrez en commencer une autre.",
+    "stay": "Rester",
+    "leave": "Quitter"
+  },
+  "errors": {
+    "startFailed": "Impossible de démarrer.",
+    "notFound": "Saison introuvable",
+    "constraintTooShort": "Écrivez une contrainte d'au moins quelques mots."
+  },
+  "statement": "Saison « {{title}} » — jour {{day}}/{{total}}. {{constraint}}",
+  "catalog": {
+    "une-dominante": {
+      "title": "Une dominante",
+      "constraint": "Une seule couleur dominante. Les autres n'apparaissent qu'en touches, ou pas du tout.",
+      "invitation": "Sept jours pour habiter une teinte. Choisissez-la ce matin — un bleu, un ocre, un vert fatigué — et laissez-la décider du reste. Le fond, les silences, ce que vous n'osez pas encore."
+    },
+    "poche-a6": {
+      "title": "Format poche",
+      "constraint": "Support de poche (A6, carte, enveloppe, coin de carnet). Rien de plus grand.",
+      "invitation": "Un petit rectangle. Pas d'ambition murale. Le geste se concentre, le temps tient dans la paume. Sept jours de formats que l'on pourrait glisser dans une poche."
+    },
+    "rien-que-collage": {
+      "title": "Rien que le collage",
+      "constraint": "Collage uniquement : papiers, revues, tickets, restes. Assembler plutôt que tracer.",
+      "invitation": "Dix jours sans crayon obligatoire. On coupe, on déchire, on pose. La composition naît des hasards du papier — une pub, un ticket, un ciel déjà imprimé."
+    },
+    "trait-continu": {
+      "title": "Le trait qui ne lève pas",
+      "constraint": "Un trait aussi continu que possible. S'il quitte le papier, c'est un nouveau départ, pas une erreur.",
+      "invitation": "Le crayon reste en contact. La ligne cherche, hésite, revient. Sept jours pour désapprendre le « joli » et retrouver le mouvement."
+    },
+    "terres": {
+      "title": "Terres",
+      "constraint": "Palette de terres : ocre, sienne, ombre, crème. Peu ou pas de couleurs froides.",
+      "invitation": "Une quinzaine dans les bruns chauds. Pigments de sol, papiers jaunis, lumières d'après-midi. Le temps de s'y habituer — puis de voir ce qui reste quand le bleu s'absente."
+    }
+  }
+}

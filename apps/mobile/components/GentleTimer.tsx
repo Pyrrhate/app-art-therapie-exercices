@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import Svg, { Circle, Path } from "react-native-svg";
 import * as Haptics from "expo-haptics";
 import {
+  getZenTimerPhrases,
   nextZenPhraseIndex,
   pickRandomZenPhraseIndex,
-  ZEN_TIMER_PHRASES,
 } from "@/lib/exercise/zenPhrases";
 import { playTimerSound } from "@/lib/sounds";
 
@@ -44,6 +45,8 @@ export function GentleTimer({
   completionSound = "gong",
   silence = false,
 }: GentleTimerProps) {
+  const { t, i18n } = useTranslation("ritual");
+  const phrases = getZenTimerPhrases(i18n.language);
   const totalSeconds = durationMinutes * 60;
   const [elapsed, setElapsed] = useState(0);
   const [running, setRunning] = useState(autoStart);
@@ -208,7 +211,7 @@ export function GentleTimer({
         {!isComplete && (
           <Pressable onPress={togglePause} className={controlClass}>
             <Text className={controlTextClass}>
-              {running ? "Pause" : "Reprendre"}
+              {running ? t("timer.pause") : t("timer.resume")}
             </Text>
           </Pressable>
         )}
@@ -216,7 +219,7 @@ export function GentleTimer({
         <Pressable
           onPress={handleReset}
           accessibilityRole="button"
-          accessibilityLabel="Remise à zéro du timer"
+          accessibilityLabel={t("timer.resetA11y")}
           className={resetClass}
         >
           <ResetIcon color={silence ? "#C9B8A8" : "#8A7A6E"} />
@@ -225,13 +228,13 @@ export function GentleTimer({
 
       {!silence && !isComplete && (
         <Text className="text-sand-500 text-sm mt-4 text-center leading-6 px-6 min-h-[48px]">
-          {ZEN_TIMER_PHRASES[phraseIndex]}
+          {phrases[phraseIndex]}
         </Text>
       )}
 
       {silence && !isComplete && (
         <Text className="text-sand-500 text-sm mt-6 text-center px-6">
-          Laissez le geste guider — l&apos;écran se tait.
+          {t("timer.silenceHint")}
         </Text>
       )}
 
@@ -241,7 +244,7 @@ export function GentleTimer({
             silence ? "text-sage-300" : "text-sage-500"
           }`}
         >
-          Moment terminé — prenez le temps de respirer
+          {t("timer.complete")}
         </Text>
       )}
     </View>

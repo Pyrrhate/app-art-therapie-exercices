@@ -5,9 +5,23 @@ import type { AppLanguage } from "./types";
 import frCommon from "@/locales/fr/common.json";
 import frLanding from "@/locales/fr/landing.json";
 import frApp from "@/locales/fr/app.json";
+import frFil from "@/locales/fr/fil.json";
+import frSeasons from "@/locales/fr/seasons.json";
+import frFeatures from "@/locales/fr/features.json";
+import frRitual from "@/locales/fr/ritual.json";
+import frAmorces from "@/locales/fr/amorces.json";
+import frLegal from "@/locales/fr/legal.json";
+import frExamples from "@/locales/fr/examples.json";
 import enCommon from "@/locales/en/common.json";
 import enLanding from "@/locales/en/landing.json";
 import enApp from "@/locales/en/app.json";
+import enFil from "@/locales/en/fil.json";
+import enSeasons from "@/locales/en/seasons.json";
+import enFeatures from "@/locales/en/features.json";
+import enRitual from "@/locales/en/ritual.json";
+import enAmorces from "@/locales/en/amorces.json";
+import enLegal from "@/locales/en/legal.json";
+import enExamples from "@/locales/en/examples.json";
 
 export const DEFAULT_LANGUAGE: AppLanguage = "fr";
 
@@ -16,11 +30,25 @@ const resources = {
     common: frCommon,
     landing: frLanding,
     app: frApp,
+    fil: frFil,
+    seasons: frSeasons,
+    features: frFeatures,
+    ritual: frRitual,
+    amorces: frAmorces,
+    legal: frLegal,
+    examples: frExamples,
   },
   en: {
     common: enCommon,
     landing: enLanding,
     app: enApp,
+    fil: enFil,
+    seasons: enSeasons,
+    features: enFeatures,
+    ritual: enRitual,
+    amorces: enAmorces,
+    legal: enLegal,
+    examples: enExamples,
   },
 } as const;
 
@@ -30,7 +58,18 @@ if (!i18n.isInitialized) {
     lng: DEFAULT_LANGUAGE,
     fallbackLng: DEFAULT_LANGUAGE,
     defaultNS: "common",
-    ns: ["common", "landing", "app"],
+    ns: [
+      "common",
+      "landing",
+      "app",
+      "fil",
+      "seasons",
+      "features",
+      "ritual",
+      "amorces",
+      "legal",
+      "examples",
+    ],
     interpolation: { escapeValue: false },
     compatibilityJSON: "v4",
     react: { useSuspense: false },

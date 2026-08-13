@@ -1,3 +1,4 @@
+import i18n from "@/lib/i18n";
 import type { ArtisticTechnique } from "@/lib/types";
 import type { Emotion, EmotionQuadrantId } from "./types";
 
@@ -30,7 +31,11 @@ export function suggestTechnique(
 }
 
 export function buildImpulseFromEmotion(emotion: Emotion): string {
-  return `Émotion ressentie : ${emotion.label} — ${emotion.description}`;
+  return i18n.t("emotionExplorer.impulse", {
+    ns: "amorces",
+    label: emotion.label,
+    description: emotion.description,
+  });
 }
 
 export function buildExerciseContext(emotion: Emotion): {

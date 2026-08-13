@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import {
   CustomDepthSelector,
@@ -25,6 +26,7 @@ import { ROUTES } from "@/lib/routes";
 import { useRitualStore } from "@/lib/store";
 
 export default function CustomWorkspaceScreen() {
+  const { t } = useTranslation("ritual");
   const {
     customSessionConfig,
     durationMinutes,
@@ -102,11 +104,9 @@ export default function CustomWorkspaceScreen() {
       router.push(ROUTES.exercise);
     } catch (err) {
       const message =
-        err instanceof ApiError
-          ? err.message
-          : "Une erreur inattendue est survenue. Réessayez dans un instant.";
+        err instanceof ApiError ? err.message : t("custom.errorUnexpected");
       setError(message);
-      showAlert("Impossible de générer", message);
+      showAlert(t("custom.errorTitle"), message);
     } finally {
       setLoading(false);
     }
@@ -114,13 +114,13 @@ export default function CustomWorkspaceScreen() {
 
   return (
     <ScreenContainer refreshable compactTop>
-      <ScreenNavBar backLabel="← Accueil" onBack={navigateHome} />
+      <ScreenNavBar backLabel={t("nav.backHome")} onBack={navigateHome} />
 
       <PastekScreenHero
-        label="Sur-mesure"
-        title="Mode "
-        accent="Sur-Mesure"
-        description="Composez votre séance en choisissant thématique, émotion, objectif et technique — puis laissez l'exercice émerger."
+        label={t("custom.heroLabel")}
+        title={t("custom.heroTitle")}
+        accent={t("custom.heroAccent")}
+        description={t("custom.heroDescription")}
         className="mb-4"
       />
 
@@ -138,15 +138,14 @@ export default function CustomWorkspaceScreen() {
           <View className="items-center justify-center py-16 gap-4">
             <ActivityIndicator color="#6B8F71" size="large" />
             <Text className="text-sage-600 text-sm text-center leading-6 px-6">
-              Nous composons un exercice aligné avec vos critères…
+              {t("custom.generating")}
             </Text>
           </View>
         ) : (
           <View>
             <AccentCard className="mb-6">
               <Text className="text-sage-700 text-sm leading-6">
-                Chaque critère affine la proposition. Vous pourrez ensuite créer
-                et accueillir votre réflexion selon le rythme choisi.
+                {t("custom.intro")}
               </Text>
             </AccentCard>
 
@@ -171,7 +170,7 @@ export default function CustomWorkspaceScreen() {
             </Text>
           )}
           <PrimaryButton
-            label="Générer mon exercice sur-mesure"
+            label={t("custom.cta")}
             onPress={() => void handleGenerate()}
             disabled={!canGenerate}
           />

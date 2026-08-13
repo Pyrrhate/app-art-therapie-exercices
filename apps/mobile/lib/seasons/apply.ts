@@ -1,4 +1,6 @@
+import i18n from "@/lib/i18n";
 import { useRitualStore } from "@/lib/store";
+import { getSeasonRunTitle } from "@/lib/seasons/catalog";
 import {
   buildSeasonStatement,
   getActiveSeasonRun,
@@ -16,13 +18,14 @@ export async function applyActiveSeasonToRitual(options?: {
     return null;
   }
 
-  store.setSeason(run.id, run.title);
+  const title = getSeasonRunTitle(run, i18n.getFixedT(null, "seasons"));
+  store.setSeason(run.id, title);
 
   const seasonText = buildSeasonStatement(run);
   const existing = store.moduleStatement?.trim();
   if (!existing) {
     store.setModuleStatement(seasonText);
-  } else if (!existing.includes(run.title)) {
+  } else if (!existing.includes(title) && !existing.includes(run.title)) {
     store.setModuleStatement(`${existing}\n\n${seasonText}`);
   }
 

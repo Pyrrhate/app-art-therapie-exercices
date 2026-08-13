@@ -1,84 +1,61 @@
-export const FEATURES_SEO_TITLE =
-  "Fonctionnalités — atelier créatif, Fil, silence et saisons | Pastek Art";
-
-export const FEATURES_SEO_DESCRIPTION =
-  "Pastek Art n'est pas un chat : un rituel incarné, un Fil local, un miroir bienveillant, des saisons de 7 à 14 jours. Lecture des fonctionnalités, sans jargon.";
+import type { TFunction } from "i18next";
 
 export const FEATURES_CANONICAL = "https://pastek-art.eu/fonctionnalites";
 
+/** `t` du namespace `features`. */
+export type FeaturesTranslator = TFunction<"features">;
+
+/** Ordre de lecture de la page — les textes vivent dans le namespace `features`. */
+export const FEATURE_SECTION_IDS = [
+  "atelier",
+  "rituel",
+  "fil",
+  "saisons",
+  "local",
+  "sur-mesure",
+] as const;
+
+export type FeatureSectionId = (typeof FEATURE_SECTION_IDS)[number];
+
 export type FeatureSection = {
-  id: string;
+  id: FeatureSectionId;
   kicker: string;
   title: string;
   paragraphs: string[];
 };
 
-export const FEATURES_HERO = {
-  kicker: "Ce que l'atelier propose",
-  title: "Un cadre qui se tait,",
-  accent: "se souvient, et dure.",
-  lead: "Pastek Art n'essaie pas d'être un meilleur générateur de consignes. Un modèle de langage sait déjà écrire une invitation. Ce que l'application tient, c'est autre chose : un temps, une mémoire, un rythme. Voici, pour la lecture, ce qui s'y trouve vraiment.",
+export type FeaturesHero = {
+  kicker: string;
+  title: string;
+  accent: string;
+  lead: string;
 };
 
-export const FEATURES_SECTIONS: FeatureSection[] = [
-  {
-    id: "atelier",
-    kicker: "Posture",
-    title: "Un atelier, pas une conversation",
-    paragraphs: [
-      "La plupart des outils créatifs assistés par l'IA se présentent comme un interlocuteur. On discute, on reformule, on relance. L'écran reste allumé, le geste attend.",
-      "Pastek inverse l'ordre. On arrive avec une impulsion — un mot, une couleur, une fatigue. On choisit une technique et une durée. Une consigne arrive. Puis l'application recule. Le travail n'est pas de mieux parler à la machine : c'est de poser le crayon, la colle, le corps.",
-      "L'IA, quand elle est là, joue un rôle précis : proposer une invitation, puis un miroir après coup. Jamais un diagnostic. Jamais un profil. Coach créatif, au conditionnel, et seulement si vous le demandez.",
-    ],
-  },
-  {
-    id: "rituel",
-    kicker: "Parcours",
-    title: "Le rituel en trois temps",
-    paragraphs: [
-      "Impulsion, exercice, réflexion. Trois écrans, toujours les mêmes, pour que le cadre devienne familier.",
-      "L'impulsion peut venir de vous, ou d'une amorce légère : Ping-Pong de mots, palette RYB, explorateur émotionnel, chercheur de nuances. Ces modules n'ont pas besoin d'un modèle pour exister. Ils préparent le geste.",
-      "L'exercice affiche une consigne, parfois un développement, parfois le contexte d'un module. Un timer tient la durée. Le mode silence assombrit l'écran : il reste le temps, quelques mots-clés, un gong. L'app se tait pour que vous n'ayez plus à la regarder.",
-      "Ensuite seulement, la capture et le miroir. Une photo si vous le souhaitez, un texte, des questions ouvertes. Vous pouvez approfondir — le premier miroir n'est pas écrasé. Rien n'oblige à tout faire. On peut aussi simplement accueillir le ressenti, sans analyse.",
-    ],
-  },
-  {
-    id: "fil",
-    kicker: "Mémoire",
-    title: "Le Fil, mosaïque de pratiques",
-    paragraphs: [
-      "Chaque rituel et chaque amorce laissent une trace sur l'appareil. Pas un historique de chat : une mémoire visuelle. Le Fil se parcourt en mosaïque, comme un mur d'atelier — images, couleurs, tags.",
-      "La technique (peinture, dessin, collage…) s'affiche d'elle-même. Vous pouvez ajouter vos propres tags, filtrer, retrouver un élan. Les photos ne quittent pas l'appareil, sauf si vous demandez un miroir IA ou une sauvegarde Drive.",
-      "Avant le miroir, un interrupteur : « Tenir compte de mon Fil ». Opt-in. Quelques extraits seulement, jamais les photos. Le modèle croise alors cette séance avec vos pratiques récentes — au conditionnel, sans dresser de portrait psychologique.",
-    ],
-  },
-  {
-    id: "saisons",
-    kicker: "Rythme",
-    title: "Les saisons : une contrainte douce, plusieurs jours",
-    paragraphs: [
-      "Une séance unique n'installe pas une habitude. Une saison le peut. Sept, dix ou quatorze jours, une seule contrainte : une couleur dominante, un format de poche, le collage uniquement, un trait qui ne lève pas, une palette de terres. Ou la vôtre.",
-      "Ce n'est pas un défi à streaks, ni une performance. Les jours manqués ne cassent rien. Chaque séance du rituel, pendant la saison, porte la contrainte dans l'énoncé — visible, cadrante, sans noyer l'invitation.",
-      "À l'accueil, une carte discrète : jour 3 sur 7, continuer. À la fin, un bilan local : combien de séances, dans quelle contrainte. Le Fil s'en souvient, tagué du nom de la saison.",
-    ],
-  },
-  {
-    id: "local",
-    kicker: "Souveraineté",
-    title: "Chez vous d'abord",
-    paragraphs: [
-      "Pas de mur de connexion. Les traces vivent dans le stockage de l'appareil. L'export et la restauration restent de votre côté (fichier, Drive optionnel).",
-      "Le mode gratuit s'appuie sur une inférence distante minimale. Si vous apportez votre clé (Mistral, OpenAI, Anthropic, Gemini, moteurs européens, Ollama local), elle ne quitte pas l'appareil : elle transite le temps d'une requête, elle n'est pas conservée par Pastek.",
-      "Vous pouvez lire et modifier les prompts système. L'outil reste le vôtre, y compris dans sa voix.",
-    ],
-  },
-  {
-    id: "sur-mesure",
-    kicker: "Également",
-    title: "Sur-mesure, exemples, et ce que l'app ne fait pas",
-    paragraphs: [
-      "Le mode Sur-Mesure affine la consigne selon une thématique, une émotion, un but — sans prétendre à une prise en charge. Les exemples du site montrent un parcours complet, pour voir avant de se lancer.",
-      "Pastek Art n'est pas une thérapie, ni un cabinet, ni un réseau social. Pas de fil d'actualité, pas de likes. Un atelier personnel, à ouvrir quand vous avez vingt minutes, ou une saison devant vous.",
-    ],
-  },
-];
+function asText(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function asParagraphs(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((p): p is string => typeof p === "string");
+}
+
+export function getFeaturesHero(t: FeaturesTranslator): FeaturesHero {
+  return {
+    kicker: asText(t("hero.kicker")),
+    title: asText(t("hero.title")),
+    accent: asText(t("hero.accent")),
+    lead: asText(t("hero.lead")),
+  };
+}
+
+export function getFeatureSections(t: FeaturesTranslator): FeatureSection[] {
+  return FEATURE_SECTION_IDS.map((id) => ({
+    id,
+    kicker: asText(t(`sections.${id}.kicker`)),
+    title: asText(t(`sections.${id}.title`)),
+    paragraphs: asParagraphs(
+      t(`sections.${id}.paragraphs`, { returnObjects: true })
+    ),
+  }));
+}

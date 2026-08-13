@@ -1,13 +1,14 @@
 import { useCallback, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { useFocusEffect } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { showAlert } from "@/lib/alert";
 import {
   clearDeepQuestionsOverrides,
-  DEFAULT_DEEP_QUESTIONS,
+  getDefaultDeepQuestions,
   DEEP_QUESTION_KEYS,
   getDeepQuestionsOverrides,
   resolveDeepQuestions,
@@ -26,6 +27,7 @@ import { useIsDark } from "@/lib/themeStore";
 
 export default function DeepQuestionsSettingsScreen() {
   const isDark = useIsDark();
+  const { t } = useTranslation("app");
   const [drafts, setDrafts] = useState<
     Record<DeepQuestionKey, DeepQuestionOverride>
   >(() => resolveDeepQuestions());
@@ -54,9 +56,10 @@ export default function DeepQuestionsSettingsScreen() {
     setSaving(true);
     try {
       const overrides: DeepQuestionsOverrides = {};
+      const defaults = getDefaultDeepQuestions();
       for (const key of DEEP_QUESTION_KEYS) {
         const d = drafts[key];
-        const def = DEFAULT_DEEP_QUESTIONS[key];
+        const def = defaults[key];
         if (
           d.label.trim() !== def.label ||
           d.placeholder.trim() !== def.placeholder
@@ -70,7 +73,10 @@ export default function DeepQuestionsSettingsScreen() {
         }
       }
       await saveDeepQuestionsOverrides(overrides);
-      showAlert("Enregistré", "Les questions du parcours profond sont à jour.");
+      showAlert(
+        t("deepQuestionsPage.savedTitle"),
+        t("deepQuestionsPage.savedBody")
+      );
     } finally {
       setSaving(false);
     }
@@ -79,7 +85,10 @@ export default function DeepQuestionsSettingsScreen() {
   async function handleReset() {
     await clearDeepQuestionsOverrides();
     setDrafts(resolveDeepQuestions());
-    showAlert("Réinitialisé", "Questions par défaut restaurées.");
+    showAlert(
+      t("deepQuestionsPage.resetTitle"),
+      t("deepQuestionsPage.resetBody")
+    );
   }
 
   const inputClass = `border rounded-xl px-3 py-2 text-base ${
@@ -90,12 +99,12 @@ export default function DeepQuestionsSettingsScreen() {
 
   return (
     <ScreenContainer scrollable refreshable compactTop>
-      <ScreenNavBar backLabel="← Réglages" />
+      <ScreenNavBar backLabel={t("nav.backSettings")} />
       <PastekScreenHero
-        label="Parcours profond"
-        title="Questions "
-        accent="d'ancrage"
-        description="Personnalisez les trois questions posées avant le miroir créatif en mode profond."
+        label={t("deepQuestionsPage.heroLabel")}
+        title={t("deepQuestionsPage.heroTitle")}
+        accent={t("deepQuestionsPage.heroAccent")}
+        description={t("deepQuestionsPage.heroDescription")}
         className="mb-6"
       />
 
@@ -106,10 +115,12 @@ export default function DeepQuestionsSettingsScreen() {
             className={`rounded-2xl border px-4 py-4 gap-3 ${panelBg(isDark)}`}
           >
             <Text className={`text-xs uppercase tracking-wider ${textMuted(isDark)}`}>
-              Question {index + 1}
+              {t("deepQuestionsPage.question", { index: index + 1 })}
             </Text>
             <View className="gap-1">
-              <Text className={`text-sm ${textPrimary(isDark)}`}>Libellé</Text>
+              <Text className={`text-sm ${textPrimary(isDark)}`}>
+                {t("deepQuestionsPage.label")}
+              </Text>
               <TextInput
                 value={drafts[key].label}
                 onChangeText={(v) => updateField(key, "label", v)}
@@ -118,7 +129,7 @@ export default function DeepQuestionsSettingsScreen() {
             </View>
             <View className="gap-1">
               <Text className={`text-sm ${textPrimary(isDark)}`}>
-                Texte d&apos;aide
+                {t("deepQuestionsPage.helper")}
               </Text>
               <TextInput
                 value={drafts[key].placeholder}
@@ -132,18 +143,20 @@ export default function DeepQuestionsSettingsScreen() {
         ))}
 
         <PrimaryButton
-          label={saving ? "Enregistrement…" : "Enregistrer"}
+          label={
+            saving ? t("deepQuestionsPage.saving") : t("deepQuestionsPage.save")
+          }
           onPress={() => void handleSave()}
           disabled={saving}
         />
         <PrimaryButton
-          label="Restaurer les questions par défaut"
+          label={t("deepQuestionsPage.reset")}
           onPress={() => void handleReset()}
           variant="ghost"
           disabled={saving}
         />
         <Text className={`text-xs leading-5 ${textSecondary(isDark)}`}>
-          Ces textes restent uniquement sur cet appareil.
+          {t("deepQuestionsPage.localOnly")}
         </Text>
       </View>
     </ScreenContainer>

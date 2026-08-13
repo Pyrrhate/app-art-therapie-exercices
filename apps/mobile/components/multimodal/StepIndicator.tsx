@@ -1,13 +1,14 @@
 import { Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { MultimodalWorkflowStep } from "@/lib/multimodal/types";
 import { textMuted } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
-const STEPS: { id: MultimodalWorkflowStep; label: string }[] = [
-  { id: "media", label: "Expression" },
-  { id: "questionnaire", label: "Ressenti" },
-  { id: "upload", label: "Média" },
-  { id: "analyzing", label: "Analyse" },
+const STEPS: { id: MultimodalWorkflowStep; labelKey: string }[] = [
+  { id: "media", labelKey: "multimodal.stepExpression" },
+  { id: "questionnaire", labelKey: "multimodal.stepFeeling" },
+  { id: "upload", labelKey: "multimodal.stepMedia" },
+  { id: "analyzing", labelKey: "multimodal.stepAnalysis" },
 ];
 
 interface StepIndicatorProps {
@@ -16,6 +17,7 @@ interface StepIndicatorProps {
 
 export function StepIndicator({ current }: StepIndicatorProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("ritual");
   const currentIndex = STEPS.findIndex((s) => s.id === current);
 
   return (
@@ -25,7 +27,10 @@ export function StepIndicator({ current }: StepIndicatorProps) {
         min: 1,
         max: STEPS.length,
         now: currentIndex + 1,
-        text: `Étape ${currentIndex + 1} sur ${STEPS.length}`,
+        text: t("multimodal.stepStatus", {
+          current: currentIndex + 1,
+          total: STEPS.length,
+        }),
       }}
       className="flex-row items-center justify-between mb-8 gap-1"
     >
@@ -45,7 +50,7 @@ export function StepIndicator({ current }: StepIndicatorProps) {
               }`}
               numberOfLines={1}
             >
-              {step.label}
+              {t(step.labelKey)}
             </Text>
           </View>
         );

@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
-import { getTechniqueLabel } from "@/constants";
+import { useTranslation } from "react-i18next";
 import type { ArtisticTechnique } from "@/lib/types";
+import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 
 interface ExerciseKeywordChipsProps {
   keywords: string[];
@@ -11,14 +12,18 @@ export function ExerciseKeywordChips({
   keywords,
   technique,
 }: ExerciseKeywordChipsProps) {
+  const { t } = useTranslation("ritual");
+
   if (keywords.length === 0) return null;
 
-  const techniqueLabel = technique ? getTechniqueLabel(technique) : null;
+  const techniqueLabel = technique
+    ? localizedTechniqueLabel(technique)
+    : null;
 
   return (
     <View className="mb-4">
       <Text className="text-sand-600 text-xs uppercase tracking-wider mb-2">
-        À garder sous les yeux
+        {t("keywords.title")}
       </Text>
       <View className="flex-row flex-wrap gap-2">
         {keywords.map((word) => {
@@ -40,7 +45,7 @@ export function ExerciseKeywordChips({
                   isTechnique ? "text-white" : "text-white"
                 }`}
               >
-                {isTechnique ? `Technique · ${word}` : word}
+                {isTechnique ? t("keywords.techniquePrefix", { word }) : word}
               </Text>
             </View>
           );

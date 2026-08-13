@@ -1,0 +1,105 @@
+{
+  "source": {
+    "ritual": "Ritual",
+    "mandala": "Mandala",
+    "nuances": "Nuances",
+    "ping-pong": "Ping-Pong",
+    "color-journey": "Palette assistant",
+    "emotion-explorer": "Emotion explorer",
+    "zen-garden": "Zen garden"
+  },
+  "nav": {
+    "backHome": "← Home",
+    "backFil": "← Thread"
+  },
+  "list": {
+    "heroLabel": "Creative Thread",
+    "heroTitle": "A mosaic of your ",
+    "heroAccent": "practice",
+    "heroDescription": "A visual view — photos, colours, tags. Opt-in, on this device.",
+    "loading": "Loading…",
+    "empty": "Nothing here yet. Finish an exercise or a starter — a trace will appear on its own.",
+    "prepareExercise": "Prepare an exercise",
+    "backHome": "Back to home",
+    "nearLimit": "{{used}} / {{max}} traces — the oldest will be removed automatically on the next one.",
+    "searchPlaceholder": "Search…",
+    "filterAll": "All",
+    "noMatch": "No trace matches.",
+    "selectStart": "Read the Thread (max {{max}})",
+    "selectCancel": "Cancel selection",
+    "selectHint": "Select up to {{max}} traces ({{used}}/{{max}}).",
+    "analyzeBusy": "Reading…",
+    "analyze_one": "Read {{count}} trace",
+    "analyze_other": "Read {{count}} traces",
+    "crossReading": "Cross-reading",
+    "clearAll": "Erase the whole Thread…"
+  },
+  "detail": {
+    "notFound": "Trace not found.",
+    "exercise": "Exercise",
+    "mirror": "Creative mirror",
+    "colorReading": "Colour reading",
+    "harmony": "Harmony: {{name}}",
+    "duration": " · {{minutes}} min",
+    "redoExercise": "Do this exercise again",
+    "reuseNuancier": "Create with this palette",
+    "goToExercise": "Move on to the exercise",
+    "exportBusy": "Exporting…",
+    "exportPdf": "Export as PDF (print)",
+    "remove": "Remove from the Thread",
+    "defaultImpulse": "Colour harmony"
+  },
+  "tile": {
+    "fallbackLabel": "Thread trace",
+    "selected": "selected",
+    "unselected": "not selected"
+  },
+  "tags": {
+    "title": "Your tags",
+    "hint": "Add words of your own — the technique shows up by itself.",
+    "remove": "Remove the tag {{tag}}",
+    "none": "No personal tag yet.",
+    "placeholder": "e.g. nocturne, A6, ink…",
+    "add": "Add the tag",
+    "max": "Up to {{max}} tags per trace."
+  },
+  "cta": {
+    "a11y": "Connect Google Drive to back up your Thread",
+    "kicker": "Backup",
+    "title": "Your creations are stored on this device.",
+    "body": "Connect Google Drive for a personal backup copy — with no Pastek account.",
+    "action": "Drive backup →",
+    "footnote": "Local-first · BYOK · zero server knowledge"
+  },
+  "alerts": {
+    "selectionTitle": "Selection",
+    "selectionMax": "You can read up to {{max}} traces at once.",
+    "analysisTitle": "Reading",
+    "analysisFallback": "Fallback reading — check your AI key.",
+    "analysisFailedTitle": "Reading unavailable",
+    "continueFailedTitle": "Can't continue",
+    "exportTitle": "Export",
+    "exportFailedTitle": "Export failed",
+    "retry": "Try again in a moment."
+  },
+  "confirm": {
+    "cancel": "Cancel",
+    "deleteTitle": "Delete this trace?",
+    "deleteBody": "This trace will be permanently removed from your Thread on this device.",
+    "deleteBodyExcerpt": "“{{excerpt}}” will be permanently removed from your Thread on this device.",
+    "delete": "Delete",
+    "count_one": "1 trace",
+    "count_other": "{{count}} traces",
+    "clearTitleWeb": "Erase the whole Creative Thread?",
+    "clearBodyWeb": "{{countLabel}} will be deleted.\n\nYou can also remove traces one by one from their page.",
+    "clearTitle": "Erase the whole Thread?",
+    "clearBody": "{{countLabel}} will be deleted from this device.\n\nFor finer control, remove traces one by one from their page.",
+    "clearContinue": "Continue",
+    "finalTitle": "Last confirmation",
+    "finalBody": "Permanently erase {{countLabel}}? This cannot be undone.",
+    "clearConfirm": "Erase everything"
+  },
+  "defaults": {
+    "ritualTitle": "Creative ritual"
+  }
+}

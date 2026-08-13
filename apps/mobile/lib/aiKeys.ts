@@ -13,6 +13,7 @@ import {
   BYOK_PROVIDER_IDS,
   type ByokProviderId,
 } from "@art-therapie/shared";
+import i18n from "@/lib/i18n";
 
 export type AiKeyProvider = ByokProviderId;
 
@@ -89,8 +90,8 @@ export async function saveAiKey(
   if (trimmed.length < minKeyLength(provider)) {
     throw new Error(
       provider === "ollama"
-        ? "Indiquez l’URL Ollama (ex. http://127.0.0.1:11434)."
-        : "La clé API semble trop courte. Vérifiez la copie."
+        ? i18n.t("common:aiKeys.ollamaUrlRequired")
+        : i18n.t("common:aiKeys.keyTooShort")
     );
   }
   await secureSet(storageKey(provider), trimmed);

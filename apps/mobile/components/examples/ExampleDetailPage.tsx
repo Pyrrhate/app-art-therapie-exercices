@@ -1,5 +1,6 @@
 import { Image, Platform, Pressable, Text, View } from "react-native";
 import { Link } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { SemanticWeb } from "@/components/landing/SemanticWeb";
 import { ROUTES } from "@/lib/routes";
 import type { ExampleStep, PastekExample } from "@/lib/examples/types";
@@ -17,14 +18,16 @@ function Chips({ items }: { items: string[] }) {
         <View
           key={chip}
           className={`rounded-full px-3 py-1.5 ${
-            chip.startsWith("Technique")
+            chip.toLowerCase().startsWith("technique")
               ? "bg-clay-100 border border-clay-200"
               : "bg-sage-500"
           }`}
         >
           <Text
             className={`text-xs font-medium ${
-              chip.startsWith("Technique") ? "text-clay-800" : "text-white"
+              chip.toLowerCase().startsWith("technique")
+                ? "text-clay-800"
+                : "text-white"
             }`}
           >
             {chip}
@@ -35,7 +38,22 @@ function Chips({ items }: { items: string[] }) {
   );
 }
 
-function StepBlock({ step, impulse }: { step: ExampleStep; impulse?: string }) {
+function StepBlock({
+  step,
+  impulse,
+}: {
+  step: ExampleStep;
+  impulse?: string;
+}) {
+  const { t } = useTranslation("examples");
+
+  const bodyLabel =
+    step.id === "impulsion"
+      ? t("detail.impulseCaptured")
+      : step.id === "exercice"
+        ? t("detail.impulseWith", { impulse: impulse ?? "" })
+        : t("detail.mirrorLabel");
+
   return (
     <SemanticWeb
       tag="section"
@@ -54,11 +72,7 @@ function StepBlock({ step, impulse }: { step: ExampleStep; impulse?: string }) {
       {step.body ? (
         <View className="bg-white rounded-2xl border border-sand-200 px-5 py-5 mt-5">
           <Text className="text-sand-400 text-xs uppercase tracking-wider mb-3">
-            {step.id === "impulsion"
-              ? "Impulsion saisie"
-              : step.id === "exercice"
-                ? `Impulsion · ${impulse ?? ""}`
-                : "Miroir créatif · Analyse IA"}
+            {bodyLabel}
           </Text>
           <SemanticWeb tag="p" className="text-sand-700 text-sm leading-7 whitespace-pre-line">
             {step.body}
@@ -85,7 +99,7 @@ function StepBlock({ step, impulse }: { step: ExampleStep; impulse?: string }) {
       {step.openQuestions && step.openQuestions.length > 0 ? (
         <View className="bg-sage-50 rounded-2xl border border-sage-100 px-5 py-5 mt-5">
           <Text className="text-sage-700 text-xs uppercase tracking-wider mb-3">
-            Questions d'exploration
+            {t("detail.questionsLabel")}
           </Text>
           {step.openQuestions.map((q) => (
             <Text key={q} className="text-sand-700 text-sm leading-6 mb-2">
@@ -98,10 +112,10 @@ function StepBlock({ step, impulse }: { step: ExampleStep; impulse?: string }) {
       {step.followUpExercise ? (
         <View className="bg-white rounded-2xl border border-sage-200 px-5 py-5 mt-4">
           <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
-            Poursuivre la création
+            {t("detail.followUpLabel")}
           </Text>
           <Text className="text-sand-700 text-sm font-medium mb-2">
-            Un nouvel exercice pour vous
+            {t("detail.followUpTitle")}
           </Text>
           <SemanticWeb tag="p" className="text-sand-600 text-sm leading-6">
             {step.followUpExercise}
@@ -117,11 +131,17 @@ interface ExampleDetailPageProps {
 }
 
 export function ExampleDetailPage({ example }: ExampleDetailPageProps) {
+  const { t } = useTranslation("examples");
+  const modeLabel =
+    example.experienceMode === "express"
+      ? t("detail.modeExpress")
+      : t("detail.modeDeep");
+
   return (
     <View className="max-w-3xl mx-auto px-6 pb-16">
       <SemanticWeb tag="article">
         <Text className="text-sage-500 text-xs uppercase tracking-[0.2em] mb-3 font-medium">
-          Exemple de parcours · {example.technique}
+          {t("detail.eyebrow", { technique: example.technique })}
         </Text>
         <SemanticWeb tag="h1" className="font-display text-3xl md:text-4xl text-sand-900 mb-4 leading-tight">
           {example.title}
@@ -132,7 +152,10 @@ export function ExampleDetailPage({ example }: ExampleDetailPageProps) {
 
         <View className="flex-row flex-wrap gap-3 mb-8">
           <Text className="text-sand-500 text-sm">
-            {example.durationMinutes} min · Mode {example.experienceMode === "express" ? "express" : "profond"}
+            {t("detail.meta", {
+              minutes: example.durationMinutes,
+              mode: modeLabel,
+            })}
           </Text>
         </View>
 
@@ -162,7 +185,7 @@ export function ExampleDetailPage({ example }: ExampleDetailPageProps) {
               style={ctaShadow}
             >
               <Text className="text-white text-sm font-semibold tracking-wide">
-                Lancer votre propre exercice →
+                {t("detail.cta")}
               </Text>
             </Pressable>
           </Link>

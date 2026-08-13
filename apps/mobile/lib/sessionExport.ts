@@ -1,9 +1,11 @@
 import { Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
-import { formatSessionDate, getTechniqueLabel } from "@/constants";
+import { formatSessionDate } from "@/constants";
 import type { FilEntry } from "@/lib/fil/types";
+import i18n from "@/lib/i18n";
 import { uriToDataUrl } from "@/lib/image";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
+import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import type { SavedSession } from "@/lib/types";
 
 function escapeHtml(text: string): string {
@@ -34,6 +36,9 @@ function buildSessionHtml(
   session: SavedSession,
   photoDataUrl: string | null
 ): string {
+  const t = (key: string, opts?: Record<string, string>) =>
+    i18n.t(`ritual:export.${key}`, opts);
+  const lang = i18n.language?.startsWith("en") ? "en" : "fr";
   const exercise = escapeHtml(sanitizeAiDisplayText(session.exercise));
   const reflection = session.reflection
     ? sanitizeAiDisplayText(session.reflection)
@@ -47,20 +52,20 @@ function buildSessionHtml(
     .map((q) => `<li>${escapeHtml(sanitizeAiDisplayText(q))}</li>`)
     .join("");
   const written = session.writtenText
-    ? `<section><h2>Texte écrit</h2><p>${escapeHtml(session.writtenText)}</p></section>`
+    ? `<section><h2>${escapeHtml(t("writtenText"))}</h2><p>${escapeHtml(session.writtenText)}</p></section>`
     : "";
   const followUp = session.followUpExercise
-    ? `<section><h2>Poursuite suggérée</h2><p>${escapeHtml(sanitizeAiDisplayText(session.followUpExercise))}</p></section>`
+    ? `<section><h2>${escapeHtml(t("followUp"))}</h2><p>${escapeHtml(sanitizeAiDisplayText(session.followUpExercise))}</p></section>`
     : "";
   const artwork = photoDataUrl
-    ? `<section class="artwork"><h2>Votre création</h2><img src="${photoDataUrl.replace(/"/g, "&quot;")}" alt="Création artistique" /></section>`
+    ? `<section class="artwork"><h2>${escapeHtml(t("artwork"))}</h2><img src="${photoDataUrl.replace(/"/g, "&quot;")}" alt="${escapeHtml(t("artworkAlt"))}" /></section>`
     : "";
 
   return `<!DOCTYPE html>
-<html lang="fr">
+<html lang="${lang}">
 <head>
   <meta charset="utf-8" />
-  <title>Exercice — ${escapeHtml(session.impulse)}</title>
+  <title>${escapeHtml(t("docTitle", { impulse: session.impulse }))}</title>
   <style>
     @page { size: A4; margin: 16mm; }
     body { font-family: Georgia, serif; color: #3d3530; background: #FAF7F4; line-height: 1.65; margin: 0; padding: 24px; }
@@ -89,22 +94,22 @@ function buildSessionHtml(
 </head>
 <body>
   <h1>${escapeHtml(session.impulse)}</h1>
-  <p class="meta">${escapeHtml(formatSessionDate(session.createdAt))} · ${escapeHtml(getTechniqueLabel(session.technique))} · ${session.durationMinutes} min</p>
+  <p class="meta">${escapeHtml(formatSessionDate(session.createdAt))} · ${escapeHtml(localizedTechniqueLabel(session.technique))} · ${session.durationMinutes} min</p>
   ${artwork}
-  <section><h2>Exercice</h2><p>${exercise}</p></section>
+  <section><h2>${escapeHtml(t("exercise"))}</h2><p>${exercise}</p></section>
   ${written}
   ${
     paragraphs
-      ? `<section class="reflection"><h2>Miroir créatif</h2>${paragraphs}</section>`
+      ? `<section class="reflection"><h2>${escapeHtml(t("mirror"))}</h2>${paragraphs}</section>`
       : ""
   }
   ${
     questions
-      ? `<section><h2>Questions d'exploration</h2><ul>${questions}</ul></section>`
+      ? `<section><h2>${escapeHtml(t("questions"))}</h2><ul>${questions}</ul></section>`
       : ""
   }
   ${followUp}
-  <footer>Pastek Art — export local</footer>
+  <footer>${escapeHtml(t("footer"))}</footer>
   <script>
     async function readyToPrint() {
       const images = Array.from(document.images || []);
@@ -131,9 +136,7 @@ function buildSessionHtml(
 function exportWebPdf(html: string): void {
   const printWindow = window.open("", "_blank");
   if (!printWindow) {
-    throw new Error(
-      "Popup bloquée — autorisez les fenêtres pour exporter en PDF"
-    );
+    throw new Error(i18n.t("ritual:export.popupBlocked"));
   }
   printWindow.document.write(html);
   printWindow.document.close();
@@ -155,7 +158,7 @@ export async function exportFilRitualPdf(
 ): Promise<{ uri?: string; message: string }> {
   const m = entry.metadata;
   if (!m?.technique || !m.exercise) {
-    throw new Error("Cette trace ne contient pas de fiche d'exercice complète.");
+    throw new Error(i18n.t("ritual:export.incompleteFil"));
   }
   return exportSessionPdf({
     id: entry.id,
@@ -183,8 +186,8 @@ export async function exportSessionPdf(
     exportWebPdf(html);
     return {
       message: photoDataUrl
-        ? "Fenêtre d'impression ouverte (avec image) — choisissez « Enregistrer en PDF »."
-        : "Fenêtre d'impression ouverte — choisissez « Enregistrer en PDF ».",
+        ? i18n.t("ritual:export.printWithImage")
+        : i18n.t("ritual:export.printOpened"),
     };
   }
 
@@ -194,16 +197,16 @@ export async function exportSessionPdf(
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(uri, {
         mimeType: "text/html",
-        dialogTitle: "Exporter votre exercice",
+        dialogTitle: i18n.t("ritual:export.shareDialogTitle"),
       });
       return {
         uri,
-        message: "Fiche partagée — ouvrez-la dans le navigateur pour imprimer.",
+        message: i18n.t("ritual:export.sharedNative"),
       };
     }
   } catch {
     /* expo-sharing optionnel */
   }
 
-  return { uri, message: `Fiche enregistrée : ${uri}` };
+  return { uri, message: i18n.t("ritual:export.savedNative", { uri }) };
 }

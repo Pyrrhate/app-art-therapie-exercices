@@ -7,6 +7,7 @@ import {
   type ArtisticTechnique,
 } from "@art-therapie/shared";
 import type { TechniqueDefinition } from "@/constants";
+import i18n from "@/lib/i18n";
 
 const STORAGE_KEY = "@art_therapie/managed_techniques_v1";
 
@@ -137,7 +138,7 @@ export async function addCustomTechnique(input: {
   aiAnalysis?: boolean;
 }): Promise<ManagedTechniquesState> {
   const label = input.label.trim();
-  if (label.length < 2) throw new Error("Nom trop court");
+  if (label.length < 2) throw new Error(i18n.t("common:techniques.nameTooShort"));
   const state = await getManagedTechniquesState();
   const mapsTo = input.mapsTo ?? "mixed_media";
   const custom: CustomTechnique = {
@@ -172,7 +173,7 @@ export async function deleteCustomTechnique(
   id: string
 ): Promise<ManagedTechniquesState> {
   if (!id.startsWith("custom_")) {
-    throw new Error("Les techniques intégrées ne peuvent pas être supprimées.");
+    throw new Error(i18n.t("common:techniques.cannotDeleteBuiltIn"));
   }
   const state = await getManagedTechniquesState();
   const next = {

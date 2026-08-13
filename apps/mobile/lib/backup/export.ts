@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import * as FileSystem from "expo-file-system";
 import { formatSessionDate } from "@/constants";
+import i18n from "@/lib/i18n";
 import { buildAppBackup, formatBackupSize } from "./build";
 import { BACKUP_FILE_EXTENSION } from "./types";
 
@@ -30,7 +31,7 @@ async function shareOnNative(filename: string, contents: string): Promise<string
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(uri, {
         mimeType: "application/json",
-        dialogTitle: "Exporter votre pratique",
+        dialogTitle: i18n.t("app:settings.backupShareDialog"),
         UTI: "public.json",
       });
       return uri;
@@ -55,7 +56,7 @@ export async function exportAppBackup(): Promise<{
   if (Platform.OS === "web") {
     downloadOnWeb(filename, json);
     return {
-      message: `Fichier téléchargé (${sizeLabel}) — conservez-le pour restaurer sur un autre appareil.`,
+      message: i18n.t("app:settings.backupDownloaded", { size: sizeLabel }),
       sizeLabel,
       filCount: backup.data.creativeFil.length,
     };
@@ -63,7 +64,7 @@ export async function exportAppBackup(): Promise<{
 
   const uri = await shareOnNative(filename, json);
   return {
-    message: `Sauvegarde partagée (${sizeLabel}). Enregistrez le fichier dans vos fichiers ou Drive.`,
+    message: i18n.t("app:settings.backupShared", { size: sizeLabel }),
     sizeLabel,
     filCount: backup.data.creativeFil.length,
   };
@@ -82,12 +83,16 @@ export function formatRestoreConfirmMessage(summary: {
   sizeLabel: string;
 }): string {
   const lines = [
-    `${summary.filCount} trace${summary.filCount > 1 ? "s" : ""} dans le Fil créatif`,
-    summary.hasDraft ? "Brouillon de rituel inclus" : "Pas de brouillon en cours",
-    `Exportée le ${formatSessionDate(summary.exportedAt)}`,
-    `Taille : ${summary.sizeLabel}`,
+    i18n.t("app:settings.backupConfirmTraces", { count: summary.filCount }),
+    summary.hasDraft
+      ? i18n.t("app:settings.backupConfirmDraftYes")
+      : i18n.t("app:settings.backupConfirmDraftNo"),
+    i18n.t("app:settings.backupConfirmExported", {
+      date: formatSessionDate(summary.exportedAt),
+    }),
+    i18n.t("app:settings.backupConfirmSize", { size: summary.sizeLabel }),
     "",
-    "Les données actuelles de cet appareil seront remplacées.",
+    i18n.t("app:settings.backupConfirmReplace"),
   ];
   return lines.join("\n");
 }

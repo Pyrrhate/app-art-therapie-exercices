@@ -1,10 +1,12 @@
 import { Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { ColorSwatch } from "@/components/color-journey/ColorSwatch";
 import {
-  COLOR_JOURNEY_DIMENSIONS,
   COLOR_JOURNEY_TURN_COUNT,
+  getDimensionForTurn,
 } from "@/lib/color-journey/dimensions";
 import type { ColorChoice } from "@/lib/color-journey/types";
+import { useLanguageStore } from "@/lib/i18n/languageStore";
 
 interface JourneyProgressProps {
   currentTurn: number;
@@ -12,21 +14,27 @@ interface JourneyProgressProps {
 }
 
 export function JourneyProgress({ currentTurn, history }: JourneyProgressProps) {
+  const { t } = useTranslation("amorces");
+  const language = useLanguageStore((s) => s.language);
+  const activeTurn = Math.min(currentTurn, COLOR_JOURNEY_TURN_COUNT);
+  const activeDimension = getDimensionForTurn(activeTurn, language);
+
   return (
     <View className="mb-6">
       <Text className="text-sand-400 text-xs text-center mb-1 uppercase tracking-wider">
-        Étape {Math.min(currentTurn, COLOR_JOURNEY_TURN_COUNT)} /{" "}
-        {COLOR_JOURNEY_TURN_COUNT}
+        {t("colorJourney.progressStep", {
+          current: activeTurn,
+          total: COLOR_JOURNEY_TURN_COUNT,
+        })}
       </Text>
       <Text className="text-sand-500 text-xs text-center mb-3">
-        {COLOR_JOURNEY_DIMENSIONS[Math.min(currentTurn, COLOR_JOURNEY_TURN_COUNT) - 1]
-          ?.title ?? "Palette"}
+        {activeDimension.title || t("colorJourney.progressFallback")}
       </Text>
       <View className="flex-row justify-center gap-2 flex-wrap px-2">
         {Array.from({ length: COLOR_JOURNEY_TURN_COUNT }, (_, i) => {
           const choice = history[i];
           const isCurrent = i + 1 === currentTurn && !choice;
-          const role = COLOR_JOURNEY_DIMENSIONS[i]?.title.split(" ").pop();
+          const role = getDimensionForTurn(i + 1, language).shortTitle;
           return (
             <View key={i} className="items-center">
               <ColorSwatch
@@ -41,7 +49,7 @@ export function JourneyProgress({ currentTurn, history }: JourneyProgressProps) 
                 }
               />
               <Text className="text-sand-400 text-[10px] mt-1 capitalize">
-                {role ?? ""}
+                {role}
               </Text>
             </View>
           );

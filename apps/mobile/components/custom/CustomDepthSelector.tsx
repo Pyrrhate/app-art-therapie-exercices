@@ -1,32 +1,13 @@
 import { Platform, Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/Card";
 import type { ExperienceMode } from "@/lib/experience/types";
 import { textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
-const DEPTH_MODES: {
-  id: ExperienceMode;
-  title: string;
-  subtitle: string;
-  description: string;
-  icon: string;
-}[] = [
-  {
-    id: "express",
-    title: "Session Rapide",
-    subtitle: "Parcours express",
-    description:
-      "Exercice sur-mesure puis analyse directe de votre création.",
-    icon: "→",
-  },
-  {
-    id: "deep",
-    title: "Session Approfondie",
-    subtitle: "Parcours guidé",
-    description:
-      "Ancrage avant l'analyse, puis pistes d'intégration pour clore la séance.",
-    icon: "◎",
-  },
+const DEPTH_MODES: { id: ExperienceMode; keyPrefix: string; icon: string }[] = [
+  { id: "express", keyPrefix: "custom.depthExpress", icon: "→" },
+  { id: "deep", keyPrefix: "custom.depthDeep", icon: "◎" },
 ];
 
 interface CustomDepthSelectorProps {
@@ -39,27 +20,31 @@ export function CustomDepthSelector({
   onChange,
 }: CustomDepthSelectorProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("ritual");
 
   return (
     <View
       accessibilityRole="radiogroup"
-      accessibilityLabel="Choisir la profondeur de la séance"
+      accessibilityLabel={t("custom.depthA11y")}
       className="gap-3"
     >
       <Text className={`text-sm font-medium mb-1 ${textPrimary(isDark)}`}>
-        Profondeur de la séance
+        {t("custom.depthTitle")}
       </Text>
 
       <View className="flex-row gap-3">
         {DEPTH_MODES.map((mode) => {
           const selected = value === mode.id;
+          const title = t(`${mode.keyPrefix}.title`);
+          const subtitle = t(`${mode.keyPrefix}.subtitle`);
+          const description = t(`${mode.keyPrefix}.description`);
           return (
             <Pressable
               key={mode.id}
               onPress={() => onChange(mode.id)}
               accessibilityRole="radio"
               accessibilityState={{ selected }}
-              accessibilityLabel={`${mode.title} — ${mode.description}`}
+              accessibilityLabel={`${title} — ${description}`}
               className="flex-1 active:opacity-90 focus:opacity-90"
             >
               <Card
@@ -70,13 +55,13 @@ export function CustomDepthSelector({
               >
                 <Text className="text-sage-500 text-xl mb-2">{mode.icon}</Text>
                 <Text className={`font-semibold text-sm ${textPrimary(isDark)}`}>
-                  {mode.title}
+                  {title}
                 </Text>
                 <Text className={`text-xs mt-0.5 ${textMuted(isDark)}`}>
-                  {mode.subtitle}
+                  {subtitle}
                 </Text>
                 <Text className={`text-xs mt-2 leading-5 ${textSecondary(isDark)}`}>
-                  {mode.description}
+                  {description}
                 </Text>
               </Card>
             </Pressable>

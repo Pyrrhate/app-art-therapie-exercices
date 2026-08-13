@@ -1,13 +1,14 @@
 import { Fragment } from "react";
 import { Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useIsDark } from "@/lib/themeStore";
 
 export type RitualStep = "ritual" | "exercise" | "reflection";
 
-const STEPS: { id: RitualStep; label: string }[] = [
-  { id: "ritual", label: "Impulsion" },
-  { id: "exercise", label: "Exercice" },
-  { id: "reflection", label: "Réflexion" },
+const STEPS: { id: RitualStep; labelKey: string }[] = [
+  { id: "ritual", labelKey: "progress.impulse" },
+  { id: "exercise", labelKey: "progress.exercise" },
+  { id: "reflection", labelKey: "progress.reflection" },
 ];
 
 const TRACK_WIDTH = 260;
@@ -18,7 +19,9 @@ interface RitualProgressBarProps {
 
 export function RitualProgressBar({ current }: RitualProgressBarProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("ritual");
   const currentIndex = STEPS.findIndex((s) => s.id === current);
+  const currentLabelKey = STEPS[currentIndex]?.labelKey;
 
   return (
     <View
@@ -28,7 +31,11 @@ export function RitualProgressBar({ current }: RitualProgressBarProps) {
         min: 0,
         max: STEPS.length - 1,
         now: currentIndex,
-        text: `Étape ${currentIndex + 1} sur ${STEPS.length} — ${STEPS[currentIndex]?.label}`,
+        text: t("progress.status", {
+          current: currentIndex + 1,
+          total: STEPS.length,
+          label: currentLabelKey ? t(currentLabelKey) : "",
+        }),
       }}
     >
       <View
@@ -89,7 +96,7 @@ export function RitualProgressBar({ current }: RitualProgressBarProps) {
               }`}
               numberOfLines={1}
             >
-              {step.label}
+              {t(step.labelKey)}
             </Text>
           );
         })}

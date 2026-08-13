@@ -1,0 +1,55 @@
+{
+  "privacy": {
+    "heroLabel": "Confidentialité",
+    "heroTitle": "Mentions légales & ",
+    "heroAccent": "confidentialité",
+    "heroDescription": "Dernière mise à jour : juin 2026",
+    "publisherTitle": "Éditeur",
+    "publisherBody": "Application « Pastek Art » — rituel créatif guidé. Éditeur : Guillot / Pastek Art. Contact : {{email}}.",
+    "dataTitle": "Données collectées",
+    "dataBody1": "Aucun compte utilisateur n'est requis. Vos rituels (impulsion, technique, exercice, photo, réflexion) et vos amorces sont enregistrés automatiquement dans le Fil créatif, localement sur votre appareil via AsyncStorage.",
+    "dataBody2": "Vous pouvez exporter et restaurer votre Fil créatif depuis les paramètres : le fichier reste chez vous (Drive, mail, etc.) et n'est jamais envoyé à nos serveurs.",
+    "dataBody3": "Lorsque vous demandez une réflexion IA, votre photo est compressée puis envoyée à notre serveur API (Vercel), qui la transmet à Hugging Face pour analyse. Elle n'est pas conservée côté serveur après traitement. Les amorces sans IA (palette, émotions, nuances) n'envoient aucune donnée au serveur.",
+    "purposeTitle": "Finalités",
+    "purposeBody": "Génération d'exercices créatifs et analyse bienveillante de votre œuvre. Aucune revente de données, aucun profilage publicitaire.",
+    "legalBasisTitle": "Base légale (RGPD)",
+    "legalBasisBody": "Intérêt légitime et exécution du service demandé par l'utilisateur·rice. Vous pouvez utiliser l'application sans envoyer de photo à l'IA.",
+    "rightsTitle": "Vos droits",
+    "rightsBody": "Accès, rectification, effacement : retirez vos traces dans le Fil créatif, utilisez « Tout effacer sur cet appareil » dans les paramètres, ou désinstallez l'app. Pour toute question : {{email}}.",
+    "processorsTitle": "Sous-traitants",
+    "processorsBody": "Hébergement API : Vercel (vercel.com/legal/privacy-policy). Modèles IA : Hugging Face (huggingface.co/privacy) — inférence uniquement, sans entraînement sur vos contenus via cette application. Les clés API restent côté serveur.",
+    "cookiesTitle": "Cookies & web",
+    "cookiesBody": "L'application web ne dépose pas de cookies publicitaires. Seul le stockage local du navigateur peut être utilisé pour le Fil créatif et les préférences.",
+    "footer": "Politique de confidentialité simplifiée — juin 2026."
+  },
+  "updates": {
+    "label": "Produit",
+    "title": "Mises à ",
+    "titleAccent": "jour",
+    "description": "Les grandes évolutions de Pastek Art — sans les petits correctifs du quotidien.",
+    "openApp": "Ouvrir l'application →",
+    "recent": "Récent",
+    "footer": "Pastek Art · générateur d'exercices créatifs",
+    "seoTitle": "Mises à jour Pastek Art — évolutions du générateur créatif",
+    "seoDescription": "Les grandes évolutions de Pastek Art : local-first, clés IA personnelles (BYOK), sauvegarde Drive, prompts et accès libre — sans les petits correctifs du quotidien."
+  },
+  "notFound": {
+    "aria": "Page introuvable",
+    "code": "Erreur 404",
+    "title": "Cette page n'existe pas",
+    "body": "Le lien est peut-être incorrect, ou la page a été déplacée. Pas de panique : votre prochain rituel créatif est à un clic.",
+    "cta": "Lancer le générateur d'exercices →",
+    "ctaLabel": "Lancer le générateur d'exercices",
+    "home": "Accueil",
+    "examples": "Exemples",
+    "seoTitle": "Page introuvable | Pastek Art",
+    "screenTitle": "Page introuvable"
+  },
+  "auth": {
+    "connecting": "Connexion en cours…",
+    "failedTitle": "Connexion",
+    "failedBody": "La connexion n'a pas abouti. Réessayez avec Google ou demandez un nouveau lien magique.",
+    "errorTitle": "Connexion impossible",
+    "backToSettings": "Retournez aux Réglages pour vous reconnecter."
+  }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { completeAuthFromCallbackUrl } from "@/lib/supabase/sessionFromUrl";
 import { formatAuthError } from "@/lib/supabase/errors";
@@ -10,6 +11,7 @@ import { useIsDark } from "@/lib/themeStore";
 
 /** Point d'entrée OAuth / Magic Link (web et deep link natif). */
 export default function AuthCallbackScreen() {
+  const { t } = useTranslation("app");
   const isDark = useIsDark();
   const [failed, setFailed] = useState(false);
 
@@ -27,10 +29,7 @@ export default function AuthCallbackScreen() {
         if (!connected) {
           if (active) {
             setFailed(true);
-            showAlert(
-              "Connexion",
-              "La connexion n'a pas abouti. Réessayez avec Google ou demandez un nouveau lien magique."
-            );
+            showAlert(t("auth.signInAlertTitle"), t("auth.callbackFailedBody"));
           }
           return;
         }
@@ -38,10 +37,7 @@ export default function AuthCallbackScreen() {
         console.warn("[auth/callback]", error);
         if (active) {
           setFailed(true);
-          showAlert(
-            "Connexion impossible",
-            formatAuthError(error)
-          );
+          showAlert(t("auth.callbackImpossibleTitle"), formatAuthError(error));
         }
         return;
       }
@@ -54,7 +50,7 @@ export default function AuthCallbackScreen() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   if (failed) {
     return (
@@ -62,7 +58,7 @@ export default function AuthCallbackScreen() {
         className={`flex-1 items-center justify-center px-8 ${screenBg(isDark)}`}
       >
         <Text className={`text-sm text-center leading-6 ${textMuted(isDark)}`}>
-          Retournez aux Réglages pour vous reconnecter.
+          {t("auth.callbackFailedHint")}
         </Text>
       </View>
     );
@@ -74,7 +70,7 @@ export default function AuthCallbackScreen() {
     >
       <ActivityIndicator color="#496349" />
       <Text className={`mt-4 text-sm ${textMuted(isDark)}`}>
-        Connexion en cours…
+        {t("auth.callbackBusy")}
       </Text>
     </View>
   );

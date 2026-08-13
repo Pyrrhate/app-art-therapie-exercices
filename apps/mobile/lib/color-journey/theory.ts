@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+import { pickLocalized } from "@/lib/i18n/localize";
 import { hexToColorLabel } from "@/lib/color-names";
 import { hexToRgb, rgbToHex } from "@/lib/nuance-finder/colors";
 import { COLOR_JOURNEY_TURN_COUNT, getDimensionForTurn } from "./dimensions";
@@ -6,12 +8,19 @@ import {
   inferPrimaryFromHue,
   mixSecondaryHex,
   mixTertiaryHex,
+  paintLabel,
   RYB_PRIMARIES,
+  RYB_SECONDARIES,
   tertiaryLabel,
   type PaintPrimaryId,
   type PaintSecondaryId,
 } from "./painting-theory";
-import type { ColorChoice, ColorProposal, JourneyReflection, JourneySynthesis } from "./types";
+import type {
+  ColorChoice,
+  ColorProposal,
+  JourneyReflection,
+  JourneySynthesis,
+} from "./types";
 
 export interface Hsl {
   h: number;
@@ -81,7 +90,10 @@ const LIGHTNESS_VALUES: Record<LightnessPreset, number> = {
   profond: 0.34,
 };
 
-export function hexFromHue(hue: number, preset: LightnessPreset = "moyen"): string {
+export function hexFromHue(
+  hue: number,
+  preset: LightnessPreset = "moyen"
+): string {
   return hslToHex(hue, 0.72, LIGHTNESS_VALUES[preset]);
 }
 
@@ -129,6 +141,12 @@ function resolveSecondaryId(history: ColorChoice[]): PaintSecondaryId | null {
   return best.id;
 }
 
+function lightnessPresetLabel(preset: LightnessPreset): string {
+  if (preset === "clair") return i18n.t("amorces:colorJourney.lightnessLight");
+  if (preset === "profond") return i18n.t("amorces:colorJourney.lightnessDeep");
+  return i18n.t("amorces:colorJourney.lightnessMedium");
+}
+
 export interface TurnGuidance {
   title: string;
   subtitle: string;
@@ -137,16 +155,17 @@ export interface TurnGuidance {
   highlightSpread: number;
 }
 
-export function getTurnGuidance(turn: number, history: ColorChoice[]): TurnGuidance {
+export function getTurnGuidance(
+  turn: number,
+  history: ColorChoice[]
+): TurnGuidance {
   const dim = getDimensionForTurn(turn);
 
   if (turn === 1) {
     return {
       title: dim.title,
-      subtitle:
-        "Choisissez votre couleur primaire dominante — rouge, jaune ou bleu. C'est la base de votre palette peinture.",
-      theory:
-        "En peinture (modèle RYB), les trois primaires ne se mélangent pas entre elles : elles servent de point de départ pour créer toutes les autres teintes.",
+      subtitle: i18n.t("amorces:colorJourney.guidance.primarySubtitle"),
+      theory: i18n.t("amorces:colorJourney.guidance.primaryTheory"),
       highlightHues: RYB_PRIMARIES.map((p) => p.hue),
       highlightSpread: 22,
     };
@@ -154,17 +173,22 @@ export function getTurnGuidance(turn: number, history: ColorChoice[]): TurnGuida
 
   const primaryId = resolvePrimaryId(history);
   const primary = RYB_PRIMARIES.find((p) => p.id === primaryId)!;
+  const primaryName = paintLabel(primary).toLowerCase();
 
   if (turn === 2) {
     const secondaries = getSecondariesForPrimary(primaryId);
     return {
       title: dim.title,
-      subtitle: `Mélangez deux primaires pour obtenir une secondaire complémentaire à votre ${primary.label.toLowerCase()}.`,
-      theory: `Les secondaires (orange, vert, violet) naissent du mélange de deux primaires. Face au ${primary.label.toLowerCase()}, choisissez ${secondaries.map((s) => s.label.toLowerCase()).join(" ou ")}.`,
-      highlightHues: secondaries.map((s) => {
-        const hex = mixSecondaryHex(s);
-        return hexToHsl(hex).h;
+      subtitle: i18n.t("amorces:colorJourney.guidance.secondarySubtitle", {
+        primary: primaryName,
       }),
+      theory: i18n.t("amorces:colorJourney.guidance.secondaryTheory", {
+        primary: primaryName,
+        options: secondaries
+          .map((s) => paintLabel(s).toLowerCase())
+          .join(` ${i18n.t("amorces:colorJourney.guidance.or")} `),
+      }),
+      highlightHues: secondaries.map((s) => hexToHsl(mixSecondaryHex(s)).h),
       highlightSpread: 24,
     };
   }
@@ -180,10 +204,8 @@ export function getTurnGuidance(turn: number, history: ColorChoice[]): TurnGuida
 
   return {
     title: dim.title,
-    subtitle:
-      "Une teinte tertiaire entre votre primaire et secondaire — idéale pour ombres, accents et transitions.",
-    theory:
-      "Les tertiaires (rouge-orange, jaune-vert, bleu-violet…) enrichissent la palette sans la surcharger. Pensez ratio 60 % primaire · 30 % secondaire · 10 % tertiaire.",
+    subtitle: i18n.t("amorces:colorJourney.guidance.tertiarySubtitle"),
+    theory: i18n.t("amorces:colorJourney.guidance.tertiaryTheory"),
     highlightHues: highlights,
     highlightSpread: 18,
   };
@@ -197,8 +219,8 @@ export function getTurnProposals(
   if (turn === 1) {
     return RYB_PRIMARIES.map((p) => ({
       hex: p.hex,
-      label: p.label,
-      hint: "Primaire RYB — teinte pure",
+      label: paintLabel(p),
+      hint: i18n.t("amorces:colorJourney.proposals.primaryHint"),
       paintId: p.id,
     }));
   }
@@ -207,9 +229,9 @@ export function getTurnProposals(
     const primaryId = resolvePrimaryId(history);
     return getSecondariesForPrimary(primaryId).map((secondary) => ({
       hex: mixSecondaryHex(secondary),
-      label: secondary.label,
-      hint: secondary.recipe.parts,
-      mixRecipe: secondary.recipe.description,
+      label: paintLabel(secondary),
+      hint: pickLocalized(secondary.recipe.parts),
+      mixRecipe: pickLocalized(secondary.recipe.description),
       paintId: secondary.id,
     }));
   }
@@ -219,20 +241,34 @@ export function getTurnProposals(
     const secondaryId = resolveSecondaryId(history);
     if (!secondaryId) return [];
 
+    const secondaryDef = RYB_SECONDARIES.find((s) => s.id === secondaryId)!;
+    const primaryName = paintLabel(
+      RYB_PRIMARIES.find((p) => p.id === primaryId)!
+    ).toLowerCase();
+    const secondaryName = paintLabel(secondaryDef).toLowerCase();
+
     return (["primary", "secondary"] as const).map((bias) => {
       const hex = mixTertiaryHex(primaryId, secondaryId, bias);
       const label = tertiaryLabel(primaryId, secondaryId, bias);
-      const primaryLabel =
-        RYB_PRIMARIES.find((p) => p.id === primaryId)!.label.toLowerCase();
-      const secondaryLabel = secondaryId;
       return {
         hex,
         label: label.charAt(0).toUpperCase() + label.slice(1),
         hint:
           bias === "primary"
-            ? `Proche du ${primaryLabel} — ombres et profondeur`
-            : `Proche du ${secondaryLabel} — accents et lumières`,
-        mixRecipe: `Mélange ${primaryLabel} + ${secondaryLabel} (${bias === "primary" ? "dominante primaire" : "dominante secondaire"})`,
+            ? i18n.t("amorces:colorJourney.proposals.tertiaryNearPrimary", {
+                color: primaryName,
+              })
+            : i18n.t("amorces:colorJourney.proposals.tertiaryNearSecondary", {
+                color: secondaryName,
+              }),
+        mixRecipe: i18n.t("amorces:colorJourney.proposals.tertiaryMix", {
+          primary: primaryName,
+          secondary: secondaryName,
+          bias:
+            bias === "primary"
+              ? i18n.t("amorces:colorJourney.proposals.biasPrimary")
+              : i18n.t("amorces:colorJourney.proposals.biasSecondary"),
+        }),
         paintId: `tertiary-${bias}`,
       };
     });
@@ -250,7 +286,10 @@ export function proposalFromSelection(
   return {
     hex,
     label,
-    hint: `Teinte ${label.toLowerCase()} — ${preset}`,
+    hint: i18n.t("amorces:colorJourney.proposals.wheelHint", {
+      label: label.toLowerCase(),
+      preset: lightnessPresetLabel(preset),
+    }),
   };
 }
 
@@ -267,13 +306,14 @@ export function buildProposalFromWheel(
     return {
       hex,
       label,
-      hint: `Proche du ${primary.label.toLowerCase()} — primaire RYB`,
+      hint: i18n.t("amorces:colorJourney.proposals.nearPrimary", {
+        color: paintLabel(primary).toLowerCase(),
+      }),
       paintId,
     };
   }
 
   if (turn === 2) {
-    const primaryId = resolvePrimaryId(history);
     const proposals = getTurnProposals(2, history);
     const hsl = hexToHsl(hex);
     let closest = proposals[0]!;
@@ -299,23 +339,13 @@ export function buildProposalFromWheel(
   return {
     hex,
     label,
-    hint: closest?.hint ?? "Tertiaire — nuance d'accord",
+    hint:
+      closest?.hint ??
+      i18n.t("amorces:colorJourney.proposals.tertiaryFallback"),
     mixRecipe: closest?.mixRecipe,
     paintId: closest?.paintId ?? "tertiary-custom",
   };
 }
-
-const PAINTING_TIPS: Record<number, string> = {
-  1: "Utilisez cette primaire pour les grandes masses (~60 % de la surface).",
-  2: "La secondaire équilibre la primaire — réservée aux zones médianes (~30 %).",
-  3: "La tertiaire sert aux accents, contours et détails (~10 %).",
-};
-
-const PRACTICAL_QUESTIONS: Record<number, string> = {
-  1: "Testez la teinte sur une bande d'essai avant de couvrir la toile.",
-  2: "Mélangez sur la palette avec un couteau — pas directement sur le papier.",
-  3: "Un peu de blanc adoucit la tertiaire sans la désaturer entièrement.",
-};
 
 export function buildReflection(
   turn: number,
@@ -323,14 +353,19 @@ export function buildReflection(
   history: ColorChoice[]
 ): JourneyReflection {
   const guidance = getTurnGuidance(turn, history);
-  const practical = PAINTING_TIPS[turn] ?? PAINTING_TIPS[3]!;
+  const tipKey =
+    turn === 1 || turn === 2 || turn === 3 ? String(turn) : "3";
+  const practical = i18n.t(`amorces:colorJourney.tips.${tipKey}`);
   const question =
     turn <= COLOR_JOURNEY_TURN_COUNT
-      ? PRACTICAL_QUESTIONS[turn]
+      ? i18n.t(`amorces:colorJourney.questions.${tipKey}`)
       : undefined;
 
   return {
-    reflection: `${chosen.label} rejoint votre palette — ${practical.toLowerCase()}`,
+    reflection: i18n.t("amorces:colorJourney.reflection", {
+      label: chosen.label,
+      practical: practical.toLowerCase(),
+    }),
     psychology: practical,
     theory: guidance.theory,
     question,
@@ -345,14 +380,19 @@ export function buildSynthesis(history: ColorChoice[]): JourneySynthesis {
 
   const relations =
     history.length >= COLOR_JOURNEY_TURN_COUNT
-      ? `Primaire, secondaire et tertiaire forment une palette peinture équilibrée (ratio 60·30·10).`
+      ? i18n.t("amorces:colorJourney.synthesis.full")
       : history.length >= 2
-        ? "Primaire et secondaire suffisent pour démarrer — vous pouvez ajouter une tertiaire ou passer à l'exercice."
-        : "Une primaire pose la base — poursuivez pour construire votre palette.";
+        ? i18n.t("amorces:colorJourney.synthesis.partial")
+        : i18n.t("amorces:colorJourney.synthesis.single");
 
   return {
-    summary: `${relations} Votre palette : ${labels}.`,
-    suggestedImpulse: `Palette peinture : ${labels}`,
+    summary: i18n.t("amorces:colorJourney.synthesis.summary", {
+      relations,
+      labels,
+    }),
+    suggestedImpulse: labels
+      ? i18n.t("amorces:colorJourney.synthesis.impulse", { labels })
+      : i18n.t("amorces:colorJourney.synthesis.impulseEmpty"),
     palette: history,
     source: "fallback",
   };
@@ -364,7 +404,13 @@ export function buildPaletteUsageGuide(history: ColorChoice[]): string {
     const role = getDimensionForTurn(index + 1).title;
     const ratio = index === 0 ? "60 %" : index === 1 ? "30 %" : "10 %";
     const recipe = choice.mixRecipe ? ` · ${choice.mixRecipe}` : "";
-    return `${role} (${ratio}) : ${choice.label} (${choice.hex})${recipe}`;
+    return i18n.t("amorces:colorJourney.usageLine", {
+      role,
+      ratio,
+      label: choice.label,
+      hex: choice.hex,
+      recipe,
+    });
   });
   return lines.join("\n");
 }

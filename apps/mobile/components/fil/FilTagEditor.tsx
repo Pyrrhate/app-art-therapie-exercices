@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/Button";
 import {
   FIL_MAX_TAG_LENGTH,
@@ -18,6 +19,7 @@ interface FilTagEditorProps {
 
 export function FilTagEditor({ tags, onChange }: FilTagEditorProps) {
   const isDark = useIsDark();
+  const { t } = useTranslation("fil");
   const [draft, setDraft] = useState("");
 
   function addTag() {
@@ -36,11 +38,10 @@ export function FilTagEditor({ tags, onChange }: FilTagEditorProps) {
   return (
     <View className={`rounded-3xl border px-5 py-5 ${panelBg(isDark)}`}>
       <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-        Vos tags
+        {t("tags.title")}
       </Text>
       <Text className={`text-sm leading-6 mb-3 ${textSecondary(isDark)}`}>
-        Ajoutez des mots à vous — en plus de la technique, qui s&apos;affiche
-        toute seule.
+        {t("tags.hint")}
       </Text>
       {tags.length > 0 ? (
         <View className="flex-row flex-wrap gap-2 mb-3">
@@ -50,7 +51,7 @@ export function FilTagEditor({ tags, onChange }: FilTagEditorProps) {
               <Pressable
                 onPress={() => removeTag(tag)}
                 hitSlop={8}
-                accessibilityLabel={`Retirer le tag ${tag}`}
+                accessibilityLabel={t("tags.remove", { tag })}
                 className="ml-1"
               >
                 <Text className={`text-xs ${textMuted(isDark)}`}>×</Text>
@@ -60,7 +61,7 @@ export function FilTagEditor({ tags, onChange }: FilTagEditorProps) {
         </View>
       ) : (
         <Text className={`text-xs mb-3 ${textMuted(isDark)}`}>
-          Aucun tag personnel pour l&apos;instant.
+          {t("tags.none")}
         </Text>
       )}
       {canAdd ? (
@@ -68,7 +69,7 @@ export function FilTagEditor({ tags, onChange }: FilTagEditorProps) {
           <TextInput
             value={draft}
             onChangeText={setDraft}
-            placeholder="ex. nocturne, A6, encre…"
+            placeholder={t("tags.placeholder")}
             placeholderTextColor={isDark ? "#8A8078" : "#B8A090"}
             maxLength={FIL_MAX_TAG_LENGTH}
             onSubmitEditing={addTag}
@@ -80,7 +81,7 @@ export function FilTagEditor({ tags, onChange }: FilTagEditorProps) {
             }`}
           />
           <PrimaryButton
-            label="Ajouter le tag"
+            label={t("tags.add")}
             onPress={addTag}
             variant="ghost"
             disabled={!normalizeTag(draft)}
@@ -88,7 +89,7 @@ export function FilTagEditor({ tags, onChange }: FilTagEditorProps) {
         </View>
       ) : (
         <Text className={`text-xs ${textMuted(isDark)}`}>
-          Maximum {FIL_MAX_TAGS_PER_ENTRY} tags par trace.
+          {t("tags.max", { max: FIL_MAX_TAGS_PER_ENTRY })}
         </Text>
       )}
     </View>

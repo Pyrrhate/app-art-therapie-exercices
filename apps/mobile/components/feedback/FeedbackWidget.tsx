@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { REFLECTION_PROMPT_VERSION } from "@art-therapie/shared";
@@ -11,11 +12,11 @@ export type FeedbackRating = 1 | 2 | 3;
 const RATING_OPTIONS: {
   value: FeedbackRating;
   emoji: string;
-  label: string;
+  labelKey: string;
 }[] = [
-  { value: 3, emoji: "🌟", label: "Parfait" },
-  { value: 2, emoji: "🌿", label: "Intéressant" },
-  { value: 1, emoji: "🥀", label: "À côté de la plaque" },
+  { value: 3, emoji: "🌟", labelKey: "feedback.ratingGreat" },
+  { value: 2, emoji: "🌿", labelKey: "feedback.ratingOk" },
+  { value: 1, emoji: "🥀", labelKey: "feedback.ratingOff" },
 ];
 
 function storageKey(sessionId: string): string {
@@ -38,6 +39,7 @@ export function FeedbackWidget({
   aiResponseText,
   promptVersion = REFLECTION_PROMPT_VERSION,
 }: FeedbackWidgetProps) {
+  const { t } = useTranslation("ritual");
   const [selectedRating, setSelectedRating] = useState<FeedbackRating | null>(
     null
   );
@@ -113,12 +115,13 @@ export function FeedbackWidget({
       className="bg-sand-50 rounded-2xl border border-sage-100 px-5 py-5"
     >
       <Text className="text-sand-700 text-sm text-center leading-6 mb-4">
-        Ce miroir résonne-t-il juste pour vous ?
+        {t("feedback.question")}
       </Text>
 
       <View className="flex-row justify-center gap-2 flex-wrap">
         {RATING_OPTIONS.map((option) => {
           const isSelected = selectedRating === option.value;
+          const label = t(option.labelKey);
           return (
             <Pressable
               key={option.value}
@@ -126,7 +129,7 @@ export function FeedbackWidget({
               disabled={submitting}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={option.label}
+              accessibilityLabel={label}
               className={`items-center rounded-2xl border px-3 py-3 min-w-[92px] ${
                 isSelected
                   ? "bg-sage-100 border-sage-300"
@@ -135,7 +138,7 @@ export function FeedbackWidget({
             >
               <Text className="text-2xl mb-1">{option.emoji}</Text>
               <Text className="text-sage-700 text-xs font-medium text-center">
-                {option.label}
+                {label}
               </Text>
             </Pressable>
           );
@@ -145,13 +148,13 @@ export function FeedbackWidget({
       {selectedRating === 1 && (
         <Animated.View entering={FadeIn.duration(320)} className="mt-4">
           <Text className="text-sand-600 text-sm text-center mb-3 leading-5">
-            Qu&apos;est-ce qui vous a dérangé ? (optionnel)
+            {t("feedback.lowPrompt")}
           </Text>
           <TextInput
             className="bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-sm min-h-[88px] mb-3"
             multiline
             textAlignVertical="top"
-            placeholder="Vos mots, sans jugement…"
+            placeholder={t("feedback.commentPlaceholder")}
             placeholderTextColor="#A89F91"
             value={comment}
             onChangeText={setComment}
@@ -160,10 +163,10 @@ export function FeedbackWidget({
           <PrimaryButton
             label={
               submitting
-                ? "Envoi…"
+                ? t("feedback.submitting")
                 : savedRating === 1
-                  ? "Mettre à jour mon retour"
-                  : "Partager mon ressenti"
+                  ? t("feedback.update")
+                  : t("feedback.share")
             }
             onPress={() => void persist(1, comment)}
             disabled={!canSubmitLow}
@@ -175,8 +178,7 @@ export function FeedbackWidget({
 
       {showConfirmation && (
         <Text className="text-sage-600 text-xs text-center mt-4 leading-5">
-          Merci pour votre retour — vous pouvez le modifier tant que vous êtes
-          sur cette page.
+          {t("feedback.thanks")}
         </Text>
       )}
     </Animated.View>

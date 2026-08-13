@@ -1,4 +1,5 @@
 import { Alert, Platform } from "react-native";
+import i18n from "@/lib/i18n";
 
 function truncateSummary(summary: string, max = 72): string {
   const trimmed = summary.trim();
@@ -8,64 +9,78 @@ function truncateSummary(summary: string, max = 72): string {
 
 /** Confirmation avant de retirer une trace du Fil. */
 export async function confirmDeleteFilEntry(summary: string): Promise<boolean> {
+  const t = i18n.getFixedT(null, "fil");
   const excerpt = truncateSummary(summary);
+  const title = t("confirm.deleteTitle");
   const message = excerpt
-    ? `« ${excerpt} » sera définitivement retirée de votre Fil sur cet appareil.`
-    : "Cette trace sera définitivement retirée de votre Fil sur cet appareil.";
+    ? t("confirm.deleteBodyExcerpt", { excerpt })
+    : t("confirm.deleteBody");
 
   if (Platform.OS === "web") {
-    return window.confirm(`Supprimer cette trace ?\n\n${message}`);
+    return window.confirm(`${title}\n\n${message}`);
   }
 
   return new Promise((resolve) => {
-    Alert.alert("Supprimer cette trace ?", message, [
-      { text: "Annuler", style: "cancel", onPress: () => resolve(false) },
-      { text: "Supprimer", style: "destructive", onPress: () => resolve(true) },
+    Alert.alert(title, message, [
+      {
+        text: t("confirm.cancel"),
+        style: "cancel",
+        onPress: () => resolve(false),
+      },
+      {
+        text: t("confirm.delete"),
+        style: "destructive",
+        onPress: () => resolve(true),
+      },
     ]);
   });
 }
 
 /** Double confirmation avant d'effacer l'intégralité du Fil. */
 export async function confirmClearAllFil(count: number): Promise<boolean> {
-  const countLabel =
-    count === 1 ? "1 trace" : `${count} traces`;
+  const t = i18n.getFixedT(null, "fil");
+  const countLabel = t("confirm.count", { count });
 
   if (Platform.OS === "web") {
     const first = window.confirm(
-      `Effacer tout le Fil créatif ?\n\n${countLabel} seront supprimées.\n\nVous pouvez aussi retirer les traces une par une depuis leur fiche.`
+      `${t("confirm.clearTitleWeb")}\n\n${t("confirm.clearBodyWeb", { countLabel })}`
     );
     if (!first) return false;
 
     return window.confirm(
-      `Dernière confirmation\n\nEffacer définitivement ${countLabel} ? Cette action est irréversible.`
+      `${t("confirm.finalTitle")}\n\n${t("confirm.finalBody", { countLabel })}`
     );
   }
 
   return new Promise((resolve) => {
-    Alert.alert(
-      "Effacer tout le Fil ?",
-      `${countLabel} seront supprimées de cet appareil.\n\nPour un contrôle fin, retirez les traces une par une depuis leur fiche.`,
-      [
-        { text: "Annuler", style: "cancel", onPress: () => resolve(false) },
-        {
-          text: "Continuer",
-          style: "destructive",
-          onPress: () => {
-            Alert.alert(
-              "Dernière confirmation",
-              `Effacer définitivement ${countLabel} ? Cette action est irréversible.`,
-              [
-                { text: "Annuler", style: "cancel", onPress: () => resolve(false) },
-                {
-                  text: "Tout effacer",
-                  style: "destructive",
-                  onPress: () => resolve(true),
-                },
-              ]
-            );
-          },
+    Alert.alert(t("confirm.clearTitle"), t("confirm.clearBody", { countLabel }), [
+      {
+        text: t("confirm.cancel"),
+        style: "cancel",
+        onPress: () => resolve(false),
+      },
+      {
+        text: t("confirm.clearContinue"),
+        style: "destructive",
+        onPress: () => {
+          Alert.alert(
+            t("confirm.finalTitle"),
+            t("confirm.finalBody", { countLabel }),
+            [
+              {
+                text: t("confirm.cancel"),
+                style: "cancel",
+                onPress: () => resolve(false),
+              },
+              {
+                text: t("confirm.clearConfirm"),
+                style: "destructive",
+                onPress: () => resolve(true),
+              },
+            ]
+          );
         },
-      ]
-    );
+      },
+    ]);
   });
 }

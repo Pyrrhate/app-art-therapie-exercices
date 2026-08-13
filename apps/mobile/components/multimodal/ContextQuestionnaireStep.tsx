@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Text, TextInput, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { MultimodalUserAnswers } from "@/lib/multimodal/types";
 import {
   DEEP_QUESTION_KEYS,
@@ -28,13 +29,17 @@ export function ContextQuestionnaireStep({
   onChange,
 }: ContextQuestionnaireStepProps) {
   const isDark = useIsDark();
-  const [questions, setQuestions] = useState(() => resolveDeepQuestions());
+  const { t, i18n } = useTranslation("ritual");
+  const language = i18n.language;
+  const [questions, setQuestions] = useState(() =>
+    resolveDeepQuestions(null, language)
+  );
 
   useEffect(() => {
     void getDeepQuestionsOverrides().then((overrides) => {
-      setQuestions(resolveDeepQuestions(overrides));
+      setQuestions(resolveDeepQuestions(overrides, language));
     });
-  }, []);
+  }, [language]);
 
   const inputClass = `bg-white border rounded-2xl px-4 py-3 text-base min-h-[88px] ${
     isDark
@@ -45,9 +50,7 @@ export function ContextQuestionnaireStep({
   return (
     <View className="gap-6">
       <Text className={`text-base leading-7 ${textSecondary(isDark)}`}>
-        Avant de partager votre création, prenez un instant pour ancrer ce que vous
-        avez vécu. Ces mots guideront l&apos;accompagnement bienveillant — ils ne seront
-        pas jugés.
+        {t("contextQuestions.intro")}
       </Text>
 
       {DEEP_QUESTION_KEYS.map((key: DeepQuestionKey) => {

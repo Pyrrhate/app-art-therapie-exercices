@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { InlineNotice } from "@/components/InlineNotice";
@@ -54,19 +55,20 @@ import {
   ImageReadTimeoutError,
   ImageSourceTooLargeError,
   ImageTooLargeError,
-  MAX_SOURCE_LABEL,
+  maxSourceLabel,
   pickImageFileWeb,
   prepareImageDataUrl,
   prepareImageForAnalysis,
   prepareImageFromAsset,
   prepareImageFromFile,
   processTimeoutMs,
-  UPLOAD_MAX_LABEL,
+  uploadMaxLabel,
   uriToDataUrl,
 } from "@/lib/image";
 import { recordFilEntry } from "@/lib/fil/record";
 import { useRitualStore } from "@/lib/store";
 import { getTechniqueLabel, isAiAnalysisSupported } from "@/constants";
+import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import { getLocalReflection } from "@/lib/reflection/fallback";
 import {
   cleanReflectionBodyForDisplay,
@@ -117,9 +119,11 @@ function withTimeout<T>(
   });
 }
 
-function imageErrorMessage(error: unknown): string {
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+
+function imageErrorMessage(error: unknown, t: Translate): string {
   if (error instanceof Error && error.message === "TIMEOUT") {
-    return "La photo met trop de temps à se préparer. Patientez ou choisissez une image plus légère.";
+    return t("reflection.notice.photoTimeout");
   }
   if (error instanceof ImageCloudFileError) return error.message;
   if (error instanceof ImageReadTimeoutError) return error.message;
@@ -128,10 +132,11 @@ function imageErrorMessage(error: unknown): string {
   if (error instanceof ImageCompressionError) return error.message;
   if (error instanceof ImageProcessingAbortedError) return error.message;
   if (error instanceof Error && error.message) return error.message;
-  return "Impossible de préparer cette photo. Essayez une autre image.";
+  return t("reflection.notice.photoFailed");
 }
 
 export default function ReflectionScreen() {
+  const { t } = useTranslation("ritual");
   const ritual = useRitualStore();
   const {
     impulse,
@@ -280,8 +285,13 @@ export default function ReflectionScreen() {
     setNotice({
       type: "success",
       message: prepared.uploadReady
-        ? `Photo prête pour l'IA (${formatImageSize(prepared.byteSize)} · max ${UPLOAD_MAX_LABEL}).`
-        : `Photo compressée (${formatImageSize(prepared.byteSize)}).`,
+        ? t("reflection.notice.photoReady", {
+            size: formatImageSize(prepared.byteSize),
+            max: uploadMaxLabel(),
+          })
+        : t("reflection.notice.photoCompressed", {
+            size: formatImageSize(prepared.byteSize),
+          }),
     });
   }
 
@@ -290,7 +300,7 @@ export default function ReflectionScreen() {
     setPreparingPhoto(true);
     setNotice({
       type: "info",
-      message: "Compression de la photo pour l'IA…",
+      message: t("reflection.notice.compressing"),
     });
 
     const timeoutMs = asset.fileSize
@@ -313,7 +323,7 @@ export default function ReflectionScreen() {
       setPhotoUri(null);
       setPhotoDataUrl(null);
       setPhotoSizeLabel(null);
-      setNotice({ type: "error", message: imageErrorMessage(error) });
+      setNotice({ type: "error", message: imageErrorMessage(error, t) });
     } finally {
       if (!isStale(generation)) {
         finishWork();
@@ -327,7 +337,10 @@ export default function ReflectionScreen() {
     setPreparingPhoto(true);
     setNotice({
       type: "info",
-      message: `Compression (${formatImageSize(file.size)}) → max ${UPLOAD_MAX_LABEL} pour l'IA…`,
+      message: t("reflection.notice.compressingFile", {
+        size: formatImageSize(file.size),
+        max: uploadMaxLabel(),
+      }),
     });
 
     const timeoutMs = processTimeoutMs(file.size);
@@ -348,7 +361,7 @@ export default function ReflectionScreen() {
       setPhotoUri(null);
       setPhotoDataUrl(null);
       setPhotoSizeLabel(null);
-      setNotice({ type: "error", message: imageErrorMessage(error) });
+      setNotice({ type: "error", message: imageErrorMessage(error, t) });
     } finally {
       if (!isStale(generation)) {
         finishWork();
@@ -374,8 +387,7 @@ export default function ReflectionScreen() {
       if (!permission.granted) {
         setNotice({
           type: "error",
-          message:
-            "Autorisez l'accès à la galerie dans les réglages de l'appareil.",
+          message: t("reflection.notice.galleryPermission"),
         });
         return;
       }
@@ -390,8 +402,7 @@ export default function ReflectionScreen() {
     } catch {
       setNotice({
         type: "error",
-        message:
-          "Impossible d'ouvrir la galerie. Réessayez ou utilisez la caméra.",
+        message: t("reflection.notice.galleryFailed"),
       });
     }
   }
@@ -402,8 +413,7 @@ export default function ReflectionScreen() {
       if (!permission.granted) {
         setNotice({
           type: "error",
-          message:
-            "Autorisez l'accès à la caméra pour photographier votre création.",
+          message: t("reflection.notice.cameraPermission"),
         });
         return;
       }
@@ -416,7 +426,7 @@ export default function ReflectionScreen() {
     } catch {
       setNotice({
         type: "error",
-        message: "Impossible d'utiliser la caméra sur cet appareil.",
+        message: t("reflection.notice.cameraFailed"),
       });
     }
   }
@@ -426,7 +436,7 @@ export default function ReflectionScreen() {
       return photoDataUrl;
     }
     if (!photoUri) {
-      throw new Error("Aucune photo sélectionnée.");
+      throw new Error(t("reflection.notice.noPhotoSelected"));
     }
     const raw = photoUri.startsWith("data:")
       ? photoUri
@@ -441,7 +451,7 @@ export default function ReflectionScreen() {
     setOcrLoading(true);
     setNotice({
       type: "info",
-      message: "Lecture de votre écriture manuscrite…",
+      message: t("reflection.notice.ocrReading"),
     });
 
     try {
@@ -468,14 +478,13 @@ export default function ReflectionScreen() {
           type: "success",
           message:
             result.source === "ai"
-              ? "Texte extrait — corrigez-le ci-dessus si besoin avant l'analyse."
-              : "Transcription partielle — complétez le texte manuellement.",
+              ? t("reflection.notice.ocrDone")
+              : t("reflection.notice.ocrPartial"),
         });
       } else {
         setNotice({
           type: "error",
-          message:
-            "Impossible de lire l'écriture. Saisissez le texte à la main ou reprenez une photo plus nette.",
+          message: t("reflection.notice.ocrUnreadable"),
         });
       }
     } catch (error) {
@@ -483,7 +492,7 @@ export default function ReflectionScreen() {
       const message =
         error instanceof ApiError
           ? error.message
-          : "La transcription a échoué. Saisissez le texte à la main.";
+          : t("reflection.notice.ocrFailed");
       setNotice({ type: "error", message });
     } finally {
       if (!isStale(generation)) {
@@ -530,8 +539,7 @@ export default function ReflectionScreen() {
       setDeepenedOpenQuestions([]);
       setNotice({
         type: "info",
-        message:
-          "Pas de clé IA — miroir créatif local. Ajoutez une clé dans Réglages pour une analyse personnalisée.",
+        message: t("reflection.notice.localMirror"),
       });
       return;
     }
@@ -541,10 +549,10 @@ export default function ReflectionScreen() {
         setNotice({
           type: "error",
           message: isWriting
-            ? "Collez votre texte ou photographiez votre écriture manuscrite."
+            ? t("reflection.notice.needTextWriting")
             : techniqueNeedsByokForAi
-              ? "Décrivez votre ressenti (au moins 10 caractères) pour l'analyse."
-              : "Ajoutez une photo de votre création ou un texte de ressenti.",
+              ? t("reflection.notice.needFeeling")
+              : t("reflection.notice.needPhotoOrText"),
         });
       }
       return;
@@ -557,8 +565,7 @@ export default function ReflectionScreen() {
     setDeepenedOpenQuestions([]);
     setNotice({
       type: "info",
-      message:
-        "Analyse en cours — laissez le compteur zen vous accompagner. Vous pouvez annuler ci-dessous.",
+      message: t("reflection.notice.analyzing"),
     });
     try {
       let imageBase64: string | undefined;
@@ -642,10 +649,11 @@ export default function ReflectionScreen() {
       if (result.source === "fallback") {
         setNotice({
           type: "error",
-          message:
-            result.analysisNote
-              ? `Analyse IA indisponible (${result.analysisNote}). Questions génériques affichées — réessayez dans quelques minutes.`
-              : "L'IA n'a pas pu analyser votre photo (service indisponible). Les questions ci-dessous sont génériques — réessayez dans quelques minutes.",
+          message: result.analysisNote
+            ? t("reflection.notice.analysisFallbackNote", {
+                note: result.analysisNote,
+              })
+            : t("reflection.notice.analysisFallback"),
         });
       } else if (result.analysisNote?.trim()) {
         setNotice({
@@ -662,7 +670,7 @@ export default function ReflectionScreen() {
       }
       const message =
         error instanceof Error && error.message === "TIMEOUT"
-          ? "Délai dépassé. Réessayez avec une photo plus légère."
+          ? t("reflection.notice.analysisTimeout")
           : error instanceof ImageSourceTooLargeError ||
               error instanceof ImageTooLargeError ||
               error instanceof ImageCloudFileError ||
@@ -671,7 +679,7 @@ export default function ReflectionScreen() {
             ? error.message
             : error instanceof ApiError
               ? error.message
-              : "Le serveur n'a pas pu analyser l'image. Vérifiez la connexion API et réessayez.";
+              : t("reflection.notice.analysisFailed");
       setNotice({ type: "error", message });
     } finally {
       if (!isStale(generation)) {
@@ -712,11 +720,11 @@ export default function ReflectionScreen() {
       } else {
         setNotice({
           type: "error",
-          message: "Déposez une image (JPG, PNG…), pas un dossier.",
+          message: t("reflection.notice.dropImageOnly"),
         });
       }
     });
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!reflection) {
@@ -738,12 +746,14 @@ export default function ReflectionScreen() {
         /* conserve l'URI d'origine si la compression échoue */
       }
 
+      const ritualTitle =
+        impulse || t("reflection.defaults.defaultRitualTitle");
       const entry = await recordFilEntry({
         source: "ritual",
         summary:
           currentRound === 2
-            ? `${impulse || "Rituel créatif"} · 2e tour`
-            : impulse || "Rituel créatif",
+            ? `${ritualTitle}${t("reflection.metaRound2")}`
+            : ritualTitle,
         detail: reflection.slice(0, 280),
         metadata: {
           impulse,
@@ -772,7 +782,7 @@ export default function ReflectionScreen() {
       await discardRitualDraft();
       setNotice({
         type: "success",
-        message: "Trace enregistrée dans votre Fil créatif.",
+        message: t("reflection.notice.filSaved"),
       });
     })();
   }, [
@@ -790,6 +800,10 @@ export default function ReflectionScreen() {
     round1Snapshot,
     colorContext,
     paletteColors,
+    t,
+    ritual.techniqueLabel,
+    ritual.exerciseDevelopment,
+    ritual.moduleStatement,
   ]);
 
   function handleGoHome() {
@@ -825,7 +839,7 @@ export default function ReflectionScreen() {
     cancelWork();
     setNotice({
       type: "info",
-      message: "Opération annulée.",
+      message: t("reflection.notice.cancelled"),
     });
   }
 
@@ -842,7 +856,7 @@ export default function ReflectionScreen() {
     setLoadingReflection(true);
     setNotice({
       type: "info",
-      message: "Approfondissement du miroir en cours…",
+      message: t("reflection.notice.deepening"),
     });
     try {
       const deepenWritten = [
@@ -860,7 +874,9 @@ Miroir initial (à conserver — ne pas recopier) :
 
       const result = await withTimeout(
         analyzeArtwork({
-          impulse: (impulse || "Approfondir le miroir").slice(0, 200),
+          impulse: (
+            impulse || t("reflection.defaults.defaultDeepenImpulse")
+          ).slice(0, 200),
           technique: technique ?? undefined,
           exercise: exercise?.slice(0, 3000),
           durationMinutes,
@@ -886,8 +902,7 @@ Miroir initial (à conserver — ne pas recopier) :
         setNotice({
           type: "error",
           message:
-            result.analysisNote?.trim() ||
-            "L'approfondissement n'a pas renvoyé de texte exploitable. Réessayez dans un instant.",
+            result.analysisNote?.trim() || t("reflection.notice.deepenEmpty"),
         });
         return;
       }
@@ -899,13 +914,12 @@ Miroir initial (à conserver — ne pas recopier) :
         result.source === "ai"
           ? {
               type: "success",
-              message: "Approfondissement ajouté sous le bouton.",
+              message: t("reflection.notice.deepenAdded"),
             }
           : {
               type: "info",
               message:
-                result.analysisNote ??
-                "Approfondissement en mode secours.",
+                result.analysisNote ?? t("reflection.notice.deepenFallback"),
             }
       );
     } catch (error) {
@@ -915,7 +929,7 @@ Miroir initial (à conserver — ne pas recopier) :
         message:
           error instanceof ApiError
             ? error.message
-            : "Impossible d'approfondir le miroir pour le moment.",
+            : t("reflection.notice.deepenFailed"),
       });
     } finally {
       if (!isStale(generation)) {
@@ -930,7 +944,7 @@ Miroir initial (à conserver — ne pas recopier) :
     try {
       const result = await exportSessionPdf({
         id: sessionExerciseId || `session_${Date.now()}`,
-        impulse: impulse || "Exercice créatif",
+        impulse: impulse || t("reflection.defaults.defaultExerciseTitle"),
         technique,
         exercise: [exercise, ritual.exerciseDevelopment]
           .filter(Boolean)
@@ -939,7 +953,7 @@ Miroir initial (à conserver — ne pas recopier) :
         photoUri: photoUri ?? undefined,
         reflection: [reflection, deepenedReflection]
           .filter(Boolean)
-          .join("\n\n—— Approfondissement ——\n\n"),
+          .join(`\n\n—— ${t("reflection.deepenedLabel")} ——\n\n`),
         openQuestions:
           deepenedOpenQuestions.length > 0
             ? deepenedOpenQuestions
@@ -953,8 +967,10 @@ Miroir initial (à conserver — ne pas recopier) :
       setNotice({ type: "success", message: result.message });
     } catch (error) {
       showAlert(
-        "Export PDF",
-        error instanceof Error ? error.message : "Export impossible."
+        t("reflection.notice.exportPdfTitle"),
+        error instanceof Error
+          ? error.message
+          : t("reflection.notice.exportFailed")
       );
     }
   }
@@ -1027,12 +1043,12 @@ Miroir initial (à conserver — ne pas recopier) :
       setWorkflowPhase("complete");
       setNotice({
         type: "success",
-        message: "Votre séance profonde est enregistrée dans le journal local.",
+        message: t("reflection.notice.journalSaved"),
       });
 
       await recordFilEntry({
         source: "ritual",
-        summary: impulse || "Séance profonde",
+        summary: impulse || t("reflection.defaults.defaultDeepSession"),
         detail: postAnswers.resonance.trim().slice(0, 280),
         metadata: {
           impulse,
@@ -1049,7 +1065,7 @@ Miroir initial (à conserver — ne pas recopier) :
     } catch {
       setNotice({
         type: "error",
-        message: "Impossible d'enregistrer le journal pour le moment.",
+        message: t("reflection.notice.journalFailed"),
       });
     }
   }
@@ -1093,8 +1109,7 @@ Miroir initial (à conserver — ne pas recopier) :
       filRecordedRef.current = false;
       setNotice({
         type: "info",
-        message:
-          "2e tour — répondez aux questions flash pour préparer un exercice adapté.",
+        message: t("reflection.notice.secondRoundStart"),
       });
     })();
   }
@@ -1105,7 +1120,7 @@ Miroir initial (à conserver — ne pas recopier) :
     setLoadingAugmentedExercise(true);
     setNotice({
       type: "info",
-      message: "Génération de votre exercice augmenté…",
+      message: t("reflection.notice.augmentedGenerating"),
     });
 
     try {
@@ -1133,15 +1148,15 @@ Miroir initial (à conserver — ne pas recopier) :
         type: "success",
         message:
           result.source === "ai"
-            ? "Exercice augmenté prêt — lancez votre 2e tour."
-            : "Exercice adapté localement — lancez votre 2e tour.",
+            ? t("reflection.notice.augmentedReady")
+            : t("reflection.notice.augmentedReadyLocal"),
       });
       router.push(ROUTES.exercise);
     } catch (error) {
       const message =
         error instanceof ApiError
           ? error.message
-          : "Impossible de préparer l'exercice augmenté. Réessayez.";
+          : t("reflection.notice.augmentedFailed");
       setNotice({ type: "error", message });
     } finally {
       setLoadingAugmentedExercise(false);
@@ -1205,58 +1220,54 @@ Miroir initial (à conserver — ne pas recopier) :
     switch (workflowPhase) {
       case "pre_analysis":
         return {
-          label: "Parcours profond",
-          title: "Ancrer votre ",
-          accent: "ressenti",
-          description:
-            "Trois questions avant le miroir créatif pour ancrer ce que vous vivez.",
+          label: t("reflection.heroDeepLabel"),
+          title: t("reflection.heroPreTitle"),
+          accent: t("reflection.heroPreAccent"),
+          description: t("reflection.heroPreDescription"),
         };
       case "post_integration":
         return {
-          label: "Parcours profond",
-          title: "Clôturer en ",
-          accent: "douceur",
-          description:
-            "Quelques pistes pour intégrer votre séance avant de la garder en mémoire.",
+          label: t("reflection.heroDeepLabel"),
+          title: t("reflection.heroPostTitle"),
+          accent: t("reflection.heroPostAccent"),
+          description: t("reflection.heroPostDescription"),
         };
       case "second_round_transition":
         return {
-          label: "Réitération rapide",
-          title: "Préparer le ",
-          accent: "2e tour",
-          description:
-            "Répondez en flash à ce qui a changé depuis votre première création.",
+          label: t("reflection.heroTransitionLabel"),
+          title: t("reflection.heroTransitionTitle"),
+          accent: t("reflection.heroTransitionAccent"),
+          description: t("reflection.heroTransitionDescription"),
         };
       case "complete":
         return {
-          label: "Parcours profond",
-          title: "Séance ",
-          accent: "enregistrée",
-          description:
-            "Votre parcours complet est conservé localement dans votre journal.",
+          label: t("reflection.heroDeepLabel"),
+          title: t("reflection.heroCompleteTitle"),
+          accent: t("reflection.heroCompleteAccent"),
+          description: t("reflection.heroCompleteDescription"),
         };
       default:
         return {
-          label: "Réflexion",
-          title: "Capture & ",
-          accent: "réflexion",
+          label: t("reflection.heroLabel"),
+          title: t("reflection.heroTitle"),
+          accent: t("reflection.heroAccent"),
           description: undefined as string | undefined,
         };
     }
-  }, [workflowPhase]);
+  }, [workflowPhase, t]);
 
   const navBackLabel = useMemo(() => {
     if (workflowPhase === "pre_analysis" && upgradedFromCapture) {
-      return "← Capture";
+      return t("nav.backCapture");
     }
     if (workflowPhase === "post_integration") {
-      return "← Réflexion";
+      return t("nav.backReflection");
     }
     if (workflowPhase === "complete") {
-      return "← Intégration";
+      return t("nav.backIntegration");
     }
-    return "← Retour";
-  }, [workflowPhase, upgradedFromCapture]);
+    return t("nav.back");
+  }, [workflowPhase, upgradedFromCapture, t]);
 
   const showDeepModeEncart =
     isDeep && (workflowPhase === "pre_analysis" || workflowPhase === "post_integration");
@@ -1294,13 +1305,13 @@ Miroir initial (à conserver — ne pas recopier) :
         <AccentCard className="mb-4 px-4 py-3">
           <Text className="text-sage-700 text-sm font-medium">
             {workflowPhase === "pre_analysis"
-              ? "Mode approfondi — ancrage avant l'analyse"
-              : "Mode approfondi — intégration de séance"}
+              ? t("reflection.deepEncartPreTitle")
+              : t("reflection.deepEncartPostTitle")}
           </Text>
           <Text className="text-sand-600 text-xs leading-5 mt-1">
             {workflowPhase === "pre_analysis"
-              ? "Répondez aux trois questions ci-dessous, puis poursuivez vers la capture de votre création."
-              : "Prenez un instant pour noter ce qui résonne avant d'enregistrer votre séance."}
+              ? t("reflection.deepEncartPreBody")
+              : t("reflection.deepEncartPostBody")}
           </Text>
         </AccentCard>
       )}
@@ -1309,11 +1320,13 @@ Miroir initial (à conserver — ne pas recopier) :
         <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-4 mb-4">
           {technique && (
             <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
-              {getTechniqueLabel(technique)}
-              {durationMinutes ? ` · ${durationMinutes} min` : ""}
-              {isDeep ? " · parcours profond" : " · parcours express"}
-              {currentRound === 2 ? " · 2e tour" : ""}
-              {!supportsAiAnalysis ? " · sans analyse IA" : ""}
+              {localizedTechniqueLabel(technique, ritual.techniqueLabel)}
+              {durationMinutes
+                ? t("reflection.metaDuration", { minutes: durationMinutes })
+                : ""}
+              {isDeep ? t("reflection.metaDeep") : t("reflection.metaExpress")}
+              {currentRound === 2 ? t("reflection.metaRound2") : ""}
+              {!supportsAiAnalysis ? t("reflection.metaNoAi") : ""}
             </Text>
           )}
           {impulse ? (
@@ -1330,13 +1343,18 @@ Miroir initial (à conserver — ne pas recopier) :
       {!supportsAiAnalysis && showCapture && (
         <View className="bg-amber-50 rounded-2xl border border-amber-200 px-4 py-3 mb-4">
           <Text className="text-amber-800 text-sm leading-6">
-            Pour{" "}
-            {technique ? getTechniqueLabel(technique).toLowerCase() : "cette technique"}
-            , privilégiez un{" "}
-            <Text className="font-medium">miroir textuel</Text> : décrivez ce que
-            vous avez vécu, ressenti ou exploré — sans envoi de photo au serveur.
-            Une image souvenir reste possible, mais elle ne sera pas analysée par
-            l&apos;IA.
+            {t("reflection.noAiNoticePrefix", {
+              technique: technique
+                ? localizedTechniqueLabel(
+                    technique,
+                    ritual.techniqueLabel
+                  ).toLowerCase()
+                : t("reflection.thisTechnique"),
+            })}
+            <Text className="font-medium">
+              {t("reflection.noAiNoticeBold")}
+            </Text>
+            {t("reflection.noAiNoticeSuffix")}
           </Text>
         </View>
       )}
@@ -1344,8 +1362,7 @@ Miroir initial (à conserver — ne pas recopier) :
       {techniqueNeedsByokForAi && byokConfigured && showCapture && (
         <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-3 mb-4">
           <Text className="text-sage-800 text-sm leading-6">
-            Clé IA active — décrivez votre ressenti ou votre performance pour
-            recevoir une analyse bienveillante (photo optionnelle).
+            {t("reflection.keyActiveNotice")}
           </Text>
         </View>
       )}
@@ -1359,7 +1376,7 @@ Miroir initial (à conserver — ne pas recopier) :
             />
             <View className="mt-6">
               <PrimaryButton
-                label="Continuer vers la capture"
+                label={t("reflection.continueToCapture")}
                 onPress={() => setWorkflowPhase("capture")}
                 disabled={!preAnswersComplete(preAnswers)}
                 showArrow
@@ -1387,9 +1404,10 @@ Miroir initial (à conserver — ne pas recopier) :
       {currentRound === 2 && (
         <View className="bg-sage-50 rounded-2xl border border-sage-100 px-4 py-3 mb-4">
           <Text className="text-sage-700 text-sm leading-6">
-            <Text className="font-medium">2e tour — exercice augmenté.</Text>{" "}
-            Partagez votre nouvelle création pour une analyse tenant compte de
-            votre premier passage et de vos réponses flash.
+            <Text className="font-medium">
+              {t("reflection.round2NoticeBold")}
+            </Text>
+            {t("reflection.round2NoticeBody")}
           </Text>
         </View>
       )}
@@ -1398,17 +1416,16 @@ Miroir initial (à conserver — ne pas recopier) :
       {isWriting && (
         <View className="mb-6">
           <Text className="text-sand-700 text-base font-medium mb-2">
-            Votre texte
+            {t("reflection.writingTitle")}
           </Text>
           <Text className="text-sand-500 text-sm leading-6 mb-3">
-            Collez ici ce que vous avez écrit, ou photographiez votre écriture
-            manuscrite ci-dessous — l&apos;IA tentera de la lire.
+            {t("reflection.writingHint")}
           </Text>
           <TextInput
             className="bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base min-h-[140px] mb-2"
             multiline
             textAlignVertical="top"
-            placeholder="Collez ou saisissez votre texte…"
+            placeholder={t("reflection.writingPlaceholder")}
             placeholderTextColor="#A89F91"
             value={writtenText}
             onChangeText={setWrittenText}
@@ -1416,8 +1433,8 @@ Miroir initial (à conserver — ne pas recopier) :
           />
           <Text className="text-sand-400 text-xs">
             {writtenText.trim().length >= 10
-              ? "Texte prêt pour l'analyse."
-              : "Minimum 10 caractères, ou ajoutez une photo manuscrite."}
+              ? t("reflection.writingReady")
+              : t("reflection.writingMin")}
           </Text>
         </View>
       )}
@@ -1425,13 +1442,13 @@ Miroir initial (à conserver — ne pas recopier) :
       {!isWriting && techniqueNeedsByokForAi && (
         <View className="mb-6">
           <Text className="text-sand-700 text-base font-medium mb-2">
-            Votre ressenti / description
+            {t("reflection.feelingTitle")}
           </Text>
           <TextInput
             className="bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base min-h-[120px] mb-2"
             multiline
             textAlignVertical="top"
-            placeholder="Décrivez ce que vous avez exploré, ressenti, entendu ou vu…"
+            placeholder={t("reflection.feelingPlaceholder")}
             placeholderTextColor="#A89F91"
             value={writtenText}
             onChangeText={setWrittenText}
@@ -1442,19 +1459,21 @@ Miroir initial (à conserver — ne pas recopier) :
 
       {!isWriting && (
         <Text className="text-sand-700 text-base font-medium mb-2">
-          {supportsAiAnalysis ? "Votre création" : "Photo souvenir (optionnelle)"}
+          {supportsAiAnalysis
+            ? t("reflection.photoTitleCreation")
+            : t("reflection.photoTitleSouvenir")}
         </Text>
       )}
       {isWriting && (
         <Text className="text-sand-700 text-base font-medium mb-2">
-          Photo (optionnelle)
+          {t("reflection.photoTitleOptional")}
         </Text>
       )}
 
       {busy && (
         <Pressable onPress={handleCancel} className="mb-4">
           <Text className="text-red-500 text-sm text-center font-medium">
-            Annuler l'opération en cours
+            {t("reflection.cancelInProgress")}
           </Text>
         </Pressable>
       )}
@@ -1471,7 +1490,7 @@ Miroir initial (à conserver — ne pas recopier) :
             {Platform.OS === "web" && dragOver && (
               <View className="absolute inset-0 rounded-2xl bg-sage-500/20 items-center justify-center mb-2">
                 <Text className="text-sage-700 text-sm font-medium">
-                  Relâchez pour remplacer
+                  {t("reflection.dropReplace")}
                 </Text>
               </View>
             )}
@@ -1488,13 +1507,13 @@ Miroir initial (à conserver — ne pas recopier) :
             <Text className="text-sand-500 text-sm text-center leading-6">
               {Platform.OS === "web"
                 ? dragOver
-                  ? "Relâchez pour ajouter la photo"
+                  ? t("reflection.dropAdd")
                   : isWriting
-                    ? "Glissez une photo de votre écriture manuscrite\n(Bureau, Téléchargements…)"
-                    : "Glissez une photo ici\n(Bureau, Téléchargements…)"
+                    ? t("reflection.dropHintWriting")
+                    : t("reflection.dropHint")
                 : isWriting
-                  ? "Photographiez votre écriture manuscrite (optionnel)"
-                  : "Aucune photo pour l'instant"}
+                  ? t("reflection.nativeHintWriting")
+                  : t("reflection.noPhotoYet")}
             </Text>
           </View>
         )}
@@ -1502,14 +1521,17 @@ Miroir initial (à conserver — ne pas recopier) :
         <Text className="text-sand-400 text-xs mb-4 leading-5">
           {supportsAiAnalysis ? (
             <>
-              Fichier max {MAX_SOURCE_LABEL} · envoi IA max {UPLOAD_MAX_LABEL}.
-              {photoSizeLabel ? ` Actuelle : ${photoSizeLabel}.` : ""}
-              {Platform.OS === "web"
-                ? " Les photos sont automatiquement compressées avant envoi à l'IA."
+              {t("reflection.sizeHint", {
+                max: maxSourceLabel(),
+                upload: uploadMaxLabel(),
+              })}
+              {photoSizeLabel
+                ? t("reflection.sizeCurrent", { size: photoSizeLabel })
                 : ""}
+              {Platform.OS === "web" ? t("reflection.sizeWebCompress") : ""}
             </>
           ) : (
-            "Aucune photo n'est envoyée au serveur pour cette technique."
+            t("reflection.noPhotoSent")
           )}
         </Text>
 
@@ -1519,8 +1541,8 @@ Miroir initial (à conserver — ne pas recopier) :
               <PrimaryButton
                 label={
                   isWriting
-                    ? "Photographier mon écriture"
-                    : "Photographier mon œuvre"
+                    ? t("reflection.photographWriting")
+                    : t("reflection.photographWork")
                 }
                 onPress={handleTakePhoto}
                 variant="secondary"
@@ -1531,8 +1553,8 @@ Miroir initial (à conserver — ne pas recopier) :
               <PrimaryButton
                 label={
                   Platform.OS === "web"
-                    ? "Choisir une photo (Bureau…)"
-                    : "Choisir depuis la galerie"
+                    ? t("reflection.pickWeb")
+                    : t("reflection.pickGallery")
                 }
                 onPress={handlePickFromGallery}
                 variant="ghost"
@@ -1544,8 +1566,8 @@ Miroir initial (à conserver — ne pas recopier) :
             <PrimaryButton
               label={
                 ocrLoading
-                  ? "Lecture en cours…"
-                  : "Extraire le texte de la photo (OCR)"
+                  ? t("reflection.ocrCtaLoading")
+                  : t("reflection.ocrCta")
               }
               onPress={handleTranscribePhoto}
               variant="secondary"
@@ -1557,20 +1579,20 @@ Miroir initial (à conserver — ne pas recopier) :
             <View className="rounded-2xl border border-sage-100 bg-sage-50/80 px-4 py-3 flex-row items-center gap-3">
               <View className="flex-1">
                 <Text className="text-sage-800 text-sm font-medium mb-1">
-                  Tenir compte de mon Fil
+                  {t("reflection.filMemoryTitle")}
                 </Text>
                 <Text className="text-sage-700 text-xs leading-5">
-                  Croiser jusqu&apos;à {PRACTICE_CONTEXT_MAX_ENTRIES} traces
-                  locales ({filTraceCount} disponibles) — opt-in, sans photos.
-                  En mode gratuit, un résumé plus court est utilisé pour
-                  rester compatible.
+                  {t("reflection.filMemoryBody", {
+                    max: PRACTICE_CONTEXT_MAX_ENTRIES,
+                    available: filTraceCount,
+                  })}
                 </Text>
               </View>
               <Switch
                 value={useFilMemory}
                 onValueChange={setUseFilMemory}
                 disabled={busy}
-                accessibilityLabel="Tenir compte des traces du Fil créatif"
+                accessibilityLabel={t("reflection.filMemoryA11y")}
               />
             </View>
           ) : null}
@@ -1578,14 +1600,14 @@ Miroir initial (à conserver — ne pas recopier) :
           <PrimaryButton
             label={
               loadingReflection
-                ? "Analyse en cours…"
+                ? t("reflection.analyzeLoading")
                 : preparingPhoto
-                  ? "Préparation..."
+                  ? t("reflection.analyzePreparing")
                   : supportsAiAnalysis
                     ? useFilMemory
-                      ? "Demander un miroir (avec Fil)"
-                      : "Demander une réflexion bienveillante"
-                    : "Accueillir mon ressenti"
+                      ? t("reflection.analyzeWithFil")
+                      : t("reflection.analyzeCta")
+                    : t("reflection.welcomeFeelingCta")
             }
             onPress={handleRequestReflection}
             disabled={!canAnalyze || busy}
@@ -1598,16 +1620,20 @@ Miroir initial (à conserver — ne pas recopier) :
             <View className="bg-white rounded-2xl border border-sand-200 px-5 py-6">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-sand-400 text-xs uppercase tracking-wider">
-                  Miroir créatif
+                  {t("reflection.mirrorLabel")}
                 </Text>
                 {reflectionSource === "fallback" && (
                   <Text className="text-amber-600 text-xs font-medium">
-                    {supportsAiAnalysis ? "Mode secours" : "Sans analyse IA"}
+                    {supportsAiAnalysis
+                      ? t("reflection.sourceFallback")
+                      : t("reflection.sourceNoAi")}
                   </Text>
                 )}
                 {reflectionSource === "ai" && (
                   <Text className="text-sage-500 text-xs font-medium">
-                    {useFilMemory ? "Analyse IA · Fil" : "Analyse IA"}
+                    {useFilMemory
+                      ? t("reflection.sourceAiFil")
+                      : t("reflection.sourceAi")}
                   </Text>
                 )}
               </View>
@@ -1620,7 +1646,7 @@ Miroir initial (à conserver — ne pas recopier) :
                 <Text className="text-sand-600 text-sm leading-6">
                   {reflection?.trim()
                     ? reflection
-                    : "Votre réflexion est prête — explorez les invitations ci-dessous."}
+                    : t("reflection.mirrorReady")}
                 </Text>
               )}
             </View>
@@ -1638,12 +1664,12 @@ Miroir initial (à conserver — ne pas recopier) :
               <PrimaryButton
                 label={
                   loadingReflection && !deepenedReflection
-                    ? "Approfondissement…"
+                    ? t("reflection.deepenLoading")
                     : loadingReflection
-                      ? "Nouvel approfondissement…"
+                      ? t("reflection.deepenAgainLoading")
                       : deepenedReflection
-                        ? "Approfondir encore"
-                        : "Approfondir"
+                        ? t("reflection.deepenAgainCta")
+                        : t("reflection.deepenCta")
                 }
                 onPress={() => void handleDeepenReflection()}
                 variant="secondary"
@@ -1654,7 +1680,7 @@ Miroir initial (à conserver — ne pas recopier) :
             {deepenedReflection ? (
               <View className="bg-white rounded-2xl border border-sage-200 px-5 py-6">
                 <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-                  Approfondissement
+                  {t("reflection.deepenedLabel")}
                 </Text>
                 <ProgressiveReflection
                   key={deepenedReflection.slice(0, 64)}
@@ -1674,7 +1700,7 @@ Miroir initial (à conserver — ne pas recopier) :
             ) : null}
 
             <PrimaryButton
-              label="Exporter en PDF"
+              label={t("reflection.exportPdf")}
               onPress={() => void handleExportPdf()}
               variant="ghost"
               disabled={busy}
@@ -1685,16 +1711,16 @@ Miroir initial (à conserver — ne pas recopier) :
         {displayFollowUpExercise && !showDeepIntegrationCta && (
           <View className="bg-white rounded-2xl border border-sage-200 px-5 py-5 mb-6">
             <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
-              Poursuivre la création
+              {t("reflection.followUpLabel")}
             </Text>
             <Text className="text-sand-700 text-sm font-medium mb-2">
-              Un nouvel exercice pour vous
+              {t("reflection.followUpTitle")}
             </Text>
             <Text className="text-sand-600 text-sm leading-6 mb-4">
               {displayFollowUpExercise}
             </Text>
             <PrimaryButton
-              label="Commencer cet exercice"
+              label={t("reflection.followUpCta")}
               onPress={handleStartFollowUp}
               variant="secondary"
             />
@@ -1704,7 +1730,7 @@ Miroir initial (à conserver — ne pas recopier) :
         {showSecondRoundCta && (
           <View className="mb-6">
             <PrimaryButton
-              label="Faire un 2nd tour (Réitération rapide)"
+              label={t("reflection.secondRoundCta")}
               onPress={handleStartSecondRound}
               variant="secondary"
             />
@@ -1714,7 +1740,7 @@ Miroir initial (à conserver — ne pas recopier) :
         {showDeepIntegrationCta && (
           <View className="mb-6">
             <PrimaryButton
-              label="Poursuivre l'intégration"
+              label={t("reflection.integrationCta")}
               onPress={() => setWorkflowPhase("post_integration")}
             />
           </View>
@@ -1731,7 +1757,7 @@ Miroir initial (à conserver — ne pas recopier) :
             />
             <View className="mt-6 gap-3">
               <PrimaryButton
-                label="Enregistrer dans mon journal"
+                label={t("reflection.saveJournalCta")}
                 onPress={() => void handleSaveIntegration()}
                 disabled={!integrationAnswersComplete(postAnswers)}
               />
@@ -1744,14 +1770,13 @@ Miroir initial (à conserver — ne pas recopier) :
         <WorkflowStepTransition stepKey="complete">
           <View className="bg-sage-50 rounded-2xl border border-sage-200 px-5 py-6 mb-6">
             <Text className="text-sage-700 text-base font-medium mb-2">
-              Séance profonde enregistrée
+              {t("reflection.completeTitle")}
             </Text>
             <Text className="text-sand-600 text-sm leading-6 mb-4">
-              Votre parcours complet — ancrage, réflexion et intégration — est
-              conservé localement. Vous pouvez revenir quand vous le souhaitez.
+              {t("reflection.completeBody")}
             </Text>
             <PrimaryButton
-              label="Exporter en PDF"
+              label={t("reflection.exportPdf")}
               onPress={() => void handleExportPdf()}
               variant="secondary"
             />
@@ -1763,14 +1788,14 @@ Miroir initial (à conserver — ne pas recopier) :
         <View className="flex-row gap-3 pb-8">
           <View className="flex-1">
             <PrimaryButton
-              label="Voir le Fil créatif"
+              label={t("reflection.viewFil")}
               onPress={() => router.push(ROUTES.fil)}
               variant="secondary"
             />
           </View>
           <View className="flex-1">
             <PrimaryButton
-              label="Nouveau rituel"
+              label={t("reflection.newRitual")}
               onPress={handleGoHome}
               variant="ghost"
             />

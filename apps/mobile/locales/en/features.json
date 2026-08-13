@@ -1,0 +1,79 @@
+{
+  "seo": {
+    "title": "Features — creative studio, Thread, silence and seasons | Pastek Art",
+    "description": "Pastek Art is not a chat: an embodied ritual, a local Thread, a kind mirror, seasons of 7 to 14 days. A plain reading of the features, no jargon."
+  },
+  "aria": {
+    "page": "Features"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "features": "Features"
+  },
+  "hero": {
+    "kicker": "What the studio offers",
+    "title": "A frame that stays quiet,",
+    "accent": "remembers, and lasts.",
+    "lead": "Pastek Art isn't trying to be a better prompt generator. A language model can already write an invitation. What the app holds is something else: a time, a memory, a rhythm. Here, for the reading, is what's really inside."
+  },
+  "sections": {
+    "atelier": {
+      "kicker": "Posture",
+      "title": "A studio, not a conversation",
+      "paragraphs": [
+        "Most AI-assisted creative tools present themselves as someone to talk to. You discuss, you rephrase, you ask again. The screen stays lit, the gesture waits.",
+        "Pastek reverses the order. You arrive with an impulse — a word, a colour, a tiredness. You choose a technique and a duration. An invitation arrives. Then the app steps back. The work isn't to speak better to the machine: it's to pick up the pencil, the glue, the body.",
+        "The AI, when it is there, plays a precise role: offering an invitation, then a mirror afterwards. Never a diagnosis. Never a profile. A creative coach, in the conditional, and only if you ask."
+      ]
+    },
+    "rituel": {
+      "kicker": "Path",
+      "title": "The ritual in three movements",
+      "paragraphs": [
+        "Impulse, exercise, reflection. Three screens, always the same, so the frame becomes familiar.",
+        "The impulse can come from you, or from a light starter: word Ping-Pong, RYB palette, emotion explorer, nuance finder. These modules don't need a model to exist. They prepare the gesture.",
+        "The exercise shows an invitation, sometimes a development, sometimes the context of a module. A timer holds the duration. Silent mode dims the screen: what remains is the time, a few keywords, a gong. The app goes quiet so you no longer have to look at it.",
+        "Only then come the capture and the mirror. A photo if you want one, a text, open questions. You can go further — the first mirror is never overwritten. Nothing obliges you to do it all. You can also simply welcome the feeling, with no analysis."
+      ]
+    },
+    "fil": {
+      "kicker": "Memory",
+      "title": "The Thread, a mosaic of practice",
+      "paragraphs": [
+        "Every ritual and every starter leaves a trace on the device. Not a chat history: a visual memory. The Thread is browsed as a mosaic, like a studio wall — images, colours, tags.",
+        "The technique (painting, drawing, collage…) appears on its own. You can add your own tags, filter, find an impulse again. Photos never leave the device, unless you ask for an AI mirror or a Drive backup.",
+        "Before the mirror, a switch: “Take my Thread into account”. Opt-in. A few excerpts only, never the photos. The model then reads this session alongside your recent practice — in the conditional, without drawing a psychological portrait."
+      ]
+    },
+    "saisons": {
+      "kicker": "Rhythm",
+      "title": "Seasons: a gentle constraint, several days",
+      "paragraphs": [
+        "A single session doesn't install a habit. A season can. Seven, ten or fourteen days, one constraint only: a dominant colour, a pocket format, collage alone, a line that never lifts, an earth palette. Or your own.",
+        "This is not a streak challenge, nor a performance. Missed days break nothing. During the season, every ritual session carries the constraint in its statement — visible, framing, without drowning the invitation.",
+        "On the home screen, a discreet card: day 3 of 7, continue. At the end, a local review: how many sessions, under which constraint. The Thread remembers, tagged with the season's name."
+      ]
+    },
+    "local": {
+      "kicker": "Sovereignty",
+      "title": "Your place first",
+      "paragraphs": [
+        "No login wall. Traces live in the device's storage. Export and restore stay on your side (a file, Drive if you want it).",
+        "The free mode relies on minimal remote inference. If you bring your own key (Mistral, OpenAI, Anthropic, Gemini, European engines, local Ollama), it never leaves the device: it travels for the length of a request, and Pastek doesn't keep it.",
+        "You can read and edit the system prompts. The tool stays yours, including its voice."
+      ]
+    },
+    "sur-mesure": {
+      "kicker": "Also",
+      "title": "Custom mode, examples, and what the app doesn't do",
+      "paragraphs": [
+        "Custom mode tunes the invitation to a theme, an emotion, a purpose — without claiming to provide care. The examples on the site show a complete path, so you can see before you begin.",
+        "Pastek Art is not therapy, not a clinic, not a social network. No feed, no likes. A personal studio, to open when you have twenty minutes — or a season ahead of you."
+      ]
+    }
+  },
+  "cta": {
+    "a11y": "Open the creative space",
+    "label": "Step into the studio"
+  }
+}

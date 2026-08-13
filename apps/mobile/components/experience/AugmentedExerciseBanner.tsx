@@ -1,4 +1,5 @@
 import { Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { EvolutionTriggers } from "@/lib/experience/types";
 import { AccentCard } from "@/components/ui/Card";
 import { WorkflowStepTransition } from "@/components/experience/WorkflowStepTransition";
@@ -34,15 +35,16 @@ export function AugmentedExerciseBanner({
   triggers,
   className = "",
 }: AugmentedExerciseBannerProps) {
+  const { t } = useTranslation("ritual");
+
   return (
     <WorkflowStepTransition stepKey="augmented-banner">
       <AccentCard className={`mb-3 px-4 py-3 ${className}`}>
         <Text className="text-sage-700 text-sm font-medium">
-          Exercice augmenté basé sur votre premier retour
+          {t("augmented.title")}
         </Text>
         <Text className="text-sand-600 text-xs leading-5 mt-1">
-          Cette consigne a été adaptée à partir de votre première création et de
-          ce qui en a émergé.
+          {t("augmented.body")}
         </Text>
         {triggers ? <TriggerChips triggers={triggers} /> : null}
       </AccentCard>

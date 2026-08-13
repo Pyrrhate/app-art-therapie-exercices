@@ -1,0 +1,34 @@
+{
+  "index": {
+    "title": "Exemples d'exercices créatifs",
+    "intro": "Parcourez des parcours réels du générateur Pastek Art : impulsion, consigne personnalisée, création et réflexion bienveillante. Idéal pour comprendre l'outil avant de vous lancer — ou pour voir concrètement ce qu'un rituel peut offrir.",
+    "cardMeta": "{{technique}} · {{minutes}} min",
+    "cardCta": "Lire l'exemple →",
+    "cta": "Essayer le générateur",
+    "seoTitle": "Exemples d'exercices créatifs — parcours peinture, écriture, créativité | Pastek Art",
+    "seoDescription": "Découvrez des exemples concrets du générateur Pastek Art : impulsion, consigne IA, création guidée et réflexion bienveillante. Inspirez-vous avant votre premier rituel créatif."
+  },
+  "detail": {
+    "eyebrow": "Exemple de parcours · {{technique}}",
+    "meta": "{{minutes}} min · Mode {{mode}}",
+    "modeExpress": "express",
+    "modeDeep": "profond",
+    "impulseCaptured": "Impulsion saisie",
+    "impulseWith": "Impulsion · {{impulse}}",
+    "mirrorLabel": "Miroir créatif · Analyse IA",
+    "questionsLabel": "Questions d'exploration",
+    "followUpLabel": "Poursuivre la création",
+    "followUpTitle": "Un nouvel exercice pour vous",
+    "cta": "Lancer votre propre exercice →"
+  },
+  "breadcrumb": {
+    "home": "Accueil",
+    "examples": "Exemples"
+  },
+  "jsonLd": {
+    "about1": "exercice créatif",
+    "about2": "exercice de peinture",
+    "about3": "lâcher-prise créatif",
+    "about3Emotions": "expression des émotions"
+  }
+}

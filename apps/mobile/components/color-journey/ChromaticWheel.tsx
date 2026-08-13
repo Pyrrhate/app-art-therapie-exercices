@@ -7,16 +7,17 @@ import {
   type GestureResponderEvent,
 } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
+import { useTranslation } from "react-i18next";
 import {
   hexFromHue,
   type LightnessPreset,
 } from "@/lib/color-journey/theory";
 
 const SEGMENT_COUNT = 72;
-const PRESETS: { id: LightnessPreset; label: string }[] = [
-  { id: "clair", label: "Clair" },
-  { id: "moyen", label: "Moyen" },
-  { id: "profond", label: "Profond" },
+const PRESETS: { id: LightnessPreset; labelKey: string }[] = [
+  { id: "clair", labelKey: "colorJourney.lightnessLight" },
+  { id: "moyen", labelKey: "colorJourney.lightnessMedium" },
+  { id: "profond", labelKey: "colorJourney.lightnessDeep" },
 ];
 
 interface ChromaticWheelProps {
@@ -105,6 +106,7 @@ export function ChromaticWheel({
   onConfirm,
   disabled = false,
 }: ChromaticWheelProps) {
+  const { t } = useTranslation("amorces");
   const [selectedHue, setSelectedHue] = useState<number | null>(null);
   const [preset, setPreset] = useState<LightnessPreset>("moyen");
   const wheelRef = useRef<View>(null);
@@ -190,7 +192,7 @@ export function ChromaticWheel({
           onPress={handleTouch}
           disabled={disabled}
           accessibilityRole="adjustable"
-          accessibilityLabel="Roue chromatique"
+          accessibilityLabel={t("colorJourney.wheelLabel")}
           style={{
             position: "absolute",
             top: 0,
@@ -217,7 +219,7 @@ export function ChromaticWheel({
       </View>
 
       <Text className="text-sand-500 text-xs mt-3 mb-3 text-center px-4">
-        Touchez la roue, puis ajustez la luminosité
+        {t("colorJourney.wheelHint")}
       </Text>
 
       <View className="flex-row gap-2 mb-4">
@@ -237,7 +239,7 @@ export function ChromaticWheel({
               <Text
                 className={`text-sm ${active ? "text-white" : "text-sand-700"}`}
               >
-                {item.label}
+                {t(item.labelKey)}
               </Text>
             </Pressable>
           );
@@ -255,7 +257,7 @@ export function ChromaticWheel({
         }`}
       >
         <Text className="text-white text-base font-medium">
-          Valider cette teinte
+          {t("colorJourney.wheelConfirm")}
         </Text>
       </Pressable>
     </View>

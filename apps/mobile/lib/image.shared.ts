@@ -1,18 +1,16 @@
 import type { ImagePickerOptions } from "expo-image-picker";
+import i18n from "@/lib/i18n";
 
 /** Limite corps JSON côté API (~4,5 Mo Vercel). */
 export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
-export const MAX_IMAGE_LABEL = "3 Mo";
 
 /** Fichier source max avant compression. */
 export const MAX_SOURCE_BYTES = 15 * 1024 * 1024;
-export const MAX_SOURCE_LABEL = "15 Mo";
 
 /** Cible garantie pour l'envoi IA (vision Hugging Face). */
 export const UPLOAD_MAX_BYTES = 380 * 1024;
 export const UPLOAD_MAX_WIDTH = 768;
 export const UPLOAD_MIN_WIDTH = 320;
-export const UPLOAD_MAX_LABEL = "380 Ko";
 
 /** Alias conservés pour compatibilité interne. */
 export const ANALYSIS_MAX_BYTES = UPLOAD_MAX_BYTES;
@@ -22,11 +20,30 @@ export const ANALYSIS_MAX_WIDTH = UPLOAD_MAX_WIDTH;
 export const PREVIEW_MAX_BYTES = UPLOAD_MAX_BYTES;
 export const PREVIEW_MAX_WIDTH = UPLOAD_MAX_WIDTH;
 
+/** Labels dynamiques (suivent la langue UI). */
+export function maxImageLabel(): string {
+  return formatImageSize(MAX_IMAGE_BYTES);
+}
+export function maxSourceLabel(): string {
+  return formatImageSize(MAX_SOURCE_BYTES);
+}
+export function uploadMaxLabel(): string {
+  return formatImageSize(UPLOAD_MAX_BYTES);
+}
+
+/** @deprecated Prefer maxImageLabel() / maxSourceLabel() / uploadMaxLabel(). */
+export const MAX_IMAGE_LABEL = "3 Mo";
+export const MAX_SOURCE_LABEL = "15 Mo";
+export const UPLOAD_MAX_LABEL = "380 Ko";
+
 export class ImageTooLargeError extends Error {
-  constructor(
-    message = `Impossible de réduire la photo sous ${UPLOAD_MAX_LABEL}. Essayez une capture plus légère.`
-  ) {
-    super(message);
+  constructor(message?: string) {
+    super(
+      message ??
+        i18n.t("common:imageErrors.tooLarge", {
+          max: formatImageSize(UPLOAD_MAX_BYTES),
+        })
+    );
     this.name = "ImageTooLargeError";
   }
 }
@@ -34,15 +51,18 @@ export class ImageTooLargeError extends Error {
 export class ImageSourceTooLargeError extends Error {
   constructor(sizeBytes: number) {
     super(
-      `Fichier trop lourd (${formatImageSize(sizeBytes)}). Maximum : ${MAX_SOURCE_LABEL}.`
+      i18n.t("common:imageErrors.sourceTooLarge", {
+        size: formatImageSize(sizeBytes),
+        max: formatImageSize(MAX_SOURCE_BYTES),
+      })
     );
     this.name = "ImageSourceTooLargeError";
   }
 }
 
 export class ImageCompressionError extends Error {
-  constructor(message = "Compression de la photo impossible.") {
-    super(message);
+  constructor(message?: string) {
+    super(message ?? i18n.t("common:imageErrors.compressionFailed"));
     this.name = "ImageCompressionError";
   }
 }
@@ -53,9 +73,13 @@ export function getImageByteSize(dataUrl: string): number {
 }
 
 export function formatImageSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+  if (bytes < 1024) return i18n.t("common:sizes.bytes", { n: bytes });
+  if (bytes < 1024 * 1024) {
+    return i18n.t("common:sizes.kb", { n: Math.round(bytes / 1024) });
+  }
+  return i18n.t("common:sizes.mb", {
+    n: (bytes / (1024 * 1024)).toFixed(1),
+  });
 }
 
 export function assertSourceSize(bytes: number) {
@@ -87,25 +111,21 @@ export function yieldToUi(): Promise<void> {
 
 export class ImageProcessingAbortedError extends Error {
   constructor() {
-    super("Traitement de la photo annulé.");
+    super(i18n.t("common:imageErrors.aborted"));
     this.name = "ImageProcessingAbortedError";
   }
 }
 
 export class ImageCloudFileError extends Error {
-  constructor(
-    message = "Cette photo n'est pas disponible localement (OneDrive nuage). Copiez-la sur le Bureau ou glissez-la dans la zone prévue."
-  ) {
-    super(message);
+  constructor(message?: string) {
+    super(message ?? i18n.t("common:imageErrors.cloudFile"));
     this.name = "ImageCloudFileError";
   }
 }
 
 export class ImageReadTimeoutError extends Error {
-  constructor(
-    message = "Lecture de la photo trop lente. Copiez-la sur le Bureau ou glissez-la dans la zone prévue."
-  ) {
-    super(message);
+  constructor(message?: string) {
+    super(message ?? i18n.t("common:imageErrors.readTimeout"));
     this.name = "ImageReadTimeoutError";
   }
 }
