@@ -99,7 +99,7 @@ function formatReflectionContext(ctx: ReflectionPromptContext): string {
       ? `Miroir créatif déjà proposé (à approfondir — allez plus loin, sans répéter) :\n« ${ctx.previousReflection.slice(0, 2500)} »`
       : null,
     ctx.practiceContext
-      ? `Mémoire de pratique (Fil local — croiser avec douceur, au conditionnel, sans dresser de profil psychologique) :\n${ctx.practiceContext.slice(0, 2800)}`
+      ? `Mémoire de pratique (Fil local — croiser avec douceur, au conditionnel, sans dresser de profil psychologique) :\n${ctx.practiceContext.slice(0, 1600)}`
       : null,
   ].filter(Boolean);
   return lines.join("\n\n");

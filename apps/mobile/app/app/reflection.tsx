@@ -41,6 +41,7 @@ import {
   buildPracticeContextFromFil,
   countUsableFilTraces,
   PRACTICE_CONTEXT_MAX_ENTRIES,
+  PRACTICE_CONTEXT_MAX_ENTRIES_COMPACT,
 } from "@/lib/fil/practiceContext";
 import {
   extractImageFileFromDataTransfer,
@@ -598,12 +599,18 @@ export default function ReflectionScreen() {
       if (useFilMemory) {
         try {
           const entries = await getFilEntries();
+          const byokActive = Boolean(
+            await resolveByokCredentials().catch(() => null)
+          );
           const built = buildPracticeContextFromFil(entries, {
             technique,
-            maxEntries: PRACTICE_CONTEXT_MAX_ENTRIES,
+            compact: !byokActive,
+            maxEntries: byokActive
+              ? PRACTICE_CONTEXT_MAX_ENTRIES
+              : PRACTICE_CONTEXT_MAX_ENTRIES_COMPACT,
           });
           if (built.trim().length >= 20) {
-            practiceContext = built.slice(0, 4000);
+            practiceContext = built;
           }
         } catch {
           /* Fil optionnel */
@@ -639,6 +646,11 @@ export default function ReflectionScreen() {
             result.analysisNote
               ? `Analyse IA indisponible (${result.analysisNote}). Questions génériques affichées — réessayez dans quelques minutes.`
               : "L'IA n'a pas pu analyser votre photo (service indisponible). Les questions ci-dessous sont génériques — réessayez dans quelques minutes.",
+        });
+      } else if (result.analysisNote?.trim()) {
+        setNotice({
+          type: "info",
+          message: result.analysisNote.trim(),
         });
       } else {
         setNotice(null);
@@ -1549,8 +1561,9 @@ Miroir initial (à conserver — ne pas recopier) :
                 </Text>
                 <Text className="text-sage-700 text-xs leading-5">
                   Croiser jusqu&apos;à {PRACTICE_CONTEXT_MAX_ENTRIES} traces
-                  locales ({filTraceCount} disponibles) — opt-in, sans envoyer
-                  vos photos.
+                  locales ({filTraceCount} disponibles) — opt-in, sans photos.
+                  En mode gratuit, un résumé plus court est utilisé pour
+                  rester compatible.
                 </Text>
               </View>
               <Switch

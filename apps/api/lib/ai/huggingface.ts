@@ -237,10 +237,56 @@ export class HuggingFaceProvider implements AIProvider {
 
     const isWriting = input.technique === "writing";
     let writtenText = input.writtenText?.trim() ?? "";
+    let visualNotes: string | undefined;
+    const practiceContext = input.practiceContext?.trim()
+      ? input.practiceContext.trim().slice(0, 1200)
+      : undefined;
+
+    const runWarm = async (ctx: ReflectionPromptContext) => {
+      let warmRaw = await this.callTextModel(buildWarmReflectionPrompt(ctx), {
+        temperature: 0.82,
+        maxTokens: 950,
+        systemPrompt: resolvePromptText(
+          "reflection_system",
+          input.promptOverrides
+        ),
+      });
+      let parsed = parseReflectionFromAi(warmRaw);
+
+      const needsRetry =
+        parsed?.reflection &&
+        (looksLikeColdDescription(parsed.reflection) ||
+          looksLikeTooBriefReflection(parsed.reflection));
+
+      if (needsRetry && parsed?.reflection) {
+        console.warn("[HF analyzeArtwork] reformulation (ton ou longueur)");
+        warmRaw = await this.callTextModel(
+          buildWarmReflectionRetryPrompt(parsed.reflection, ctx),
+          {
+            temperature: 0.78,
+            maxTokens: 950,
+            systemPrompt: resolvePromptText(
+              "reflection_system",
+              input.promptOverrides
+            ),
+          }
+        );
+        parsed = parseReflectionFromAi(warmRaw);
+      }
+
+      return { warmRaw, parsed };
+    };
+
+    const packAi = (parsed: NonNullable<
+      Awaited<ReturnType<typeof parseReflectionFromAi>>
+    >): ReflectionResponse => ({
+      reflection: parsed.reflection,
+      openQuestions: parsed.openQuestions.map(ensureVouvoiementQuestion),
+      followUpExercise: parsed.followUpExercise,
+      source: "ai",
+    });
 
     try {
-      let visualNotes: string | undefined;
-
       if (input.imageBase64) {
         visualNotes = await this.callVisionModel(
           input.imageBase64,
@@ -276,41 +322,29 @@ export class HuggingFaceProvider implements AIProvider {
         durationMinutes: input.durationMinutes,
         colorContext: input.colorContext,
         previousReflection: input.previousReflection,
-        practiceContext: input.practiceContext,
+        practiceContext,
       };
 
-      let warmRaw = await this.callTextModel(
-        buildWarmReflectionPrompt(promptCtx),
-        {
-          temperature: 0.82,
-          maxTokens: 950,
-          systemPrompt: resolvePromptText(
-            "reflection_system",
-            input.promptOverrides
-          ),
-        }
-      );
-      let parsed = parseReflectionFromAi(warmRaw);
+      let { warmRaw, parsed } = await runWarm(promptCtx);
+      let droppedFil = false;
 
-      const needsRetry =
-        parsed?.reflection &&
-        (looksLikeColdDescription(parsed.reflection) ||
-          looksLikeTooBriefReflection(parsed.reflection));
-
-      if (needsRetry && parsed?.reflection) {
-        console.warn("[HF analyzeArtwork] reformulation (ton ou longueur)");
-        warmRaw = await this.callTextModel(
-          buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
-          {
-            temperature: 0.78,
-            maxTokens: 950,
-            systemPrompt: resolvePromptText(
-              "reflection_system",
-              input.promptOverrides
-            ),
-          }
+      // Freemium HF : si le Fil alourdit trop le prompt, retenter sans practiceContext.
+      if (
+        practiceContext &&
+        !(
+          parsed?.reflection &&
+          !looksLikeColdDescription(parsed.reflection) &&
+          !looksLikeTooBriefReflection(parsed.reflection)
+        )
+      ) {
+        console.warn(
+          "[HF analyzeArtwork] nouvel essai sans practiceContext (contexte Fil trop lourd)"
         );
-        parsed = parseReflectionFromAi(warmRaw);
+        ({ warmRaw, parsed } = await runWarm({
+          ...promptCtx,
+          practiceContext: undefined,
+        }));
+        droppedFil = true;
       }
 
       if (
@@ -318,12 +352,13 @@ export class HuggingFaceProvider implements AIProvider {
         !looksLikeColdDescription(parsed.reflection) &&
         !looksLikeTooBriefReflection(parsed.reflection)
       ) {
-        return {
-          reflection: parsed.reflection,
-          openQuestions: parsed.openQuestions.map(ensureVouvoiementQuestion),
-          followUpExercise: parsed.followUpExercise,
-          source: "ai",
-        };
+        return droppedFil
+          ? {
+              ...packAi(parsed),
+              analysisNote:
+                "Miroir généré sans croiser le Fil (limite du mode gratuit).",
+            }
+          : packAi(parsed);
       }
 
       if (parsed?.reflection && looksLikeColdDescription(parsed.reflection)) {
@@ -336,6 +371,38 @@ export class HuggingFaceProvider implements AIProvider {
       );
       throw new Error("Réponse IA illisible — reformulation impossible");
     } catch (error) {
+      // Dernier filet texte : sans Fil, avant le mode secours local.
+      if (practiceContext) {
+        try {
+          console.warn(
+            "[HF analyzeArtwork] retry texte sans Fil après erreur"
+          );
+          const { parsed } = await runWarm({
+            visualNotes,
+            impulse: input.impulse,
+            technique: input.technique,
+            exercise: input.exercise,
+            writtenText: writtenText || undefined,
+            durationMinutes: input.durationMinutes,
+            colorContext: input.colorContext,
+            previousReflection: input.previousReflection,
+          });
+          if (
+            parsed?.reflection &&
+            !looksLikeColdDescription(parsed.reflection) &&
+            !looksLikeTooBriefReflection(parsed.reflection)
+          ) {
+            return {
+              ...packAi(parsed),
+              analysisNote:
+                "Miroir généré sans croiser le Fil (limite du mode gratuit).",
+            };
+          }
+        } catch (retryError) {
+          console.warn("[HF analyzeArtwork] retry sans Fil échoué", retryError);
+        }
+      }
+
       const note =
         error instanceof Error ? error.message : "Erreur vision inconnue";
       console.warn("[HF analyzeArtwork]", error);
