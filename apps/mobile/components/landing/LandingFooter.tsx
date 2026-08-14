@@ -22,6 +22,11 @@ export function LandingFooter() {
               {t("nav.features")}
             </Text>
           </Link>
+          <Link href={ROUTES.glossary}>
+            <Text className="text-sage-700 text-sm font-medium">
+              {t("nav.glossary")}
+            </Text>
+          </Link>
           <Link href={ROUTES.home}>
             <Text className="text-sage-700 text-sm font-medium">
               {t("nav.studio")}

@@ -7,6 +7,7 @@ export const ROUTES = {
   examples: "/exemples",
   example: (slug: string) => `/exemples/${slug}`,
   features: "/fonctionnalites",
+  glossary: "/glossaire",
   home: APP_BASE,
   seasons: `${APP_BASE}/saisons`,
   ritual: `${APP_BASE}/ritual`,

@@ -1,0 +1,87 @@
+{
+  "seo": {
+    "title": "Glossaire créatif — impulsion, miroir, Fil, BYOK | Pastek Art",
+    "description": "Quinze termes pour comprendre Pastek Art : impulsion, amorce, rituel, consigne, miroir créatif, Fil, BYOK, modes express et profond, saisons, local-first."
+  },
+  "aria": {
+    "page": "Glossaire créatif Pastek Art",
+    "toc": "Sommaire des termes"
+  },
+  "breadcrumb": {
+    "home": "Accueil",
+    "glossary": "Glossaire"
+  },
+  "hero": {
+    "kicker": "Vocabulaire de l'atelier",
+    "title": "Les mots qui ",
+    "accent": "ouvrent le geste",
+    "lead": "Un glossaire court — technique et créatif — pour nommer ce que Pastek Art propose : impulsion, rituel, miroir, Fil, et quelques idées utiles avant de créer."
+  },
+  "tocTitle": "Sur cette page",
+  "cta": {
+    "label": "Commencer à créer",
+    "a11y": "Ouvrir l'espace créatif Pastek Art"
+  },
+  "terms": {
+    "impulse": {
+      "term": "Impulsion",
+      "body": "Le point de départ du rituel : un mot, une couleur, une sensation, une image intérieure. Chez Pastek Art, l'impulsion n'est pas un brief marketing — c'est ce qui appelle le geste avant même la technique."
+    },
+    "amorce": {
+      "term": "Amorce créative",
+      "body": "Un parcours léger pour faire émerger une impulsion : Ping-Pong de mots, palette, explorateur émotionnel, Trois gestes, Une seule règle… L'amorce précède l'acte ; elle ne le remplace pas."
+    },
+    "ritual": {
+      "term": "Rituel créatif",
+      "body": "Le parcours guidé de Pastek Art : impulsion → technique et durée → consigne → temps de création → capture et miroir. Un cadre doux, pas une conversation sans fin avec l'IA."
+    },
+    "brief": {
+      "term": "Consigne créative",
+      "body": "L'énoncé proposé pour démarrer — court, invitant, sans jugement. Il ouvre le geste ; vous restez libre de vous en éloigner. Un développement peut préciser le déroulé sans figer le résultat."
+    },
+    "mirror": {
+      "term": "Miroir créatif",
+      "body": "La réflexion bienveillante après la création. Elle accueille ce qui est là (couleurs, geste, texte) au conditionnel, sans diagnostic clinique ni critique d'art. Optionnelle, et souvent plus utile quand elle reste courte."
+    },
+    "fil": {
+      "term": "Fil créatif",
+      "body": "La mémoire locale de vos pratiques : traces de rituels et d'amorces, photos, tags. Opt-in, sur l'appareil. Le Fil peut nourrir un miroir longitudinal si vous le choisissez — sans envoyer vos œuvres par défaut."
+    },
+    "byok": {
+      "term": "BYOK (Bring Your Own Key)",
+      "body": "Vous pouvez brancher votre propre clé IA (Mistral, OpenAI, etc.). La clé reste sur l'appareil ; Pastek Art ne la stocke pas côté serveur. Sans clé, des parcours locaux et des modes de secours restent disponibles."
+    },
+    "express": {
+      "term": "Mode express",
+      "body": "Le rythme court du rituel : générer, créer, accueillir la réflexion sans étapes d'ancrage supplémentaires. Idéal quand le temps est serré et que l'élan compte plus que le parcours guidé."
+    },
+    "deep": {
+      "term": "Mode profond",
+      "body": "Un parcours plus lent : questions d'ancrage avant le miroir, puis prompts d'intégration pour refermer la séance. Même atelier, autre respiration — sans transformer Pastek en outil thérapeutique."
+    },
+    "season": {
+      "term": "Saison créative",
+      "body": "Une habitude douce sur 7 à 14 jours : une contrainte simple (couleur, format, technique) revient dans l'énoncé, sans streak punitif. La saison accompagne le rythme ; elle ne juge pas l'assiduité."
+    },
+    "guided-exercise": {
+      "term": "Exercice créatif guidé",
+      "body": "Une invitation à créer avec un cadre clair (durée, technique, impulsion) et un espace pour le silence. Le but n'est pas une œuvre « réussie » : c'est explorer le processus — dessin, peinture, collage, écriture, geste…"
+    },
+    "bespoke": {
+      "term": "Mode Sur-Mesure",
+      "body": "Composer une séance en choisissant thème, émotion, intention et technique, puis laisser l'exercice émerger. Une autre porte d'entrée quand l'impulsion libre ne vient pas toute seule."
+    },
+    "local-first": {
+      "term": "Local-first",
+      "body": "Vos traces, préférences et clés restent d'abord sur l'appareil. Pas de mur de connexion pour créer. La synchronisation cloud, quand elle existe, reste optionnelle et au service de la sauvegarde."
+    },
+    "letting-go": {
+      "term": "Lâcher-prise créatif",
+      "body": "Accepter que le geste dérive de la consigne, qu'une tache compte, qu'il n'y a pas de bon résultat à atteindre. Pastek Art place cette posture au centre : curiosité avant maîtrise, présence avant performance."
+    },
+    "creative-silence": {
+      "term": "Silence créatif",
+      "body": "Pendant l'exercice, l'écran peut s'effacer pour laisser place au timer et au geste. Le silence n'est pas un vide productif : c'est le temps où la matière, pas l'interface, mène la danse."
+    }
+  }
+}

@@ -103,6 +103,7 @@ export function LandingHeader({
     () => [
       { label: t("landing:nav.examples"), href: ROUTES.examples },
       { label: t("landing:nav.features"), href: ROUTES.features },
+      { label: t("landing:nav.glossary"), href: ROUTES.glossary },
       { label: t("landing:nav.studio"), href: ROUTES.home },
       { label: t("landing:nav.aiConfig"), href: ROUTES.aiEngines },
     ],

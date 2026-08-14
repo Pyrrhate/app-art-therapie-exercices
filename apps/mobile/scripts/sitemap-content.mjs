@@ -5,6 +5,7 @@ export const SITEMAP_PATHS = [
   "/",
   "/exemples",
   "/fonctionnalites",
+  "/glossaire",
   "/exemples/exemple-004",
   "/exemples/exemple-002",
   "/exemples/exemple-001",

@@ -8,6 +8,7 @@ import frApp from "@/locales/fr/app.json";
 import frFil from "@/locales/fr/fil.json";
 import frSeasons from "@/locales/fr/seasons.json";
 import frFeatures from "@/locales/fr/features.json";
+import frGlossary from "@/locales/fr/glossary.json";
 import frRitual from "@/locales/fr/ritual.json";
 import frAmorces from "@/locales/fr/amorces.json";
 import frLegal from "@/locales/fr/legal.json";
@@ -18,6 +19,7 @@ import enApp from "@/locales/en/app.json";
 import enFil from "@/locales/en/fil.json";
 import enSeasons from "@/locales/en/seasons.json";
 import enFeatures from "@/locales/en/features.json";
+import enGlossary from "@/locales/en/glossary.json";
 import enRitual from "@/locales/en/ritual.json";
 import enAmorces from "@/locales/en/amorces.json";
 import enLegal from "@/locales/en/legal.json";
@@ -33,6 +35,7 @@ const resources = {
     fil: frFil,
     seasons: frSeasons,
     features: frFeatures,
+    glossary: frGlossary,
     ritual: frRitual,
     amorces: frAmorces,
     legal: frLegal,
@@ -45,6 +48,7 @@ const resources = {
     fil: enFil,
     seasons: enSeasons,
     features: enFeatures,
+    glossary: enGlossary,
     ritual: enRitual,
     amorces: enAmorces,
     legal: enLegal,
@@ -65,6 +69,7 @@ if (!i18n.isInitialized) {
       "fil",
       "seasons",
       "features",
+      "glossary",
       "ritual",
       "amorces",
       "legal",

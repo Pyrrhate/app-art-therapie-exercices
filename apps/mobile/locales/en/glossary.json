@@ -1,0 +1,87 @@
+{
+  "seo": {
+    "title": "Creative glossary — impulse, mirror, Thread, BYOK | Pastek Art",
+    "description": "Fifteen terms to understand Pastek Art: impulse, starter, ritual, brief, creative mirror, Thread, BYOK, express and deep modes, seasons, local-first."
+  },
+  "aria": {
+    "page": "Pastek Art creative glossary",
+    "toc": "Glossary table of contents"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "glossary": "Glossary"
+  },
+  "hero": {
+    "kicker": "Studio vocabulary",
+    "title": "Words that ",
+    "accent": "open the gesture",
+    "lead": "A short glossary — technical and creative — naming what Pastek Art offers: impulse, ritual, mirror, Thread, and a few useful ideas before you make."
+  },
+  "tocTitle": "On this page",
+  "cta": {
+    "label": "Start creating",
+    "a11y": "Open the Pastek Art creative space"
+  },
+  "terms": {
+    "impulse": {
+      "term": "Impulse",
+      "body": "The starting point of the ritual: a word, a colour, a sensation, an inner image. In Pastek Art, the impulse is not a marketing brief — it is what calls the gesture before technique even enters."
+    },
+    "amorce": {
+      "term": "Creative starter",
+      "body": "A light path to bring forth an impulse: word Ping-Pong, palette, emotion explorer, Three gestures, One rule… The starter precedes making; it does not replace it."
+    },
+    "ritual": {
+      "term": "Creative ritual",
+      "body": "Pastek Art’s guided journey: impulse → technique and length → brief → making time → capture and mirror. A gentle frame, not an endless chat with the AI."
+    },
+    "brief": {
+      "term": "Creative brief",
+      "body": "The invitation that helps you begin — short, open, without judgement. It opens the gesture; you remain free to drift from it. A development paragraph may clarify the flow without freezing the outcome."
+    },
+    "mirror": {
+      "term": "Creative Mirror",
+      "body": "The kind reflection after making. It welcomes what is there (colours, gesture, text) in the conditional mood — no clinical diagnosis, no art critique. Optional, and often most useful when kept short."
+    },
+    "fil": {
+      "term": "Creative Thread",
+      "body": "The local memory of your practice: ritual and starter traces, photos, tags. Opt-in, on this device. The Thread can feed a longer mirror if you choose — without uploading your work by default."
+    },
+    "byok": {
+      "term": "BYOK (Bring Your Own Key)",
+      "body": "You can plug in your own AI key (Mistral, OpenAI, and more). The key stays on the device; Pastek Art does not store it on the server. Without a key, local paths and fallback modes remain available."
+    },
+    "express": {
+      "term": "Express mode",
+      "body": "The short rhythm of the ritual: generate, make, welcome the reflection without extra grounding steps. Ideal when time is tight and momentum matters more than a guided arc."
+    },
+    "deep": {
+      "term": "Deep mode",
+      "body": "A slower journey: grounding questions before the mirror, then integration prompts to close the session. Same studio, different breath — without turning Pastek into a therapy tool."
+    },
+    "season": {
+      "term": "Creative season",
+      "body": "A gentle habit over 7 to 14 days: a simple constraint (colour, format, technique) returns in the brief, without a punitive streak. The season supports rhythm; it does not judge attendance."
+    },
+    "guided-exercise": {
+      "term": "Guided creative exercise",
+      "body": "An invitation to make within a clear frame (length, technique, impulse) and room for silence. The aim is not a “successful” artwork: it is exploring the process — drawing, painting, collage, writing, gesture…"
+    },
+    "bespoke": {
+      "term": "Bespoke mode",
+      "body": "Compose a session by choosing theme, emotion, intention and technique, then let the exercise emerge. Another doorway when a free impulse does not arrive on its own."
+    },
+    "local-first": {
+      "term": "Local-first",
+      "body": "Your traces, preferences and keys stay on the device first. No login wall to create. Cloud sync, when available, stays optional and serves backup."
+    },
+    "letting-go": {
+      "term": "Creative letting go",
+      "body": "Accepting that the gesture may leave the brief, that a mark counts, that there is no right result to chase. Pastek Art puts this posture at the centre: curiosity before mastery, presence before performance."
+    },
+    "creative-silence": {
+      "term": "Creative silence",
+      "body": "During the exercise, the screen can step back so only the timer and the gesture remain. Silence is not productive emptiness: it is the time when material, not the interface, leads."
+    }
+  }
+}
