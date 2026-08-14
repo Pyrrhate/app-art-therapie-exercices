@@ -59,6 +59,12 @@ const MODULE_DEFS: {
     route: ROUTES.emotionExplorer,
   },
   { key: "nuanceFinder", icon: "nuance-finder", route: ROUTES.nuanceFinder },
+  {
+    key: "threeGestures",
+    icon: "three-gestures",
+    route: ROUTES.threeGestures,
+  },
+  { key: "oneRule", icon: "one-rule", route: ROUTES.oneRule },
 ];
 
 const WIDE_LAYOUT_MIN = 720;

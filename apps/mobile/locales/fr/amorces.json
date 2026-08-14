@@ -15,6 +15,14 @@
     "nuanceFinder": {
       "title": "Chercheur de Nuances",
       "description": "Puzzle couleur sans IA — se détendre avant de créer."
+    },
+    "threeGestures": {
+      "title": "Trois gestes",
+      "description": "Trois micro-gestes — en choisir un, puis créer."
+    },
+    "oneRule": {
+      "title": "Une seule règle",
+      "description": "Une contrainte douce pour ouvrir l'impulsion."
     }
   },
   "nav": {
@@ -190,6 +198,66 @@
       "named": "« {{harmony}} » réunit {{names}} — laissez cette harmonie infuser votre geste sans chercher la perfection.",
       "tones": "Vos teintes ({{names}}) forment une carte intérieure — accueillez ce que ces nuances éveillent en vous.",
       "empty": "Votre grille révèle un paysage chromatique singulier — laissez ces nuances guider votre prochain geste."
+    }
+  },
+  "threeGestures": {
+    "heroLabel": "Trois gestes",
+    "heroTitle": "Amorcer par le ",
+    "heroAccent": "corps",
+    "heroDescription": "Trois micro-gestes proposés. Choisissez-en un — l'impulsion naît du mouvement, pas de la réflexion.",
+    "pickHint": "Touchez le geste qui vous appelle maintenant.",
+    "refresh": "Proposer trois autres gestes",
+    "wordLabel": "Un mot libre (optionnel)",
+    "wordPlaceholder": "Souffle, mer, silence…",
+    "wordHint": "Un mot peut colorer le geste sans le remplacer.",
+    "impulseTitle": "Votre impulsion",
+    "moduleStatement": "Amorce Trois gestes — pratiquez : {{gesture}}.",
+    "filSummary": "Trois gestes — {{gesture}}",
+    "gestures": {
+      "three_slow_circles": "Tracer trois cercles lents",
+      "single_breath_line": "Une ligne d'un seul souffle",
+      "fill_without_looking_up": "Remplir sans lever le regard",
+      "press_hard_then_light": "Appuyer fort, puis tout en douceur",
+      "non_dominant_marks": "Marques de la main non dominante",
+      "dots_then_connect": "Des points, puis les relier",
+      "spiral_from_center": "Une spirale depuis le centre",
+      "edge_to_edge_sweep": "Un balayage d'un bord à l'autre",
+      "tiny_detail_only": "Un seul détail minuscule",
+      "continuous_loop": "Une boucle continue, sans lever l'outil",
+      "pause_between_marks": "Une pause entre chaque marque",
+      "soft_then_bold": "D'abord léger, puis un trait affirmé"
+    }
+  },
+  "oneRule": {
+    "heroLabel": "Une seule règle",
+    "heroTitle": "Créer avec ",
+    "heroAccent": "une limite",
+    "heroDescription": "Une contrainte douce tire au sort. Gardez-la, ou tirez une autre (deux fois). L'impulsion naît du cadre.",
+    "ruleLabel": "Votre règle",
+    "redrawStatus": "{{remaining}} tirage(s) restant(s) sur {{max}}",
+    "keep": "Garder cette règle",
+    "redraw": "Tirer une autre règle",
+    "redrawExhausted": "Plus de tirage disponible",
+    "themeLabel": "Un thème libre (optionnel)",
+    "themePlaceholder": "Pluie, seuil, mémoire…",
+    "themeHint": "Le thème reste libre — la règle donne le cadre.",
+    "impulseTitle": "Votre impulsion",
+    "restart": "Nouvelle règle",
+    "moduleStatement": "Amorce Une seule règle — contrainte : {{rule}}.",
+    "filSummary": "Une seule règle — {{rule}}",
+    "rules": {
+      "one_color_only": "Une seule couleur",
+      "tiny_format": "Un format minuscule",
+      "non_dominant_hand": "La main non dominante seulement",
+      "no_outlines": "Sans contours",
+      "only_verticals": "Uniquement des verticales",
+      "eyes_closed_first_minute": "Yeux fermés la première minute",
+      "no_lifting_tool": "Sans jamais lever l'outil",
+      "fill_edges_first": "Commencer par les bords",
+      "silence_no_music": "En silence — sans musique",
+      "reuse_one_shape": "Une seule forme, répétée",
+      "leave_half_blank": "Laisser la moitié du support vide",
+      "work_very_slow": "Tout faire très lentement"
     }
   }
 }

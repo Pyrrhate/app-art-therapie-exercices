@@ -6,7 +6,9 @@ export type ModuleIconId =
   | "ping-pong"
   | "color-journey"
   | "emotion-explorer"
-  | "nuance-finder";
+  | "nuance-finder"
+  | "three-gestures"
+  | "one-rule";
 
 export type PastekIconId =
   | ModuleIconId
@@ -27,6 +29,8 @@ const ICON_BG: Record<string, string> = {
   "color-journey": BEIGE,
   "emotion-explorer": MINT,
   "nuance-finder": BEIGE,
+  "three-gestures": MINT,
+  "one-rule": BEIGE,
   ritual: BEIGE,
   mandala: MINT,
   "zen-garden": BEIGE,
@@ -82,6 +86,8 @@ export function filSourceToIcon(source: string): PastekIconId {
     "ping-pong": "ping-pong",
     "color-journey": "color-journey",
     "emotion-explorer": "emotion-explorer",
+    "three-gestures": "three-gestures",
+    "one-rule": "one-rule",
     "zen-garden": "zen-garden",
   };
   return map[source] ?? "ritual";
@@ -148,6 +154,58 @@ function IconGraphic({
               />
             ))
           )}
+        </>
+      );
+    case "three-gestures":
+      return (
+        <>
+          <Path
+            d="M10 26 C12 18, 16 14, 20 12"
+            fill="none"
+            stroke={p}
+            strokeWidth={2.2}
+            strokeLinecap="round"
+          />
+          <Path
+            d="M14 28 C16 20, 20 15, 24 14"
+            fill="none"
+            stroke={s}
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            opacity={0.85}
+          />
+          <Path
+            d="M18 30 C20 22, 24 17, 28 16"
+            fill="none"
+            stroke={a}
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            opacity={0.75}
+          />
+        </>
+      );
+    case "one-rule":
+      return (
+        <>
+          <Rect
+            x="10"
+            y="10"
+            width="20"
+            height="20"
+            rx="3"
+            fill="none"
+            stroke={p}
+            strokeWidth={2}
+          />
+          <Line
+            x1="14"
+            y1="20"
+            x2="26"
+            y2="20"
+            stroke={a}
+            strokeWidth={2.4}
+            strokeLinecap="round"
+          />
         </>
       );
     case "ritual":

@@ -9,6 +9,8 @@ export type FilSource =
   | "ping-pong"
   | "color-journey"
   | "emotion-explorer"
+  | "three-gestures"
+  | "one-rule"
   | "zen-garden";
 
 export interface FilMetadata {
@@ -68,6 +70,11 @@ export const FIL_SOURCE_META: Record<
     labelKey: "source.emotion-explorer",
     icon: "emotion-explorer",
   },
+  "three-gestures": {
+    labelKey: "source.three-gestures",
+    icon: "three-gestures",
+  },
+  "one-rule": { labelKey: "source.one-rule", icon: "one-rule" },
   "zen-garden": { labelKey: "source.zen-garden", icon: "zen-garden" },
 };
 

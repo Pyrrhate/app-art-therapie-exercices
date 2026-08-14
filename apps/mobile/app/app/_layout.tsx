@@ -29,6 +29,14 @@ export default function AppStackLayout() {
         name="color-journey/index"
         options={{ title: t("screens.colorJourney") }}
       />
+      <Stack.Screen
+        name="three-gestures/index"
+        options={{ title: t("screens.threeGestures") }}
+      />
+      <Stack.Screen
+        name="one-rule/index"
+        options={{ title: t("screens.oneRule") }}
+      />
       <Stack.Screen name="fil/index" options={{ title: t("screens.fil") }} />
       <Stack.Screen name="fil/[id]" />
       <Stack.Screen name="saisons/index" options={{ title: t("screens.seasons") }} />

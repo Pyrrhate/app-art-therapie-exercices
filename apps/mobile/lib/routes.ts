@@ -28,13 +28,17 @@ export const ROUTES = {
   colorJourney: `${APP_BASE}/color-journey`,
   nuanceFinder: `${APP_BASE}/nuance-finder`,
   emotionExplorer: `${APP_BASE}/emotion-explorer`,
+  threeGestures: `${APP_BASE}/three-gestures`,
+  oneRule: `${APP_BASE}/one-rule`,
 } as const;
 
 export type ModuleAmorceRoute =
   | typeof ROUTES.pingPong
   | typeof ROUTES.colorJourney
   | typeof ROUTES.nuanceFinder
-  | typeof ROUTES.emotionExplorer;
+  | typeof ROUTES.emotionExplorer
+  | typeof ROUTES.threeGestures
+  | typeof ROUTES.oneRule;
 
 export function isAppHomePath(pathname: string): boolean {
   const normalized = pathname.replace(/\/$/, "") || "/";

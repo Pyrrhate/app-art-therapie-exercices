@@ -15,6 +15,14 @@
     "nuanceFinder": {
       "title": "Nuance Seeker",
       "description": "A colour puzzle without AI — unwind before you create."
+    },
+    "threeGestures": {
+      "title": "Three gestures",
+      "description": "Three micro-gestures — pick one, then create."
+    },
+    "oneRule": {
+      "title": "One rule",
+      "description": "A gentle constraint to unlock an impulse."
     }
   },
   "nav": {
@@ -190,6 +198,66 @@
       "named": "“{{harmony}}” brings together {{names}} — let this harmony infuse your gesture without chasing perfection.",
       "tones": "Your hues ({{names}}) form an inner map — welcome what these nuances awaken in you.",
       "empty": "Your grid reveals a singular chromatic landscape — let these nuances guide your next gesture."
+    }
+  },
+  "threeGestures": {
+    "heroLabel": "Three gestures",
+    "heroTitle": "Begin with the ",
+    "heroAccent": "body",
+    "heroDescription": "Three micro-gestures on offer. Pick one — the impulse comes from movement, not overthinking.",
+    "pickHint": "Tap the gesture that calls you right now.",
+    "refresh": "Offer three other gestures",
+    "wordLabel": "A free word (optional)",
+    "wordPlaceholder": "Breath, sea, quiet…",
+    "wordHint": "A word can colour the gesture without replacing it.",
+    "impulseTitle": "Your impulse",
+    "moduleStatement": "Three gestures starter — practise: {{gesture}}.",
+    "filSummary": "Three gestures — {{gesture}}",
+    "gestures": {
+      "three_slow_circles": "Draw three slow circles",
+      "single_breath_line": "One line in a single breath",
+      "fill_without_looking_up": "Fill without looking up",
+      "press_hard_then_light": "Press hard, then very gently",
+      "non_dominant_marks": "Marks with your non-dominant hand",
+      "dots_then_connect": "Dots, then connect them",
+      "spiral_from_center": "A spiral from the centre",
+      "edge_to_edge_sweep": "A sweep from edge to edge",
+      "tiny_detail_only": "One tiny detail only",
+      "continuous_loop": "A continuous loop, tool never lifted",
+      "pause_between_marks": "A pause between each mark",
+      "soft_then_bold": "Soft first, then one bold stroke"
+    }
+  },
+  "oneRule": {
+    "heroLabel": "One rule",
+    "heroTitle": "Create within ",
+    "heroAccent": "a limit",
+    "heroDescription": "One gentle constraint is drawn. Keep it, or draw another (twice). The impulse comes from the frame.",
+    "ruleLabel": "Your rule",
+    "redrawStatus": "{{remaining}} redraw(s) left of {{max}}",
+    "keep": "Keep this rule",
+    "redraw": "Draw another rule",
+    "redrawExhausted": "No redraws left",
+    "themeLabel": "A free theme (optional)",
+    "themePlaceholder": "Rain, threshold, memory…",
+    "themeHint": "The theme stays free — the rule sets the frame.",
+    "impulseTitle": "Your impulse",
+    "restart": "New rule",
+    "moduleStatement": "One rule starter — constraint: {{rule}}.",
+    "filSummary": "One rule — {{rule}}",
+    "rules": {
+      "one_color_only": "One colour only",
+      "tiny_format": "A tiny format",
+      "non_dominant_hand": "Non-dominant hand only",
+      "no_outlines": "No outlines",
+      "only_verticals": "Verticals only",
+      "eyes_closed_first_minute": "Eyes closed for the first minute",
+      "no_lifting_tool": "Never lift the tool",
+      "fill_edges_first": "Start with the edges",
+      "silence_no_music": "In silence — no music",
+      "reuse_one_shape": "One shape, repeated",
+      "leave_half_blank": "Leave half the surface blank",
+      "work_very_slow": "Do everything very slowly"
     }
   }
 }
