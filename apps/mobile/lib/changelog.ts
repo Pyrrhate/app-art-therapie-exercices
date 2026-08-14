@@ -23,17 +23,55 @@ export type LocalizedChangelogEntry = {
  */
 export const CHANGELOG_CATALOG: LocalizedChangelogEntry[] = [
   {
+    id: "glossaire-nav-site",
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Glossaire créatif & navigation du site",
+      en: "Creative glossary & site navigation",
+    },
+    highlights: {
+      fr: [
+        "Nouvelle page Glossaire : 15 termes techniques et créatifs (impulsion, miroir, Fil, BYOK…), FR / EN, indexable.",
+        "Navigation du site allégée : Fonctionnalités → Exemples → Glossaire → Espace créatif (Config IA et À propos retirés du menu).",
+      ],
+      en: [
+        "A new Glossary page: 15 technical and creative terms (impulse, mirror, Thread, BYOK…), FR / EN, indexable.",
+        "A lighter site navigation: Features → Examples → Glossary → Creative space (AI setup and About removed from the menu).",
+      ],
+    },
+  },
+  {
+    id: "amorces-geste-regle",
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Amorces Trois gestes & Une seule règle",
+      en: "Three gestures & One rule starters",
+    },
+    highlights: {
+      fr: [
+        "Trois gestes : trois micro-gestes tirés au sort — choisir avec le corps, puis passer au rituel.",
+        "Une seule règle : une contrainte douce (re-tirages limités) pour ouvrir l'impulsion sans IA obligatoire.",
+      ],
+      en: [
+        "Three gestures: three micro-gestures drawn at random — choose with the body, then move into the ritual.",
+        "One rule: a gentle constraint (limited redraws) to unlock an impulse, with no AI required.",
+      ],
+    },
+  },
+  {
     id: "i18n-fr-en",
     dateLabel: { fr: "août 2026", en: "August 2026" },
     title: { fr: "Interface FR / EN", en: "FR / EN interface" },
     highlights: {
       fr: [
         "Bascule Français / English dans la navigation et les réglages (préférence locale).",
-        "Landing et chrome de l'app traduits ; le reste (Fil, saisons, prompts IA) suivra.",
+        "Toute l'interface suit la langue choisie — y compris les consignes d'exercice générées.",
+        "Le contenu déjà enregistré dans le Fil (résumés, miroirs, énoncés) reste dans sa langue d'origine.",
       ],
       en: [
         "A Français / English switch in the navigation and settings (kept on your device).",
-        "Landing page and app chrome translated; the rest (Thread, seasons, AI prompts) will follow.",
+        "The whole interface follows the language you choose — including generated exercise briefs.",
+        "Content already saved in the Thread (summaries, mirrors, briefs) stays in its original language.",
       ],
     },
   },
