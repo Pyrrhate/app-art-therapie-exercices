@@ -37,11 +37,6 @@ export function LandingFooter() {
               {t("nav.updates")}
             </Text>
           </Link>
-          <Link href={ROUTES.privacy}>
-            <Text className="text-sage-700 text-sm font-medium">
-              {t("nav.about")}
-            </Text>
-          </Link>
         </View>
         <Text className="text-sand-500 text-sm text-center leading-6">
           {t("footer.tagline", { year })}

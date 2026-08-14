@@ -105,7 +105,6 @@ export function LandingHeader({
       { label: t("landing:nav.features"), href: ROUTES.features },
       { label: t("landing:nav.studio"), href: ROUTES.home },
       { label: t("landing:nav.aiConfig"), href: ROUTES.aiEngines },
-      { label: t("landing:nav.about"), href: ROUTES.privacy },
     ],
     [t]
   );
