@@ -3,8 +3,19 @@ import {
   type PromptOverrides,
 } from "@art-therapie/shared";
 import { sanitizeExerciseKeywords } from "../exercise-keywords";
-import { TECHNIQUE_LABELS } from "../techniques";
+import {
+  TECHNIQUE_LABELS,
+  techniqueLabelForLanguage,
+} from "../techniques";
 import type { ArtisticTechnique } from "../types";
+
+export type PromptLanguage = "fr" | "en";
+
+export function normalizePromptLanguage(
+  language?: string | null
+): PromptLanguage {
+  return language?.toLowerCase().startsWith("en") ? "en" : "fr";
+}
 
 /** @deprecated Préférer resolvePromptText("exercise_system") */
 export const EXERCISE_SYSTEM = resolvePromptText("exercise_system");
@@ -12,20 +23,63 @@ export const EXERCISE_SYSTEM = resolvePromptText("exercise_system");
 /** @deprecated Préférer resolvePromptText("reflection_system") */
 export const WARM_REFLECTION_SYSTEM = resolvePromptText("reflection_system");
 
+/** System prompt exercice + contrainte de langue de sortie. */
+export function resolveExerciseSystemPrompt(
+  overrides?: PromptOverrides | null,
+  language: PromptLanguage = "fr"
+): string {
+  const base = resolvePromptText("exercise_system", overrides);
+  if (language === "en") {
+    return `${base}
+
+OUTPUT LANGUAGE (mandatory):
+- Write every user-facing JSON field (exercise, development, keywords) in natural English.
+- Warm second-person address (“you”).
+- Do not answer in French unless the impulse itself is a French quote you briefly echo.`;
+  }
+  return `${base}
+
+LANGUE DE SORTIE (obligatoire) :
+- Rédigez tous les champs utilisateur du JSON (exercise, development, keywords) en français.
+- Vouvoiement doux (« vous »).`;
+}
+
 export function buildExercisePrompt(
   impulse: string,
   technique: ArtisticTechnique,
   durationMinutes = 15,
-  augmentationContext?: string
+  augmentationContext?: string,
+  language: PromptLanguage = "fr"
 ): string {
+  const lang = normalizePromptLanguage(language);
+
   if (augmentationContext?.trim()) {
     const preferred = durationMinutes;
+    if (lang === "en") {
+      return `${augmentationContext.trim()}
+
+Planned duration: ${preferred} minutes (do not change it in your JSON response).
+Write exercise, development and keywords in English.`;
+    }
     return `${augmentationContext.trim()}
 
 Durée prévue : ${preferred} minutes (ne pas la modifier dans ta réponse JSON).`;
   }
 
-  const label = TECHNIQUE_LABELS[technique];
+  const label = techniqueLabelForLanguage(technique, lang);
+
+  if (lang === "en") {
+    return `USER CONTEXT:
+- Starting impulse: “${impulse}”
+- Chosen technique: ${label}
+- Planned duration: ${durationMinutes} minutes (do not change it in your response)
+
+EXPECTED RESPONSE FORMAT:
+{"exercise":"creative brief text","development":"paragraph that develops the flow and possible variations","durationMinutes":${durationMinutes},"keywords":["phrase 1","phrase 2","phrase 3"]}
+
+Write exercise, development and keywords in English.`;
+  }
+
   return `CONTEXTE DE L'UTILISATEUR :
 - Impulsion de départ : « ${impulse} »
 - Technique choisie : ${label}

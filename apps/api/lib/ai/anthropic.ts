@@ -16,8 +16,10 @@ import {
   buildWarmReflectionRetryPrompt,
   looksLikeColdDescription,
   looksLikeTooBriefReflection,
+  normalizePromptLanguage,
   parseExerciseFromAi,
   parseReflectionFromAi,
+  resolveExerciseSystemPrompt,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -126,14 +128,16 @@ export class AnthropicProvider implements AIProvider {
     }
 
     try {
+      const language = normalizePromptLanguage(input.language);
       const prompt = buildExercisePrompt(
         input.impulse,
         input.technique,
         preferredDuration ?? 15,
-        input.augmentationContext
+        input.augmentationContext,
+        language
       );
       const raw = await this.callText(prompt, {
-        system: resolvePromptText("exercise_system", input.promptOverrides),
+        system: resolveExerciseSystemPrompt(input.promptOverrides, language),
       });
       const parsed = parseExerciseFromAi(raw, preferredDuration);
 

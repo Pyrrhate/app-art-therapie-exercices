@@ -15,6 +15,7 @@ const bodySchema = z.object({
   impulse: z.string().min(1).max(200),
   technique: artisticTechniqueSchema,
   durationMinutes: z.union([z.literal(15), z.literal(30), z.literal(45)]).optional(),
+  language: z.enum(["fr", "en"]).optional(),
   augmentationContext: z.string().min(20).max(8000).optional(),
   promptOverrides: promptOverridesSchema,
   byok: byokBodySchema,

@@ -19,8 +19,10 @@ import {
   buildWarmReflectionRetryPrompt,
   looksLikeColdDescription,
   looksLikeTooBriefReflection,
+  normalizePromptLanguage,
   parseExerciseFromAi,
   parseReflectionFromAi,
+  resolveExerciseSystemPrompt,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -66,15 +68,17 @@ export class AlephAlphaProvider implements AIProvider {
     }
 
     try {
-      const system = resolvePromptText(
-        "exercise_system",
-        input.promptOverrides
+      const language = normalizePromptLanguage(input.language);
+      const system = resolveExerciseSystemPrompt(
+        input.promptOverrides,
+        language
       );
       const user = buildExercisePrompt(
         input.impulse,
         input.technique,
         preferredDuration ?? 15,
-        input.augmentationContext
+        input.augmentationContext,
+        language
       );
       const raw = await this.complete(
         `${CREATIVE_COACH_SAFETY}\n\n${system}\n\n${user}\n\nJSON:`

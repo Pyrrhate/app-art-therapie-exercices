@@ -21,8 +21,10 @@ import {
   buildWarmReflectionRetryPrompt,
   looksLikeColdDescription,
   looksLikeTooBriefReflection,
+  normalizePromptLanguage,
   parseExerciseFromAi,
   parseReflectionFromAi,
+  resolveExerciseSystemPrompt,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -169,14 +171,16 @@ export class GeminiProvider implements AIProvider {
     }
 
     try {
+      const language = normalizePromptLanguage(input.language);
       const prompt = buildExercisePrompt(
         input.impulse,
         input.technique,
         preferredDuration ?? 15,
-        input.augmentationContext
+        input.augmentationContext,
+        language
       );
       const raw = await this.generate(
-        resolvePromptText("exercise_system", input.promptOverrides),
+        resolveExerciseSystemPrompt(input.promptOverrides, language),
         prompt,
         { temperature: 0.85, maxTokens: 2048, json: true }
       );

@@ -8,6 +8,8 @@ export interface ExerciseRequest {
   durationMinutes?: number;
   /** Prompt d'augmentation pour le 2e tour (remplace le prompt standard). */
   augmentationContext?: string;
+  /** Langue de l'interface — consignes générées dans cette langue. */
+  language?: "fr" | "en";
   /** Overrides locaux des prompts système (BYOP — jamais stockés serveur). */
   promptOverrides?: PromptOverrides;
 }

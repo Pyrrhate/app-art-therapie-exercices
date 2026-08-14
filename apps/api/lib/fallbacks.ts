@@ -1,8 +1,33 @@
 import { deriveExerciseKeywords } from "./exercise-keywords";
-import { TECHNIQUE_LABELS, isAiAnalysisSupported } from "./techniques";
+import {
+  TECHNIQUE_LABELS,
+  isAiAnalysisSupported,
+  techniqueLabelForLanguage,
+} from "./techniques";
 import type { ExerciseRequest, ExerciseResponse, ReflectionRequest } from "./types";
 
-function performativeIntro(technique: ExerciseRequest["technique"]): string {
+function resolveLanguage(language?: string | null): "fr" | "en" {
+  return language?.toLowerCase().startsWith("en") ? "en" : "fr";
+}
+
+function performativeIntro(
+  technique: ExerciseRequest["technique"],
+  language: "fr" | "en"
+): string {
+  if (language === "en") {
+    switch (technique) {
+      case "video":
+        return "Let the impulse guide your frame, your shots and what you choose to show";
+      case "music":
+        return "Let the impulse guide the rhythm, sounds or melody you explore";
+      case "dance":
+        return "Let the impulse guide movement, the weight of the body and the space around you";
+      case "theatre":
+        return "Let the impulse guide voice, play and bodily presence";
+      default:
+        return "Begin with a shape or colour that calls you, even if it surprises you";
+    }
+  }
   switch (technique) {
     case "video":
       return "Laissez l'impulsion guider votre cadre, vos plans et ce que vous choisissez de montrer";
@@ -18,28 +43,50 @@ function performativeIntro(technique: ExerciseRequest["technique"]): string {
 }
 
 export function getFallbackExercise(input: ExerciseRequest): ExerciseResponse {
-  const technique = TECHNIQUE_LABELS[input.technique];
-  const impulse = input.impulse.trim() || "votre impulsion du moment";
+  const language = resolveLanguage(input.language);
+  const technique = techniqueLabelForLanguage(input.technique, language);
+  const impulse =
+    input.impulse.trim() ||
+    (language === "en" ? "your impulse of the moment" : "votre impulsion du moment");
   const durationMinutes = input.durationMinutes ?? 15;
   const isPerformative = !isAiAnalysisSupported(input.technique);
 
   const intro = isPerformative
-    ? performativeIntro(input.technique)
-    : "Commencez par une forme ou une couleur qui vous appelle, même si elle vous surprend";
+    ? performativeIntro(input.technique, language)
+    : language === "en"
+      ? "Begin with a shape or colour that calls you, even if it surprises you"
+      : "Commencez par une forme ou une couleur qui vous appelle, même si elle vous surprend";
 
-  const middle = isPerformative
-    ? `${intro}. Explorez pendant ${durationMinutes} minutes en restant à l'écoute de ce qui émerge — sans viser une performance parfaite.`
-    : `${intro}. Travaillez pendant ${durationMinutes} minutes en restant curieux·se face à ce qui émerge.`;
+  const middle =
+    language === "en"
+      ? isPerformative
+        ? `${intro}. Explore for ${durationMinutes} minutes, staying open to what emerges — without aiming for a perfect performance.`
+        : `${intro}. Work for ${durationMinutes} minutes, staying curious about what emerges.`
+      : isPerformative
+        ? `${intro}. Explorez pendant ${durationMinutes} minutes en restant à l'écoute de ce qui émerge — sans viser une performance parfaite.`
+        : `${intro}. Travaillez pendant ${durationMinutes} minutes en restant curieux·se face à ce qui émerge.`;
 
-  const exercise = `Prenez un moment pour vous installer confortablement. Sans jugement, laissez l'impulsion « ${impulse} » guider votre ${technique}.
+  const exercise =
+    language === "en"
+      ? `Take a moment to settle comfortably. Without judgement, let the impulse “${impulse}” guide your ${technique}.
+
+${middle}
+
+There is no right or wrong outcome — only your expression in this moment.`
+      : `Prenez un moment pour vous installer confortablement. Sans jugement, laissez l'impulsion « ${impulse} » guider votre ${technique}.
 
 ${middle}
 
 Il n'y a pas de bon ou mauvais résultat — seulement votre expression du moment.`;
 
-  const development = isPerformative
-    ? `Vous pouvez varier le rythme, l'intensité ou le point de vue. Si un geste vous surprend, accueillez-le plutôt que de le corriger.`
-    : `Précisez un détail qui vous attire et laissez-le grandir sans forcer le reste. Changez d'échelle une fois si l'envie vient.`;
+  const development =
+    language === "en"
+      ? isPerformative
+        ? `You may vary pace, intensity or point of view. If a gesture surprises you, welcome it rather than correct it.`
+        : `Notice one detail that draws you and let it grow without forcing the rest. Change scale once if the urge arises.`
+      : isPerformative
+        ? `Vous pouvez varier le rythme, l'intensité ou le point de vue. Si un geste vous surprend, accueillez-le plutôt que de le corriger.`
+        : `Précisez un détail qui vous attire et laissez-le grandir sans forcer le reste. Changez d'échelle une fois si l'envie vient.`;
 
   return {
     exercise,

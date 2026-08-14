@@ -6,6 +6,7 @@ import {
   resolveColorLabel,
 } from "@/lib/color-names";
 import { generateExercise } from "@/lib/api";
+import { useLanguageStore } from "@/lib/i18n/languageStore";
 import { getFallbackExercise } from "@/lib/ritual/fallback";
 import { useRitualStore } from "@/lib/store";
 import type { ArtisticTechnique, ExerciseResponse } from "@/lib/types";
@@ -69,15 +70,16 @@ export async function startExerciseFromImpulse(
   applyColorHints(colorHints);
 
   let result: ExerciseResponse;
+  const language = useLanguageStore.getState().language;
   try {
     // Pas d'augmentationContext : l'IA reçoit seulement impulsion + technique.
     result = await generateExercise(trimmed, technique, minutes);
   } catch {
-    result = getFallbackExercise(trimmed, technique, minutes);
+    result = getFallbackExercise(trimmed, technique, minutes, language);
   }
 
   if (!result.exercise?.trim()) {
-    result = getFallbackExercise(trimmed, technique, minutes);
+    result = getFallbackExercise(trimmed, technique, minutes, language);
   }
 
   store.setExercise(

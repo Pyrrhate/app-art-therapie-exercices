@@ -3,6 +3,8 @@ import { getSupabaseClient } from "./supabase/client";
 import { resolveByokCredentials } from "./aiKeys";
 import { isByokEnabledPath } from "./byok-headers";
 import { getPromptOverrides } from "./promptOverrides";
+import { useLanguageStore } from "./i18n/languageStore";
+import type { AppLanguage } from "./i18n/types";
 import { getFallbackExercise, getFallbackAugmentedExercise } from "./ritual/fallback";
 import { getFallbackPingPongReply } from "./ping-pong/fallback";
 import { buildLocalColorMirror } from "./color-journey/mirror-fallback";
@@ -12,6 +14,10 @@ import type {
   ExerciseResponse,
   ReflectionResponse,
 } from "./types";
+
+function currentUiLanguage(): AppLanguage {
+  return useLanguageStore.getState().language === "en" ? "en" : "fr";
+}
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const supabase = getSupabaseClient();
@@ -172,6 +178,7 @@ export async function generateExercise(
   augmentationContext?: string
 ): Promise<ExerciseResponse> {
   const byokActive = Boolean(await resolveByokCredentials().catch(() => null));
+  const language = currentUiLanguage();
 
   try {
     return await request<ExerciseResponse>("/api/exercise/generate", {
@@ -180,6 +187,7 @@ export async function generateExercise(
         impulse,
         technique,
         durationMinutes,
+        language,
         ...(augmentationContext ? { augmentationContext } : {}),
       }),
     });
@@ -189,7 +197,7 @@ export async function generateExercise(
       throw error;
     }
     if (isRecoverableApiError(error)) {
-      return getFallbackExercise(impulse, technique, durationMinutes);
+      return getFallbackExercise(impulse, technique, durationMinutes, language);
     }
     throw error;
   }
@@ -202,6 +210,7 @@ export async function generateAugmentedExercise(
   durationMinutes?: number
 ): Promise<ExerciseResponse> {
   const byokActive = Boolean(await resolveByokCredentials().catch(() => null));
+  const language = currentUiLanguage();
 
   try {
     return await request<ExerciseResponse>("/api/exercise/generate", {
@@ -210,6 +219,7 @@ export async function generateAugmentedExercise(
         impulse,
         technique,
         durationMinutes,
+        language,
         augmentationContext,
       }),
     });
@@ -222,7 +232,8 @@ export async function generateAugmentedExercise(
         impulse,
         technique,
         augmentationContext,
-        durationMinutes
+        durationMinutes,
+        language
       );
     }
     throw error;
