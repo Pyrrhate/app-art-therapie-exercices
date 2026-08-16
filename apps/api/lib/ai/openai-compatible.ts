@@ -36,6 +36,8 @@ export interface OpenAICompatibleOptions {
   visionModel?: string;
   /** Modèles de secours si le principal est 404 / indisponible. */
   fallbackModels?: string[];
+  /** Fallbacks dédiés vision (sinon = fallbackModels). */
+  visionFallbackModels?: string[];
   /** true = pas de vision (texte seul + fallback OCR). */
   textOnly?: boolean;
 }
@@ -98,7 +100,7 @@ function compatibleHttpError(
 }
 
 function shouldTryNextModel(message: string): boolean {
-  return /HTTP 404|model_not_found|does not exist|not found|unknown model|not available|no longer/i.test(
+  return /HTTP 404|HTTP 400|model_not_found|does not exist|not found|unknown model|not available|no longer|unavailable|retired|deprecated|invalid.?model|model.?id|does not support|not supported for/i.test(
     message
   );
 }
@@ -110,6 +112,7 @@ export class OpenAICompatibleProvider implements AIProvider {
   private readonly textModel: string;
   private readonly visionModel: string;
   private readonly fallbackModels: string[];
+  private readonly visionFallbackModels: string[];
   private readonly textOnly: boolean;
 
   constructor(options: OpenAICompatibleOptions) {
@@ -119,6 +122,8 @@ export class OpenAICompatibleProvider implements AIProvider {
     this.textModel = options.textModel;
     this.visionModel = options.visionModel ?? options.textModel;
     this.fallbackModels = options.fallbackModels ?? [];
+    this.visionFallbackModels =
+      options.visionFallbackModels ?? this.fallbackModels;
     this.textOnly = options.textOnly ?? false;
   }
 
@@ -352,7 +357,7 @@ export class OpenAICompatibleProvider implements AIProvider {
       },
     ];
     return this.chatWithFallback(
-      [this.visionModel, ...this.fallbackModels],
+      [this.visionModel, ...this.visionFallbackModels],
       messages,
       {
         maxTokens: 1024,

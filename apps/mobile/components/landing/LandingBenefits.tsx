@@ -58,11 +58,11 @@ export function LandingBenefits() {
           {t("benefits.intro")}
         </SemanticWeb>
 
-        <View className="flex-row flex-wrap gap-4 md:gap-6">
+        <View className="flex-row flex-wrap justify-center gap-4 md:gap-6">
           {items.map((item) => (
             <View
               key={item.key}
-              className="flex-1 min-w-[260px] basis-[280px] rounded-2xl border border-sand-200/80 bg-sand-50 p-6"
+              className="w-full max-[639px]:max-w-md min-[640px]:w-[calc(50%-0.5rem)] min-[640px]:max-w-[calc(50%-0.5rem)] md:w-[calc(50%-0.75rem)] md:max-w-[calc(50%-0.75rem)] rounded-2xl border border-sand-200/80 bg-sand-50 p-6"
               style={cardShadow}
             >
               <View className={`self-start rounded-full px-3 py-1 mb-4 ${item.pillBg}`}>

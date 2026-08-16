@@ -1,6 +1,11 @@
 /**
- * Ollama local — BYOK via URL de base (ex. http://localhost:11434).
+ * Ollama local — BYOK via URL de base (ex. http://127.0.0.1:11434).
  * Le champ « clé » côté client contient l’URL ; jamais persistée serveur.
+ *
+ * Stratégie de robustesse :
+ * - normalise l’URL (trailing slash, /v1, /api)
+ * - préfère /v1/chat/completions (OpenAI-compat), puis /api/chat
+ * - si le modèle demandé manque, lit /api/tags et prend le premier modèle local
  */
 
 import { CREATIVE_COACH_SAFETY, resolvePromptText } from "@art-therapie/shared";
@@ -26,7 +31,16 @@ import {
   type ReflectionPromptContext,
 } from "./prompts";
 
-const DEFAULT_MODEL = "llama3.2";
+const DEFAULT_MODEL_CANDIDATES = [
+  "llama3.2",
+  "llama3.1",
+  "llama3",
+  "mistral",
+  "qwen2.5",
+  "gemma2",
+  "phi3",
+  "llama2",
+] as const;
 
 function ensureVouvoiementQuestion(question: string): string {
   return question
@@ -39,6 +53,34 @@ function ensureVouvoiementQuestion(question: string): string {
     .replace(/\btes\b/gi, "vos");
 }
 
+/** Nettoie une URL collée depuis la doc (avec ou sans /v1, /api). */
+export function normalizeOllamaBaseUrl(raw: string): string {
+  let url = raw.trim().replace(/\/+$/, "");
+  if (!url) return "";
+  // Accepte host:port sans schéma (ex. 192.168.1.10:11434)
+  if (!/^https?:\/\//i.test(url)) {
+    url = `http://${url}`;
+  }
+  url = url.replace(/\/+$/, "");
+  url = url.replace(/\/v1$/i, "");
+  url = url.replace(/\/api$/i, "");
+  return url.replace(/\/+$/, "");
+}
+
+function isModelMissingError(message: string): boolean {
+  return /HTTP 404|model.*not found|not found.*model|pull model|unknown model|does not exist|no such model/i.test(
+    message
+  );
+}
+
+function explainOllamaFailure(error: unknown): string {
+  const msg = error instanceof Error ? error.message : String(error);
+  if (/fetch failed|ECONNREFUSED|ENOTFOUND|network|timeout|AbortError|failed to fetch/i.test(msg)) {
+    return `${msg} — Ollama doit être joignable depuis le serveur API (pas seulement localhost du téléphone). Utilisez une IP LAN, un tunnel (ngrok/cloudflared) ou une URL publique.`;
+  }
+  return msg;
+}
+
 export type OllamaProviderOptions = {
   /** Base URL Ollama, ex. http://127.0.0.1:11434 */
   baseUrl: string;
@@ -47,11 +89,33 @@ export type OllamaProviderOptions = {
 
 export class OllamaProvider implements AIProvider {
   private baseUrl: string;
-  private model: string;
+  private preferredModel: string;
+  private resolvedModel: string | null = null;
 
   constructor(options: OllamaProviderOptions) {
-    this.baseUrl = options.baseUrl.replace(/\/$/, "").trim();
-    this.model = options.model ?? process.env.OLLAMA_MODEL ?? DEFAULT_MODEL;
+    this.baseUrl = normalizeOllamaBaseUrl(options.baseUrl);
+    this.preferredModel =
+      options.model?.trim() ||
+      process.env.OLLAMA_MODEL?.trim() ||
+      DEFAULT_MODEL_CANDIDATES[0];
+  }
+
+  async ping(): Promise<string> {
+    if (!this.baseUrl) throw new Error("URL Ollama manquante.");
+    const tags = await this.listLocalModels();
+    if (tags.length === 0) {
+      throw new Error(
+        "Ollama répond mais aucun modèle n’est installé. Exécutez par ex. `ollama pull llama3.2`."
+      );
+    }
+    // Ping léger via generate court sur un modèle présent
+    const model = await this.resolveModel();
+    const reply = await this.chat(
+      "Répondez strictement: OK",
+      "Répondez uniquement par le mot OK.",
+      { model, maxTokens: 16, temperature: 0 }
+    );
+    return reply;
   }
 
   async generateExercise(input: ExerciseRequest): Promise<ExerciseResponse> {
@@ -77,7 +141,8 @@ export class OllamaProvider implements AIProvider {
       );
       const raw = await this.chat(
         resolveExerciseSystemPrompt(input.promptOverrides, language),
-        prompt
+        prompt,
+        { jsonBias: true }
       );
       const parsed = parseExerciseFromAi(raw, preferredDuration);
       if (parsed) {
@@ -103,14 +168,14 @@ export class OllamaProvider implements AIProvider {
         fallbackNote: "Ollama: format non exploitable.",
       };
     } catch (error) {
-      console.warn("[Ollama generateExercise]", (error as Error).message);
+      const note = explainOllamaFailure(error);
+      console.warn("[Ollama generateExercise]", note);
       const fallback = getFallbackExercise(input);
       return {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback",
-        fallbackNote:
-          "Ollama injoignable. Vérifiez que le service tourne et l’URL (ex. http://127.0.0.1:11434).",
+        fallbackNote: note.slice(0, 400),
       };
     }
   }
@@ -146,7 +211,8 @@ export class OllamaProvider implements AIProvider {
       );
       let warmRaw = await this.chat(
         system,
-        buildWarmReflectionPrompt(promptCtx)
+        buildWarmReflectionPrompt(promptCtx),
+        { jsonBias: true }
       );
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -158,7 +224,8 @@ export class OllamaProvider implements AIProvider {
       if (needsRetry && parsed?.reflection) {
         warmRaw = await this.chat(
           system,
-          buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx)
+          buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
+          { jsonBias: true }
         );
         parsed = parseReflectionFromAi(warmRaw);
       }
@@ -177,7 +244,7 @@ export class OllamaProvider implements AIProvider {
       }
       throw new Error("Réponse Ollama non exploitable");
     } catch (error) {
-      const note = error instanceof Error ? error.message : "Erreur Ollama";
+      const note = explainOllamaFailure(error);
       console.warn("[Ollama analyzeArtwork]", note);
       const fallback = getFallbackReflection(input);
       return {
@@ -195,13 +262,118 @@ export class OllamaProvider implements AIProvider {
     return { text: "", source: "fallback" };
   }
 
-  private async chat(system: string, user: string): Promise<string> {
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
+  private async resolveModel(): Promise<string> {
+    if (this.resolvedModel) return this.resolvedModel;
+
+    let installed: string[] = [];
+    try {
+      installed = await this.listLocalModels();
+    } catch {
+      /* /api/tags peut échouer ; on tente quand même les candidats */
+    }
+
+    const candidates = [
+      this.preferredModel,
+      ...DEFAULT_MODEL_CANDIDATES,
+      ...installed,
+    ];
+
+    // Match exact ou préfixe (llama3.2 ↔ llama3.2:latest)
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const hit = installed.find(
+        (name) =>
+          name === candidate ||
+          name.startsWith(`${candidate}:`) ||
+          candidate.startsWith(`${name}:`)
+      );
+      if (hit) {
+        this.resolvedModel = hit;
+        return hit;
+      }
+    }
+
+    if (installed[0]) {
+      this.resolvedModel = installed[0];
+      return installed[0];
+    }
+
+    this.resolvedModel = this.preferredModel;
+    return this.preferredModel;
+  }
+
+  private async listLocalModels(): Promise<string[]> {
+    const response = await fetch(`${this.baseUrl}/api/tags`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!response.ok) {
+      throw new Error(`Ollama /api/tags HTTP ${response.status}`);
+    }
+    const data = (await response.json()) as {
+      models?: Array<{ name?: string; model?: string }>;
+    };
+    return (data.models ?? [])
+      .map((m) => (m.name || m.model || "").trim())
+      .filter(Boolean);
+  }
+
+  private async chat(
+    system: string,
+    user: string,
+    options?: {
+      model?: string;
+      maxTokens?: number;
+      temperature?: number;
+      jsonBias?: boolean;
+    }
+  ): Promise<string> {
+    const model = options?.model ?? (await this.resolveModel());
+    const temperature = options?.temperature ?? 0.7;
+    const maxTokens = options?.maxTokens ?? 900;
+
+    try {
+      return await this.chatOpenAiCompat(model, system, user, {
+        temperature,
+        maxTokens,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (isModelMissingError(msg)) {
+        this.resolvedModel = null;
+        const retryModel = await this.resolveModel();
+        if (retryModel !== model) {
+          try {
+            return await this.chatOpenAiCompat(retryModel, system, user, {
+              temperature,
+              maxTokens,
+            });
+          } catch {
+            /* native below */
+          }
+        }
+      }
+      // Fallback native Ollama
+    }
+
+    return this.chatNative(model, system, user, {
+      temperature,
+      jsonBias: options?.jsonBias,
+    });
+  }
+
+  private async chatOpenAiCompat(
+    model: string,
+    system: string,
+    user: string,
+    options: { temperature: number; maxTokens: number }
+  ): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: this.model,
-        stream: false,
+        model,
         messages: [
           {
             role: "system",
@@ -209,18 +381,78 @@ export class OllamaProvider implements AIProvider {
           },
           { role: "user", content: user },
         ],
+        temperature: options.temperature,
+        max_tokens: options.maxTokens,
+        stream: false,
       }),
       signal: AbortSignal.timeout(120_000),
     });
     const raw = await response.text();
     if (!response.ok) {
-      console.warn("[Ollama]", response.status, raw.slice(0, 200));
-      throw new Error(`Ollama HTTP ${response.status}`);
+      throw new Error(`Ollama HTTP ${response.status} — ${raw.slice(0, 160)}`);
+    }
+    const data = JSON.parse(raw) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const text = data.choices?.[0]?.message?.content?.trim();
+    if (!text) throw new Error("Ollama: réponse vide");
+    return text;
+  }
+
+  private async chatNative(
+    model: string,
+    system: string,
+    user: string,
+    options: { temperature: number; jsonBias?: boolean }
+  ): Promise<string> {
+    const body: Record<string, unknown> = {
+      model,
+      stream: false,
+      options: { temperature: options.temperature },
+      messages: [
+        {
+          role: "system",
+          content: `${CREATIVE_COACH_SAFETY}\n\n${system}`,
+        },
+        { role: "user", content: user },
+      ],
+    };
+    if (options.jsonBias) {
+      body.format = "json";
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(120_000),
+    });
+    const raw = await response.text();
+    if (!response.ok) {
+      // Si format=json non supporté, retente sans
+      if (options.jsonBias && /format|json/i.test(raw)) {
+        return this.chatNative(model, system, user, {
+          temperature: options.temperature,
+          jsonBias: false,
+        });
+      }
+      throw new Error(`Ollama HTTP ${response.status} — ${raw.slice(0, 160)}`);
     }
     const data = JSON.parse(raw) as {
       message?: { content?: string };
       response?: string;
+      error?: string;
     };
+    if (data.error) {
+      if (isModelMissingError(data.error)) {
+        this.resolvedModel = null;
+        const retryModel = await this.resolveModel();
+        if (retryModel !== model) {
+          return this.chatNative(retryModel, system, user, options);
+        }
+      }
+      throw new Error(`Ollama — ${data.error}`);
+    }
     const text = (data.message?.content ?? data.response ?? "").trim();
     if (!text) throw new Error("Ollama: réponse vide");
     return text;

@@ -4,9 +4,11 @@
  */
 import { z } from "zod";
 import { createAiAdapter } from "@/lib/ai/adapter";
+import { AlephAlphaProvider } from "@/lib/ai/aleph-alpha";
 import { AnthropicProvider } from "@/lib/ai/anthropic";
 import { byokBodySchema, byokFromBody } from "@/lib/ai/byok";
 import { GeminiProvider } from "@/lib/ai/gemini";
+import { OllamaProvider } from "@/lib/ai/ollama";
 import { OpenAICompatibleProvider } from "@/lib/ai/openai-compatible";
 import { OpenAIProvider } from "@/lib/ai/openai";
 import {
@@ -80,16 +82,21 @@ export async function POST(request: Request) {
     const provider = createAiAdapter(credentials);
 
     // Ping court pour les providers qui l'exposent (évite les faux négatifs JSON).
-    if (
+    const canPing =
       (credentials.provider === "gemini" &&
         provider instanceof GeminiProvider) ||
       (credentials.provider === "anthropic" &&
         provider instanceof AnthropicProvider) ||
-      (credentials.provider === "openai" && provider instanceof OpenAIProvider) ||
+      (credentials.provider === "openai" &&
+        provider instanceof OpenAIProvider) ||
       ((credentials.provider === "scaleway" ||
         credentials.provider === "ovhcloud") &&
-        provider instanceof OpenAICompatibleProvider)
-    ) {
+        provider instanceof OpenAICompatibleProvider) ||
+      (credentials.provider === "alephalpha" &&
+        provider instanceof AlephAlphaProvider) ||
+      (credentials.provider === "ollama" && provider instanceof OllamaProvider);
+
+    if (canPing) {
       const reply = await provider.ping();
       const ok = /ok/i.test(reply);
       const labels: Record<string, string> = {
@@ -98,6 +105,8 @@ export async function POST(request: Request) {
         openai: "OpenAI",
         scaleway: "Scaleway",
         ovhcloud: "OVHcloud",
+        alephalpha: "Aleph Alpha",
+        ollama: "Ollama",
       };
       const label = labels[credentials.provider] ?? credentials.provider;
       return jsonResponse(

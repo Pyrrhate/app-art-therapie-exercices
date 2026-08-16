@@ -240,22 +240,22 @@
       },
       "scaleway": {
         "badge": "EU sovereign",
-        "why": "European generative API (OpenAI-compatible). Use a Scaleway IAM secret key (SCW_SECRET_KEY), not a public one.",
+        "why": "European generative API (OpenAI-compatible). Use a Scaleway IAM secret key (SCW_SECRET_KEY), not a public one. Common serverless models (Llama 3.3, Mistral Small, Gemma) are tried automatically.",
         "placeholder": "Scaleway secret key (SCW_SECRET_KEY)…"
       },
       "ovhcloud": {
         "badge": "EU sovereign",
-        "why": "OVHcloud AI Endpoints (OpenAI-compatible), with data kept in Europe.",
+        "why": "OVHcloud AI Endpoints (OpenAI-compatible). Create a token under Public Cloud → AI Endpoints. Current catalog model IDs and legacy aliases are tried automatically.",
         "placeholder": "OVHcloud AI token…"
       },
       "alephalpha": {
         "badge": "EU sovereign",
-        "why": "A European LLM (Germany) for sovereign creative exploration.",
+        "why": "European LLM (Germany). Create a token at app.aleph-alpha.com. The app tries chat/completions then Complete, across several Luminous / Pharia models.",
         "placeholder": "Aleph Alpha key…"
       },
       "ollama": {
         "badge": "Offline",
-        "why": "A model on your own machine — no cloud key. Give the service URL. With a hosted API (Vercel), Ollama has to be reachable from the server (tunnel / IP), not just from your phone's localhost.",
+        "why": "A model on your own machine — no cloud key. Give the service URL (e.g. http://192.168.x.x:11434). With a hosted API (Vercel), Ollama must be reachable from the server (tunnel / public IP), not just your phone's localhost. Pull a model: ollama pull llama3.2",
         "placeholder": "http://127.0.0.1:11434"
       },
       "openai": {

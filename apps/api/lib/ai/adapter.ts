@@ -18,28 +18,50 @@ export interface AdapterCredentials {
   apiKey: string;
 }
 
-/** Endpoints européens OpenAI-compatible. */
+/**
+ * Endpoints européens OpenAI-compatible.
+ * Modèles alignés sur les catalogues publics (août 2026) + alias historiques
+ * pour maximiser les chances sans test manuel.
+ */
 export const PROVIDER_ENDPOINTS = {
   scaleway: {
     baseUrl: "https://api.scaleway.ai/v1",
+    // Serverless « Yes » : docs Scaleway supported-models
     textModel: "llama-3.3-70b-instruct",
-    visionModel: "llama-3.3-70b-instruct",
+    visionModel: "mistral-small-3.2-24b-instruct-2506",
     fallbackModels: [
       "mistral-small-3.2-24b-instruct-2506",
       "gemma-4-26b-a4b-it",
       "mistral-medium-3.5-128b",
+      "qwen3.6-35b-a3b",
+      "gemma-3-27b-it",
     ],
-    textOnly: true as const,
+    visionFallbackModels: [
+      "gemma-4-26b-a4b-it",
+      "mistral-medium-3.5-128b",
+      "gemma-3-27b-it",
+    ],
+    textOnly: false as const,
   },
   ovhcloud: {
     baseUrl: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
-    textModel: "Meta-Llama-3_3-70B-Instruct",
-    visionModel: "Meta-Llama-3_3-70B-Instruct",
+    // Catalog API id + alias docs + anciens IDs playground
+    textModel: "llama-3-3-70b-instruct",
+    visionModel: "qwen-2-5-vl-72b-instruct",
     fallbackModels: [
-      "Meta-Llama-3_1-70B-Instruct",
-      "Mixtral-8x22B-Instruct-v0.1",
+      "Meta-Llama-3_3-70B-Instruct",
+      "meta-llama-3_3-70b-instruct",
+      "gpt-oss-20b",
+      "gpt-oss-120b",
+      "qwen-3-5-9b",
+      "qwen-3-6-27b",
     ],
-    textOnly: true as const,
+    visionFallbackModels: [
+      "qwen-3-5-9b",
+      "qwen-3-6-27b",
+      "qwen-3-5-397b",
+    ],
+    textOnly: false as const,
   },
 } as const;
 
@@ -65,11 +87,13 @@ export function createAiAdapter(credentials: AdapterCredentials): AIProvider {
       const cfg = PROVIDER_ENDPOINTS.scaleway;
       return new OpenAICompatibleProvider({
         label: "Scaleway",
-        baseUrl: cfg.baseUrl,
+        baseUrl: process.env.SCALEWAY_BASE_URL?.trim() || cfg.baseUrl,
         apiKey,
-        textModel: cfg.textModel,
-        visionModel: cfg.visionModel,
+        textModel: process.env.SCALEWAY_TEXT_MODEL?.trim() || cfg.textModel,
+        visionModel:
+          process.env.SCALEWAY_VISION_MODEL?.trim() || cfg.visionModel,
         fallbackModels: [...cfg.fallbackModels],
+        visionFallbackModels: [...cfg.visionFallbackModels],
         textOnly: cfg.textOnly,
       });
     }
@@ -77,11 +101,13 @@ export function createAiAdapter(credentials: AdapterCredentials): AIProvider {
       const cfg = PROVIDER_ENDPOINTS.ovhcloud;
       return new OpenAICompatibleProvider({
         label: "OVHcloud",
-        baseUrl: cfg.baseUrl,
+        baseUrl: process.env.OVHCLOUD_BASE_URL?.trim() || cfg.baseUrl,
         apiKey,
-        textModel: cfg.textModel,
-        visionModel: cfg.visionModel,
+        textModel: process.env.OVHCLOUD_TEXT_MODEL?.trim() || cfg.textModel,
+        visionModel:
+          process.env.OVHCLOUD_VISION_MODEL?.trim() || cfg.visionModel,
         fallbackModels: [...cfg.fallbackModels],
+        visionFallbackModels: [...cfg.visionFallbackModels],
         textOnly: cfg.textOnly,
       });
     }

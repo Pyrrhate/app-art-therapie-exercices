@@ -1,5 +1,6 @@
 /**
- * Aleph Alpha (UE) — API Complete, BYOK.
+ * Aleph Alpha (UE) — BYOK.
+ * Priorité : chat/completions OpenAI-compat, puis API Complete historique.
  * https://docs.aleph-alpha.com/
  */
 
@@ -26,8 +27,22 @@ import {
   type ReflectionPromptContext,
 } from "./prompts";
 
-const COMPLETE_URL = "https://api.aleph-alpha.com/complete";
-const DEFAULT_MODEL = "luminous-base";
+const HOST = "https://api.aleph-alpha.com";
+const COMPLETE_URL = `${HOST}/complete`;
+const CHAT_URLS = [`${HOST}/v1/chat/completions`, `${HOST}/chat/completions`];
+
+/**
+ * Ordre volontaire : control (instruction-following) d’abord,
+ * puis modèles historiques encore documentés sur le client Python.
+ */
+const DEFAULT_MODELS = [
+  "luminous-base-control",
+  "luminous-extended-control",
+  "luminous-supreme-control",
+  "luminous-base",
+  "luminous-extended",
+  "pharia-1-llm-7b-control",
+] as const;
 
 function ensureVouvoiementQuestion(question: string): string {
   return question
@@ -40,6 +55,38 @@ function ensureVouvoiementQuestion(question: string): string {
     .replace(/\btes\b/gi, "vos");
 }
 
+function shouldTryNextModel(message: string): boolean {
+  return /HTTP 404|HTTP 400|model_not_found|does not exist|unknown model|not found|not available|invalid.?model|no such model/i.test(
+    message
+  );
+}
+
+function shouldTryNextEndpoint(message: string): boolean {
+  return /HTTP 404|HTTP 405|HTTP 501|not found|unsupported/i.test(message);
+}
+
+function alephHttpError(status: number, rawBody: string, model?: string): Error {
+  let detail = `Aleph Alpha HTTP ${status}`;
+  try {
+    const parsed = JSON.parse(rawBody) as {
+      error?: string | { message?: string; code?: string };
+      message?: string;
+    };
+    const msg =
+      (typeof parsed.error === "string"
+        ? parsed.error
+        : parsed.error?.message?.trim()) || parsed.message?.trim();
+    if (msg) detail = `Aleph Alpha HTTP ${status} — ${msg.slice(0, 220)}`;
+  } catch {
+    const snippet = rawBody.replace(/\s+/g, " ").trim().slice(0, 160);
+    if (snippet) detail = `Aleph Alpha HTTP ${status} — ${snippet}`;
+  }
+  if (model && !detail.includes(model)) {
+    detail = `${detail} (model: ${model})`;
+  }
+  return new Error(detail);
+}
+
 export type AlephAlphaProviderOptions = {
   apiKey: string;
   model?: string;
@@ -47,12 +94,27 @@ export type AlephAlphaProviderOptions = {
 
 export class AlephAlphaProvider implements AIProvider {
   private apiKey: string;
-  private model: string;
+  private models: string[];
 
   constructor(options: AlephAlphaProviderOptions) {
     this.apiKey = options.apiKey.trim();
-    this.model =
-      options.model ?? process.env.ALEPHALPHA_MODEL ?? DEFAULT_MODEL;
+    const preferred =
+      options.model?.trim() || process.env.ALEPHALPHA_MODEL?.trim();
+    this.models = [
+      ...new Set(
+        [preferred, ...DEFAULT_MODELS].filter(
+          (m): m is string => Boolean(m && m.length > 0)
+        )
+      ),
+    ];
+  }
+
+  async ping(): Promise<string> {
+    return this.generate(
+      "Répondez strictement: OK",
+      "Répondez uniquement par le mot OK.",
+      { maxTokens: 16, temperature: 0 }
+    );
   }
 
   async generateExercise(input: ExerciseRequest): Promise<ExerciseResponse> {
@@ -80,9 +142,10 @@ export class AlephAlphaProvider implements AIProvider {
         input.augmentationContext,
         language
       );
-      const raw = await this.complete(
-        `${CREATIVE_COACH_SAFETY}\n\n${system}\n\n${user}\n\nJSON:`
-      );
+      const raw = await this.generate(system, `${user}\n\nJSON:`, {
+        maxTokens: 800,
+        temperature: 0.75,
+      });
       const parsed = parseExerciseFromAi(raw, preferredDuration);
       if (parsed) {
         const keywords =
@@ -113,7 +176,7 @@ export class AlephAlphaProvider implements AIProvider {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback",
-        fallbackNote: "Aleph Alpha indisponible — exercice local.",
+        fallbackNote: (error as Error).message.slice(0, 400),
       };
     }
   }
@@ -147,8 +210,10 @@ export class AlephAlphaProvider implements AIProvider {
         "reflection_system",
         input.promptOverrides
       );
-      let warmRaw = await this.complete(
-        `${CREATIVE_COACH_SAFETY}\n\n${system}\n\n${buildWarmReflectionPrompt(promptCtx)}\n\nJSON:`
+      let warmRaw = await this.generate(
+        system,
+        `${buildWarmReflectionPrompt(promptCtx)}\n\nJSON:`,
+        { maxTokens: 900, temperature: 0.75 }
       );
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -158,8 +223,10 @@ export class AlephAlphaProvider implements AIProvider {
           looksLikeTooBriefReflection(parsed.reflection));
 
       if (needsRetry && parsed?.reflection) {
-        warmRaw = await this.complete(
-          `${CREATIVE_COACH_SAFETY}\n\n${system}\n\n${buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx)}\n\nJSON:`
+        warmRaw = await this.generate(
+          system,
+          `${buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx)}\n\nJSON:`,
+          { maxTokens: 900, temperature: 0.72 }
         );
         parsed = parseReflectionFromAi(warmRaw);
       }
@@ -197,7 +264,113 @@ export class AlephAlphaProvider implements AIProvider {
     return { text: "", source: "fallback" };
   }
 
-  private async complete(prompt: string): Promise<string> {
+  private async generate(
+    system: string,
+    user: string,
+    options?: { maxTokens?: number; temperature?: number }
+  ): Promise<string> {
+    const maxTokens = options?.maxTokens ?? 800;
+    const temperature = options?.temperature ?? 0.75;
+    let lastError: Error | null = null;
+
+    for (const model of this.models) {
+      // 1) Chat OpenAI-compat (Pharia / stacks récents)
+      try {
+        return await this.chatCompletions(model, system, user, {
+          maxTokens,
+          temperature,
+        });
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        // Auth / quota : inutile de continuer
+        if (/HTTP 401|HTTP 403|unauthorized|invalid.?token|quota/i.test(lastError.message)) {
+          throw lastError;
+        }
+      }
+
+      // 2) API Complete historique (Luminous SaaS)
+      try {
+        return await this.complete(model, system, user, {
+          maxTokens,
+          temperature,
+        });
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.warn(
+          `[AlephAlpha] modèle ${model}:`,
+          lastError.message.slice(0, 180)
+        );
+        if (/HTTP 401|HTTP 403|unauthorized|invalid.?token|quota/i.test(lastError.message)) {
+          throw lastError;
+        }
+        if (!shouldTryNextModel(lastError.message)) {
+          // Erreur non liée au modèle : on tente quand même le modèle suivant
+          // seulement si c’est clairement un problème de modèle / endpoint.
+          if (!shouldTryNextEndpoint(lastError.message)) {
+            /* continue to next model for resilience */
+          }
+        }
+      }
+    }
+
+    throw lastError ?? new Error("Aleph Alpha: tous les modèles ont échoué");
+  }
+
+  private async chatCompletions(
+    model: string,
+    system: string,
+    user: string,
+    options: { maxTokens: number; temperature: number }
+  ): Promise<string> {
+    let lastError: Error | null = null;
+    const messages = [
+      { role: "system", content: `${CREATIVE_COACH_SAFETY}\n\n${system}` },
+      { role: "user", content: user },
+    ];
+
+    for (const url of CHAT_URLS) {
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            max_tokens: options.maxTokens,
+            temperature: options.temperature,
+          }),
+          signal: AbortSignal.timeout(90_000),
+        });
+        const raw = await response.text();
+        if (!response.ok) {
+          throw alephHttpError(response.status, raw, model);
+        }
+        const data = JSON.parse(raw) as {
+          choices?: Array<{ message?: { content?: string } }>;
+        };
+        const text = data.choices?.[0]?.message?.content?.trim();
+        if (!text) throw new Error("Aleph Alpha chat: réponse vide");
+        return text;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        if (!shouldTryNextEndpoint(lastError.message)) throw lastError;
+      }
+    }
+
+    throw lastError ?? new Error("Aleph Alpha chat indisponible");
+  }
+
+  private async complete(
+    model: string,
+    system: string,
+    user: string,
+    options: { maxTokens: number; temperature: number }
+  ): Promise<string> {
+    const prompt = `${CREATIVE_COACH_SAFETY}\n\n${system}\n\n${user}`;
     const response = await fetch(COMPLETE_URL, {
       method: "POST",
       headers: {
@@ -206,19 +379,21 @@ export class AlephAlphaProvider implements AIProvider {
         Accept: "application/json",
       },
       body: JSON.stringify({
-        model: this.model,
+        model,
         prompt,
-        maximum_tokens: 800,
-        temperature: 0.75,
+        maximum_tokens: options.maxTokens,
+        temperature: options.temperature,
+        stop_sequences: ["\n\n\n"],
       }),
       signal: AbortSignal.timeout(90_000),
     });
     const raw = await response.text();
     if (!response.ok) {
-      console.warn("[AlephAlpha]", response.status, raw.slice(0, 200));
-      throw new Error(`Aleph Alpha HTTP ${response.status}`);
+      throw alephHttpError(response.status, raw, model);
     }
-    const data = JSON.parse(raw) as { completions?: Array<{ completion?: string }> };
+    const data = JSON.parse(raw) as {
+      completions?: Array<{ completion?: string }>;
+    };
     const text = data.completions?.[0]?.completion?.trim();
     if (!text) throw new Error("Aleph Alpha: réponse vide");
     return text;
