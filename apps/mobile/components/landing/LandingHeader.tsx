@@ -244,7 +244,7 @@ export function LandingHeader({
               </Pressable>
             </View>
 
-            <View className="mb-4">
+            <View className="mb-4 self-start">
               <LanguageToggle />
             </View>
 

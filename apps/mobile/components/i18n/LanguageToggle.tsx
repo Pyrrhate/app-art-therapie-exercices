@@ -63,7 +63,7 @@ export function LanguageToggle({ variant = "compact" }: LanguageToggleProps) {
 
   return (
     <View
-      className="flex-row items-center rounded-full border border-sand-200 bg-sand-50/90 overflow-hidden"
+      className="flex-row items-center self-start shrink-0 rounded-full border border-sand-200 bg-sand-50/90 overflow-hidden"
       accessibilityLabel={t("language.label")}
     >
       {APP_LANGUAGES.map((code) => {
@@ -78,7 +78,7 @@ export function LanguageToggle({ variant = "compact" }: LanguageToggleProps) {
               lang: t(`language.${code}`),
             })}
             hitSlop={4}
-            className={`px-2.5 py-1.5 min-h-[32px] justify-center ${
+            className={`px-2.5 py-1.5 min-h-[32px] justify-center shrink-0 ${
               active ? "bg-sage-500" : ""
             }`}
           >
