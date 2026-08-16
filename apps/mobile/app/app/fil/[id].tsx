@@ -241,9 +241,34 @@ export default function FilDetailScreen() {
         </View>
       )}
 
-      {m?.openQuestions?.length ? (
+      {m?.deepenedReflection?.trim() ? (
+        <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
+          <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
+            {t("detail.deepened")}
+          </Text>
+          {sanitizeAiDisplayText(m.deepenedReflection)
+            .split(/\n\s*\n/)
+            .filter((p) => p.trim())
+            .map((p, i) => (
+              <Text
+                key={i}
+                className={`text-base leading-7 mb-4 italic ${textSecondary(isDark)}`}
+              >
+                {p}
+              </Text>
+            ))}
+        </View>
+      ) : null}
+
+      {(m?.deepenedOpenQuestions?.length
+        ? m.deepenedOpenQuestions
+        : m?.openQuestions
+      )?.length ? (
         <View className="bg-sage-50 rounded-3xl border border-sage-100 px-5 py-5 mb-6">
-          {m.openQuestions.map((q, i) => (
+          {(m?.deepenedOpenQuestions?.length
+            ? m.deepenedOpenQuestions
+            : m?.openQuestions ?? []
+          ).map((q, i) => (
             <Text key={i} className="text-sand-600 text-sm leading-6 mb-2">
               · {sanitizeAiDisplayText(q)}
             </Text>

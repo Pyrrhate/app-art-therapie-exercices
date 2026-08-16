@@ -7,6 +7,10 @@ import { uriToDataUrl } from "@/lib/image";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import type { SavedSession } from "@/lib/types";
+import {
+  composeReflectionWithDeepen,
+  resolveOpenQuestionsForPersist,
+} from "@/lib/reflection/persist";
 
 function escapeHtml(text: string): string {
   return text
@@ -160,6 +164,7 @@ export async function exportFilRitualPdf(
   if (!m?.technique || !m.exercise) {
     throw new Error(i18n.t("ritual:export.incompleteFil"));
   }
+  const deepenLabel = i18n.t("ritual:reflection.deepenedLabel");
   return exportSessionPdf({
     id: entry.id,
     impulse: m.impulse ?? entry.summary,
@@ -167,8 +172,15 @@ export async function exportFilRitualPdf(
     exercise: m.exercise,
     durationMinutes: m.durationMinutes ?? 15,
     photoUri: m.photoUri,
-    reflection: m.reflection,
-    openQuestions: m.openQuestions,
+    reflection: composeReflectionWithDeepen(
+      m.reflection,
+      m.deepenedReflection,
+      deepenLabel
+    ),
+    openQuestions: resolveOpenQuestionsForPersist(
+      m.openQuestions,
+      m.deepenedOpenQuestions
+    ),
     writtenText: m.writtenText,
     followUpExercise: m.followUpExercise,
     createdAt: entry.createdAt,

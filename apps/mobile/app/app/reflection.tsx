@@ -37,13 +37,17 @@ import { analyzeArtwork, ApiError, generateAugmentedExercise, transcribeHandwrit
 import { resolveByokCredentials } from "@/lib/aiKeys";
 import { exportSessionPdf } from "@/lib/sessionExport";
 import { showAlert } from "@/lib/alert";
-import { getFilEntries } from "@/lib/fil/storage";
+import { getFilEntries, getFilEntryById, patchFilEntry } from "@/lib/fil/storage";
 import {
   buildPracticeContextFromFil,
   countUsableFilTraces,
   PRACTICE_CONTEXT_MAX_ENTRIES,
   PRACTICE_CONTEXT_MAX_ENTRIES_COMPACT,
 } from "@/lib/fil/practiceContext";
+import {
+  composeReflectionWithDeepen,
+  resolveOpenQuestionsForPersist,
+} from "@/lib/reflection/persist";
 import {
   extractImageFileFromDataTransfer,
   formatImageSize,
@@ -210,6 +214,11 @@ export default function ReflectionScreen() {
   const abortRef = useRef<AbortController | null>(null);
   const workGenRef = useRef(0);
   const filRecordedRef = useRef(false);
+  const filEntryIdRef = useRef<string | null>(null);
+  const deepenPersistRef = useRef<{
+    reflection: string;
+    questions: string[];
+  }>({ reflection: "", questions: [] });
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [photoSizeLabel, setPhotoSizeLabel] = useState<string | null>(null);
   const [preparingPhoto, setPreparingPhoto] = useState(false);
@@ -225,6 +234,14 @@ export default function ReflectionScreen() {
   const [deepenedOpenQuestions, setDeepenedOpenQuestions] = useState<string[]>(
     []
   );
+
+  useEffect(() => {
+    deepenPersistRef.current = {
+      reflection: deepenedReflection?.trim() || "",
+      questions: deepenedOpenQuestions,
+    };
+  }, [deepenedReflection, deepenedOpenQuestions]);
+
   const [useFilMemory, setUseFilMemory] = useState(false);
   const [filTraceCount, setFilTraceCount] = useState(0);
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -729,6 +746,7 @@ export default function ReflectionScreen() {
   useEffect(() => {
     if (!reflection) {
       filRecordedRef.current = false;
+      filEntryIdRef.current = null;
       return;
     }
     if (!technique || !exercise || filRecordedRef.current) return;
@@ -748,6 +766,7 @@ export default function ReflectionScreen() {
 
       const ritualTitle =
         impulse || t("reflection.defaults.defaultRitualTitle");
+      const deepenSnapshot = deepenPersistRef.current;
       const entry = await recordFilEntry({
         source: "ritual",
         summary:
@@ -765,13 +784,37 @@ export default function ReflectionScreen() {
           durationMinutes,
           photoUri: storedPhotoUri,
           reflection,
+          ...(deepenSnapshot.reflection
+            ? { deepenedReflection: deepenSnapshot.reflection }
+            : {}),
           openQuestions: openQuestions.length ? openQuestions : undefined,
+          ...(deepenSnapshot.questions.length
+            ? { deepenedOpenQuestions: deepenSnapshot.questions }
+            : {}),
           writtenText: writtenText.trim() || undefined,
           followUpExercise: followUpExercise ?? undefined,
           ...(paletteColors.length ? { colors: paletteColors } : {}),
           ...(colorContext ? { colorContext } : {}),
         },
       });
+      filEntryIdRef.current = entry.id;
+
+      // Si l'approfondissement a abouti pendant l'enregistrement, le rattacher.
+      const lateDeepen = deepenPersistRef.current;
+      if (
+        lateDeepen.reflection &&
+        lateDeepen.reflection !== deepenSnapshot.reflection
+      ) {
+        await patchFilEntry(entry.id, {
+          metadata: {
+            ...entry.metadata,
+            deepenedReflection: lateDeepen.reflection,
+            ...(lateDeepen.questions.length
+              ? { deepenedOpenQuestions: lateDeepen.questions }
+              : {}),
+          },
+        });
+      }
 
       if (storedPhotoUri?.startsWith("data:")) {
         const { tryUploadArtworkToCloud } = await import(
@@ -910,6 +953,29 @@ Miroir initial (à conserver — ne pas recopier) :
       // Conserve le miroir créatif initial ; l'approfondissement s'affiche en dessous.
       setDeepenedReflection(nextReflection);
       setDeepenedOpenQuestions(result.openQuestions ?? []);
+      deepenPersistRef.current = {
+        reflection: nextReflection,
+        questions: result.openQuestions ?? [],
+      };
+
+      const filId = filEntryIdRef.current;
+      if (filId) {
+        void (async () => {
+          const existing = await getFilEntryById(filId);
+          if (!existing) return;
+          await patchFilEntry(filId, {
+            metadata: {
+              ...existing.metadata,
+              reflection: existing.metadata?.reflection ?? previousMirror,
+              deepenedReflection: nextReflection,
+              ...(result.openQuestions?.length
+                ? { deepenedOpenQuestions: result.openQuestions }
+                : {}),
+            },
+          });
+        })();
+      }
+
       setNotice(
         result.source === "ai"
           ? {
@@ -951,15 +1017,15 @@ Miroir initial (à conserver — ne pas recopier) :
           .join("\n\n"),
         durationMinutes,
         photoUri: photoUri ?? undefined,
-        reflection: [reflection, deepenedReflection]
-          .filter(Boolean)
-          .join(`\n\n—— ${t("reflection.deepenedLabel")} ——\n\n`),
-        openQuestions:
-          deepenedOpenQuestions.length > 0
-            ? deepenedOpenQuestions
-            : openQuestions.length
-              ? openQuestions
-              : undefined,
+        reflection: composeReflectionWithDeepen(
+          reflection,
+          deepenedReflection,
+          t("reflection.deepenedLabel")
+        ),
+        openQuestions: resolveOpenQuestionsForPersist(
+          openQuestions,
+          deepenedOpenQuestions
+        ),
         writtenText: writtenText.trim() || undefined,
         followUpExercise: followUpExercise ?? undefined,
         createdAt: new Date().toISOString(),
@@ -993,6 +1059,15 @@ Miroir initial (à conserver — ne pas recopier) :
       round1Snapshot?.reflection ?? (currentRound === 1 ? reflection : "");
     const round1OpenQuestions =
       round1Snapshot?.openQuestions ?? (currentRound === 1 ? openQuestions : []);
+    const composedMirror = composeReflectionWithDeepen(
+      reflection,
+      deepenedReflection,
+      t("reflection.deepenedLabel")
+    );
+    const persistedQuestions = resolveOpenQuestionsForPersist(
+      openQuestions,
+      deepenedOpenQuestions
+    );
 
     try {
       const sessionData = buildSessionDataPayload(
@@ -1001,22 +1076,28 @@ Miroir initial (à conserver — ne pas recopier) :
           round1: {
             media: round1Media,
             preAnswers: round1Snapshot?.preAnswers ?? preAnswers,
-            aiAnalysis: round1Analysis,
+            aiAnalysis:
+              currentRound === 1
+                ? composedMirror ?? reflection
+                : round1Analysis,
             postAnswers:
               currentRound === 1 ? postAnswers : round1Snapshot?.postAnswers,
             writtenText:
               round1Snapshot?.writtenText ??
               (currentRound === 1 ? writtenText.trim() || undefined : undefined),
-            openQuestions: round1Snapshot?.openQuestions ?? round1OpenQuestions,
+            openQuestions:
+              currentRound === 1
+                ? persistedQuestions ?? openQuestions
+                : round1Snapshot?.openQuestions ?? round1OpenQuestions,
           },
           ...(currentRound === 2 && round1Snapshot
             ? {
                 round2: {
                   media: photoUri ?? "",
                   transitionAnswers,
-                  aiAnalysis: reflection,
+                  aiAnalysis: composedMirror ?? reflection,
                   writtenText: writtenText.trim() || undefined,
-                  openQuestions,
+                  openQuestions: persistedQuestions ?? openQuestions,
                 },
               }
             : {}),
@@ -1046,6 +1127,7 @@ Miroir initial (à conserver — ne pas recopier) :
         message: t("reflection.notice.journalSaved"),
       });
 
+      const deepenTrimmed = deepenedReflection?.trim() || "";
       await recordFilEntry({
         source: "ritual",
         summary: impulse || t("reflection.defaults.defaultDeepSession"),
@@ -1056,7 +1138,11 @@ Miroir initial (à conserver — ne pas recopier) :
           exercise,
           durationMinutes,
           reflection,
+          ...(deepenTrimmed ? { deepenedReflection: deepenTrimmed } : {}),
           openQuestions: openQuestions.length ? openQuestions : undefined,
+          ...(deepenedOpenQuestions.length
+            ? { deepenedOpenQuestions }
+            : {}),
           writtenText: writtenText.trim() || undefined,
           followUpExercise: followUpExercise ?? undefined,
         },
@@ -1106,7 +1192,11 @@ Miroir initial (à conserver — ne pas recopier) :
       setPhotoDataUrl(null);
       setPhotoSizeLabel(null);
       setReflectionSource(null);
+      setDeepenedReflection(null);
+      setDeepenedOpenQuestions([]);
+      deepenPersistRef.current = { reflection: "", questions: [] };
       filRecordedRef.current = false;
+      filEntryIdRef.current = null;
       setNotice({
         type: "info",
         message: t("reflection.notice.secondRoundStart"),

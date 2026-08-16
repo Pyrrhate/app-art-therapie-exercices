@@ -77,6 +77,9 @@ export function buildPracticeContextFromFil(
         : entry.detail
           ? `Note : ${entry.detail.slice(0, compact ? 120 : 200)}`
           : null,
+      m?.deepenedReflection
+        ? `Approfondissement (extrait) : ${m.deepenedReflection.slice(0, reflectionLen)}`
+        : null,
     ].filter(Boolean);
     return lines.join("\n");
   });

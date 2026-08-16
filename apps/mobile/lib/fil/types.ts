@@ -32,7 +32,10 @@ export interface FilMetadata {
   moduleStatement?: string;
   durationMinutes?: number;
   reflection?: string;
+  /** Miroir d'approfondissement (opt-in), distinct du miroir initial. */
+  deepenedReflection?: string;
   openQuestions?: string[];
+  deepenedOpenQuestions?: string[];
   writtenText?: string;
   followUpExercise?: string;
   photoUri?: string;
