@@ -23,6 +23,24 @@ export type LocalizedChangelogEntry = {
  */
 export const CHANGELOG_CATALOG: LocalizedChangelogEntry[] = [
   {
+    id: "onedrive-local-first",
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Sauvegarde OneDrive (local-first)",
+      en: "OneDrive backup (local-first)",
+    },
+    highlights: {
+      fr: [
+        "OneDrive via Microsoft Graph : collez un jeton Files.ReadWrite — aucun secret Azure / OneDrive sur Vercel (comme kDrive).",
+        "Dossier « Pastek Art », sauvegarde / restauration et photos optionnelles. Idéal pour les utilisateurs au Canada.",
+      ],
+      en: [
+        "OneDrive via Microsoft Graph: paste a Files.ReadWrite token — no Azure / OneDrive secrets on Vercel (same model as kDrive).",
+        "“Pastek Art” folder, backup / restore and optional photos. Ideal for users in Canada.",
+      ],
+    },
+  },
+  {
     id: "cohere-canada",
     dateLabel: { fr: "août 2026", en: "August 2026" },
     title: {

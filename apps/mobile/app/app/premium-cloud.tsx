@@ -12,7 +12,7 @@ import { textMuted, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
 /**
- * Sauvegarde personnelle — Google Drive + Infomaniak kDrive (local-first).
+ * Sauvegarde personnelle — Google Drive + Infomaniak kDrive + OneDrive (local-first).
  * Plus de compte Pastek / OAuth serveur.
  */
 export default function PremiumCloudScreen() {

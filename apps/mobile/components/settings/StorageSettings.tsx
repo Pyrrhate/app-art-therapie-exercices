@@ -23,6 +23,14 @@ import {
   restoreLocalDataFromKDrive,
 } from "@/lib/storage/kDriveAdapter";
 import type { KDriveMeta } from "@/lib/storage/kDriveTokens";
+import {
+  backupLocalDataToOneDrive,
+  connectOneDrive,
+  disconnectOneDrive,
+  getOneDriveConnectionStatus,
+  restoreLocalDataFromOneDrive,
+} from "@/lib/storage/oneDriveAdapter";
+import type { OneDriveMeta } from "@/lib/storage/oneDriveTokens";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -35,10 +43,14 @@ type BusyKind =
   | "k-disconnect"
   | "k-backup"
   | "k-restore"
+  | "o-connect"
+  | "o-disconnect"
+  | "o-backup"
+  | "o-restore"
   | null;
 
 /**
- * Sauvegarde locale ↔ Google Drive + Infomaniak kDrive (local-first).
+ * Sauvegarde locale ↔ Google Drive + Infomaniak kDrive + OneDrive (local-first).
  */
 export function StorageSettings({ className = "" }: { className?: string }) {
   const isDark = useIsDark();
@@ -54,18 +66,25 @@ export function StorageSettings({ className = "" }: { className?: string }) {
   const [kDriveId, setKDriveId] = useState("");
   const [kToken, setKToken] = useState("");
 
+  const [oConnected, setOConnected] = useState(false);
+  const [oMeta, setOMeta] = useState<OneDriveMeta | null>(null);
+  const [oToken, setOToken] = useState("");
+
   const [busy, setBusy] = useState<BusyKind>(null);
 
   const refresh = useCallback(async () => {
-    const [gStatus, kStatus] = await Promise.all([
+    const [gStatus, kStatus, oStatus] = await Promise.all([
       getGoogleDriveConnectionStatus(),
       getKDriveConnectionStatus(),
+      getOneDriveConnectionStatus(),
     ]);
     setGConfigured(gStatus.configured);
     setGConnected(gStatus.connected);
     setGMeta(gStatus.meta);
     setKConnected(kStatus.connected);
     setKMeta(kStatus.meta);
+    setOConnected(oStatus.connected);
+    setOMeta(oStatus.meta);
   }, []);
 
   useFocusEffect(
@@ -215,6 +234,77 @@ export function StorageSettings({ className = "" }: { className?: string }) {
     setBusy("k-restore");
     try {
       const result = await restoreLocalDataFromKDrive();
+      await refresh();
+      showAlert(
+        t("settings.restoreDoneTitle"),
+        t("settings.restoreDoneBody", { count: result.filCount })
+      );
+    } catch (error) {
+      showAlert(
+        t("settings.restoreFailTitle"),
+        error instanceof Error ? error.message : t("settings.restoreFailBody")
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleOneDriveConnect() {
+    setBusy("o-connect");
+    try {
+      await connectOneDrive({ accessToken: oToken });
+      setOToken("");
+      await refresh();
+      showAlert(t("settings.onedriveConnected"), t("settings.onedriveBody"));
+    } catch (error) {
+      showAlert(
+        t("settings.onedriveTitle"),
+        error instanceof Error ? error.message : t("settings.eraseFailBody")
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleOneDriveDisconnect() {
+    setBusy("o-disconnect");
+    try {
+      await disconnectOneDrive();
+      await refresh();
+      showAlert(t("settings.driveLocalOnly"), t("settings.storageStatusLocal"));
+    } catch (error) {
+      showAlert(
+        t("settings.onedriveDisconnect"),
+        error instanceof Error ? error.message : t("settings.eraseFailBody")
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleOneDriveBackup() {
+    setBusy("o-backup");
+    try {
+      const result = await backupLocalDataToOneDrive();
+      await refresh();
+      showAlert(
+        t("settings.exportDoneTitle"),
+        t("settings.restoreDoneBody", { count: result.filCount })
+      );
+    } catch (error) {
+      showAlert(
+        t("settings.backupTitle"),
+        error instanceof Error ? error.message : t("settings.exportFailBody")
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleOneDriveRestore() {
+    setBusy("o-restore");
+    try {
+      const result = await restoreLocalDataFromOneDrive();
       await refresh();
       showAlert(
         t("settings.restoreDoneTitle"),
@@ -438,6 +528,103 @@ export function StorageSettings({ className = "" }: { className?: string }) {
                   : t("settings.kdriveDisconnect")
               }
               onPress={() => void handleKDriveDisconnect()}
+              disabled={busy !== null}
+              variant="ghost"
+            />
+          </View>
+        )}
+      </View>
+
+      {/* OneDrive */}
+      <View className={`rounded-3xl border px-5 py-5 gap-4 ${panelBg(isDark)}`}>
+        <Text className={`font-medium ${textPrimary(isDark)}`}>
+          {t("settings.onedriveSectionTitle")}
+        </Text>
+        <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
+          {t("settings.onedriveBody")}
+        </Text>
+
+        <View
+          className={`rounded-2xl px-4 py-3 ${
+            isDark ? "bg-sand-900/60" : "bg-sage-50"
+          }`}
+        >
+          <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
+            {providerStatus(
+              oConnected,
+              oMeta,
+              "settings.onedriveStatusConnected",
+              "settings.onedriveStatusSynced"
+            )}
+          </Text>
+          {oConnected && oMeta?.accountHint ? (
+            <Text className={`text-xs mt-1 ${textMuted(isDark)}`}>
+              {oMeta.accountHint}
+            </Text>
+          ) : null}
+        </View>
+
+        {busy?.startsWith("o-") ? <ActivityIndicator color="#496349" /> : null}
+
+        {!oConnected ? (
+          <View className="gap-3">
+            <View>
+              <Text className={`text-sm font-medium mb-2 ${textSecondary(isDark)}`}>
+                {t("settings.onedriveTokenLabel")}
+              </Text>
+              <TextInput
+                className={inputClass}
+                value={oToken}
+                onChangeText={setOToken}
+                placeholder={t("settings.onedriveTokenPlaceholder")}
+                placeholderTextColor="#A89F91"
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry
+                editable={busy === null}
+              />
+            </View>
+            <Text className={`text-xs leading-5 ${textMuted(isDark)}`}>
+              {t("settings.onedriveHelp")}
+            </Text>
+            <PrimaryButton
+              label={
+                busy === "o-connect"
+                  ? t("settings.storageConnecting")
+                  : t("settings.onedriveConnect")
+              }
+              onPress={() => void handleOneDriveConnect()}
+              disabled={busy !== null || oToken.trim().length < 40}
+            />
+          </View>
+        ) : (
+          <View className="gap-3">
+            <PrimaryButton
+              label={
+                busy === "o-backup"
+                  ? t("settings.storageBackingUp")
+                  : t("settings.onedriveBackup")
+              }
+              onPress={() => void handleOneDriveBackup()}
+              disabled={busy !== null}
+            />
+            <PrimaryButton
+              label={
+                busy === "o-restore"
+                  ? t("settings.storageRestoring")
+                  : t("settings.onedriveRestore")
+              }
+              onPress={() => void handleOneDriveRestore()}
+              disabled={busy !== null}
+              variant="secondary"
+            />
+            <PrimaryButton
+              label={
+                busy === "o-disconnect"
+                  ? t("settings.storageDisconnecting")
+                  : t("settings.onedriveDisconnect")
+              }
+              onPress={() => void handleOneDriveDisconnect()}
               disabled={busy !== null}
               variant="ghost"
             />

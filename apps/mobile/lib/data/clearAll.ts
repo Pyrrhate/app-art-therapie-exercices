@@ -9,6 +9,14 @@ import {
   clearGoogleDriveMeta,
   clearGoogleDriveTokens,
 } from "@/lib/storage/googleDriveTokens";
+import {
+  clearKDriveCredentials,
+  clearKDriveMeta,
+} from "@/lib/storage/kDriveTokens";
+import {
+  clearOneDriveCredentials,
+  clearOneDriveMeta,
+} from "@/lib/storage/oneDriveTokens";
 import { useRitualStore } from "@/lib/store";
 import { useThemeStore } from "@/lib/themeStore";
 
@@ -39,6 +47,10 @@ export async function clearAllLocalData(): Promise<void> {
   await clearAllPromptOverrides();
   await clearGoogleDriveTokens();
   await clearGoogleDriveMeta();
+  await clearKDriveCredentials();
+  await clearKDriveMeta();
+  await clearOneDriveCredentials();
+  await clearOneDriveMeta();
 
   await setThemePreference("light");
   await setTimerSound("gong");
