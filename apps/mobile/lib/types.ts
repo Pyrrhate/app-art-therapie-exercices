@@ -24,6 +24,12 @@ export interface ExerciseResponse {
   fallbackNote?: string;
 }
 
+export interface CreativeTipsResponse {
+  tips: string[];
+  source: "ai" | "fallback";
+  fallbackNote?: string;
+}
+
 export interface ReflectionResponse {
   reflection: string;
   openQuestions: string[];

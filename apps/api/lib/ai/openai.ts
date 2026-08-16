@@ -3,11 +3,17 @@ import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
 import type {
   AIProvider,
+  CreativeTipsRequest,
+  CreativeTipsResponse,
   ExerciseRequest,
   ExerciseResponse,
   ReflectionRequest,
   ReflectionResponse,
 } from "../types";
+import {
+  getFallbackCreativeTips,
+  runCreativeTipsGeneration,
+} from "./creative-tips";
 import {
   buildExercisePrompt,
   buildHandwritingOcrPrompt,
@@ -177,6 +183,30 @@ export class OpenAIProvider implements AIProvider {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback" as const,
+        fallbackNote: note.slice(0, 400),
+      };
+    }
+  }
+
+  async generateCreativeTips(
+    input: CreativeTipsRequest
+  ): Promise<CreativeTipsResponse> {
+    if (!this.apiKey) {
+      return getFallbackCreativeTips(input);
+    }
+    try {
+      return await runCreativeTipsGeneration(input, (user, system) =>
+        this.callText(user, {
+          systemPrompt: system,
+          maxTokens: 600,
+          temperature: 0.8,
+        })
+      );
+    } catch (error) {
+      const note = error instanceof Error ? error.message : "Erreur OpenAI";
+      console.warn("[OpenAI generateCreativeTips]", note);
+      return {
+        ...getFallbackCreativeTips(input),
         fallbackNote: note.slice(0, 400),
       };
     }

@@ -8,11 +8,17 @@ import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
 import type {
   AIProvider,
+  CreativeTipsRequest,
+  CreativeTipsResponse,
   ExerciseRequest,
   ExerciseResponse,
   ReflectionRequest,
   ReflectionResponse,
 } from "../types";
+import {
+  getFallbackCreativeTips,
+  runCreativeTipsGeneration,
+} from "./creative-tips";
 import {
   buildExercisePrompt,
   buildHandwritingOcrPrompt,
@@ -215,6 +221,33 @@ export class GeminiProvider implements AIProvider {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback",
+        fallbackNote: note.slice(0, 400),
+      };
+    }
+  }
+
+  async generateCreativeTips(
+    input: CreativeTipsRequest
+  ): Promise<CreativeTipsResponse> {
+    if (!this.apiKey) {
+      return {
+        ...getFallbackCreativeTips(input),
+        fallbackNote: "Aucune clé Gemini disponible.",
+      };
+    }
+    try {
+      return await runCreativeTipsGeneration(input, (user, system) =>
+        this.generate(system, user, {
+          temperature: 0.8,
+          maxTokens: 800,
+          json: true,
+        })
+      );
+    } catch (error) {
+      const note = error instanceof Error ? error.message : "Erreur Gemini";
+      console.warn("[Gemini generateCreativeTips]", note);
+      return {
+        ...getFallbackCreativeTips(input),
         fallbackNote: note.slice(0, 400),
       };
     }

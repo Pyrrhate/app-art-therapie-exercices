@@ -3,11 +3,17 @@ import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
 import type {
   AIProvider,
+  CreativeTipsRequest,
+  CreativeTipsResponse,
   ExerciseRequest,
   ExerciseResponse,
   ReflectionRequest,
   ReflectionResponse,
 } from "../types";
+import {
+  getFallbackCreativeTips,
+  runCreativeTipsGeneration,
+} from "./creative-tips";
 import {
   buildExercisePrompt,
   buildHandwritingOcrPrompt,
@@ -134,6 +140,33 @@ export class MistralProvider implements AIProvider {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback" as const,
+        fallbackNote: explainMistralFailure(error),
+      };
+    }
+  }
+
+  async generateCreativeTips(
+    input: CreativeTipsRequest
+  ): Promise<CreativeTipsResponse> {
+    if (!this.apiKey) {
+      return {
+        ...getFallbackCreativeTips(input),
+        fallbackNote:
+          "Aucune clé Mistral disponible. Vérifiez Réglages → Moteurs IA.",
+      };
+    }
+    try {
+      return await runCreativeTipsGeneration(input, (user, system) =>
+        this.callText(user, {
+          systemPrompt: system,
+          maxTokens: 600,
+          temperature: 0.8,
+        })
+      );
+    } catch (error) {
+      console.warn("[Mistral generateCreativeTips]", error);
+      return {
+        ...getFallbackCreativeTips(input),
         fallbackNote: explainMistralFailure(error),
       };
     }

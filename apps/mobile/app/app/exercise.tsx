@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StatusBar, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StatusBar,
+  Text,
+  View,
+} from "react-native";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { ROUTES } from "@/lib/routes";
@@ -12,6 +19,7 @@ import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { RitualProgressBar } from "@/components/ui/RitualProgressBar";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
+import { generateCreativeTips } from "@/lib/api";
 import { resolveByokCredentials } from "@/lib/aiKeys";
 import { localExerciseBannerMessage } from "@/lib/localExerciseBanner";
 import { getTimerSound } from "@/lib/preferences";
@@ -40,6 +48,11 @@ export default function ExerciseScreen() {
   const [byokConfigured, setByokConfigured] = useState(false);
   const [silenceMode, setSilenceMode] = useState(false);
   const [peekConsigne, setPeekConsigne] = useState(false);
+  const [creativeTips, setCreativeTips] = useState<string[] | null>(null);
+  const [tipsSource, setTipsSource] = useState<"ai" | "fallback" | null>(null);
+  const [tipsExpanded, setTipsExpanded] = useState(true);
+  const [tipsLoading, setTipsLoading] = useState(false);
+  const [tipsError, setTipsError] = useState<string | null>(null);
 
   useEffect(() => {
     getTimerSound().then(setCompletionSound);
@@ -58,6 +71,14 @@ export default function ExerciseScreen() {
   useEffect(() => {
     void persistRitualDraft("exercise");
   }, [exercise, durationMinutes, impulse]);
+
+  useEffect(() => {
+    setCreativeTips(null);
+    setTipsSource(null);
+    setTipsExpanded(true);
+    setTipsError(null);
+    setTipsLoading(false);
+  }, [exercise]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -230,6 +251,93 @@ export default function ExerciseScreen() {
           ) : null}
         </ScrollView>
       </ContentCard>
+
+      {!creativeTips && !tipsLoading ? (
+        <View className="mb-3">
+          <PrimaryButton
+            label={t("exercise.creativeTipsCta")}
+            onPress={() => {
+              void (async () => {
+                if (!exercise?.trim() || !technique) return;
+                setTipsError(null);
+                setTipsLoading(true);
+                try {
+                  const result = await generateCreativeTips({
+                    impulse: impulse || "",
+                    technique,
+                    exercise,
+                    development: exerciseDevelopment || undefined,
+                  });
+                  setCreativeTips(result.tips);
+                  setTipsSource(result.source);
+                  setTipsExpanded(true);
+                } catch {
+                  setTipsError(t("exercise.creativeTipsError"));
+                } finally {
+                  setTipsLoading(false);
+                }
+              })();
+            }}
+            variant="ghost"
+          />
+        </View>
+      ) : null}
+
+      {tipsLoading ? (
+        <View className="flex-row items-center justify-center gap-2 mb-4 py-2">
+          <ActivityIndicator size="small" color="#6B8F71" />
+          <Text className="text-sand-500 text-sm">
+            {t("exercise.creativeTipsLoading")}
+          </Text>
+        </View>
+      ) : null}
+
+      {tipsError ? (
+        <Text className="text-sand-500 text-xs leading-5 text-center mb-3 px-2">
+          {tipsError}
+        </Text>
+      ) : null}
+
+      {creativeTips && creativeTips.length > 0 ? (
+        <View className="mb-4 rounded-2xl border border-sand-100 bg-sand-50/80 px-4 py-3">
+          <Pressable
+            onPress={() => setTipsExpanded((v) => !v)}
+            className="flex-row items-center justify-between mb-1"
+            accessibilityRole="button"
+            accessibilityLabel={
+              tipsExpanded
+                ? t("exercise.creativeTipsCollapse")
+                : t("exercise.creativeTipsExpand")
+            }
+          >
+            <Text className="text-sand-500 text-xs uppercase tracking-wider">
+              {t("exercise.creativeTipsTitle")}
+            </Text>
+            <Text className="text-sage-700 text-xs">
+              {tipsExpanded
+                ? t("exercise.creativeTipsCollapse")
+                : t("exercise.creativeTipsExpand")}
+            </Text>
+          </Pressable>
+          {tipsExpanded ? (
+            <View className="gap-2 mt-1">
+              {creativeTips.map((tip, index) => (
+                <Text
+                  key={`${index}-${tip.slice(0, 24)}`}
+                  className="text-sand-700 text-sm leading-6"
+                >
+                  • {tip}
+                </Text>
+              ))}
+              {tipsSource === "fallback" ? (
+                <Text className="text-sand-400 text-xs leading-5 mt-1">
+                  {t("exercise.creativeTipsFallbackNote")}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       <Text className="text-sand-600 text-sm mb-2 font-medium">
         {t("exercise.timerLabel")}

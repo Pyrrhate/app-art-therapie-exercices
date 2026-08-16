@@ -23,6 +23,24 @@ export type LocalizedChangelogEntry = {
  */
 export const CHANGELOG_CATALOG: LocalizedChangelogEntry[] = [
   {
+    id: "creative-tips-optin",
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Pistes créatives (sur demande)",
+      en: "Creative prompts (on request)",
+    },
+    highlights: {
+      fr: [
+        "Après votre exercice : bouton optionnel « Demander des pistes créatives » — associations, symbolisme doux, gestes en ouverture.",
+        "Ne remplace pas la consigne ni le développement déjà généré ; repliable, court, ton coach créatif.",
+      ],
+      en: [
+        "After your exercise: optional “Ask for creative prompts” — associations, gentle symbolism, opening gestures.",
+        "Doesn’t replace the brief or its development; collapsible, short, creative-coach tone.",
+      ],
+    },
+  },
+  {
     id: "onedrive-local-first",
     dateLabel: { fr: "août 2026", en: "August 2026" },
     title: {

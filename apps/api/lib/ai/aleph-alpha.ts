@@ -9,11 +9,17 @@ import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
 import type {
   AIProvider,
+  CreativeTipsRequest,
+  CreativeTipsResponse,
   ExerciseRequest,
   ExerciseResponse,
   ReflectionRequest,
   ReflectionResponse,
 } from "../types";
+import {
+  getFallbackCreativeTips,
+  runCreativeTipsGeneration,
+} from "./creative-tips";
 import {
   buildExercisePrompt,
   buildWarmReflectionPrompt,
@@ -176,6 +182,34 @@ export class AlephAlphaProvider implements AIProvider {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback",
+        fallbackNote: (error as Error).message.slice(0, 400),
+      };
+    }
+  }
+
+  async generateCreativeTips(
+    input: CreativeTipsRequest
+  ): Promise<CreativeTipsResponse> {
+    if (!this.apiKey) {
+      return {
+        ...getFallbackCreativeTips(input),
+        fallbackNote: "Aucune clé Aleph Alpha disponible.",
+      };
+    }
+    try {
+      return await runCreativeTipsGeneration(input, (user, system) =>
+        this.generate(system, `${user}\n\nJSON:`, {
+          maxTokens: 600,
+          temperature: 0.75,
+        })
+      );
+    } catch (error) {
+      console.warn(
+        "[AlephAlpha generateCreativeTips]",
+        (error as Error).message
+      );
+      return {
+        ...getFallbackCreativeTips(input),
         fallbackNote: (error as Error).message.slice(0, 400),
       };
     }

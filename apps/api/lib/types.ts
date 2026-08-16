@@ -25,6 +25,23 @@ export interface ExerciseResponse {
   fallbackNote?: string;
 }
 
+/** Demande opt-in de pistes créatives (après génération d'exercice). */
+export interface CreativeTipsRequest {
+  impulse: string;
+  technique: import("@art-therapie/shared").ArtisticTechnique;
+  exercise: string;
+  /** Déjà affiché — à ne pas répéter. */
+  development?: string;
+  language?: "fr" | "en";
+  promptOverrides?: PromptOverrides;
+}
+
+export interface CreativeTipsResponse {
+  tips: string[];
+  source: "ai" | "fallback";
+  fallbackNote?: string;
+}
+
 export interface ReflectionRequest {
   /** Image base64 — optionnelle si writtenText fourni (technique écriture). */
   imageBase64?: string;
@@ -66,6 +83,9 @@ export interface HandwritingOcrRequest {
 
 export interface AIProvider {
   generateExercise(input: ExerciseRequest): Promise<ExerciseResponse>;
+  generateCreativeTips(
+    input: CreativeTipsRequest
+  ): Promise<CreativeTipsResponse>;
   analyzeArtwork(input: ReflectionRequest): Promise<ReflectionResponse>;
   transcribeHandwriting(
     imageBase64: string,

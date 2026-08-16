@@ -65,7 +65,14 @@
     "seasonLabel": "Season — {{title}}",
     "moduleLabel": "Module context",
     "timerLabel": "Timer duration",
-    "silenceHint": "Silence mode dims the screen and keeps only the timer — ideal for settling into your making time. Tap “Brief” for a discreet peek."
+    "silenceHint": "Silence mode dims the screen and keeps only the timer — ideal for settling into your making time. Tap “Brief” for a discreet peek.",
+    "creativeTipsCta": "Ask for creative prompts",
+    "creativeTipsLoading": "Gathering prompts…",
+    "creativeTipsTitle": "Creative prompts",
+    "creativeTipsCollapse": "Hide prompts",
+    "creativeTipsExpand": "Show prompts",
+    "creativeTipsError": "Couldn’t load prompts. Try again in a moment.",
+    "creativeTipsFallbackNote": "Local prompts — the AI connection wasn’t available."
   },
   "keywords": {
     "title": "Keep these in view",

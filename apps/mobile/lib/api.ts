@@ -5,12 +5,13 @@ import { isByokEnabledPath } from "./byok-headers";
 import { getPromptOverrides } from "./promptOverrides";
 import { useLanguageStore } from "./i18n/languageStore";
 import type { AppLanguage } from "./i18n/types";
-import { getFallbackExercise, getFallbackAugmentedExercise } from "./ritual/fallback";
+import { getFallbackExercise, getFallbackAugmentedExercise, getFallbackCreativeTips } from "./ritual/fallback";
 import { getFallbackPingPongReply } from "./ping-pong/fallback";
 import { buildLocalColorMirror } from "./color-journey/mirror-fallback";
 import { buildLocalNuanceMirror } from "./nuance-finder/mirror-fallback";
 import type {
   ArtisticTechnique,
+  CreativeTipsResponse,
   ExerciseResponse,
   ReflectionResponse,
 } from "./types";
@@ -233,6 +234,38 @@ export async function generateAugmentedExercise(
         technique,
         augmentationContext,
         durationMinutes,
+        language
+      );
+    }
+    throw error;
+  }
+}
+
+export async function generateCreativeTips(payload: {
+  impulse: string;
+  technique: ArtisticTechnique;
+  exercise: string;
+  development?: string;
+}): Promise<CreativeTipsResponse> {
+  const byokActive = Boolean(await resolveByokCredentials().catch(() => null));
+  const language = currentUiLanguage();
+
+  try {
+    return await request<CreativeTipsResponse>("/api/exercise/creative-tips", {
+      method: "POST",
+      body: JSON.stringify({
+        ...payload,
+        language,
+      }),
+    });
+  } catch (error) {
+    if (byokActive) {
+      throw error;
+    }
+    if (isRecoverableApiError(error)) {
+      return getFallbackCreativeTips(
+        payload.impulse,
+        payload.technique,
         language
       );
     }

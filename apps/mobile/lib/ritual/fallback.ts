@@ -1,7 +1,7 @@
 import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import { deriveExerciseKeywords } from "@/lib/exercise/keywords";
 import type { AppLanguage } from "@/lib/i18n/types";
-import type { ArtisticTechnique, ExerciseResponse } from "../types";
+import type { ArtisticTechnique, CreativeTipsResponse, ExerciseResponse } from "../types";
 
 function resolveLanguage(language?: AppLanguage | string | null): AppLanguage {
   return language?.toLowerCase().startsWith("en") ? "en" : "fr";
@@ -150,5 +150,38 @@ Pour ce second passage, accueillez ce qui a émergé lors du premier tour${theme
     durationMinutes: base.durationMinutes,
     source: "fallback",
     keywords: deriveExerciseKeywords(impulse, technique, augmented),
+  };
+}
+
+/** Pistes créatives locales si l'API est indisponible. */
+export function getFallbackCreativeTips(
+  impulse: string,
+  technique: ArtisticTechnique,
+  language?: AppLanguage | string | null
+): CreativeTipsResponse {
+  const lang = resolveLanguage(language);
+  const word =
+    impulse.trim() ||
+    (lang === "en" ? "your impulse" : "votre impulsion");
+  const label = localizedTechniqueLabel(technique);
+
+  if (lang === "en") {
+    return {
+      tips: [
+        `Let “${word}” open free associations — colours, textures, rhythms — without hunting for the “right” image.`,
+        `If a symbol appears in your ${label}, hold it conditionally: it might evoke… rather than locking one meaning.`,
+        `Vary one gesture or material quality (pressure, speed, scale) to extend the exploration without rewriting the brief.`,
+      ],
+      source: "fallback",
+    };
+  }
+
+  return {
+    tips: [
+      `Laissez « ${word} » ouvrir des associations libres — couleurs, textures, rythmes — sans chercher la « bonne » image.`,
+      `Si un symbole apparaît dans votre ${label}, accueillez-le au conditionnel : il pourrait évoquer… plutôt qu'imposer un sens fixe.`,
+      `Variez un geste ou une qualité de matière (pression, vitesse, échelle) pour prolonger l'exploration sans refaire la consigne.`,
+    ],
+    source: "fallback",
   };
 }

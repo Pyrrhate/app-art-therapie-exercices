@@ -65,7 +65,14 @@
     "seasonLabel": "Saison — {{title}}",
     "moduleLabel": "Contexte du module",
     "timerLabel": "Durée du timer",
-    "silenceHint": "Le mode silence assombrit l'écran et ne garde que le timer — idéal pour démarrer votre temps de création. Touchez « Consigne » pour un aperçu discret."
+    "silenceHint": "Le mode silence assombrit l'écran et ne garde que le timer — idéal pour démarrer votre temps de création. Touchez « Consigne » pour un aperçu discret.",
+    "creativeTipsCta": "Demander des pistes créatives",
+    "creativeTipsLoading": "Pistes en cours…",
+    "creativeTipsTitle": "Pistes créatives",
+    "creativeTipsCollapse": "Replier les pistes",
+    "creativeTipsExpand": "Afficher les pistes",
+    "creativeTipsError": "Impossible de charger les pistes. Réessayez dans un instant.",
+    "creativeTipsFallbackNote": "Pistes locales — la connexion IA n'était pas disponible."
   },
   "keywords": {
     "title": "À garder sous les yeux",

@@ -13,11 +13,17 @@ import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
 import type {
   AIProvider,
+  CreativeTipsRequest,
+  CreativeTipsResponse,
   ExerciseRequest,
   ExerciseResponse,
   ReflectionRequest,
   ReflectionResponse,
 } from "../types";
+import {
+  getFallbackCreativeTips,
+  runCreativeTipsGeneration,
+} from "./creative-tips";
 import {
   buildExercisePrompt,
   buildWarmReflectionPrompt,
@@ -175,6 +181,33 @@ export class OllamaProvider implements AIProvider {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
         source: "fallback",
+        fallbackNote: note.slice(0, 400),
+      };
+    }
+  }
+
+  async generateCreativeTips(
+    input: CreativeTipsRequest
+  ): Promise<CreativeTipsResponse> {
+    if (!this.baseUrl) {
+      return {
+        ...getFallbackCreativeTips(input),
+        fallbackNote: "URL Ollama manquante.",
+      };
+    }
+    try {
+      return await runCreativeTipsGeneration(input, (user, system) =>
+        this.chat(system, user, {
+          maxTokens: 600,
+          temperature: 0.8,
+          jsonBias: true,
+        })
+      );
+    } catch (error) {
+      const note = explainOllamaFailure(error);
+      console.warn("[Ollama generateCreativeTips]", note);
+      return {
+        ...getFallbackCreativeTips(input),
         fallbackNote: note.slice(0, 400),
       };
     }

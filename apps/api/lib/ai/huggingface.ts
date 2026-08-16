@@ -3,11 +3,17 @@ import { deriveExerciseKeywords } from "../exercise-keywords";
 import { getFallbackExercise, getFallbackReflection } from "../fallbacks";
 import type {
   AIProvider,
+  CreativeTipsRequest,
+  CreativeTipsResponse,
   ExerciseRequest,
   ExerciseResponse,
   ReflectionRequest,
   ReflectionResponse,
 } from "../types";
+import {
+  getFallbackCreativeTips,
+  runCreativeTipsGeneration,
+} from "./creative-tips";
 import {
   buildExercisePrompt,
   buildHandwritingOcrPrompt,
@@ -225,6 +231,26 @@ export class HuggingFaceProvider implements AIProvider {
         ...fallback,
         durationMinutes: preferredDuration ?? fallback.durationMinutes,
       };
+    }
+  }
+
+  async generateCreativeTips(
+    input: CreativeTipsRequest
+  ): Promise<CreativeTipsResponse> {
+    if (!this.token) {
+      return getFallbackCreativeTips(input);
+    }
+    try {
+      return await runCreativeTipsGeneration(input, (user, system) =>
+        this.callTextModel(user, {
+          systemPrompt: system,
+          maxTokens: 600,
+          temperature: 0.8,
+        })
+      );
+    } catch (error) {
+      console.warn("[HF generateCreativeTips]", error);
+      return getFallbackCreativeTips(input);
     }
   }
 
