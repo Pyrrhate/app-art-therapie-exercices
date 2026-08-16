@@ -66,7 +66,7 @@ function NavLink({
   );
 }
 
-function CreateButton({
+function StudioCta({
   label,
   onPress,
   className = "",
@@ -83,7 +83,9 @@ function CreateButton({
       className={`rounded-full bg-melon-500 active:bg-melon-600 px-4 py-2 min-h-[40px] justify-center shrink-0 web:hover:bg-melon-600 ${className}`}
       style={ctaShadow}
     >
-      <Text className="text-white text-sm font-semibold tracking-wide">{label}</Text>
+      <Text className="text-white text-sm font-semibold tracking-wide">
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -99,24 +101,30 @@ export function LandingHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const maxW = maxWidth === "3xl" ? "max-w-3xl" : "max-w-3xl";
 
+  const studioLabel = t("landing:nav.studio");
+  const studioHref = ROUTES.home;
+
+  /** Liens de navigation (sans Espace créatif — celui-ci est le CTA). */
   const defaultNav = useMemo<LandingNavItem[]>(
     () => [
       { label: t("landing:nav.features"), href: ROUTES.features },
       { label: t("landing:nav.examples"), href: ROUTES.examples },
       { label: t("landing:nav.glossary"), href: ROUTES.glossary },
-      { label: t("landing:nav.studio"), href: ROUTES.home },
     ],
     [t]
   );
-  const items = navItems ?? defaultNav;
+  const items = useMemo(() => {
+    const source = navItems ?? defaultNav;
+    return source.filter((item) => item.href !== studioHref);
+  }, [navItems, defaultNav, studioHref]);
 
   function closeMenu() {
     setMenuOpen(false);
   }
 
-  function goCreate() {
+  function goStudio() {
     closeMenu();
-    router.push(ROUTES.home);
+    router.push(studioHref);
   }
 
   const desktopNav = (
@@ -136,7 +144,7 @@ export function LandingHeader({
         ))}
       </View>
       <LanguageToggle />
-      <CreateButton label={t("common:actions.start")} onPress={goCreate} />
+      <StudioCta label={studioLabel} onPress={goStudio} />
     </View>
   );
 
@@ -176,7 +184,7 @@ export function LandingHeader({
             ))}
           </View>
           <LanguageToggle />
-          <CreateButton label={t("common:actions.start")} onPress={goCreate} />
+          <StudioCta label={studioLabel} onPress={goStudio} />
         </View>
       ) : null}
     </>
@@ -248,7 +256,10 @@ export function LandingHeader({
               <LanguageToggle />
             </View>
 
-            <View accessibilityRole="navigation" accessibilityLabel={t("landing:nav.mobileNav")}>
+            <View
+              accessibilityRole="navigation"
+              accessibilityLabel={t("landing:nav.mobileNav")}
+            >
               {items.map((item) => (
                 <View key={item.href} className="border-b border-sand-100 py-3">
                   <NavLink
@@ -261,9 +272,9 @@ export function LandingHeader({
               ))}
             </View>
 
-            <CreateButton
-              label={t("common:actions.startCreating")}
-              onPress={goCreate}
+            <StudioCta
+              label={studioLabel}
+              onPress={goStudio}
               className="mt-6 w-full items-center px-5 py-3.5 min-h-[48px]"
             />
           </View>
