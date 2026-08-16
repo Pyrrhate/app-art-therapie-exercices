@@ -23,6 +23,24 @@ export type LocalizedChangelogEntry = {
  */
 export const CHANGELOG_CATALOG: LocalizedChangelogEntry[] = [
   {
+    id: "kdrive-infomaniak",
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Sauvegarde Infomaniak kDrive",
+      en: "Infomaniak kDrive backup",
+    },
+    highlights: {
+      fr: [
+        "En plus de Google Drive : connectez votre kDrive avec un jeton API Infomaniak (scope drive) et l'ID de votre drive.",
+        "Même modèle local-first — dossier « Pastek Art », sauvegarde / restauration, photos optionnelles. Le jeton reste sur l'appareil.",
+      ],
+      en: [
+        "Alongside Google Drive: connect your kDrive with an Infomaniak API token (drive scope) and your drive ID.",
+        "Same local-first model — “Pastek Art” folder, backup / restore, optional photos. The token stays on the device.",
+      ],
+    },
+  },
+  {
     id: "glossaire-nav-site",
     dateLabel: { fr: "août 2026", en: "August 2026" },
     title: {

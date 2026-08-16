@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Text, TextInput, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { PrimaryButton } from "@/components/ui/Button";
@@ -15,26 +15,57 @@ import {
   restoreLocalDataFromGoogleDrive,
 } from "@/lib/storage/googleDriveAdapter";
 import type { GoogleDriveMeta } from "@/lib/storage/googleDriveTokens";
+import {
+  backupLocalDataToKDrive,
+  connectKDrive,
+  disconnectKDrive,
+  getKDriveConnectionStatus,
+  restoreLocalDataFromKDrive,
+} from "@/lib/storage/kDriveAdapter";
+import type { KDriveMeta } from "@/lib/storage/kDriveTokens";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
+type BusyKind =
+  | "g-connect"
+  | "g-disconnect"
+  | "g-backup"
+  | "g-restore"
+  | "k-connect"
+  | "k-disconnect"
+  | "k-backup"
+  | "k-restore"
+  | null;
+
 /**
- * Sauvegarde locale ↔ Google Drive (local-first, sans compte Pastek).
+ * Sauvegarde locale ↔ Google Drive + Infomaniak kDrive (local-first).
  */
 export function StorageSettings({ className = "" }: { className?: string }) {
   const isDark = useIsDark();
   const { t } = useTranslation("app");
   const language = useLanguageStore((s) => s.language);
-  const [connected, setConnected] = useState(false);
-  const [configured, setConfigured] = useState(isGoogleDriveClientConfigured());
-  const [meta, setMeta] = useState<GoogleDriveMeta | null>(null);
-  const [busy, setBusy] = useState<"connect" | "disconnect" | "backup" | "restore" | null>(null);
+
+  const [gConnected, setGConnected] = useState(false);
+  const [gConfigured, setGConfigured] = useState(isGoogleDriveClientConfigured());
+  const [gMeta, setGMeta] = useState<GoogleDriveMeta | null>(null);
+
+  const [kConnected, setKConnected] = useState(false);
+  const [kMeta, setKMeta] = useState<KDriveMeta | null>(null);
+  const [kDriveId, setKDriveId] = useState("");
+  const [kToken, setKToken] = useState("");
+
+  const [busy, setBusy] = useState<BusyKind>(null);
 
   const refresh = useCallback(async () => {
-    const status = await getGoogleDriveConnectionStatus();
-    setConfigured(status.configured);
-    setConnected(status.connected);
-    setMeta(status.meta);
+    const [gStatus, kStatus] = await Promise.all([
+      getGoogleDriveConnectionStatus(),
+      getKDriveConnectionStatus(),
+    ]);
+    setGConfigured(gStatus.configured);
+    setGConnected(gStatus.connected);
+    setGMeta(gStatus.meta);
+    setKConnected(kStatus.connected);
+    setKMeta(kStatus.meta);
   }, []);
 
   useFocusEffect(
@@ -43,15 +74,27 @@ export function StorageSettings({ className = "" }: { className?: string }) {
     }, [refresh])
   );
 
-  async function handleConnect() {
-    setBusy("connect");
+  function providerStatus(
+    connected: boolean,
+    meta: { lastSyncAt: string | null } | null,
+    connectedKey: string,
+    syncedKey: string
+  ): string {
+    if (!connected) return t("settings.storageStatusLocal");
+    if (meta?.lastSyncAt) {
+      return t(syncedKey, {
+        date: formatSessionDate(meta.lastSyncAt, language),
+      });
+    }
+    return t(connectedKey);
+  }
+
+  async function handleGoogleConnect() {
+    setBusy("g-connect");
     try {
       await connectGoogleDrive();
       await refresh();
-      showAlert(
-        t("settings.driveConnected"),
-        t("settings.storageBody")
-      );
+      showAlert(t("settings.driveConnected"), t("settings.storageBody"));
     } catch (error) {
       showAlert(
         t("settings.driveTitle"),
@@ -62,8 +105,8 @@ export function StorageSettings({ className = "" }: { className?: string }) {
     }
   }
 
-  async function handleDisconnect() {
-    setBusy("disconnect");
+  async function handleGoogleDisconnect() {
+    setBusy("g-disconnect");
     try {
       await disconnectGoogleDrive();
       await refresh();
@@ -78,8 +121,8 @@ export function StorageSettings({ className = "" }: { className?: string }) {
     }
   }
 
-  async function handleBackup() {
-    setBusy("backup");
+  async function handleGoogleBackup() {
+    setBusy("g-backup");
     try {
       const result = await backupLocalDataToGoogleDrive();
       await refresh();
@@ -97,8 +140,8 @@ export function StorageSettings({ className = "" }: { className?: string }) {
     }
   }
 
-  async function handleRestore() {
-    setBusy("restore");
+  async function handleGoogleRestore() {
+    setBusy("g-restore");
     try {
       const result = await restoreLocalDataFromGoogleDrive();
       await refresh();
@@ -116,92 +159,291 @@ export function StorageSettings({ className = "" }: { className?: string }) {
     }
   }
 
-  const statusLabel = connected
-    ? meta?.lastSyncAt
-      ? t("settings.storageStatusSynced", {
-          date: formatSessionDate(meta.lastSyncAt, language),
-        })
-      : t("settings.storageStatusConnected")
-    : t("settings.storageStatusLocal");
+  async function handleKDriveConnect() {
+    setBusy("k-connect");
+    try {
+      await connectKDrive({ apiToken: kToken, driveId: kDriveId });
+      setKToken("");
+      await refresh();
+      showAlert(t("settings.kdriveConnected"), t("settings.kdriveBody"));
+    } catch (error) {
+      showAlert(
+        t("settings.kdriveTitle"),
+        error instanceof Error ? error.message : t("settings.eraseFailBody")
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleKDriveDisconnect() {
+    setBusy("k-disconnect");
+    try {
+      await disconnectKDrive();
+      await refresh();
+      showAlert(t("settings.driveLocalOnly"), t("settings.storageStatusLocal"));
+    } catch (error) {
+      showAlert(
+        t("settings.kdriveDisconnect"),
+        error instanceof Error ? error.message : t("settings.eraseFailBody")
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleKDriveBackup() {
+    setBusy("k-backup");
+    try {
+      const result = await backupLocalDataToKDrive();
+      await refresh();
+      showAlert(
+        t("settings.exportDoneTitle"),
+        t("settings.restoreDoneBody", { count: result.filCount })
+      );
+    } catch (error) {
+      showAlert(
+        t("settings.backupTitle"),
+        error instanceof Error ? error.message : t("settings.exportFailBody")
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleKDriveRestore() {
+    setBusy("k-restore");
+    try {
+      const result = await restoreLocalDataFromKDrive();
+      await refresh();
+      showAlert(
+        t("settings.restoreDoneTitle"),
+        t("settings.restoreDoneBody", { count: result.filCount })
+      );
+    } catch (error) {
+      showAlert(
+        t("settings.restoreFailTitle"),
+        error instanceof Error ? error.message : t("settings.restoreFailBody")
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const inputClass = `rounded-2xl border border-sand-200 px-4 py-3 text-base ${
+    isDark ? "bg-sand-900 text-sand-100" : "bg-white text-sand-800"
+  }`;
 
   return (
-    <View className={`rounded-3xl border px-5 py-5 gap-4 ${panelBg(isDark)} ${className}`}>
-      <Text className="text-xs uppercase tracking-widest text-sage-500 font-medium">
-        {t("settings.storageLabel")}
-      </Text>
-      <Text className={`font-medium ${textPrimary(isDark)}`}>
-        {t("settings.storageTitle")}
-      </Text>
-      <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-        {t("settings.storageBody")}
-      </Text>
-
-      <View
-        className={`rounded-2xl px-4 py-3 ${
-          isDark ? "bg-sand-900/60" : "bg-sage-50"
-        }`}
-      >
-        <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
-          {statusLabel}
+    <View className={`gap-5 ${className}`}>
+      <View className={`rounded-3xl border px-5 py-5 gap-4 ${panelBg(isDark)}`}>
+        <Text className="text-xs uppercase tracking-widest text-sage-500 font-medium">
+          {t("settings.storageLabel")}
         </Text>
-        {connected && meta?.accountHint ? (
-          <Text className={`text-xs mt-1 ${textMuted(isDark)}`}>
-            {meta.accountHint}
-          </Text>
-        ) : null}
+        <Text className={`font-medium ${textPrimary(isDark)}`}>
+          {t("settings.storageTitle")}
+        </Text>
+        <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
+          {t("settings.storageBody")}
+        </Text>
       </View>
 
-      {!configured ? (
-        <Text className="text-amber-700 text-xs leading-5">
-          {t("settings.storageConfigHint")}
+      {/* Google Drive */}
+      <View className={`rounded-3xl border px-5 py-5 gap-4 ${panelBg(isDark)}`}>
+        <Text className={`font-medium ${textPrimary(isDark)}`}>
+          {t("settings.driveSectionTitle")}
         </Text>
-      ) : null}
+        <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
+          {t("settings.driveCardBody")}
+        </Text>
 
-      {busy ? <ActivityIndicator color="#496349" /> : null}
-
-      {!connected ? (
-        <PrimaryButton
-          label={
-            busy === "connect"
-              ? t("settings.storageConnecting")
-              : t("settings.driveConnect")
-          }
-          onPress={() => void handleConnect()}
-          disabled={!configured || busy !== null}
-        />
-      ) : (
-        <View className="gap-3">
-          <PrimaryButton
-            label={
-              busy === "backup"
-                ? t("settings.storageBackingUp")
-                : t("settings.driveBackup")
-            }
-            onPress={() => void handleBackup()}
-            disabled={busy !== null}
-          />
-          <PrimaryButton
-            label={
-              busy === "restore"
-                ? t("settings.storageRestoring")
-                : t("settings.driveRestore")
-            }
-            onPress={() => void handleRestore()}
-            disabled={busy !== null}
-            variant="secondary"
-          />
-          <PrimaryButton
-            label={
-              busy === "disconnect"
-                ? t("settings.storageDisconnecting")
-                : t("settings.storageDisconnectDrive")
-            }
-            onPress={() => void handleDisconnect()}
-            disabled={busy !== null}
-            variant="ghost"
-          />
+        <View
+          className={`rounded-2xl px-4 py-3 ${
+            isDark ? "bg-sand-900/60" : "bg-sage-50"
+          }`}
+        >
+          <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
+            {providerStatus(
+              gConnected,
+              gMeta,
+              "settings.storageStatusConnected",
+              "settings.storageStatusSynced"
+            )}
+          </Text>
+          {gConnected && gMeta?.accountHint ? (
+            <Text className={`text-xs mt-1 ${textMuted(isDark)}`}>
+              {gMeta.accountHint}
+            </Text>
+          ) : null}
         </View>
-      )}
+
+        {!gConfigured ? (
+          <Text className="text-amber-700 text-xs leading-5">
+            {t("settings.storageConfigHint")}
+          </Text>
+        ) : null}
+
+        {busy?.startsWith("g-") ? <ActivityIndicator color="#496349" /> : null}
+
+        {!gConnected ? (
+          <PrimaryButton
+            label={
+              busy === "g-connect"
+                ? t("settings.storageConnecting")
+                : t("settings.driveConnect")
+            }
+            onPress={() => void handleGoogleConnect()}
+            disabled={!gConfigured || busy !== null}
+          />
+        ) : (
+          <View className="gap-3">
+            <PrimaryButton
+              label={
+                busy === "g-backup"
+                  ? t("settings.storageBackingUp")
+                  : t("settings.driveBackup")
+              }
+              onPress={() => void handleGoogleBackup()}
+              disabled={busy !== null}
+            />
+            <PrimaryButton
+              label={
+                busy === "g-restore"
+                  ? t("settings.storageRestoring")
+                  : t("settings.driveRestore")
+              }
+              onPress={() => void handleGoogleRestore()}
+              disabled={busy !== null}
+              variant="secondary"
+            />
+            <PrimaryButton
+              label={
+                busy === "g-disconnect"
+                  ? t("settings.storageDisconnecting")
+                  : t("settings.storageDisconnectDrive")
+              }
+              onPress={() => void handleGoogleDisconnect()}
+              disabled={busy !== null}
+              variant="ghost"
+            />
+          </View>
+        )}
+      </View>
+
+      {/* Infomaniak kDrive */}
+      <View className={`rounded-3xl border px-5 py-5 gap-4 ${panelBg(isDark)}`}>
+        <Text className={`font-medium ${textPrimary(isDark)}`}>
+          {t("settings.kdriveSectionTitle")}
+        </Text>
+        <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
+          {t("settings.kdriveBody")}
+        </Text>
+
+        <View
+          className={`rounded-2xl px-4 py-3 ${
+            isDark ? "bg-sand-900/60" : "bg-sage-50"
+          }`}
+        >
+          <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
+            {providerStatus(
+              kConnected,
+              kMeta,
+              "settings.kdriveStatusConnected",
+              "settings.kdriveStatusSynced"
+            )}
+          </Text>
+          {kConnected && kMeta?.accountHint ? (
+            <Text className={`text-xs mt-1 ${textMuted(isDark)}`}>
+              {kMeta.accountHint}
+            </Text>
+          ) : null}
+        </View>
+
+        {busy?.startsWith("k-") ? <ActivityIndicator color="#496349" /> : null}
+
+        {!kConnected ? (
+          <View className="gap-3">
+            <View>
+              <Text className={`text-sm font-medium mb-2 ${textSecondary(isDark)}`}>
+                {t("settings.kdriveIdLabel")}
+              </Text>
+              <TextInput
+                className={inputClass}
+                value={kDriveId}
+                onChangeText={setKDriveId}
+                placeholder={t("settings.kdriveIdPlaceholder")}
+                placeholderTextColor="#A89F91"
+                keyboardType="number-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={busy === null}
+              />
+            </View>
+            <View>
+              <Text className={`text-sm font-medium mb-2 ${textSecondary(isDark)}`}>
+                {t("settings.kdriveTokenLabel")}
+              </Text>
+              <TextInput
+                className={inputClass}
+                value={kToken}
+                onChangeText={setKToken}
+                placeholder={t("settings.kdriveTokenPlaceholder")}
+                placeholderTextColor="#A89F91"
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry
+                editable={busy === null}
+              />
+            </View>
+            <Text className={`text-xs leading-5 ${textMuted(isDark)}`}>
+              {t("settings.kdriveHelp")}
+            </Text>
+            <PrimaryButton
+              label={
+                busy === "k-connect"
+                  ? t("settings.storageConnecting")
+                  : t("settings.kdriveConnect")
+              }
+              onPress={() => void handleKDriveConnect()}
+              disabled={
+                busy !== null || !kDriveId.trim() || kToken.trim().length < 20
+              }
+            />
+          </View>
+        ) : (
+          <View className="gap-3">
+            <PrimaryButton
+              label={
+                busy === "k-backup"
+                  ? t("settings.storageBackingUp")
+                  : t("settings.kdriveBackup")
+              }
+              onPress={() => void handleKDriveBackup()}
+              disabled={busy !== null}
+            />
+            <PrimaryButton
+              label={
+                busy === "k-restore"
+                  ? t("settings.storageRestoring")
+                  : t("settings.kdriveRestore")
+              }
+              onPress={() => void handleKDriveRestore()}
+              disabled={busy !== null}
+              variant="secondary"
+            />
+            <PrimaryButton
+              label={
+                busy === "k-disconnect"
+                  ? t("settings.storageDisconnecting")
+                  : t("settings.kdriveDisconnect")
+              }
+              onPress={() => void handleKDriveDisconnect()}
+              disabled={busy !== null}
+              variant="ghost"
+            />
+          </View>
+        )}
+      </View>
     </View>
   );
 }
