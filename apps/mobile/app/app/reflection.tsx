@@ -1575,6 +1575,28 @@ Miroir initial (à conserver — ne pas recopier) :
             />
           )}
 
+          {!isWriting && !techniqueNeedsByokForAi && (
+            <View className="mb-1">
+              <Text className="text-sand-700 text-base font-medium mb-2">
+                {t("reflection.remarkTitle")}
+              </Text>
+              <Text className="text-sand-500 text-sm leading-6 mb-3">
+                {t("reflection.remarkHint")}
+              </Text>
+              <TextInput
+                className="bg-white border border-sand-200 rounded-2xl px-4 py-3 text-sand-800 text-base min-h-[100px] mb-1"
+                multiline
+                textAlignVertical="top"
+                placeholder={t("reflection.remarkPlaceholder")}
+                placeholderTextColor="#A89F91"
+                value={writtenText}
+                onChangeText={setWrittenText}
+                editable={!busy}
+                accessibilityLabel={t("reflection.remarkTitle")}
+              />
+            </View>
+          )}
+
           {filTraceCount > 0 ? (
             <View className="rounded-2xl border border-sage-100 bg-sage-50/80 px-4 py-3 flex-row items-center gap-3">
               <View className="flex-1">
