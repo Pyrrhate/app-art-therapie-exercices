@@ -131,7 +131,7 @@ export async function uploadJsonBackup(input: {
   json: string;
 }): Promise<{ fileId: number }> {
   const directoryId = await ensurePastekFolder(input);
-  const bytes = new TextEncoder().encode(input.json);
+  const bytes = Buffer.from(new TextEncoder().encode(input.json));
   const url = new URL(`${API_BASE}/3/drive/${input.driveId}/upload`);
   url.searchParams.set("directory_id", String(directoryId));
   url.searchParams.set("file_name", BACKUP_FILENAME);
@@ -197,10 +197,11 @@ export async function uploadArtworkBytes(input: {
 }): Promise<{ fileId: number } | null> {
   try {
     const directoryId = await ensurePastekFolder(input);
+    const body = Buffer.from(input.bytes);
     const url = new URL(`${API_BASE}/3/drive/${input.driveId}/upload`);
     url.searchParams.set("directory_id", String(directoryId));
     url.searchParams.set("file_name", input.filename);
-    url.searchParams.set("total_size", String(input.bytes.byteLength));
+    url.searchParams.set("total_size", String(body.byteLength));
     url.searchParams.set("conflict", "rename");
 
     const res = await fetch(url.toString(), {
@@ -208,7 +209,7 @@ export async function uploadArtworkBytes(input: {
       headers: authHeaders(input.token, {
         "Content-Type": input.mimeType || "application/octet-stream",
       }),
-      body: input.bytes,
+      body,
     });
     if (!res.ok) return null;
     const payload = (await res.json().catch(() => ({}))) as {
