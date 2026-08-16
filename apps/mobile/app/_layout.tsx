@@ -8,6 +8,7 @@ import { ThemeRoot } from "@/components/ThemeRoot";
 import { LanguageProvider } from "@/components/i18n/LanguageProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { WebErrorBoundary } from "@/components/WebErrorBoundary";
+import { CleanExpoRouterUrl } from "@/components/web/CleanExpoRouterUrl";
 import { THEME_COLORS, useThemeStore } from "@/lib/themeStore";
 
 if (Platform.OS === "web") {
@@ -55,6 +56,7 @@ export default function RootLayout() {
         <LanguageProvider>
           <ThemeRoot>
             <AuthProvider>
+              <CleanExpoRouterUrl />
               <RootStack />
             </AuthProvider>
           </ThemeRoot>
