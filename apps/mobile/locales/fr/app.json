@@ -176,7 +176,7 @@
     "kdriveIdPlaceholder": "Ex. 123456",
     "kdriveTokenLabel": "Jeton API Infomaniak",
     "kdriveTokenPlaceholder": "Coller le jeton…",
-    "kdriveHelp": "Dans Manager Infomaniak → profil → Jetons API, créez un jeton avec le scope drive. L'ID kDrive est le nombre après /drive/ dans l'URL de votre kDrive."
+    "kdriveHelp": "Dans Manager Infomaniak → profil → Jetons API, créez un jeton avec le produit kDrive et les droits d'écriture (pas lecture seule). L'ID kDrive est le nombre après /drive/ dans l'URL. La sauvegarde est créée dans Privé → Pastek Art."
   },
   "aiEngines": {
     "heroLabel": "Moteurs IA",

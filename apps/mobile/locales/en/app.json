@@ -176,7 +176,7 @@
     "kdriveIdPlaceholder": "e.g. 123456",
     "kdriveTokenLabel": "Infomaniak API token",
     "kdriveTokenPlaceholder": "Paste the token…",
-    "kdriveHelp": "In Infomaniak Manager → profile → API tokens, create a token with the drive scope. The kDrive ID is the number after /drive/ in your kDrive URL."
+    "kdriveHelp": "In Infomaniak Manager → profile → API tokens, create a token with the kDrive product and write access (not read-only). The kDrive ID is the number after /drive/ in the URL. Backups go to Private → Pastek Art."
   },
   "aiEngines": {
     "heroLabel": "AI engines",

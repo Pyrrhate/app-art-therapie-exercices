@@ -5,7 +5,7 @@
 const API_BASE = "https://api.infomaniak.com";
 const PASTEK_FOLDER = "Pastek Art";
 const BACKUP_FILENAME = "pastek-art-backup.json";
-/** Racine privée kDrive (convention Infomaniak). */
+/** Racine technique kDrive (contient souvent Privé / Documents communs). */
 const ROOT_DIRECTORY_ID = 1;
 
 export type KDriveFile = {
@@ -13,12 +13,20 @@ export type KDriveFile = {
   name: string;
   type?: string;
   parent_id?: number;
+  visibility?: string;
+  color?: string | null;
+};
+
+type InfomaniakError = {
+  code?: string | number;
+  description?: string;
+  message?: string;
 };
 
 type InfomaniakListResponse = {
   result?: string;
   data?: KDriveFile[] | { files?: KDriveFile[] };
-  error?: { code?: string; description?: string; message?: string };
+  error?: InfomaniakError;
 };
 
 function authHeaders(token: string, extra?: HeadersInit): HeadersInit {
@@ -32,10 +40,22 @@ function authHeaders(token: string, extra?: HeadersInit): HeadersInit {
 function extractErrorMessage(payload: unknown, fallback: string): string {
   if (!payload || typeof payload !== "object") return fallback;
   const err = (payload as InfomaniakListResponse).error;
-  if (err?.description) return err.description;
-  if (err?.message) return err.message;
-  if (err?.code) return `${fallback} (${err.code})`;
-  return fallback;
+  const raw =
+    err?.description?.trim() ||
+    err?.message?.trim() ||
+    (err?.code != null ? String(err.code) : "");
+  if (!raw) return fallback;
+
+  const lower = raw.toLowerCase();
+  if (
+    lower.includes("permission") ||
+    lower.includes("forbidden") ||
+    lower.includes("not allowed") ||
+    lower.includes("access denied")
+  ) {
+    return `${raw} — recréez un jeton API Infomaniak avec le produit kDrive et les droits d'écriture (pas lecture seule), et vérifiez l'ID du drive. L'écriture se fait dans l'espace Privé.`;
+  }
+  return raw;
 }
 
 function asFileList(data: InfomaniakListResponse["data"]): KDriveFile[] {
@@ -45,12 +65,40 @@ function asFileList(data: InfomaniakListResponse["data"]): KDriveFile[] {
   return [];
 }
 
+function isDirectory(file: KDriveFile): boolean {
+  if (file.type === "dir" || file.type === "directory") return true;
+  // Les dossiers kDrive ont souvent type "file" + une couleur / visibilité d'espace.
+  if (file.color) return true;
+  if (
+    file.visibility === "is_private_space" ||
+    file.visibility === "is_team_space" ||
+    file.visibility === "is_shared_space" ||
+    file.visibility === "is_root"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function isPrivateSpaceFolder(file: KDriveFile): boolean {
+  if (file.visibility === "is_private_space") return true;
+  const name = file.name.trim().toLowerCase();
+  return (
+    name === "privé" ||
+    name === "prive" ||
+    name === "private" ||
+    name === "mon espace" ||
+    name === "my files" ||
+    name === "personal"
+  );
+}
+
 async function listChildren(
   token: string,
   driveId: number,
   directoryId: number
 ): Promise<KDriveFile[]> {
-  const url = `${API_BASE}/3/drive/${driveId}/files/${directoryId}/files?with=path`;
+  const url = `${API_BASE}/3/drive/${driveId}/files/${directoryId}/files?with=capabilities`;
   const res = await fetch(url, { headers: authHeaders(token) });
   const payload = (await res.json().catch(() => ({}))) as InfomaniakListResponse;
   if (!res.ok || payload.result === "error") {
@@ -64,29 +112,45 @@ async function listChildren(
   return asFileList(payload.data);
 }
 
+/**
+ * Trouve un parent où l'utilisateur peut écrire.
+ * Sur beaucoup de kDrive, la racine (1) n'est pas writable : il faut le dossier Privé.
+ */
+async function resolveWritableParent(
+  token: string,
+  driveId: number
+): Promise<number> {
+  const children = await listChildren(token, driveId, ROOT_DIRECTORY_ID);
+  const privateSpace = children.find(
+    (f) => isDirectory(f) && isPrivateSpaceFolder(f)
+  );
+  if (privateSpace?.id) return privateSpace.id;
+
+  // Espace personnel solo : parfois on peut écrire directement à la racine.
+  return ROOT_DIRECTORY_ID;
+}
+
 export async function probeKDrive(input: {
   token: string;
   driveId: number;
-}): Promise<{ driveId: number; folderReady: boolean }> {
-  // Vérifie l'accès en listant la racine privée.
-  await listChildren(input.token, input.driveId, ROOT_DIRECTORY_ID);
-  return { driveId: input.driveId, folderReady: true };
+}): Promise<{ driveId: number; folderReady: boolean; parentId: number }> {
+  const parentId = await resolveWritableParent(input.token, input.driveId);
+  // Vérifie aussi qu'on peut lister le parent writable.
+  await listChildren(input.token, input.driveId, parentId);
+  return { driveId: input.driveId, folderReady: true, parentId };
 }
 
 export async function ensurePastekFolder(input: {
   token: string;
   driveId: number;
 }): Promise<number> {
-  const children = await listChildren(
-    input.token,
-    input.driveId,
-    ROOT_DIRECTORY_ID
-  );
+  const parentId = await resolveWritableParent(input.token, input.driveId);
+  const children = await listChildren(input.token, input.driveId, parentId);
   const existing = children.find((f) => f.name === PASTEK_FOLDER);
   if (existing?.id) return existing.id;
 
   const res = await fetch(
-    `${API_BASE}/3/drive/${input.driveId}/files/${ROOT_DIRECTORY_ID}/directory`,
+    `${API_BASE}/3/drive/${input.driveId}/files/${parentId}/directory`,
     {
       method: "POST",
       headers: authHeaders(input.token, {
@@ -98,7 +162,7 @@ export async function ensurePastekFolder(input: {
   const payload = (await res.json().catch(() => ({}))) as {
     result?: string;
     data?: { id?: number };
-    error?: { description?: string; message?: string; code?: string };
+    error?: InfomaniakError;
   };
   if (!res.ok || payload.result === "error" || !payload.data?.id) {
     throw new Error(
@@ -136,7 +200,8 @@ export async function uploadJsonBackup(input: {
   url.searchParams.set("directory_id", String(directoryId));
   url.searchParams.set("file_name", BACKUP_FILENAME);
   url.searchParams.set("total_size", String(bytes.byteLength));
-  url.searchParams.set("conflict", "version");
+  // `rename` est plus permissif que `version` sur certains comptes.
+  url.searchParams.set("conflict", "rename");
 
   const res = await fetch(url.toString(), {
     method: "POST",
@@ -148,7 +213,7 @@ export async function uploadJsonBackup(input: {
   const payload = (await res.json().catch(() => ({}))) as {
     result?: string;
     data?: { id?: number };
-    error?: { description?: string; message?: string; code?: string };
+    error?: InfomaniakError;
   };
   if (!res.ok || payload.result === "error" || !payload.data?.id) {
     throw new Error(
@@ -183,7 +248,10 @@ export async function downloadJsonBackup(input: {
     }
   );
   if (!res.ok) {
-    throw new Error("Impossible de lire la sauvegarde sur kDrive.");
+    const payload = await res.json().catch(() => ({}));
+    throw new Error(
+      extractErrorMessage(payload, "Impossible de lire la sauvegarde sur kDrive.")
+    );
   }
   return res.text();
 }
