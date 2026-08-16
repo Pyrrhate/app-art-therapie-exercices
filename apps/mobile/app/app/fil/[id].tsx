@@ -200,6 +200,20 @@ export default function FilDetailScreen() {
         </Text>
       ) : null}
 
+      {m?.seasonTitle || m?.moduleStatement ? (
+        <View className={`rounded-3xl border px-5 py-4 mb-4 ${panelBg(isDark)}`}>
+          <Text className="text-sage-600 text-xs uppercase tracking-wider mb-2">
+            {t("detail.season")}
+            {m.seasonTitle ? ` · ${m.seasonTitle}` : ""}
+          </Text>
+          {m.moduleStatement?.trim() ? (
+            <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
+              {m.moduleStatement.trim()}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
       {visualTags(entry).length > 0 ? (
         <View className="flex-row flex-wrap gap-2 mb-5">
           {visualTags(entry).map((tag) => (

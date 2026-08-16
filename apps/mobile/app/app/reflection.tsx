@@ -750,7 +750,8 @@ export default function ReflectionScreen() {
       return;
     }
     if (!technique || !exercise || filRecordedRef.current) return;
-    if (isDeep) return;
+    // Express et profond : dès le miroir (sinon les saisons / deep sans questionnaire
+    // final n'apparaissent jamais dans le Fil).
     filRecordedRef.current = true;
 
     void (async () => {
@@ -781,6 +782,9 @@ export default function ReflectionScreen() {
           exercise,
           exerciseDevelopment: ritual.exerciseDevelopment ?? undefined,
           moduleStatement: ritual.moduleStatement ?? undefined,
+          ...(ritual.seasonTitle
+            ? { seasonTitle: ritual.seasonTitle }
+            : {}),
           durationMinutes,
           photoUri: storedPhotoUri,
           reflection,
@@ -838,7 +842,6 @@ export default function ReflectionScreen() {
     openQuestions,
     followUpExercise,
     writtenText,
-    isDeep,
     currentRound,
     round1Snapshot,
     colorContext,
@@ -1128,25 +1131,63 @@ Miroir initial (à conserver — ne pas recopier) :
       });
 
       const deepenTrimmed = deepenedReflection?.trim() || "";
-      await recordFilEntry({
-        source: "ritual",
-        summary: impulse || t("reflection.defaults.defaultDeepSession"),
-        detail: postAnswers.resonance.trim().slice(0, 280),
-        metadata: {
-          impulse,
-          technique,
-          exercise,
-          durationMinutes,
-          reflection,
-          ...(deepenTrimmed ? { deepenedReflection: deepenTrimmed } : {}),
-          openQuestions: openQuestions.length ? openQuestions : undefined,
-          ...(deepenedOpenQuestions.length
-            ? { deepenedOpenQuestions }
-            : {}),
-          writtenText: writtenText.trim() || undefined,
-          followUpExercise: followUpExercise ?? undefined,
-        },
-      });
+      const filId = filEntryIdRef.current;
+      if (filId) {
+        const existing = await getFilEntryById(filId);
+        if (existing) {
+          await patchFilEntry(filId, {
+            detail: postAnswers.resonance.trim().slice(0, 280),
+            metadata: {
+              ...existing.metadata,
+              impulse,
+              technique,
+              exercise,
+              durationMinutes,
+              reflection,
+              ...(deepenTrimmed ? { deepenedReflection: deepenTrimmed } : {}),
+              openQuestions: openQuestions.length ? openQuestions : undefined,
+              ...(deepenedOpenQuestions.length
+                ? { deepenedOpenQuestions }
+                : {}),
+              writtenText: writtenText.trim() || undefined,
+              followUpExercise: followUpExercise ?? undefined,
+              moduleStatement:
+                existing.metadata?.moduleStatement ??
+                ritual.moduleStatement ??
+                undefined,
+              seasonTitle:
+                existing.metadata?.seasonTitle ??
+                ritual.seasonTitle ??
+                undefined,
+            },
+            tags: existing.tags,
+          });
+        }
+      } else {
+        await recordFilEntry({
+          source: "ritual",
+          summary: impulse || t("reflection.defaults.defaultDeepSession"),
+          detail: postAnswers.resonance.trim().slice(0, 280),
+          metadata: {
+            impulse,
+            technique,
+            exercise,
+            durationMinutes,
+            reflection,
+            ...(deepenTrimmed ? { deepenedReflection: deepenTrimmed } : {}),
+            openQuestions: openQuestions.length ? openQuestions : undefined,
+            ...(deepenedOpenQuestions.length
+              ? { deepenedOpenQuestions }
+              : {}),
+            writtenText: writtenText.trim() || undefined,
+            followUpExercise: followUpExercise ?? undefined,
+            moduleStatement: ritual.moduleStatement ?? undefined,
+            ...(ritual.seasonTitle
+              ? { seasonTitle: ritual.seasonTitle }
+              : {}),
+          },
+        });
+      }
       await discardRitualDraft();
     } catch {
       setNotice({

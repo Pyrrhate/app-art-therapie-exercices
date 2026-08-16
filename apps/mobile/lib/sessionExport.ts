@@ -165,11 +165,14 @@ export async function exportFilRitualPdf(
     throw new Error(i18n.t("ritual:export.incompleteFil"));
   }
   const deepenLabel = i18n.t("ritual:reflection.deepenedLabel");
+  const exerciseParts = [m.exercise, m.moduleStatement?.trim()]
+    .filter(Boolean)
+    .join("\n\n");
   return exportSessionPdf({
     id: entry.id,
     impulse: m.impulse ?? entry.summary,
     technique: m.technique,
-    exercise: m.exercise,
+    exercise: exerciseParts,
     durationMinutes: m.durationMinutes ?? 15,
     photoUri: m.photoUri,
     reflection: composeReflectionWithDeepen(
