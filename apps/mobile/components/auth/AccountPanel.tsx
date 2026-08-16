@@ -1,11 +1,12 @@
 import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
-import { StorageSettings } from "@/components/settings/StorageSettings";
 import { panelBg, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
 /**
  * Remplace l'ancien panneau compte Supabase : Pastek est local-first.
+ * Les clouds (Drive / kDrive / OneDrive) sont uniquement dans
+ * Réglages → Sauvegarde Drive (`premium-cloud`).
  */
 export function AccountPanel({ className = "" }: { className?: string }) {
   const isDark = useIsDark();
@@ -21,7 +22,6 @@ export function AccountPanel({ className = "" }: { className?: string }) {
           {t("settings.accountBody")}
         </Text>
       </View>
-      <StorageSettings />
     </View>
   );
 }

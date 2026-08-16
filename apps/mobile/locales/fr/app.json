@@ -50,7 +50,7 @@
     "languageTitle": "Langue de l'interface",
     "languageHint": "Les miroirs et consignes déjà générés restent dans leur langue d'origine. Les prochaines invitations suivront ce choix une fois branchés (prochaine étape).",
     "accountLabel": "Compte",
-    "accountBody": "Aucun compte Pastek requis. L'app fonctionne hors ligne sur cet appareil. Optionnel : connectez Google Drive ci-dessous pour sauvegarder votre Fil.",
+    "accountBody": "Aucun compte Pastek requis. L'app fonctionne hors ligne sur cet appareil. Optionnel : ouvrez Sauvegarde Drive pour Google Drive, kDrive ou OneDrive.",
     "driveTitle": "Sauvegarde Google Drive",
     "driveHint": "Backup / restore local-first — sans compte Pastek",
     "aiEnginesTitle": "Moteurs IA (clé personnelle)",

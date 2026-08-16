@@ -50,7 +50,7 @@
     "languageTitle": "Interface language",
     "languageHint": "Mirrors and prompts already generated stay in their original language. Future invitations will follow this choice once wired (next step).",
     "accountLabel": "Account",
-    "accountBody": "No Pastek account required. The app works offline on this device. Optional: connect Google Drive below to back up your Thread.",
+    "accountBody": "No Pastek account required. The app works offline on this device. Optional: open Drive backup for Google Drive, kDrive or OneDrive.",
     "driveTitle": "Google Drive backup",
     "driveHint": "Local-first backup / restore — no Pastek account",
     "aiEnginesTitle": "AI engines (personal key)",
