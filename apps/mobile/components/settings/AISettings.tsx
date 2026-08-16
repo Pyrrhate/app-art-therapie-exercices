@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import {
   EUROPEAN_BYOK_PROVIDERS,
+  CANADIAN_BYOK_PROVIDERS,
   GLOBAL_BYOK_PROVIDERS,
   type ByokProviderId,
 } from "@art-therapie/shared";
@@ -78,6 +79,12 @@ const PROVIDER_META: Record<AiKeyProvider, ProviderMeta> = {
     docsUrl: "https://ollama.com/",
     docsLabel: "ollama.com",
     isUrl: true,
+  },
+  cohere: {
+    id: "cohere",
+    title: "Cohere",
+    docsUrl: "https://dashboard.cohere.com/api-keys",
+    docsLabel: "dashboard.cohere.com",
   },
   openai: {
     id: "openai",
@@ -345,6 +352,11 @@ export function AISettings({
       EUROPEAN_BYOK_PROVIDERS.map((id) => PROVIDER_META[id as ByokProviderId]),
     []
   );
+  const canadian = useMemo(
+    () =>
+      CANADIAN_BYOK_PROVIDERS.map((id) => PROVIDER_META[id as ByokProviderId]),
+    []
+  );
   const global = useMemo(
     () => GLOBAL_BYOK_PROVIDERS.map((id) => PROVIDER_META[id as ByokProviderId]),
     []
@@ -530,6 +542,12 @@ export function AISettings({
         subtitle={t("aiSettings.europeanSubtitle")}
       />
       {renderGroup(european)}
+
+      <SectionTitle
+        title={t("aiSettings.canadianTitle")}
+        subtitle={t("aiSettings.canadianSubtitle")}
+      />
+      {renderGroup(canadian)}
 
       <SectionTitle
         title={t("aiSettings.globalTitle")}

@@ -12,6 +12,7 @@ export type AiUsageProvider =
   | "ovhcloud"
   | "alephalpha"
   | "ollama"
+  | "cohere"
   | "local";
 
 export interface RecordAiUsageInput {

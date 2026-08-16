@@ -9,6 +9,7 @@ export const BYOK_PROVIDER_IDS = [
   "ovhcloud",
   "alephalpha",
   "ollama",
+  "cohere",
   "openai",
   "anthropic",
   "gemini",
@@ -22,6 +23,11 @@ export const EUROPEAN_BYOK_PROVIDERS: readonly ByokProviderId[] = [
   "ovhcloud",
   "alephalpha",
   "ollama",
+] as const;
+
+/** Canada / souveraineté nord-américaine (ex. Cohere, Toronto). */
+export const CANADIAN_BYOK_PROVIDERS: readonly ByokProviderId[] = [
+  "cohere",
 ] as const;
 
 export const GLOBAL_BYOK_PROVIDERS: readonly ByokProviderId[] = [

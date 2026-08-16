@@ -63,6 +63,20 @@ export const PROVIDER_ENDPOINTS = {
     ],
     textOnly: false as const,
   },
+  /** Cohere (Toronto) — Compatibility API OpenAI-shaped. */
+  cohere: {
+    baseUrl: "https://api.cohere.ai/compatibility/v1",
+    textModel: "command-a-03-2025",
+    visionModel: "command-a-vision-07-2025",
+    fallbackModels: [
+      "command-a-plus-05-2026",
+      "command-r7b-12-2024",
+      "command-r-plus-08-2024",
+      "command-r-08-2024",
+    ],
+    visionFallbackModels: ["command-a-plus-05-2026"],
+    textOnly: false as const,
+  },
 } as const;
 
 /**
@@ -106,6 +120,19 @@ export function createAiAdapter(credentials: AdapterCredentials): AIProvider {
         textModel: process.env.OVHCLOUD_TEXT_MODEL?.trim() || cfg.textModel,
         visionModel:
           process.env.OVHCLOUD_VISION_MODEL?.trim() || cfg.visionModel,
+        fallbackModels: [...cfg.fallbackModels],
+        visionFallbackModels: [...cfg.visionFallbackModels],
+        textOnly: cfg.textOnly,
+      });
+    }
+    case "cohere": {
+      const cfg = PROVIDER_ENDPOINTS.cohere;
+      return new OpenAICompatibleProvider({
+        label: "Cohere",
+        baseUrl: process.env.COHERE_BASE_URL?.trim() || cfg.baseUrl,
+        apiKey,
+        textModel: process.env.COHERE_TEXT_MODEL?.trim() || cfg.textModel,
+        visionModel: process.env.COHERE_VISION_MODEL?.trim() || cfg.visionModel,
         fallbackModels: [...cfg.fallbackModels],
         visionFallbackModels: [...cfg.visionFallbackModels],
         textOnly: cfg.textOnly,

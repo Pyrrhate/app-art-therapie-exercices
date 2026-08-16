@@ -39,7 +39,8 @@ function usageProviderLabel(
     byok === "scaleway" ||
     byok === "ovhcloud" ||
     byok === "alephalpha" ||
-    byok === "ollama"
+    byok === "ollama" ||
+    byok === "cohere"
   ) {
     return byok;
   }

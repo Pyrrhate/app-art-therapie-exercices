@@ -90,7 +90,8 @@ export async function POST(request: Request) {
       (credentials.provider === "openai" &&
         provider instanceof OpenAIProvider) ||
       ((credentials.provider === "scaleway" ||
-        credentials.provider === "ovhcloud") &&
+        credentials.provider === "ovhcloud" ||
+        credentials.provider === "cohere") &&
         provider instanceof OpenAICompatibleProvider) ||
       (credentials.provider === "alephalpha" &&
         provider instanceof AlephAlphaProvider) ||
@@ -107,6 +108,7 @@ export async function POST(request: Request) {
         ovhcloud: "OVHcloud",
         alephalpha: "Aleph Alpha",
         ollama: "Ollama",
+        cohere: "Cohere",
       };
       const label = labels[credentials.provider] ?? credentials.provider;
       return jsonResponse(

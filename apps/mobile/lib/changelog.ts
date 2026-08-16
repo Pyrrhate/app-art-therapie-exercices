@@ -23,6 +23,24 @@ export type LocalizedChangelogEntry = {
  */
 export const CHANGELOG_CATALOG: LocalizedChangelogEntry[] = [
   {
+    id: "cohere-canada",
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Cohere — moteur IA canadien",
+      en: "Cohere — Canadian AI engine",
+    },
+    highlights: {
+      fr: [
+        "Nouveau fournisseur BYOK Cohere (Toronto) dans une section Canada, entre l'Europe et les moteurs globaux.",
+        "Compatibility API OpenAI-compatible : Command A + vision, avec modèles de secours automatiques.",
+      ],
+      en: [
+        "New Cohere BYOK provider (Toronto) in a Canada section, between Europe and the global engines.",
+        "OpenAI-compatible Compatibility API: Command A + vision, with automatic fallback models.",
+      ],
+    },
+  },
+  {
     id: "kdrive-infomaniak",
     dateLabel: { fr: "août 2026", en: "August 2026" },
     title: {

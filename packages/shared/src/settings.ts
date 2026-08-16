@@ -10,6 +10,7 @@ export type {
 export {
   BYOK_PROVIDER_IDS,
   EUROPEAN_BYOK_PROVIDERS,
+  CANADIAN_BYOK_PROVIDERS,
   GLOBAL_BYOK_PROVIDERS,
   CREATIVE_COACH_SAFETY,
   isByokProviderId,
@@ -23,6 +24,7 @@ export interface ApiKeys {
   scaleway?: string;
   ovhcloud?: string;
   alephalpha?: string;
+  cohere?: string;
   /** Ex. "http://localhost:11434" — stocké localement comme « clé » Ollama. */
   ollamaBaseUrl?: string;
 }

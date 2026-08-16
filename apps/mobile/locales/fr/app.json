@@ -192,6 +192,8 @@
     "disclaimer": "Cette application est un outil de génération d'exercices créatifs et d'exploration personnelle. Elle ne remplace pas une thérapie médicale ou psychologique.",
     "europeanTitle": "🇪🇺 Fournisseurs européens & souverains",
     "europeanSubtitle": "Mistral, Scaleway, OVHcloud, Aleph Alpha, Ollama local.",
+    "canadianTitle": "🇨🇦 Canada",
+    "canadianSubtitle": "Cohere (Toronto) — BYOK pour les utilisateurs au Canada.",
     "globalTitle": "🌐 Fournisseurs globaux",
     "globalSubtitle": "OpenAI, Anthropic, Google Gemini.",
     "urlSaved": "URL enregistrée",
@@ -257,6 +259,11 @@
         "badge": "Hors ligne",
         "why": "Modèle sur votre machine — aucune clé cloud. Indiquez l'URL du service (ex. http://192.168.x.x:11434). Sur API hébergée (Vercel), Ollama doit être joignable depuis le serveur (tunnel / IP publique), pas seulement localhost du téléphone. Tirez un modèle : ollama pull llama3.2",
         "placeholder": "http://127.0.0.1:11434"
+      },
+      "cohere": {
+        "badge": "Canada",
+        "why": "LLM canadien (Toronto). Créez une clé sur dashboard.cohere.com — Command A (multilingue FR/EN) avec vision optionnelle.",
+        "placeholder": "Clé API Cohere…"
       },
       "openai": {
         "badge": "Global",
@@ -347,7 +354,7 @@
     "heroAccent": "cloud",
     "heroDescription": "Google Drive ou Infomaniak kDrive, directement depuis cet appareil. Pastek ne stocke ni compte ni jetons.",
     "photosHint": "Les photos d'œuvres peuvent aussi être copiées dans le dossier « Pastek Art » après un rituel, si un cloud est connecté.",
-    "roadmap": "OneDrive et Proton suivront le même modèle local-first.",
+    "roadmap": "OneDrive (fort au Canada) et Proton suivront le même modèle local-first. Sync.com n'expose pas d'API publique pour l'instant.",
     "driveAlertTitle": "Google Drive",
     "driveAlertBody": "Si la connexion vient de se terminer, utilisez « Sauvegarder vers Drive » ci-dessous."
   },
