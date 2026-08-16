@@ -20,14 +20,33 @@ async function relay<T>(
   body: Record<string, unknown>
 ): Promise<T> {
   const base = getApiUrl().replace(/\/$/, "");
-  const response = await fetch(`${base}/api/integrations/kdrive/client`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  const url = `${base}/api/integrations/kdrive/client`;
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error(
+      base
+        ? "Impossible de joindre l'API Pastek (kDrive). Vérifiez la connexion, puis redéployez l'API si la route /api/integrations/kdrive/client est absente."
+        : "Impossible de joindre l'API via le proxy local. Relancez Expo (`npx expo start --web --clear`)."
+    );
+  }
+
   const payload = (await response.json().catch(() => ({}))) as T & {
     error?: string;
   };
+
+  if (response.status === 404) {
+    throw new Error(
+      "La route kDrive n'est pas encore disponible sur l'API. Redéployez apps/api (commit kDrive), puis réessayez."
+    );
+  }
+
   if (!response.ok) {
     throw new Error(
       payload.error?.trim() || `Erreur kDrive (${response.status}).`
