@@ -191,9 +191,11 @@ export default function JournalScreen() {
         />
       ) : null}
 
-      <View className="flex-row gap-3 mb-5">
-        <View
-          className={`flex-1 rounded-2xl border px-4 py-4 ${panelBg(isDark)}`}
+      <View className="flex-row gap-3 mb-3">
+        <Pressable
+          onPress={() => router.push(ROUTES.fil)}
+          accessibilityRole="button"
+          className={`flex-1 rounded-2xl border px-4 py-4 active:opacity-80 ${panelBg(isDark)}`}
         >
           <Text className="text-sage-600 text-xs uppercase tracking-wider mb-1">
             {t("journal:filBadge")}
@@ -201,7 +203,7 @@ export default function JournalScreen() {
           <Text className={`text-xs leading-5 ${textSecondary(isDark)}`}>
             {t("journal:filHint")}
           </Text>
-        </View>
+        </Pressable>
         <View
           className={`flex-1 rounded-2xl border px-4 py-4 ${
             isDark ? "border-sage-700 bg-sage-900/40" : "border-sage-200 bg-sage-50/80"
@@ -214,6 +216,13 @@ export default function JournalScreen() {
             {t("journal:journalHint")}
           </Text>
         </View>
+      </View>
+      <View className="mb-5">
+        <PrimaryButton
+          label={t("journal:openFil")}
+          onPress={() => router.push(ROUTES.fil)}
+          variant="ghost"
+        />
       </View>
 
       <Text className={`text-xs uppercase tracking-wider mb-3 ${textMuted(isDark)}`}>
