@@ -14,6 +14,14 @@ interface AppHeaderProps {
   onNavigateTraces?: () => void;
 }
 
+function MenuDot({ isDark }: { isDark: boolean }) {
+  return (
+    <Text className={`text-xs px-0.5 ${textMuted(isDark)}`} accessibilityElementsHidden>
+      ·
+    </Text>
+  );
+}
+
 export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps) {
   const isDark = useIsDark();
   const { t } = useTranslation(["app", "common"]);
@@ -35,8 +43,7 @@ export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps)
           </Text>
         </Pressable>
 
-        <View className="flex-row items-center gap-3 shrink-0">
-          <LanguageToggle />
+        <View className="flex-row items-center shrink-0">
           <Pressable
             onPress={onNavigateTraces ?? (() => router.push(ROUTES.fil))}
             hitSlop={8}
@@ -45,16 +52,21 @@ export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps)
               {t("app:header.fil")}
             </Text>
           </Pressable>
+          <MenuDot isDark={isDark} />
           <Pressable onPress={() => router.push(ROUTES.journal)} hitSlop={8}>
             <Text className={`text-sm ${textMuted(isDark)}`}>
               {t("app:header.journal")}
             </Text>
           </Pressable>
+          <MenuDot isDark={isDark} />
           <Pressable onPress={() => router.push(ROUTES.settings)} hitSlop={8}>
             <Text className={`text-sm ${textMuted(isDark)}`}>
               {t("app:header.settings")}
             </Text>
           </Pressable>
+          <View className="ml-2">
+            <LanguageToggle />
+          </View>
         </View>
       </View>
     </View>
