@@ -23,6 +23,24 @@ export type LocalizedChangelogEntry = {
  */
 export const CHANGELOG_CATALOG: LocalizedChangelogEntry[] = [
   {
+    id: "prompt-lab-dials",
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Laboratoire prompts (expérimental)",
+      en: "Prompt lab (experimental)",
+    },
+    highlights: {
+      fr: [
+        "Réglages → Laboratoire : potentiomètres (cadre, symbolisme, longueur, concret, audace).",
+        "Désactivé par défaut ; n'écrase ni les prompts catalogue ni vos overrides texte — append doux uniquement.",
+      ],
+      en: [
+        "Settings → Lab: dials (frame, symbolism, length, concrete, boldness).",
+        "Off by default; doesn’t overwrite catalogue prompts or your text overrides — soft append only.",
+      ],
+    },
+  },
+  {
     id: "second-round-questions-custom",
     dateLabel: { fr: "août 2026", en: "August 2026" },
     title: {

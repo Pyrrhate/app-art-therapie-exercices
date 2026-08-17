@@ -57,6 +57,8 @@
     "aiEnginesHint": "Mistral, Claude ou OpenAI — clé stockée uniquement sur cet appareil",
     "promptsTitle": "Prompts IA",
     "promptsHint": "Voir les consignes système et les personnaliser localement",
+    "promptLabTitle": "Laboratoire (expérimental)",
+    "promptLabHint": "Potentiomètres pour affiner ton et longueur — désactivé par défaut",
     "techniquesTitle": "Techniques artistiques",
     "techniquesHint": "Activer, désactiver ou ajouter vos techniques",
     "deepQuestionsTitle": "Questions personnalisables",
@@ -365,6 +367,50 @@
     "resetTitle": "Réinitialisé",
     "resetBody": "Questions par défaut restaurées."
   },
+  "promptLabPage": {
+    "heroLabel": "Expérimental",
+    "heroTitle": "Laboratoire ",
+    "heroAccent": "prompts",
+    "heroDescription": "Affinez doucement le ton des consignes, du miroir et des pistes — sans modifier vos prompts texte ni les défauts.",
+    "enableTitle": "Activer l'affinage",
+    "enableHint": "Désactivé = comportement actuel. Au centre, chaque curseur est neutre.",
+    "safetyNote": "Les garde-fous (pas de diagnostic clinique, format JSON, bienveillance) restent hors curseur. S'applique en complément des prompts par défaut ou personnalisés.",
+    "dials": {
+      "openness": {
+        "label": "Cadre",
+        "left": "Précis",
+        "right": "Ouvert"
+      },
+      "symbolism": {
+        "label": "Symbolisme doux",
+        "left": "Sobre",
+        "right": "Riche"
+      },
+      "length": {
+        "label": "Longueur",
+        "left": "Court",
+        "right": "Développé"
+      },
+      "concreteness": {
+        "label": "Ancrage",
+        "left": "Métaphore",
+        "right": "Concret"
+      },
+      "audacity": {
+        "label": "Audace créative",
+        "left": "Prudent",
+        "right": "Audacieux"
+      }
+    },
+    "saving": "Enregistrement…",
+    "save": "Enregistrer",
+    "reset": "Tout remettre au neutre",
+    "localOnly": "Ces réglages restent uniquement sur cet appareil.",
+    "savedTitle": "Enregistré",
+    "savedBody": "Le laboratoire prompts est à jour.",
+    "resetTitle": "Réinitialisé",
+    "resetBody": "Curseurs remis au centre, laboratoire désactivé."
+  },
   "premiumCloud": {
     "heroLabel": "Sauvegarde",
     "heroTitle": "Votre ",
@@ -384,7 +430,8 @@
     "fil": "Fil créatif",
     "seasons": "Saisons",
     "aiEngines": "Moteurs IA",
-    "prompts": "Prompts IA"
+    "prompts": "Prompts IA",
+    "promptLab": "Laboratoire"
   },
   "auth": {
     "brand": "Compte Pastek Art",

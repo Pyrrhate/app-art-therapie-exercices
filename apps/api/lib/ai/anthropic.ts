@@ -26,6 +26,7 @@ import {
   parseExerciseFromAi,
   parseReflectionFromAi,
   resolveExerciseSystemPrompt,
+  resolveReflectionSystemPrompt,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -143,7 +144,7 @@ export class AnthropicProvider implements AIProvider {
         language
       );
       const raw = await this.callText(prompt, {
-        system: resolveExerciseSystemPrompt(input.promptOverrides, language),
+        system: resolveExerciseSystemPrompt(input.promptOverrides, language, input.promptDials),
       });
       const parsed = parseExerciseFromAi(raw, preferredDuration);
 
@@ -262,7 +263,7 @@ export class AnthropicProvider implements AIProvider {
       let warmRaw = await this.callText(buildWarmReflectionPrompt(promptCtx), {
         temperature: 0.82,
         maxTokens: 950,
-        system: resolvePromptText("reflection_system", input.promptOverrides),
+        system: resolveReflectionSystemPrompt(input.promptOverrides, normalizePromptLanguage(input.language), input.promptDials),
       });
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -277,10 +278,7 @@ export class AnthropicProvider implements AIProvider {
           {
             temperature: 0.78,
             maxTokens: 950,
-            system: resolvePromptText(
-              "reflection_system",
-              input.promptOverrides
-            ),
+            system: resolveReflectionSystemPrompt(input.promptOverrides, normalizePromptLanguage(input.language), input.promptDials),
           }
         );
         parsed = parseReflectionFromAi(warmRaw);

@@ -30,6 +30,7 @@ import {
   parseExerciseFromAi,
   parseReflectionFromAi,
   resolveExerciseSystemPrompt,
+  resolveReflectionSystemPrompt,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -137,10 +138,7 @@ export class AlephAlphaProvider implements AIProvider {
 
     try {
       const language = normalizePromptLanguage(input.language);
-      const system = resolveExerciseSystemPrompt(
-        input.promptOverrides,
-        language
-      );
+      const system = resolveExerciseSystemPrompt(input.promptOverrides, language, input.promptDials);
       const user = buildExercisePrompt(
         input.impulse,
         input.technique,
@@ -240,10 +238,7 @@ export class AlephAlphaProvider implements AIProvider {
           : undefined,
       };
 
-      const system = resolvePromptText(
-        "reflection_system",
-        input.promptOverrides
-      );
+      const system = resolveReflectionSystemPrompt(input.promptOverrides, normalizePromptLanguage(input.language), input.promptDials);
       let warmRaw = await this.generate(
         system,
         `${buildWarmReflectionPrompt(promptCtx)}\n\nJSON:`,

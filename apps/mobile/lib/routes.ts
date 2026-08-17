@@ -19,6 +19,7 @@ export const ROUTES = {
   prompts: `${APP_BASE}/settings/prompts`,
   techniques: `${APP_BASE}/settings/techniques`,
   deepQuestions: `${APP_BASE}/settings/deep-questions`,
+  promptLab: `${APP_BASE}/settings/prompt-lab`,
   premiumCloud: `${APP_BASE}/premium-cloud`,
   privacy: `${APP_BASE}/privacy`,
   /** Page site (hors /app) : https://pastek-art.eu/maj */

@@ -1,5 +1,7 @@
 import {
+  applyPromptDialsAppend,
   resolvePromptText,
+  type PromptDialsPayload,
   type PromptOverrides,
 } from "@art-therapie/shared";
 import { sanitizeExerciseKeywords } from "../exercise-keywords";
@@ -26,22 +28,34 @@ export const WARM_REFLECTION_SYSTEM = resolvePromptText("reflection_system");
 /** System prompt exercice + contrainte de langue de sortie. */
 export function resolveExerciseSystemPrompt(
   overrides?: PromptOverrides | null,
-  language: PromptLanguage = "fr"
+  language: PromptLanguage = "fr",
+  dials?: PromptDialsPayload | null
 ): string {
   const base = resolvePromptText("exercise_system", overrides);
-  if (language === "en") {
-    return `${base}
+  const withLang =
+    language === "en"
+      ? `${base}
 
 OUTPUT LANGUAGE (mandatory):
 - Write every user-facing JSON field (exercise, development, keywords) in natural English.
 - Warm second-person address (“you”).
-- Do not answer in French unless the impulse itself is a French quote you briefly echo.`;
-  }
-  return `${base}
+- Do not answer in French unless the impulse itself is a French quote you briefly echo.`
+      : `${base}
 
 LANGUE DE SORTIE (obligatoire) :
 - Rédigez tous les champs utilisateur du JSON (exercise, development, keywords) en français.
 - Vouvoiement doux (« vous »).`;
+  return applyPromptDialsAppend(withLang, "exercise_system", dials, language);
+}
+
+/** System prompt miroir + langue + dials expérimentaux. */
+export function resolveReflectionSystemPrompt(
+  overrides?: PromptOverrides | null,
+  language: PromptLanguage = "fr",
+  dials?: PromptDialsPayload | null
+): string {
+  const base = resolvePromptText("reflection_system", overrides);
+  return applyPromptDialsAppend(base, "reflection_system", dials, language);
 }
 
 export function buildExercisePrompt(

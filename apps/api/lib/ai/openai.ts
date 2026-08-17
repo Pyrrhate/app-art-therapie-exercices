@@ -26,6 +26,7 @@ import {
   parseExerciseFromAi,
   parseReflectionFromAi,
   resolveExerciseSystemPrompt,
+  resolveReflectionSystemPrompt,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -145,10 +146,7 @@ export class OpenAIProvider implements AIProvider {
         language
       );
       const raw = await this.callText(prompt, {
-        systemPrompt: resolveExerciseSystemPrompt(
-          input.promptOverrides,
-          language
-        ),
+        systemPrompt: resolveExerciseSystemPrompt(input.promptOverrides, language, input.promptDials),
       });
       const parsed = parseExerciseFromAi(raw, preferredDuration);
 
@@ -267,10 +265,7 @@ export class OpenAIProvider implements AIProvider {
       let warmRaw = await this.callText(buildWarmReflectionPrompt(promptCtx), {
         temperature: 0.82,
         maxTokens: 950,
-        systemPrompt: resolvePromptText(
-          "reflection_system",
-          input.promptOverrides
-        ),
+        systemPrompt: resolveReflectionSystemPrompt(input.promptOverrides, normalizePromptLanguage(input.language), input.promptDials),
       });
       let parsed = parseReflectionFromAi(warmRaw);
 
@@ -285,10 +280,7 @@ export class OpenAIProvider implements AIProvider {
           {
             temperature: 0.78,
             maxTokens: 950,
-            systemPrompt: resolvePromptText(
-              "reflection_system",
-              input.promptOverrides
-            ),
+            systemPrompt: resolveReflectionSystemPrompt(input.promptOverrides, normalizePromptLanguage(input.language), input.promptDials),
           }
         );
         parsed = parseReflectionFromAi(warmRaw);

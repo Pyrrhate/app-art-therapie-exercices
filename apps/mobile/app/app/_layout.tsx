@@ -67,6 +67,14 @@ export default function AppStackLayout() {
         }
       />
       <Stack.Screen
+        name="settings/prompt-lab"
+        options={
+          Platform.OS === "web"
+            ? { presentation: "card", title: t("screens.promptLab") }
+            : { presentation: "modal", title: t("screens.promptLab") }
+        }
+      />
+      <Stack.Screen
         name="premium-cloud"
         options={
           Platform.OS === "web"

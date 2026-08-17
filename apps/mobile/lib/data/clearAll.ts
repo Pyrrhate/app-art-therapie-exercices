@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/constants";
 import { removeAllAiKeys } from "@/lib/aiKeys";
 import { clearAllPromptOverrides } from "@/lib/promptOverrides";
+import { clearPromptDials } from "@/lib/promptDials";
 import { clearFilEntries } from "@/lib/fil/storage";
 import { clearRitualDraft } from "@/lib/ritualDraft";
 import { setThemePreference, setTimerSound } from "@/lib/preferences";
@@ -40,11 +41,14 @@ export async function clearAllLocalData(): Promise<void> {
     "@art_therapie/timer_sound",
     "@art_therapie/managed_techniques_v1",
     "@art_therapie/deep_questions_v1",
+    "@art_therapie/second_round_questions_v1",
+    "@art_therapie/prompt_dials_v1",
   ];
 
   await AsyncStorage.multiRemove([...new Set(keys)]);
   await removeAllAiKeys();
   await clearAllPromptOverrides();
+  await clearPromptDials();
   await clearGoogleDriveTokens();
   await clearGoogleDriveMeta();
   await clearKDriveCredentials();

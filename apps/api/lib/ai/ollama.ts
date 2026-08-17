@@ -34,6 +34,7 @@ import {
   parseExerciseFromAi,
   parseReflectionFromAi,
   resolveExerciseSystemPrompt,
+  resolveReflectionSystemPrompt,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -146,7 +147,7 @@ export class OllamaProvider implements AIProvider {
         language
       );
       const raw = await this.chat(
-        resolveExerciseSystemPrompt(input.promptOverrides, language),
+        resolveExerciseSystemPrompt(input.promptOverrides, language, input.promptDials),
         prompt,
         { jsonBias: true }
       );
@@ -238,10 +239,7 @@ export class OllamaProvider implements AIProvider {
           : undefined,
       };
 
-      const system = resolvePromptText(
-        "reflection_system",
-        input.promptOverrides
-      );
+      const system = resolveReflectionSystemPrompt(input.promptOverrides, normalizePromptLanguage(input.language), input.promptDials);
       let warmRaw = await this.chat(
         system,
         buildWarmReflectionPrompt(promptCtx),

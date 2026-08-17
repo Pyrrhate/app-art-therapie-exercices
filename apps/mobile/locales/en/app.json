@@ -57,6 +57,8 @@
     "aiEnginesHint": "Mistral, Claude or OpenAI — key stored only on this device",
     "promptsTitle": "AI prompts",
     "promptsHint": "View system prompts and customise them locally",
+    "promptLabTitle": "Lab (experimental)",
+    "promptLabHint": "Dials to fine-tune tone and length — off by default",
     "techniquesTitle": "Art techniques",
     "techniquesHint": "Enable, disable or add your techniques",
     "deepQuestionsTitle": "Customisable questions",
@@ -364,6 +366,50 @@
     "resetTitle": "Reset",
     "resetBody": "Default questions restored."
   },
+  "promptLabPage": {
+    "heroLabel": "Experimental",
+    "heroTitle": "Prompt ",
+    "heroAccent": "lab",
+    "heroDescription": "Gently fine-tune briefs, the mirror and creative tips — without changing your text prompts or the defaults.",
+    "enableTitle": "Enable fine-tuning",
+    "enableHint": "Off = current behaviour. Centre on each dial is neutral.",
+    "safetyNote": "Safety rails (no clinical diagnosis, JSON format, warmth) stay outside the dials. Applied on top of default or custom prompts.",
+    "dials": {
+      "openness": {
+        "label": "Frame",
+        "left": "Precise",
+        "right": "Open"
+      },
+      "symbolism": {
+        "label": "Soft symbolism",
+        "left": "Spare",
+        "right": "Richer"
+      },
+      "length": {
+        "label": "Length",
+        "left": "Short",
+        "right": "Fuller"
+      },
+      "concreteness": {
+        "label": "Grounding",
+        "left": "Metaphor",
+        "right": "Concrete"
+      },
+      "audacity": {
+        "label": "Creative boldness",
+        "left": "Cautious",
+        "right": "Bolder"
+      }
+    },
+    "saving": "Saving…",
+    "save": "Save",
+    "reset": "Reset all to neutral",
+    "localOnly": "These settings stay on this device only.",
+    "savedTitle": "Saved",
+    "savedBody": "The prompt lab is up to date.",
+    "resetTitle": "Reset",
+    "resetBody": "Dials centred, lab disabled."
+  },
   "premiumCloud": {
     "heroLabel": "Backup",
     "heroTitle": "Your ",
@@ -383,7 +429,8 @@
     "fil": "Creative Thread",
     "seasons": "Seasons",
     "aiEngines": "AI engines",
-    "prompts": "AI prompts"
+    "prompts": "AI prompts",
+    "promptLab": "Lab"
   },
   "auth": {
     "brand": "Pastek Art account",

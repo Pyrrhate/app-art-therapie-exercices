@@ -274,6 +274,21 @@ export default function SettingsScreen() {
         </Pressable>
 
         <Pressable
+          onPress={() => router.push(ROUTES.promptLab)}
+          className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
+        >
+          <View className="flex-1 pr-3">
+            <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
+              {t("settings.promptLabTitle")}
+            </Text>
+            <Text className={`text-sm leading-5 ${textSecondary(isDark)}`}>
+              {t("settings.promptLabHint")}
+            </Text>
+          </View>
+          <Text className="text-sage-500 text-lg">→</Text>
+        </Pressable>
+
+        <Pressable
           onPress={() => router.push(ROUTES.techniques)}
           className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
         >

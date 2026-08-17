@@ -3,6 +3,7 @@ import { getSupabaseClient } from "./supabase/client";
 import { resolveByokCredentials } from "./aiKeys";
 import { isByokEnabledPath } from "./byok-headers";
 import { getPromptOverrides } from "./promptOverrides";
+import { getActivePromptDialsForRequest } from "./promptDials";
 import { useLanguageStore } from "./i18n/languageStore";
 import type { AppLanguage } from "./i18n/types";
 import { getFallbackExercise, getFallbackAugmentedExercise, getFallbackCreativeTips } from "./ritual/fallback";
@@ -50,6 +51,19 @@ async function enrichAiRequestBody(
     }
   } catch {
     /* overrides optionnels */
+  }
+
+  try {
+    const dials = await getActivePromptDialsForRequest();
+    if (dials) {
+      next = { ...next, promptDials: dials };
+    }
+  } catch {
+    /* dials optionnels */
+  }
+
+  if (typeof next.language !== "string") {
+    next = { ...next, language: currentUiLanguage() };
   }
 
   try {

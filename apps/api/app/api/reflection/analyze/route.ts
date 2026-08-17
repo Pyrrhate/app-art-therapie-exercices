@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { withFreemiumAI } from "@/lib/ai/with-freemium";
 import { byokBodySchema } from "@/lib/ai/byok";
-import { promptOverridesSchema } from "@/lib/ai/prompt-overrides";
+import { promptDialsSchema, promptOverridesSchema } from "@/lib/ai/prompt-overrides";
 import { artisticTechniqueSchema } from "@/lib/techniques";
 import {
   corsHeaders,
@@ -33,7 +33,9 @@ const bodySchema = z
     colorContext: z.string().min(1).max(2000).optional(),
     previousReflection: z.string().min(20).max(8000).optional(),
     practiceContext: z.string().min(20).max(4000).optional(),
+    language: z.enum(["fr", "en"]).optional(),
     promptOverrides: promptOverridesSchema,
+    promptDials: promptDialsSchema,
     byok: byokBodySchema,
   })
   .refine(

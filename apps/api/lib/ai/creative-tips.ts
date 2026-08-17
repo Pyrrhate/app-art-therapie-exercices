@@ -4,6 +4,7 @@
  */
 
 import {
+  applyPromptDialsAppend,
   resolvePromptText,
   type PromptOverrides,
 } from "@art-therapie/shared";
@@ -22,22 +23,29 @@ import {
 
 export function resolveCreativeTipsSystemPrompt(
   overrides?: PromptOverrides | null,
-  language: PromptLanguage = "fr"
+  language: PromptLanguage = "fr",
+  dials?: CreativeTipsRequest["promptDials"]
 ): string {
   const base = resolvePromptText("creative_tips_system", overrides);
-  if (language === "en") {
-    return `${base}
+  const withLang =
+    language === "en"
+      ? `${base}
 
 OUTPUT LANGUAGE (mandatory):
 - Write every tip in natural English.
 - Warm second-person address (“you”).
-- Do not answer in French unless quoting the impulse briefly.`;
-  }
-  return `${base}
+- Do not answer in French unless quoting the impulse briefly.`
+      : `${base}
 
 LANGUE DE SORTIE (obligatoire) :
 - Rédigez toutes les pistes en français.
 - Vouvoiement doux (« vous »).`;
+  return applyPromptDialsAppend(
+    withLang,
+    "creative_tips_system",
+    dials,
+    language
+  );
 }
 
 export function buildCreativeTipsPrompt(
@@ -158,7 +166,8 @@ export async function runCreativeTipsGeneration(
   const language = normalizePromptLanguage(input.language);
   const system = resolveCreativeTipsSystemPrompt(
     input.promptOverrides,
-    language
+    language,
+    input.promptDials
   );
   const user = buildCreativeTipsPrompt(input, language);
   const raw = await callText(user, system);

@@ -1,5 +1,5 @@
 export type { ArtisticTechnique } from "@art-therapie/shared";
-import type { PromptOverrides } from "@art-therapie/shared";
+import type { PromptDialsPayload, PromptOverrides } from "@art-therapie/shared";
 
 export interface ExerciseRequest {
   impulse: string;
@@ -12,6 +12,8 @@ export interface ExerciseRequest {
   language?: "fr" | "en";
   /** Overrides locaux des prompts système (BYOP — jamais stockés serveur). */
   promptOverrides?: PromptOverrides;
+  /** Affinage expérimental (append) — jamais stocké serveur. */
+  promptDials?: PromptDialsPayload;
 }
 
 export interface ExerciseResponse {
@@ -34,6 +36,7 @@ export interface CreativeTipsRequest {
   development?: string;
   language?: "fr" | "en";
   promptOverrides?: PromptOverrides;
+  promptDials?: PromptDialsPayload;
 }
 
 export interface CreativeTipsResponse {
@@ -58,8 +61,12 @@ export interface ReflectionRequest {
   previousReflection?: string;
   /** Échos du Fil créatif (traces locales) pour un miroir longitudinal. */
   practiceContext?: string;
+  /** Langue de l'interface (affinage dials / ton). */
+  language?: "fr" | "en";
   /** Overrides locaux des prompts système (BYOP — jamais stockés serveur). */
   promptOverrides?: PromptOverrides;
+  /** Affinage expérimental (append) — jamais stocké serveur. */
+  promptDials?: PromptDialsPayload;
 }
 
 export interface ReflectionResponse {

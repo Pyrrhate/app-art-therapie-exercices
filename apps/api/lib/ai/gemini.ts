@@ -31,6 +31,7 @@ import {
   parseExerciseFromAi,
   parseReflectionFromAi,
   resolveExerciseSystemPrompt,
+  resolveReflectionSystemPrompt,
   type ReflectionPromptContext,
 } from "./prompts";
 
@@ -186,7 +187,7 @@ export class GeminiProvider implements AIProvider {
         language
       );
       const raw = await this.generate(
-        resolveExerciseSystemPrompt(input.promptOverrides, language),
+        resolveExerciseSystemPrompt(input.promptOverrides, language, input.promptDials),
         prompt,
         { temperature: 0.85, maxTokens: 2048, json: true }
       );
@@ -303,7 +304,7 @@ export class GeminiProvider implements AIProvider {
       };
 
       let warmRaw = await this.generate(
-        resolvePromptText("reflection_system", input.promptOverrides),
+        resolveReflectionSystemPrompt(input.promptOverrides, normalizePromptLanguage(input.language), input.promptDials),
         buildWarmReflectionPrompt(promptCtx),
         { temperature: 0.82, maxTokens: 4096, json: true }
       );
@@ -316,7 +317,7 @@ export class GeminiProvider implements AIProvider {
 
       if (needsRetry && parsed?.reflection) {
         warmRaw = await this.generate(
-          resolvePromptText("reflection_system", input.promptOverrides),
+          resolveReflectionSystemPrompt(input.promptOverrides, normalizePromptLanguage(input.language), input.promptDials),
           buildWarmReflectionRetryPrompt(parsed.reflection, promptCtx),
           { temperature: 0.78, maxTokens: 4096, json: true }
         );
