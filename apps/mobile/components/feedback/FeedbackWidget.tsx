@@ -6,8 +6,13 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { REFLECTION_PROMPT_VERSION } from "@art-therapie/shared";
 import { PrimaryButton } from "@/components/ui/Button";
 import { submitReflectionFeedback } from "@/lib/api";
+import {
+  reflectionFeedbackStorageKey,
+  type FeedbackRating,
+  type StoredReflectionFeedback,
+} from "@/lib/feedback/reflectionFeedback";
 
-export type FeedbackRating = 1 | 2 | 3;
+export type { FeedbackRating };
 
 const RATING_OPTIONS: {
   value: FeedbackRating;
@@ -20,12 +25,7 @@ const RATING_OPTIONS: {
 ];
 
 function storageKey(sessionId: string): string {
-  return `@pastek/reflection-feedback/${sessionId}`;
-}
-
-interface StoredFeedback {
-  rating: FeedbackRating;
-  comment: string;
+  return reflectionFeedbackStorageKey(sessionId);
 }
 
 interface FeedbackWidgetProps {
@@ -53,7 +53,7 @@ export function FeedbackWidget({
       try {
         const raw = await AsyncStorage.getItem(storageKey(sessionId));
         if (cancelled || !raw) return;
-        const parsed = JSON.parse(raw) as StoredFeedback;
+        const parsed = JSON.parse(raw) as StoredReflectionFeedback;
         if (parsed?.rating) {
           setSelectedRating(parsed.rating);
           setComment(parsed.comment ?? "");

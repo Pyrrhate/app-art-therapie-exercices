@@ -1,0 +1,23 @@
+{
+  "hero": {
+    "label": "Local journal",
+    "title": "Your ",
+    "accent": "deep sessions",
+    "description": "Deep rituals and second rounds saved on this device — separate from the creative Fil."
+  },
+  "empty": "No sessions saved yet. Complete a deep ritual or a second round, then use “Save to my journal”.",
+  "round1": "Round 1",
+  "round2": "Round 2",
+  "integration": "Integration",
+  "mirror": "Mirror",
+  "writtenText": "Text / feeling",
+  "openJournal": "Open my journal",
+  "delete": "Delete this entry",
+  "deleteConfirmTitle": "Remove from journal?",
+  "deleteConfirmBody": "This entry will be removed from your device.",
+  "exportPdf": "Export as PDF",
+  "exportBusy": "Exporting…",
+  "modeDeep": "Deep ritual",
+  "modeExpress": "Express second round",
+  "transitionAnswers": "Flash questions (2nd round)"
+}

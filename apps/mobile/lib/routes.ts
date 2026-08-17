@@ -26,6 +26,8 @@ export const ROUTES = {
   changelog: "/maj",
   fil: `${APP_BASE}/fil`,
   filEntry: (id: string) => `${APP_BASE}/fil/${id}`,
+  journal: `${APP_BASE}/journal`,
+  journalEntry: (id: string) => `${APP_BASE}/journal/${id}`,
   pingPong: `${APP_BASE}/ping-pong`,
   colorJourney: `${APP_BASE}/color-journey`,
   nuanceFinder: `${APP_BASE}/nuance-finder`,

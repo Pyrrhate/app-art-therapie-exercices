@@ -98,6 +98,11 @@ import {
   discardRitualDraft,
   persistRitualDraft,
 } from "@/lib/ritualPersistence";
+import { getRitualDraft, type ReflectionDraftExtras } from "@/lib/ritualDraft";
+import {
+  buildDeepenFeedbackContext,
+  getReflectionFeedback,
+} from "@/lib/feedback/reflectionFeedback";
 
 const DEFAULT_PROCESS_TIMEOUT_MS = 45_000;
 
@@ -251,6 +256,10 @@ export default function ReflectionScreen() {
     message: string;
   } | null>(null);
   const [upgradedFromCapture, setUpgradedFromCapture] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [savedJournalId, setSavedJournalId] = useState<string | null>(null);
+  const [savingJournal, setSavingJournal] = useState(false);
+  const draftRestoredRef = useRef(false);
 
   const busyRef = useRef(false);
   const applyPickedFileRef = useRef<(file: File) => Promise<void>>(async () => {});
@@ -273,9 +282,86 @@ export default function ReflectionScreen() {
     ensureSessionExerciseId();
   }, [ensureSessionExerciseId]);
 
+  const buildReflectionExtras = useCallback((): ReflectionDraftExtras => {
+    return {
+      reflection,
+      openQuestions,
+      followUpExercise,
+      experienceMode,
+      workflowPhase,
+      deepenedReflection,
+      deepenedOpenQuestions,
+      reflectionSource,
+      preAnswers,
+      postAnswers,
+      transitionAnswers,
+      currentRound,
+      isSecondRoundPrep,
+      round1Snapshot,
+      useFilMemory,
+      sessionExerciseId,
+    };
+  }, [
+    reflection,
+    openQuestions,
+    followUpExercise,
+    experienceMode,
+    workflowPhase,
+    deepenedReflection,
+    deepenedOpenQuestions,
+    reflectionSource,
+    preAnswers,
+    postAnswers,
+    transitionAnswers,
+    currentRound,
+    isSecondRoundPrep,
+    round1Snapshot,
+    useFilMemory,
+    sessionExerciseId,
+  ]);
+
   useEffect(() => {
-    void persistRitualDraft("reflection");
-  }, [exercise, impulse, photoUri, writtenText, reflection]);
+    void persistRitualDraft("reflection", buildReflectionExtras());
+  }, [
+    exercise,
+    impulse,
+    photoUri,
+    writtenText,
+    buildReflectionExtras,
+  ]);
+
+  useEffect(() => {
+    if (draftRestoredRef.current) return;
+    draftRestoredRef.current = true;
+    void (async () => {
+      const draft = await getRitualDraft();
+      if (!draft || draft.step !== "reflection") return;
+      if (
+        draft.impulse !== impulse ||
+        draft.technique !== technique ||
+        draft.exercise !== exercise
+      ) {
+        return;
+      }
+      const extras = draft.reflectionExtras;
+      if (!extras) return;
+      if (extras.workflowPhase) {
+        setWorkflowPhase(extras.workflowPhase);
+      }
+      if (extras.deepenedReflection !== undefined) {
+        setDeepenedReflection(extras.deepenedReflection);
+      }
+      if (extras.deepenedOpenQuestions) {
+        setDeepenedOpenQuestions(extras.deepenedOpenQuestions);
+      }
+      if (extras.reflectionSource !== undefined) {
+        setReflectionSource(extras.reflectionSource);
+      }
+      if (extras.useFilMemory !== undefined) {
+        setUseFilMemory(extras.useFilMemory);
+      }
+    })();
+  }, [exercise, impulse, technique]);
 
   function startWork(): { signal: AbortSignal; generation: number } {
     finishWork();
@@ -905,8 +991,14 @@ export default function ReflectionScreen() {
       message: t("reflection.notice.deepening"),
     });
     try {
+      const feedback = sessionExerciseId
+        ? await getReflectionFeedback(sessionExerciseId)
+        : null;
+      const feedbackContext = buildDeepenFeedbackContext(feedback);
+
       const deepenWritten = [
         writtenText.trim() || null,
+        feedbackContext,
         `[Demande d'approfondissement du miroir créatif]
 Miroir initial (à conserver — ne pas recopier) :
 « ${previousMirror.slice(0, 2800)} »`,
@@ -1009,7 +1101,8 @@ Miroir initial (à conserver — ne pas recopier) :
   }
 
   async function handleExportPdf() {
-    if (!technique || !exercise) return;
+    if (!technique || !exercise || exportingPdf) return;
+    setExportingPdf(true);
     try {
       const result = await exportSessionPdf({
         id: sessionExerciseId || `session_${Date.now()}`,
@@ -1041,6 +1134,8 @@ Miroir initial (à conserver — ne pas recopier) :
           ? error.message
           : t("reflection.notice.exportFailed")
       );
+    } finally {
+      setExportingPdf(false);
     }
   }
 
@@ -1124,6 +1219,7 @@ Miroir initial (à conserver — ne pas recopier) :
         writtenText: writtenText.trim() || undefined,
         hasPhoto: Boolean(photoUri || round1Snapshot?.photoUri),
       });
+      setSavedJournalId(logId);
       setWorkflowPhase("complete");
       setNotice({
         type: "success",
@@ -1194,6 +1290,84 @@ Miroir initial (à conserver — ne pas recopier) :
         type: "error",
         message: t("reflection.notice.journalFailed"),
       });
+    }
+  }
+
+  async function handleSaveExpressJournal() {
+    if (!technique || !reflection || !exercise || !round1Snapshot || savingJournal) {
+      return;
+    }
+
+    const logId = createSessionLogId();
+    const exerciseId = ensureSessionExerciseId();
+    const composedMirror = composeReflectionWithDeepen(
+      reflection,
+      deepenedReflection,
+      t("reflection.deepenedLabel")
+    );
+    const persistedQuestions = resolveOpenQuestionsForPersist(
+      openQuestions,
+      deepenedOpenQuestions
+    );
+
+    setSavingJournal(true);
+    try {
+      const sessionData = buildSessionDataPayload(
+        {
+          exerciseId,
+          round1: {
+            media: round1Snapshot.photoUri ?? "",
+            preAnswers: round1Snapshot.preAnswers,
+            aiAnalysis: round1Snapshot.reflection,
+            postAnswers: round1Snapshot.postAnswers,
+            writtenText: round1Snapshot.writtenText,
+            openQuestions: round1Snapshot.openQuestions,
+          },
+          round2: {
+            media: photoUri ?? "",
+            transitionAnswers,
+            aiAnalysis: composedMirror ?? reflection,
+            writtenText: writtenText.trim() || undefined,
+            openQuestions: persistedQuestions ?? openQuestions,
+          },
+        },
+        logId
+      );
+
+      await saveSessionLog({
+        id: logId,
+        createdAt: new Date().toISOString(),
+        mode: "express",
+        exercise: {
+          impulse,
+          technique,
+          techniqueLabel: getTechniqueLabel(technique),
+          exercise,
+          durationMinutes,
+        },
+        sessionData,
+        postIntegration: {
+          resonance: transitionAnswers.newIntention.trim(),
+          intention: transitionAnswers.gestureChange.trim(),
+          keeper: transitionAnswers.physicalState.trim(),
+        },
+        writtenText: writtenText.trim() || undefined,
+        hasPhoto: Boolean(photoUri || round1Snapshot.photoUri),
+      });
+
+      setSavedJournalId(logId);
+      setNotice({
+        type: "success",
+        message: t("reflection.notice.expressJournalSaved"),
+      });
+      await discardRitualDraft();
+    } catch {
+      setNotice({
+        type: "error",
+        message: t("reflection.notice.journalFailed"),
+      });
+    } finally {
+      setSavingJournal(false);
     }
   }
 
@@ -1316,6 +1490,12 @@ Miroir initial (à conserver — ne pas recopier) :
     Boolean(reflection) &&
     currentRound === 1 &&
     !isSecondRoundPrep &&
+    workflowPhase === "capture";
+  const showExpressJournalCta =
+    !isDeep &&
+    currentRound === 2 &&
+    Boolean(reflection) &&
+    Boolean(round1Snapshot) &&
     workflowPhase === "capture";
 
   const canAnalyze = supportsAiAnalysis
@@ -1609,8 +1789,6 @@ Miroir initial (à conserver — ne pas recopier) :
         </Pressable>
       )}
 
-      {loadingReflection && <ZenWaitIndicator active estimatedSeconds={90} />}
-
       {previewUri ? (
           <View ref={bindWebDropZone}>
             <Image
@@ -1765,7 +1943,10 @@ Miroir initial (à conserver — ne pas recopier) :
             onPress={handleRequestReflection}
             disabled={!canAnalyze || busy}
           />
-          {busy && <ActivityIndicator color="#6B8F71" />}
+          {loadingReflection && (
+            <ZenWaitIndicator active estimatedSeconds={90} />
+          )}
+          {busy && !loadingReflection && <ActivityIndicator color="#6B8F71" />}
         </View>
 
         {reflection && (
@@ -1853,10 +2034,14 @@ Miroir initial (à conserver — ne pas recopier) :
             ) : null}
 
             <PrimaryButton
-              label={t("reflection.exportPdf")}
+              label={
+                exportingPdf
+                  ? t("reflection.exportPdfBusy")
+                  : t("reflection.exportPdf")
+              }
               onPress={() => void handleExportPdf()}
               variant="ghost"
-              disabled={busy}
+              disabled={exportingPdf}
             />
           </View>
         )}
@@ -1887,6 +2072,29 @@ Miroir initial (à conserver — ne pas recopier) :
               onPress={handleStartSecondRound}
               variant="secondary"
             />
+          </View>
+        )}
+
+        {showExpressJournalCta && (
+          <View className="mb-6 gap-3">
+            {!savedJournalId ? (
+              <PrimaryButton
+                label={
+                  savingJournal
+                    ? t("reflection.saveJournalLoading")
+                    : t("reflection.saveJournalCta")
+                }
+                onPress={() => void handleSaveExpressJournal()}
+                disabled={savingJournal}
+                variant="secondary"
+              />
+            ) : (
+              <PrimaryButton
+                label={t("reflection.viewJournalCta")}
+                onPress={() => router.push(ROUTES.journalEntry(savedJournalId))}
+                variant="secondary"
+              />
+            )}
           </View>
         )}
 
@@ -1929,10 +2137,22 @@ Miroir initial (à conserver — ne pas recopier) :
               {t("reflection.completeBody")}
             </Text>
             <PrimaryButton
-              label={t("reflection.exportPdf")}
+              label={
+                exportingPdf
+                  ? t("reflection.exportPdfBusy")
+                  : t("reflection.exportPdf")
+              }
               onPress={() => void handleExportPdf()}
               variant="secondary"
+              disabled={exportingPdf}
             />
+            {savedJournalId ? (
+              <PrimaryButton
+                label={t("reflection.viewJournalCta")}
+                onPress={() => router.push(ROUTES.journalEntry(savedJournalId))}
+                variant="ghost"
+              />
+            ) : null}
           </View>
         </WorkflowStepTransition>
       )}

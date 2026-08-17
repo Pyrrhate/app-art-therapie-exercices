@@ -39,6 +39,8 @@ export default function AppStackLayout() {
       />
       <Stack.Screen name="fil/index" options={{ title: t("screens.fil") }} />
       <Stack.Screen name="fil/[id]" />
+      <Stack.Screen name="journal/index" options={{ title: t("screens.journal") }} />
+      <Stack.Screen name="journal/[id]" />
       <Stack.Screen name="saisons/index" options={{ title: t("screens.seasons") }} />
       <Stack.Screen name="exercise" />
       <Stack.Screen name="reflection" />

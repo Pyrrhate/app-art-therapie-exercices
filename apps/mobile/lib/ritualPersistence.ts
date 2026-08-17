@@ -1,12 +1,14 @@
-import type { RitualDraftStep } from "@/lib/ritualDraft";
+import type { RitualDraftStep, ReflectionDraftExtras, RitualDraft } from "@/lib/ritualDraft";
 import {
   clearRitualDraft,
   saveRitualDraft,
-  type RitualDraft,
 } from "@/lib/ritualDraft";
 import { useRitualStore } from "@/lib/store";
 
-export async function persistRitualDraft(step: RitualDraftStep): Promise<void> {
+export async function persistRitualDraft(
+  step: RitualDraftStep,
+  reflectionExtras?: ReflectionDraftExtras
+): Promise<void> {
   const state = useRitualStore.getState();
   if (!state.exercise?.trim() || !state.technique || !state.impulse.trim()) {
     return;
@@ -27,6 +29,7 @@ export async function persistRitualDraft(step: RitualDraftStep): Promise<void> {
     paletteColors: state.paletteColors.length ? state.paletteColors : undefined,
     seasonRunId: state.seasonRunId,
     seasonTitle: state.seasonTitle,
+    reflectionExtras,
     updatedAt: new Date().toISOString(),
   };
 
@@ -60,5 +63,40 @@ export function hydrateRitualFromDraft(draft: RitualDraft): void {
   }
   if (draft.seasonRunId || draft.seasonTitle) {
     store.setSeason(draft.seasonRunId ?? null, draft.seasonTitle ?? null);
+  }
+
+  const extras = draft.reflectionExtras;
+  if (!extras) return;
+
+  if (extras.experienceMode) {
+    store.setExperienceMode(extras.experienceMode);
+  }
+  if (extras.preAnswers) {
+    store.setPreAnswers(extras.preAnswers);
+  }
+  if (extras.postAnswers) {
+    store.setPostAnswers(extras.postAnswers);
+  }
+  if (extras.transitionAnswers) {
+    store.setTransitionAnswers(extras.transitionAnswers);
+  }
+  if (extras.round1Snapshot) {
+    store.setRound1Snapshot(extras.round1Snapshot);
+  }
+  if (extras.currentRound === 2) {
+    useRitualStore.setState({
+      currentRound: 2,
+      isSecondRoundPrep: extras.isSecondRoundPrep ?? false,
+    });
+  }
+  if (extras.reflection?.trim()) {
+    store.setReflection(
+      extras.reflection,
+      extras.openQuestions ?? [],
+      extras.followUpExercise ?? null
+    );
+  }
+  if (extras.sessionExerciseId?.trim()) {
+    useRitualStore.setState({ sessionExerciseId: extras.sessionExerciseId });
   }
 }

@@ -115,7 +115,7 @@ export function initialReflectionPhase(mode: ExperienceMode): ReflectionWorkflow
 export interface DeepSessionLog {
   id: string;
   createdAt: string;
-  mode: "deep";
+  mode: "deep" | "express";
   exercise: {
     impulse: string;
     technique: ArtisticTechnique;

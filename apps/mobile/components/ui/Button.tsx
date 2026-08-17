@@ -63,6 +63,7 @@ export function PrimaryButton({
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
+      hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
       className={`rounded-full px-8 py-4 min-h-[52px] items-center justify-center flex-row gap-2 ${alignClass} ${variants[variant]} ${disabled ? "opacity-40" : ""}`}
       style={variant !== "ghost" ? primaryShadow : undefined}
     >

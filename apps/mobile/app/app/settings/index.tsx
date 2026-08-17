@@ -344,6 +344,21 @@ export default function SettingsScreen() {
         </Pressable>
 
         <Pressable
+          onPress={() => router.push(ROUTES.journal)}
+          className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center ${panelBg(isDark)}`}
+        >
+          <View>
+            <Text className={`font-medium mb-1 ${textPrimary(isDark)}`}>
+              {t("settings.journalTitle")}
+            </Text>
+            <Text className={`text-sm ${textSecondary(isDark)}`}>
+              {t("settings.journalHint")}
+            </Text>
+          </View>
+          <Text className="text-sage-500 text-lg">→</Text>
+        </Pressable>
+
+        <Pressable
           onPress={() => router.push(ROUTES.changelog)}
           className={`rounded-2xl border px-5 py-5 flex-row justify-between items-center mb-3 ${panelBg(isDark)}`}
         >

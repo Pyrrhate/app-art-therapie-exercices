@@ -2,8 +2,36 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/constants";
 import type { ArtisticTechnique } from "@/lib/types";
 import type { RitualDuration } from "@/constants";
+import type {
+  ExperienceMode,
+  IntegrationAnswers,
+  ReflectionWorkflowPhase,
+  Round1Snapshot,
+  SecondRoundTransitionAnswers,
+} from "@/lib/experience/types";
+import type { MultimodalUserAnswers } from "@/lib/multimodal/types";
 
 export type RitualDraftStep = "exercise" | "reflection";
+
+/** État local + store de l'écran réflexion (reprise après navigation involontaire). */
+export interface ReflectionDraftExtras {
+  reflection?: string | null;
+  openQuestions?: string[];
+  followUpExercise?: string | null;
+  experienceMode?: ExperienceMode;
+  workflowPhase?: ReflectionWorkflowPhase;
+  deepenedReflection?: string | null;
+  deepenedOpenQuestions?: string[];
+  reflectionSource?: "ai" | "fallback" | null;
+  preAnswers?: MultimodalUserAnswers;
+  postAnswers?: IntegrationAnswers;
+  transitionAnswers?: SecondRoundTransitionAnswers;
+  currentRound?: 1 | 2;
+  isSecondRoundPrep?: boolean;
+  round1Snapshot?: Round1Snapshot | null;
+  useFilMemory?: boolean;
+  sessionExerciseId?: string;
+}
 
 export interface RitualDraft {
   impulse: string;
@@ -20,6 +48,7 @@ export interface RitualDraft {
   paletteColors?: string[];
   seasonRunId?: string | null;
   seasonTitle?: string | null;
+  reflectionExtras?: ReflectionDraftExtras;
   updatedAt: string;
 }
 

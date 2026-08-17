@@ -34,6 +34,17 @@ export async function getSessionLogs(): Promise<DeepSessionLog[]> {
   }
 }
 
+export async function getSessionLogById(id: string): Promise<DeepSessionLog | null> {
+  const logs = await getSessionLogs();
+  return logs.find((log) => log.id === id) ?? null;
+}
+
+export async function deleteSessionLog(id: string): Promise<void> {
+  const existing = await getSessionLogs();
+  const next = existing.filter((e) => e.id !== id);
+  await AsyncStorage.setItem(STORAGE_KEYS.sessionLogs, JSON.stringify(next));
+}
+
 /** Enregistre un rituel profond complet dans le journal local. */
 export async function saveSessionLog(log: DeepSessionLog): Promise<void> {
   const existing = await getSessionLogs();

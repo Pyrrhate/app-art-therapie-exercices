@@ -1,0 +1,23 @@
+{
+  "hero": {
+    "label": "Journal local",
+    "title": "Vos séances ",
+    "accent": "approfondies",
+    "description": "Rituels profonds et 2e tours enregistrés sur cet appareil — distincts du Fil créatif."
+  },
+  "empty": "Aucune séance enregistrée pour le moment. Terminez un rituel profond ou un 2e tour, puis utilisez « Enregistrer dans mon journal ».",
+  "round1": "1er tour",
+  "round2": "2e tour",
+  "integration": "Intégration",
+  "mirror": "Miroir",
+  "writtenText": "Texte / ressenti",
+  "openJournal": "Ouvrir mon journal",
+  "delete": "Supprimer cette entrée",
+  "deleteConfirmTitle": "Supprimer du journal ?",
+  "deleteConfirmBody": "Cette entrée sera retirée de votre appareil.",
+  "exportPdf": "Exporter en PDF",
+  "exportBusy": "Export…",
+  "modeDeep": "Rituel profond",
+  "modeExpress": "2e tour express",
+  "transitionAnswers": "Questions flash (2e tour)"
+}
