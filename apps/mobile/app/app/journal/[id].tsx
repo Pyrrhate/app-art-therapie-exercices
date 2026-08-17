@@ -13,7 +13,6 @@ import { deleteSessionLog, getSessionLogById } from "@/lib/sessionLog/storage";
 import { confirmDeleteJournalEntry } from "@/lib/sessionLog/deleteConfirm";
 import type { DeepSessionLog } from "@/lib/experience/types";
 import { showAlert } from "@/lib/alert";
-import { navigateHome } from "@/lib/navigation";
 import { exportSessionPdf } from "@/lib/sessionExport";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -109,7 +108,7 @@ export default function JournalDetailScreen() {
   if (!log) {
     return (
       <ScreenContainer>
-        <ScreenNavBar onBack={() => router.back()} onHome={navigateHome} />
+        <ScreenNavBar onBack={() => router.back()} />
         <Text className={`text-sm ${textSecondary(isDark)}`}>…</Text>
       </ScreenContainer>
     );
@@ -120,7 +119,7 @@ export default function JournalDetailScreen() {
 
   return (
     <ScreenContainer>
-      <ScreenNavBar onBack={() => router.back()} onHome={navigateHome} />
+      <ScreenNavBar onBack={() => router.back()} />
       <PastekScreenHero
         label={log.mode === "deep" ? t("journal:modeDeep") : t("journal:modeExpress")}
         title={log.exercise.impulse}

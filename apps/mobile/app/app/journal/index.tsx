@@ -9,7 +9,6 @@ import { formatSessionDate } from "@/constants";
 import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import { getSessionLogs } from "@/lib/sessionLog/storage";
 import type { DeepSessionLog } from "@/lib/experience/types";
-import { navigateHome } from "@/lib/navigation";
 import { ROUTES } from "@/lib/routes";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -48,7 +47,7 @@ export default function JournalScreen() {
 
   return (
     <ScreenContainer refreshable onRefresh={load}>
-      <ScreenNavBar onBack={() => router.back()} onHome={navigateHome} />
+      <ScreenNavBar onBack={() => router.back()} />
       <PastekScreenHero
         label={t("hero.label")}
         title={t("hero.title")}

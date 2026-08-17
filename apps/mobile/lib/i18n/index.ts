@@ -12,6 +12,7 @@ import frGlossary from "@/locales/fr/glossary.json";
 import frRitual from "@/locales/fr/ritual.json";
 import frAmorces from "@/locales/fr/amorces.json";
 import frLegal from "@/locales/fr/legal.json";
+import frExamples from "@/locales/fr/examples.json";
 import frJournal from "@/locales/fr/journal.json";
 import enCommon from "@/locales/en/common.json";
 import enLanding from "@/locales/en/landing.json";
@@ -23,6 +24,7 @@ import enGlossary from "@/locales/en/glossary.json";
 import enRitual from "@/locales/en/ritual.json";
 import enAmorces from "@/locales/en/amorces.json";
 import enLegal from "@/locales/en/legal.json";
+import enExamples from "@/locales/en/examples.json";
 import enJournal from "@/locales/en/journal.json";
 
 export const DEFAULT_LANGUAGE: AppLanguage = "fr";
