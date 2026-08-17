@@ -1,16 +1,17 @@
+import { useEffect, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { SecondRoundTransitionAnswers } from "@/lib/experience/types";
 import { secondRoundTransitionComplete } from "@/lib/experience/types";
+import {
+  getSecondRoundQuestionsOverrides,
+  resolveSecondRoundQuestions,
+  SECOND_ROUND_QUESTION_KEYS,
+  type SecondRoundQuestionKey,
+} from "@/lib/secondRoundQuestions";
 import { PrimaryButton } from "@/components/ui/Button";
 import { textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
-
-const QUESTION_KEYS: (keyof SecondRoundTransitionAnswers)[] = [
-  "gestureChange",
-  "newIntention",
-  "physicalState",
-];
 
 interface SecondRoundTransitionStepProps {
   answers: SecondRoundTransitionAnswers;
@@ -26,7 +27,18 @@ export function SecondRoundTransitionStep({
   loading = false,
 }: SecondRoundTransitionStepProps) {
   const isDark = useIsDark();
-  const { t } = useTranslation("ritual");
+  const { t, i18n } = useTranslation("ritual");
+  const language = i18n.language;
+  const [questions, setQuestions] = useState(() =>
+    resolveSecondRoundQuestions(null, language)
+  );
+
+  useEffect(() => {
+    void getSecondRoundQuestionsOverrides().then((overrides) => {
+      setQuestions(resolveSecondRoundQuestions(overrides, language));
+    });
+  }, [language]);
+
   const inputClass = `border rounded-2xl px-4 py-3 text-base min-h-[72px] ${
     isDark
       ? "border-sand-600 bg-sand-800 text-sand-100"
@@ -39,21 +51,21 @@ export function SecondRoundTransitionStep({
         {t("secondRound.intro")}
       </Text>
 
-      {QUESTION_KEYS.map((key) => {
-        const placeholder = t(`secondRound.${key}.placeholder`);
+      {SECOND_ROUND_QUESTION_KEYS.map((key: SecondRoundQuestionKey) => {
+        const q = questions[key];
         return (
           <View key={key} className="gap-2">
             <Text className={`text-sm font-medium ${textPrimary(isDark)}`}>
-              {t(`secondRound.${key}.label`)}
+              {q.label}
             </Text>
             <TextInput
               value={answers[key]}
               onChangeText={(text) => onChange({ ...answers, [key]: text })}
-              placeholder={placeholder}
+              placeholder={q.placeholder}
               placeholderTextColor={isDark ? "#8A8478" : "#B8A090"}
               multiline
               textAlignVertical="top"
-              accessibilityLabel={placeholder}
+              accessibilityLabel={q.accessibilityLabel}
               className={inputClass}
             />
           </View>

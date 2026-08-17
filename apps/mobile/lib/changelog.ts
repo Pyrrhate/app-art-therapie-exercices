@@ -23,6 +23,24 @@ export type LocalizedChangelogEntry = {
  */
 export const CHANGELOG_CATALOG: LocalizedChangelogEntry[] = [
   {
+    id: "second-round-questions-custom",
+    dateLabel: { fr: "août 2026", en: "August 2026" },
+    title: {
+      fr: "Encarts du 2ᵉ tour personnalisables",
+      en: "Customisable second-round cards",
+    },
+    highlights: {
+      fr: [
+        "Les trois questions flash avant le 2ᵉ tour (geste, intention, corps) se personnalisent comme l'ancrage profond.",
+        "Réglages → Questions personnalisables — textes locaux, sur cet appareil uniquement.",
+      ],
+      en: [
+        "The three flash questions before the second round (gesture, intention, body) can be customised like deep grounding.",
+        "Settings → Customisable questions — local texts, on this device only.",
+      ],
+    },
+  },
+  {
     id: "creative-tips-optin",
     dateLabel: { fr: "août 2026", en: "August 2026" },
     title: {

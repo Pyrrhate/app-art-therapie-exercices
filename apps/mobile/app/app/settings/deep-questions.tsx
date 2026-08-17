@@ -18,6 +18,17 @@ import {
   type DeepQuestionsOverrides,
 } from "@/lib/deepQuestions";
 import {
+  clearSecondRoundQuestionsOverrides,
+  getDefaultSecondRoundQuestions,
+  getSecondRoundQuestionsOverrides,
+  resolveSecondRoundQuestions,
+  saveSecondRoundQuestionsOverrides,
+  SECOND_ROUND_QUESTION_KEYS,
+  type SecondRoundQuestionKey,
+  type SecondRoundQuestionOverride,
+  type SecondRoundQuestionsOverrides,
+} from "@/lib/secondRoundQuestions";
+import {
   panelBg,
   textMuted,
   textPrimary,
@@ -28,25 +39,43 @@ import { useIsDark } from "@/lib/themeStore";
 export default function DeepQuestionsSettingsScreen() {
   const isDark = useIsDark();
   const { t } = useTranslation("app");
-  const [drafts, setDrafts] = useState<
+  const [deepDrafts, setDeepDrafts] = useState<
     Record<DeepQuestionKey, DeepQuestionOverride>
   >(() => resolveDeepQuestions());
+  const [roundDrafts, setRoundDrafts] = useState<
+    Record<SecondRoundQuestionKey, SecondRoundQuestionOverride>
+  >(() => resolveSecondRoundQuestions());
   const [saving, setSaving] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      void getDeepQuestionsOverrides().then((overrides) => {
-        setDrafts(resolveDeepQuestions(overrides));
+      void Promise.all([
+        getDeepQuestionsOverrides(),
+        getSecondRoundQuestionsOverrides(),
+      ]).then(([deepOverrides, roundOverrides]) => {
+        setDeepDrafts(resolveDeepQuestions(deepOverrides));
+        setRoundDrafts(resolveSecondRoundQuestions(roundOverrides));
       });
     }, [])
   );
 
-  function updateField(
+  function updateDeepField(
     key: DeepQuestionKey,
     field: keyof DeepQuestionOverride,
     value: string
   ) {
-    setDrafts((prev) => ({
+    setDeepDrafts((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: value },
+    }));
+  }
+
+  function updateRoundField(
+    key: SecondRoundQuestionKey,
+    field: keyof SecondRoundQuestionOverride,
+    value: string
+  ) {
+    setRoundDrafts((prev) => ({
       ...prev,
       [key]: { ...prev[key], [field]: value },
     }));
@@ -55,24 +84,50 @@ export default function DeepQuestionsSettingsScreen() {
   async function handleSave() {
     setSaving(true);
     try {
-      const overrides: DeepQuestionsOverrides = {};
-      const defaults = getDefaultDeepQuestions();
+      const deepOverrides: DeepQuestionsOverrides = {};
+      const deepDefaults = getDefaultDeepQuestions();
       for (const key of DEEP_QUESTION_KEYS) {
-        const d = drafts[key];
-        const def = defaults[key];
+        const d = deepDrafts[key];
+        const def = deepDefaults[key];
         if (
           d.label.trim() !== def.label ||
           d.placeholder.trim() !== def.placeholder
         ) {
-          overrides[key] = {
+          deepOverrides[key] = {
             label: d.label.trim() || def.label,
             placeholder: d.placeholder.trim() || def.placeholder,
             accessibilityLabel:
-              d.accessibilityLabel.trim() || d.placeholder.trim() || def.accessibilityLabel,
+              d.accessibilityLabel.trim() ||
+              d.placeholder.trim() ||
+              def.accessibilityLabel,
           };
         }
       }
-      await saveDeepQuestionsOverrides(overrides);
+
+      const roundOverrides: SecondRoundQuestionsOverrides = {};
+      const roundDefaults = getDefaultSecondRoundQuestions();
+      for (const key of SECOND_ROUND_QUESTION_KEYS) {
+        const d = roundDrafts[key];
+        const def = roundDefaults[key];
+        if (
+          d.label.trim() !== def.label ||
+          d.placeholder.trim() !== def.placeholder
+        ) {
+          roundOverrides[key] = {
+            label: d.label.trim() || def.label,
+            placeholder: d.placeholder.trim() || def.placeholder,
+            accessibilityLabel:
+              d.accessibilityLabel.trim() ||
+              d.placeholder.trim() ||
+              def.accessibilityLabel,
+          };
+        }
+      }
+
+      await Promise.all([
+        saveDeepQuestionsOverrides(deepOverrides),
+        saveSecondRoundQuestionsOverrides(roundOverrides),
+      ]);
       showAlert(
         t("deepQuestionsPage.savedTitle"),
         t("deepQuestionsPage.savedBody")
@@ -83,8 +138,12 @@ export default function DeepQuestionsSettingsScreen() {
   }
 
   async function handleReset() {
-    await clearDeepQuestionsOverrides();
-    setDrafts(resolveDeepQuestions());
+    await Promise.all([
+      clearDeepQuestionsOverrides(),
+      clearSecondRoundQuestionsOverrides(),
+    ]);
+    setDeepDrafts(resolveDeepQuestions());
+    setRoundDrafts(resolveSecondRoundQuestions());
     showAlert(
       t("deepQuestionsPage.resetTitle"),
       t("deepQuestionsPage.resetBody")
@@ -109,6 +168,9 @@ export default function DeepQuestionsSettingsScreen() {
       />
 
       <View className="gap-4 pb-8">
+        <Text className={`text-xs uppercase tracking-wider ${textMuted(isDark)}`}>
+          {t("deepQuestionsPage.sectionDeep")}
+        </Text>
         {DEEP_QUESTION_KEYS.map((key, index) => (
           <View
             key={key}
@@ -122,8 +184,8 @@ export default function DeepQuestionsSettingsScreen() {
                 {t("deepQuestionsPage.label")}
               </Text>
               <TextInput
-                value={drafts[key].label}
-                onChangeText={(v) => updateField(key, "label", v)}
+                value={deepDrafts[key].label}
+                onChangeText={(v) => updateDeepField(key, "label", v)}
                 className={inputClass}
               />
             </View>
@@ -132,8 +194,49 @@ export default function DeepQuestionsSettingsScreen() {
                 {t("deepQuestionsPage.helper")}
               </Text>
               <TextInput
-                value={drafts[key].placeholder}
-                onChangeText={(v) => updateField(key, "placeholder", v)}
+                value={deepDrafts[key].placeholder}
+                onChangeText={(v) => updateDeepField(key, "placeholder", v)}
+                multiline
+                className={`${inputClass} min-h-[72px]`}
+                textAlignVertical="top"
+              />
+            </View>
+          </View>
+        ))}
+
+        <Text
+          className={`text-xs uppercase tracking-wider mt-4 ${textMuted(isDark)}`}
+        >
+          {t("deepQuestionsPage.sectionSecondRound")}
+        </Text>
+        <Text className={`text-sm leading-5 mb-1 ${textSecondary(isDark)}`}>
+          {t("deepQuestionsPage.sectionSecondRoundHint")}
+        </Text>
+        {SECOND_ROUND_QUESTION_KEYS.map((key, index) => (
+          <View
+            key={key}
+            className={`rounded-2xl border px-4 py-4 gap-3 ${panelBg(isDark)}`}
+          >
+            <Text className={`text-xs uppercase tracking-wider ${textMuted(isDark)}`}>
+              {t("deepQuestionsPage.question", { index: index + 1 })}
+            </Text>
+            <View className="gap-1">
+              <Text className={`text-sm ${textPrimary(isDark)}`}>
+                {t("deepQuestionsPage.label")}
+              </Text>
+              <TextInput
+                value={roundDrafts[key].label}
+                onChangeText={(v) => updateRoundField(key, "label", v)}
+                className={inputClass}
+              />
+            </View>
+            <View className="gap-1">
+              <Text className={`text-sm ${textPrimary(isDark)}`}>
+                {t("deepQuestionsPage.helper")}
+              </Text>
+              <TextInput
+                value={roundDrafts[key].placeholder}
+                onChangeText={(v) => updateRoundField(key, "placeholder", v)}
                 multiline
                 className={`${inputClass} min-h-[72px]`}
                 textAlignVertical="top"
