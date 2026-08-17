@@ -5,10 +5,20 @@ import type { DeepSessionLog, SessionData } from "@/lib/experience/types";
 const MAX_LOGS = 80;
 
 function normalizeLog(log: DeepSessionLog): DeepSessionLog {
-  if (log.sessionData) return log;
-  if (!log.aiReflection) return log;
-  return {
+  const base: DeepSessionLog = {
     ...log,
+    privateNotes: log.privateNotes ?? "",
+    privatePhotoUris: Array.isArray(log.privatePhotoUris)
+      ? log.privatePhotoUris.filter((uri) => typeof uri === "string" && uri.trim().length > 0)
+      : [],
+    linkedFilEntryIds: Array.isArray(log.linkedFilEntryIds)
+      ? log.linkedFilEntryIds.filter((id) => typeof id === "string" && id.trim().length > 0)
+      : [],
+  };
+  if (log.sessionData) return base;
+  if (!log.aiReflection) return base;
+  return {
+    ...base,
     sessionData: {
       exerciseId: log.id,
       round1: {
@@ -53,6 +63,24 @@ export async function saveSessionLog(log: DeepSessionLog): Promise<void> {
     MAX_LOGS
   );
   await AsyncStorage.setItem(STORAGE_KEYS.sessionLogs, JSON.stringify(next));
+}
+
+export async function patchSessionLog(
+  id: string,
+  patch: Partial<
+    Pick<DeepSessionLog, "privateNotes" | "privatePhotoUris" | "linkedFilEntryIds">
+  >
+): Promise<DeepSessionLog | null> {
+  const logs = await getSessionLogs();
+  const index = logs.findIndex((log) => log.id === id);
+  if (index < 0) return null;
+  const next = [...logs];
+  next[index] = normalizeLog({
+    ...next[index],
+    ...patch,
+  });
+  await AsyncStorage.setItem(STORAGE_KEYS.sessionLogs, JSON.stringify(next));
+  return next[index];
 }
 
 export function buildSessionDataPayload(

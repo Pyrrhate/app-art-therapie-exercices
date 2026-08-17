@@ -4,6 +4,7 @@ import i18n from "@/lib/i18n";
 import { getFilEntries } from "@/lib/fil/storage";
 import { getRitualDraft } from "@/lib/ritualDraft";
 import { getThemePreference, getTimerSound } from "@/lib/preferences";
+import { getSessionLogs } from "@/lib/sessionLog/storage";
 import {
   BACKUP_APP_ID,
   BACKUP_FORMAT_VERSION,
@@ -22,8 +23,9 @@ export function formatBackupSize(bytes: number): string {
 }
 
 export async function buildAppBackup(): Promise<AppBackup> {
-  const [creativeFil, ritualDraft, theme, timerSound] = await Promise.all([
+  const [creativeFil, sessionLogs, ritualDraft, theme, timerSound] = await Promise.all([
     getFilEntries(),
+    getSessionLogs(),
     getRitualDraft(),
     getThemePreference(),
     getTimerSound(),
@@ -35,6 +37,7 @@ export async function buildAppBackup(): Promise<AppBackup> {
     exportedAt: new Date().toISOString(),
     data: {
       creativeFil,
+      sessionLogs,
       ritualDraft,
       preferences: { theme, timerSound },
     },
@@ -84,6 +87,17 @@ export function parseAppBackupJson(json: string): AppBackup {
 
   if (!Array.isArray(backup.data.creativeFil)) {
     throw new Error(i18n.t("app:settings.backupInvalidFil"));
+  }
+
+  if (
+    backup.data.sessionLogs !== undefined &&
+    !Array.isArray(backup.data.sessionLogs)
+  ) {
+    throw new Error(i18n.t("app:settings.backupInvalidJournal"));
+  }
+
+  if (!backup.data.sessionLogs) {
+    backup.data.sessionLogs = [];
   }
 
   if (

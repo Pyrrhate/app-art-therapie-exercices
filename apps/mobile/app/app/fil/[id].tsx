@@ -34,6 +34,7 @@ import { showAlert } from "@/lib/alert";
 import { useLanguageStore } from "@/lib/i18n/languageStore";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { exportFilRitualPdf } from "@/lib/sessionExport";
+import { createSessionLogId, saveSessionLog } from "@/lib/sessionLog/storage";
 import { useRitualStore } from "@/lib/store";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -120,6 +121,34 @@ export default function FilDetailScreen() {
     if (!confirmed) return;
     await deleteFilEntry(entry.id);
     router.back();
+  }
+
+  async function handleLinkToJournal() {
+    if (!entry) return;
+    const logId = createSessionLogId();
+    await saveSessionLog({
+      id: logId,
+      createdAt: new Date().toISOString(),
+      mode: "express",
+      exercise: {
+        impulse: entry.summary,
+        technique: entry.metadata?.technique ?? "writing",
+        techniqueLabel: entry.metadata?.techniqueLabel ?? t("detail.journalTechnique"),
+        exercise: entry.metadata?.exercise ?? entry.detail ?? t("detail.journalFallback"),
+        durationMinutes: (entry.metadata?.durationMinutes as 15 | 30 | 45) ?? 15,
+      },
+      postIntegration: {
+        resonance: "",
+        intention: "",
+        keeper: "",
+      },
+      hasPhoto: Boolean(entry.metadata?.photoUri),
+      linkedFilEntryIds: [entry.id],
+      privateNotes: entry.detail ?? "",
+      privatePhotoUris: entry.metadata?.photoUri ? [entry.metadata.photoUri] : [],
+    });
+    showAlert(t("detail.journalLinkedTitle"), t("detail.journalLinkedBody"));
+    router.push(ROUTES.journalEntry(logId));
   }
 
   async function handleExportPdf() {
@@ -350,6 +379,11 @@ export default function FilDetailScreen() {
             disabled={exporting}
           />
         )}
+        <PrimaryButton
+          label={t("detail.linkToJournal")}
+          onPress={() => void handleLinkToJournal()}
+          variant="secondary"
+        />
         <PrimaryButton
           label={t("detail.remove")}
           onPress={() => void handleDelete()}

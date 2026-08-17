@@ -136,4 +136,10 @@ export interface DeepSessionLog {
   postIntegration: IntegrationAnswers;
   writtenText?: string;
   hasPhoto: boolean;
+  /** Notes personnelles ajoutées dans le journal (jamais envoyées à l'IA). */
+  privateNotes?: string;
+  /** Photos personnelles ajoutées dans le journal (URI locales / data URL). */
+  privatePhotoUris?: string[];
+  /** Liens vers des traces du Fil créatif pour contextualiser l'entrée. */
+  linkedFilEntryIds?: string[];
 }

@@ -170,6 +170,13 @@ export default function FilScreen() {
         description={t("list.heroDescription")}
         className="mb-6"
       />
+      <View className="mb-4">
+        <PrimaryButton
+          label={t("list.openJournal")}
+          onPress={() => router.push(ROUTES.journal)}
+          variant="ghost"
+        />
+      </View>
 
       {loading ? (
         <Text className={textMuted(isDark)}>{t("list.loading")}</Text>

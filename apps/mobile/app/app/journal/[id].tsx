@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
@@ -12,8 +12,11 @@ import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import { deleteSessionLog, getSessionLogById } from "@/lib/sessionLog/storage";
 import { confirmDeleteJournalEntry } from "@/lib/sessionLog/deleteConfirm";
 import type { DeepSessionLog } from "@/lib/experience/types";
+import type { FilEntry } from "@/lib/fil/types";
+import { getFilEntryById } from "@/lib/fil/storage";
 import { showAlert } from "@/lib/alert";
 import { exportSessionPdf } from "@/lib/sessionExport";
+import { ROUTES } from "@/lib/routes";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -41,13 +44,23 @@ export default function JournalDetailScreen() {
   const { t } = useTranslation(["journal", "ritual"]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const [log, setLog] = useState<DeepSessionLog | null>(null);
+  const [linkedFilEntries, setLinkedFilEntries] = useState<FilEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
-    setLog(await getSessionLogById(id));
+    const nextLog = await getSessionLogById(id);
+    setLog(nextLog);
+    if (nextLog?.linkedFilEntryIds?.length) {
+      const linked = await Promise.all(
+        nextLog.linkedFilEntryIds.map((entryId) => getFilEntryById(entryId))
+      );
+      setLinkedFilEntries(linked.filter((entry): entry is FilEntry => Boolean(entry)));
+    } else {
+      setLinkedFilEntries([]);
+    }
     setLoading(false);
   }, [id]);
 
@@ -127,6 +140,20 @@ export default function JournalDetailScreen() {
         size="md"
       />
 
+      {(log.privateNotes?.trim() ||
+        (log.privatePhotoUris?.length ?? 0) > 0 ||
+        linkedFilEntries.length > 0) && (
+        <View
+          className={`rounded-2xl border px-4 py-3 mb-4 ${
+            isDark ? "border-sage-700 bg-sage-900/40" : "border-sage-200 bg-sage-50/80"
+          }`}
+        >
+          <Text className={`text-xs leading-5 text-center ${textSecondary(isDark)}`}>
+            {t("journal:localOnlyHint")}
+          </Text>
+        </View>
+      )}
+
       {round1?.media ? (
         <Image
           source={{ uri: round1.media }}
@@ -195,6 +222,53 @@ export default function JournalDetailScreen() {
               {log.postIntegration.keeper}
             </Text>
           ) : null}
+        </Section>
+      ) : null}
+
+      {log.privateNotes?.trim() ? (
+        <Section title={t("journal:privateNotes")} isDark={isDark}>
+          <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
+            {log.privateNotes}
+          </Text>
+        </Section>
+      ) : null}
+
+      {log.privatePhotoUris?.length ? (
+        <Section title={t("journal:privatePhotos")} isDark={isDark}>
+          <View className="flex-row flex-wrap gap-3">
+            {log.privatePhotoUris.map((uri) => (
+              <Image
+                key={uri}
+                source={{ uri }}
+                className="w-24 h-24 rounded-xl bg-sand-200"
+              />
+            ))}
+          </View>
+        </Section>
+      ) : null}
+
+      {linkedFilEntries.length > 0 ? (
+        <Section title={t("journal:linkedFil")} isDark={isDark}>
+          <View className="gap-2">
+            {linkedFilEntries.map((entry) => (
+              <Pressable
+                key={entry.id}
+                onPress={() => router.push(ROUTES.filEntry(entry.id))}
+                className={`rounded-xl border px-3 py-2 ${
+                  isDark ? "border-sand-600 bg-sand-800" : "border-sand-200 bg-white"
+                }`}
+              >
+                <Text className={`text-sm font-medium ${textPrimary(isDark)}`}>
+                  {entry.summary}
+                </Text>
+                {entry.detail ? (
+                  <Text className={`text-xs mt-1 ${textMuted(isDark)}`} numberOfLines={2}>
+                    {entry.detail}
+                  </Text>
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
         </Section>
       ) : null}
 

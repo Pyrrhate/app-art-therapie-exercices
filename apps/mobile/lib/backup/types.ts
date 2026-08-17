@@ -2,6 +2,7 @@ import type { FilEntry } from "@/lib/fil/types";
 import type { RitualDraft } from "@/lib/ritualDraft";
 import type { ThemePreference } from "@/lib/preferences";
 import type { TimerSoundId } from "@/lib/sounds";
+import type { DeepSessionLog } from "@/lib/experience/types";
 
 export const BACKUP_FORMAT_VERSION = 1 as const;
 export const BACKUP_APP_ID = "art-therapie" as const;
@@ -13,6 +14,7 @@ export interface AppBackupV1 {
   exportedAt: string;
   data: {
     creativeFil: FilEntry[];
+    sessionLogs: DeepSessionLog[];
     ritualDraft: RitualDraft | null;
     preferences: {
       theme: ThemePreference;

@@ -286,11 +286,19 @@ export default function WelcomeScreen() {
         )}
 
         {isWide ? (
-          <PrimaryButton
-            label={t("home.openFil")}
-            onPress={() => router.push(ROUTES.fil)}
-            align="stretch"
-          />
+          <View className="gap-2">
+            <PrimaryButton
+              label={t("home.openFil")}
+              onPress={() => router.push(ROUTES.fil)}
+              align="stretch"
+            />
+            <PrimaryButton
+              label={t("home.openJournal")}
+              onPress={() => router.push(ROUTES.journal)}
+              variant="secondary"
+              align="stretch"
+            />
+          </View>
         ) : null}
 
         {recentFil.length > 0 ? (
@@ -340,7 +348,19 @@ export default function WelcomeScreen() {
           </Pressable>
         )}
 
-        <View className="flex-row justify-center gap-8 pt-2 pb-2">
+        {!isWide ? (
+          <PrimaryButton
+            label={t("home.openJournal")}
+            onPress={() => router.push(ROUTES.journal)}
+            variant="secondary"
+            align="stretch"
+          />
+        ) : null}
+
+        <View className="flex-row justify-center gap-6 pt-2 pb-2 flex-wrap">
+            <Pressable onPress={() => router.push(ROUTES.journal)} hitSlop={8}>
+              <Text className={`text-sm ${textMuted(isDark)}`}>{t("home.journalLink")}</Text>
+            </Pressable>
           <Pressable onPress={() => router.push(ROUTES.settings)} hitSlop={8}>
             <Text className={`text-sm ${textMuted(isDark)}`}>{t("home.settingsLink")}</Text>
           </Pressable>

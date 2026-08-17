@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS } from "@/constants";
 import i18n from "@/lib/i18n";
 import { replaceFilEntries } from "@/lib/fil/storage";
 import { clearRitualDraft, saveRitualDraft } from "@/lib/ritualDraft";
@@ -17,6 +18,10 @@ const LEGACY_STORAGE_KEYS = {
 
 export async function restoreAppBackup(backup: AppBackup): Promise<void> {
   await replaceFilEntries(backup.data.creativeFil);
+  await AsyncStorage.setItem(
+    STORAGE_KEYS.sessionLogs,
+    JSON.stringify(backup.data.sessionLogs ?? [])
+  );
 
   if (backup.data.ritualDraft) {
     await saveRitualDraft(backup.data.ritualDraft);
