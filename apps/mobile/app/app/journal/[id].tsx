@@ -154,9 +154,15 @@ export default function JournalDetailScreen() {
     });
     if (result.canceled) return;
     const uris = result.assets
-      .map((asset) => asset.uri)
-      .filter((uri): uri is string => typeof uri === "string" && uri.length > 0);
-    setDraftPhotos((prev) => Array.from(new Set([...prev, ...uris])).slice(0, 4));
+      .map((asset) => {
+        if (typeof asset.uri === "string" && asset.uri.length > 0) return asset.uri;
+        /* Sur web, expo-image-picker peut exposer un File via asset.file */
+        const file = (asset as unknown as { file?: File }).file;
+        if (file instanceof File) return URL.createObjectURL(file);
+        return null;
+      })
+      .filter((uri): uri is string => uri !== null);
+    setDraftPhotos((prev) => Array.from(new Set([...prev, ...uris])).slice(0, 6));
   }
 
   function toggleFilLink(entryId: string) {
@@ -300,30 +306,69 @@ export default function JournalDetailScreen() {
         />
       ) : null}
 
-      <View
-        className={`rounded-2xl border px-4 py-3 mb-4 flex-row items-center justify-between ${
-          isDark ? "border-sage-700 bg-sage-900/40" : "border-sage-200 bg-sage-50/80"
-        }`}
-      >
-        <Text className={`text-xs leading-5 ${textSecondary(isDark)}`}>
-          {t("journal:localOnlyHint")}
-        </Text>
-        {!editing ? (
+      <View className="mb-4">
+        {/* Bandeau 100% local */}
+        <View
+          className={`rounded-2xl border px-4 py-3 flex-row items-center justify-between ${
+            isDark ? "border-sage-700 bg-sage-900/40" : "border-sage-200 bg-sage-50/80"
+          }`}
+        >
+          <Text className={`text-xs leading-5 ${textSecondary(isDark)}`}>
+            {t("journal:localOnlyHint")}
+          </Text>
           <Pressable
-            onPress={startEdit}
+            onPress={editing ? undefined : startEdit}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={t("journal:edit")}
             className={`rounded-full px-4 py-2 border ml-3 ${
-              isDark
-                ? "border-sage-600 bg-sage-900"
-                : "border-sage-300 bg-white"
+              editing
+                ? isDark
+                  ? "border-sage-500 bg-sage-800"
+                  : "border-sage-400 bg-sage-100"
+                : isDark
+                  ? "border-sage-600 bg-sage-900"
+                  : "border-sage-300 bg-white"
             }`}
           >
-            <Text className={`text-xs font-semibold ${isDark ? "text-sage-300" : "text-sage-700"}`}>
-              {t("journal:edit")}
+            <Text className={`text-xs font-semibold ${
+              editing
+                ? isDark ? "text-sage-200" : "text-sage-800"
+                : isDark ? "text-sage-300" : "text-sage-700"
+            }`}>
+              {editing ? "✎ " : ""}{t("journal:edit")}
             </Text>
           </Pressable>
+        </View>
+
+        {/* Boutons Enregistrer / Annuler sous le bandeau, visibles en mode édition */}
+        {editing ? (
+          <View className="flex-row gap-2 mt-2">
+            <Pressable
+              onPress={() => void handleSaveEdit()}
+              disabled={saving}
+              accessibilityRole="button"
+              className={`flex-1 rounded-full px-4 py-2.5 items-center ${
+                isDark ? "bg-sage-700" : "bg-sage-500"
+              } ${saving ? "opacity-50" : ""}`}
+            >
+              <Text className="text-white text-xs font-semibold">
+                {saving ? t("journal:saveEditBusy") : t("journal:saveEdit")}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={cancelEdit}
+              disabled={saving}
+              accessibilityRole="button"
+              className={`flex-1 rounded-full px-4 py-2.5 items-center border ${
+                isDark ? "border-sand-600 bg-transparent" : "border-sand-300 bg-white"
+              } ${saving ? "opacity-50" : ""}`}
+            >
+              <Text className={`text-xs font-semibold ${isDark ? "text-sand-200" : "text-sand-700"}`}>
+                {t("journal:cancelEdit")}
+              </Text>
+            </Pressable>
+          </View>
         ) : null}
       </View>
 
@@ -533,35 +578,17 @@ export default function JournalDetailScreen() {
       ) : null}
 
       <View className="gap-3 pb-8">
-        {editing ? (
-          <>
-            <PrimaryButton
-              label={saving ? t("journal:saveEditBusy") : t("journal:saveEdit")}
-              onPress={() => void handleSaveEdit()}
-              disabled={saving}
-            />
-            <PrimaryButton
-              label={t("journal:cancelEdit")}
-              onPress={cancelEdit}
-              variant="ghost"
-              disabled={saving}
-            />
-          </>
-        ) : (
-          <>
-            <PrimaryButton
-              label={exporting ? t("journal:exportBusy") : t("journal:exportPdf")}
-              onPress={() => void handleExportPdf()}
-              disabled={exporting}
-              variant="ghost"
-            />
-            <PrimaryButton
-              label={t("journal:delete")}
-              onPress={() => void handleDelete()}
-              variant="ghost"
-            />
-          </>
-        )}
+        <PrimaryButton
+          label={exporting ? t("journal:exportBusy") : t("journal:exportPdf")}
+          onPress={() => void handleExportPdf()}
+          disabled={exporting}
+          variant="ghost"
+        />
+        <PrimaryButton
+          label={t("journal:delete")}
+          onPress={() => void handleDelete()}
+          variant="ghost"
+        />
       </View>
 
       <ImageLightbox
