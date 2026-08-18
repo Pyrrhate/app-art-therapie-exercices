@@ -7,6 +7,7 @@ import * as ImagePicker from "expo-image-picker";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
 import { ImageLightbox, isRenderableImageUri } from "@/components/journal/ImageLightbox";
 import { EinkEditor } from "@/components/journal/EinkEditor";
+import { NoteRenderer } from "@/components/journal/NoteRenderer";
 import { InlineNotice } from "@/components/InlineNotice";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
@@ -418,9 +419,7 @@ export default function JournalDetailScreen() {
               placeholder={t("journal:addPlaceholder")}
             />
           ) : (
-            <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-              {log.privateNotes}
-            </Text>
+            <NoteRenderer content={log.privateNotes ?? ""} />
           )}
         </Section>
       ) : null}

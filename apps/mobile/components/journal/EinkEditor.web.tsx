@@ -41,15 +41,26 @@ export function EinkEditor({
   const btnBorder = isDark ? "#4A4540" : "#D4C8B8";
   const placeholderColor = isDark ? "#6A6258" : "#B8A898";
 
+  /* Rétrocompatibilité : si value est du texte brut (pas de balise HTML),
+     on le convertit en HTML simple pour TipTap. */
+  function toHtml(raw: string): string {
+    if (!raw) return "";
+    if (raw.trimStart().startsWith("<")) return raw;
+    return raw
+      .split(/\n/)
+      .map((line) => (line.trim() ? `<p>${line}</p>` : `<p></p>`))
+      .join("");
+  }
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
       Placeholder.configure({ placeholder }),
     ],
-    content: value,
+    content: toHtml(value),
     onUpdate({ editor: ed }) {
-      onChangeText(ed.getText());
+      onChangeText(ed.getHTML());
     },
     editorProps: {
       attributes: {
@@ -73,9 +84,9 @@ export function EinkEditor({
   /* Sync value externe → éditeur (ex. reset après save) */
   useEffect(() => {
     if (!editor) return;
-    const current = editor.getText();
-    if (current !== value) {
-      editor.commands.setContent(value, false);
+    const incoming = toHtml(value);
+    if (editor.getHTML() !== incoming) {
+      editor.commands.setContent(incoming, false);
     }
   }, [value, editor]);
 
@@ -203,11 +214,11 @@ export function EinkEditor({
           outline: none !important;
         }
         .pastek-eink-editor .ProseMirror p {
-          margin: 0 0 6px 0 !important;
+          margin: 0 !important;
           line-height: 26px !important;
         }
-        .pastek-eink-editor .ProseMirror p:last-child {
-          margin-bottom: 0 !important;
+        .pastek-eink-editor .ProseMirror p + p {
+          margin-top: 4px !important;
         }
         .pastek-eink-editor .ProseMirror ul {
           list-style: disc !important;
