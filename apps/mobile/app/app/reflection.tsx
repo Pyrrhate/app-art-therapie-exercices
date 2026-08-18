@@ -2091,7 +2091,7 @@ Miroir initial (à conserver — ne pas recopier) :
             ) : (
               <PrimaryButton
                 label={t("reflection.viewJournalCta")}
-                onPress={() => router.push(ROUTES.journalEntry(savedJournalId))}
+                onPress={() => router.push(ROUTES.filEntry(savedJournalId))}
                 variant="secondary"
               />
             )}
@@ -2149,7 +2149,7 @@ Miroir initial (à conserver — ne pas recopier) :
             {savedJournalId ? (
               <PrimaryButton
                 label={t("reflection.viewJournalCta")}
-                onPress={() => router.push(ROUTES.journalEntry(savedJournalId))}
+                onPress={() => router.push(ROUTES.filEntry(savedJournalId))}
                 variant="ghost"
               />
             ) : null}

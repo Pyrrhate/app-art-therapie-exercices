@@ -106,6 +106,12 @@ export async function saveSessionLog(log: DeepSessionLog): Promise<void> {
     MAX_LOGS
   );
   await writeLogs(next);
+  try {
+    const { upsertFilFromSessionLog } = await import("@/lib/fil/mergeJournal");
+    await upsertFilFromSessionLog(log);
+  } catch {
+    /* Le Fil reste la source principale ; un échec d'upsert ne bloque pas le log. */
+  }
 }
 
 export async function patchSessionLog(
@@ -138,6 +144,12 @@ export async function patchSessionLog(
       : current.postIntegration,
   });
   await writeLogs(next);
+  try {
+    const { upsertFilFromSessionLog } = await import("@/lib/fil/mergeJournal");
+    await upsertFilFromSessionLog(next[index]);
+  } catch {
+    /* ignore */
+  }
   const stored = await getSessionLogById(id);
   return stored ?? next[index];
 }

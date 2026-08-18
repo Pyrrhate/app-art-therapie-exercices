@@ -53,12 +53,6 @@ export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps)
             </Text>
           </Pressable>
           <MenuDot isDark={isDark} />
-          <Pressable onPress={() => router.push(ROUTES.journal)} hitSlop={8}>
-            <Text className={`text-sm ${textMuted(isDark)}`}>
-              {t("app:header.journal")}
-            </Text>
-          </Pressable>
-          <MenuDot isDark={isDark} />
           <Pressable onPress={() => router.push(ROUTES.settings)} hitSlop={8}>
             <Text className={`text-sm ${textMuted(isDark)}`}>
               {t("app:header.settings")}

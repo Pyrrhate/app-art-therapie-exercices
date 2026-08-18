@@ -81,6 +81,7 @@ interface PastekIconProps {
 export function filSourceToIcon(source: string): PastekIconId {
   const map: Record<string, PastekIconId> = {
     ritual: "ritual",
+    note: "writing",
     mandala: "mandala",
     nuances: "nuance-finder",
     "ping-pong": "ping-pong",

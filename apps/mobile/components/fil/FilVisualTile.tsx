@@ -3,11 +3,12 @@ import { useTranslation } from "react-i18next";
 import { PastekIcon } from "@/components/ui/ModuleIcon";
 import { FIL_SOURCE_META, type FilEntry } from "@/lib/fil/types";
 import { visualTags } from "@/lib/fil/tags";
+import { useResolvedPhotos } from "@/lib/journalPhotos";
 import { FilTagChip } from "./FilTagChip";
 import { useIsDark } from "@/lib/themeStore";
 
 export function estimateFilTileHeight(entry: FilEntry): number {
-  if (entry.metadata?.photoUri) {
+  if (entry.metadata?.photoUri || entry.metadata?.privatePhotoUris?.[0]) {
     const n = entry.id.charCodeAt(0) % 3;
     return n === 0 ? 168 : n === 1 ? 220 : 268;
   }
@@ -32,7 +33,8 @@ export function FilVisualTile({
 }: FilVisualTileProps) {
   const isDark = useIsDark();
   const { t } = useTranslation("fil");
-  const photo = entry.metadata?.photoUri;
+  const photo = entry.metadata?.photoUri || entry.metadata?.privatePhotoUris?.[0];
+  const resolvedPhoto = useResolvedPhotos(photo ? [photo] : [])[0];
   const colors = entry.metadata?.colors ?? [];
   const tags = visualTags(entry).slice(0, 4);
   const meta = FIL_SOURCE_META[entry.source];
@@ -54,9 +56,9 @@ export function FilVisualTile({
       }`}
       style={{ height }}
     >
-      {photo ? (
+      {resolvedPhoto ? (
         <Image
-          source={{ uri: photo }}
+          source={{ uri: resolvedPhoto }}
           className="absolute inset-0 w-full h-full"
           resizeMode="cover"
           accessibilityIgnoresInvertColors

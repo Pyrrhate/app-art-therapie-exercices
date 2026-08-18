@@ -4,6 +4,7 @@ import type { ArtisticTechnique } from "@/lib/types";
 
 export type FilSource =
   | "ritual"
+  | "note"
   | "mandala"
   | "nuances"
   | "ping-pong"
@@ -41,6 +42,12 @@ export interface FilMetadata {
   photoUri?: string;
   seasonId?: string;
   seasonTitle?: string;
+  /** Notes personnelles (jamais envoyées à l'IA). */
+  privateNotes?: string;
+  /** Photos personnelles (URI locales / IndexedDB). */
+  privatePhotoUris?: string[];
+  /** Id d'une ancienne entrée journal migrée. */
+  sessionLogId?: string;
 }
 
 export interface FilEntry {
@@ -65,6 +72,7 @@ export const FIL_SOURCE_META: Record<
   { labelKey: string; icon: PastekIconId }
 > = {
   ritual: { labelKey: "source.ritual", icon: "ritual" },
+  note: { labelKey: "source.note", icon: "writing" },
   mandala: { labelKey: "source.mandala", icon: "mandala" },
   nuances: { labelKey: "source.nuances", icon: "nuance-finder" },
   "ping-pong": { labelKey: "source.ping-pong", icon: "ping-pong" },
@@ -87,6 +95,10 @@ export function getFilSourceLabel(
   t: FilTranslator
 ): string {
   return t(FIL_SOURCE_META[source].labelKey);
+}
+
+export function isNoteFilEntry(entry: FilEntry): boolean {
+  return entry.source === "note";
 }
 
 export function isRitualFilEntry(entry: FilEntry): boolean {

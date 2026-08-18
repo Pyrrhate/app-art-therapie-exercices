@@ -11,12 +11,18 @@ const MIGRATION_FLAG = "@art_therapie/fil_sessions_migrated";
 
 export async function getFilEntries(): Promise<FilEntry[]> {
   await migrateLegacySessions();
+  const { migrateJournalIntoFil } = await import("./mergeJournal");
+  await migrateJournalIntoFil();
   return getFilEntriesRaw();
 }
 
-export async function getFilEntryById(id: string): Promise<FilEntry | null> {
+export async function getFilEntryByAnyId(id: string): Promise<FilEntry | null> {
   const entries = await getFilEntries();
-  return entries.find((e) => e.id === id) ?? null;
+  return (
+    entries.find(
+      (entry) => entry.id === id || entry.metadata?.sessionLogId === id
+    ) ?? null
+  );
 }
 
 export async function addFilEntry(
@@ -39,6 +45,10 @@ export async function addFilEntry(
   const next = [full, ...existing].slice(0, MAX_ENTRIES);
   await AsyncStorage.setItem(STORAGE_KEYS.creativeFil, JSON.stringify(next));
   return full;
+}
+
+export async function getFilEntriesRawForMerge(): Promise<FilEntry[]> {
+  return getFilEntriesRaw();
 }
 
 async function getFilEntriesRaw(): Promise<FilEntry[]> {

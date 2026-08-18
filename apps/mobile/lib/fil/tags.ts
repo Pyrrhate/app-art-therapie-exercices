@@ -37,6 +37,7 @@ export function techniqueTag(entry: FilEntry): string | null {
 /** Tags affichés sur la mosaïque : technique, saison, tags utilisateur. */
 export function visualTags(entry: FilEntry): string[] {
   return mergeTags(undefined, [
+    entry.source === "note" ? "Note" : null,
     techniqueTag(entry),
     entry.metadata?.seasonTitle,
     ...(entry.tags ?? []),
