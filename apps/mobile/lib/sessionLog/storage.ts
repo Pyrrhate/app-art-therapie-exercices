@@ -68,16 +68,31 @@ export async function saveSessionLog(log: DeepSessionLog): Promise<void> {
 export async function patchSessionLog(
   id: string,
   patch: Partial<
-    Pick<DeepSessionLog, "privateNotes" | "privatePhotoUris" | "linkedFilEntryIds">
+    Pick<
+      DeepSessionLog,
+      | "privateNotes"
+      | "privatePhotoUris"
+      | "linkedFilEntryIds"
+      | "exercise"
+      | "postIntegration"
+      | "hasPhoto"
+    >
   >
 ): Promise<DeepSessionLog | null> {
   const logs = await getSessionLogs();
   const index = logs.findIndex((log) => log.id === id);
   if (index < 0) return null;
+  const current = logs[index];
   const next = [...logs];
   next[index] = normalizeLog({
-    ...next[index],
+    ...current,
     ...patch,
+    exercise: patch.exercise
+      ? { ...current.exercise, ...patch.exercise }
+      : current.exercise,
+    postIntegration: patch.postIntegration
+      ? { ...current.postIntegration, ...patch.postIntegration }
+      : current.postIntegration,
   });
   await AsyncStorage.setItem(STORAGE_KEYS.sessionLogs, JSON.stringify(next));
   return next[index];
