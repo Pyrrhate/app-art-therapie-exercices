@@ -283,6 +283,20 @@ export default function JournalDetailScreen() {
           }
           router.back();
         }}
+        rightAction={
+          !editing ? (
+            <Pressable
+              onPress={startEdit}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t("journal:edit")}
+            >
+              <Text className={`text-sm font-medium ${textMuted(isDark)}`}>
+                {t("journal:edit")}
+              </Text>
+            </Pressable>
+          ) : null
+        }
       />
       <PastekScreenHero
         label={log.mode === "deep" ? t("journal:modeDeep") : t("journal:modeExpress")}
@@ -538,11 +552,6 @@ export default function JournalDetailScreen() {
           </>
         ) : (
           <>
-            <PrimaryButton
-              label={t("journal:edit")}
-              onPress={startEdit}
-              variant="secondary"
-            />
             <PrimaryButton
               label={exporting ? t("journal:exportBusy") : t("journal:exportPdf")}
               onPress={() => void handleExportPdf()}
