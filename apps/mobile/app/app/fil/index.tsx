@@ -1,19 +1,16 @@
 import { useCallback, useMemo, useState } from "react";
-import { Image, Pressable, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
-import * as ImagePicker from "expo-image-picker";
 import { FilConversionCTA } from "@/components/fil/FilConversionCTA";
 import { FilMasonry } from "@/components/fil/FilMasonry";
 import { FilTagChip } from "@/components/fil/FilTagChip";
-import { InlineNotice } from "@/components/InlineNotice";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
 import { ScreenNavBar } from "@/components/ui/ScreenNavBar";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
 import { localizedTechniqueLabel } from "@/lib/techniques/labels";
 import {
-  addFilEntry,
   clearFilEntries,
   FIL_MAX_ENTRIES,
   FIL_NEAR_LIMIT_THRESHOLD,
@@ -22,7 +19,6 @@ import {
 import { confirmClearAllFil } from "@/lib/fil/deleteConfirm";
 import { collectFilterTags, entryMatchesTag } from "@/lib/fil/tags";
 import { getFilSourceLabel, type FilEntry } from "@/lib/fil/types";
-import { persistJournalPhotos } from "@/lib/journalPhotos";
 import { analyzeFilSelection, ApiError } from "@/lib/api";
 import { showAlert } from "@/lib/alert";
 import { navigateHome } from "@/lib/navigation";
@@ -45,10 +41,6 @@ export default function FilScreen() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
-  const [noteText, setNoteText] = useState("");
-  const [notePhotos, setNotePhotos] = useState<string[]>([]);
-  const [savingNote, setSavingNote] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -129,58 +121,6 @@ export default function FilScreen() {
     router.push(ROUTES.filEntry(entry.id));
   }
 
-  async function handlePickNotePhoto() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      showAlert(t("list.photoPermissionTitle"), t("list.photoPermissionBody"));
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.7,
-      allowsMultipleSelection: true,
-      selectionLimit: 3,
-    });
-    if (result.canceled) return;
-    const picked = result.assets
-      .map((asset) => asset.uri)
-      .filter((uri): uri is string => typeof uri === "string" && uri.length > 0);
-    const uris = await persistJournalPhotos(picked);
-    setNotePhotos((prev) => Array.from(new Set([...prev, ...uris])).slice(0, 6));
-  }
-
-  async function handleSaveNote() {
-    const notes = noteText.trim();
-    if ((!notes && notePhotos.length === 0) || savingNote) return;
-    setSavingNote(true);
-    try {
-      const photos = await persistJournalPhotos(notePhotos);
-      await addFilEntry({
-        source: "note",
-        summary: notes.slice(0, 48) || t("source.note"),
-        detail: notes,
-        metadata: {
-          technique: "writing",
-          techniqueLabel: t("source.note"),
-          privateNotes: notes,
-          privatePhotoUris: photos,
-          photoUri: photos[0],
-        },
-      });
-      setNoteText("");
-      setNotePhotos([]);
-      setNotice(t("list.savedNotice"));
-      await load();
-    } catch (error) {
-      showAlert(
-        t("list.composeSave"),
-        error instanceof Error ? error.message : t("alerts.retry")
-      );
-    } finally {
-      setSavingNote(false);
-    }
-  }
-
   async function handleAnalyzeSelection() {
     if (selectedIds.length === 0) return;
     setAnalyzing(true);
@@ -231,66 +171,6 @@ export default function FilScreen() {
         description={t("list.heroDescription")}
         className="mb-6"
       />
-
-      {notice ? (
-        <InlineNotice
-          type="success"
-          message={notice}
-          onDismiss={() => setNotice(null)}
-        />
-      ) : null}
-
-      <View className={`rounded-2xl border px-5 py-5 mb-6 ${panelBg(isDark)}`}>
-        <Text className={`text-xs uppercase tracking-wider mb-2 ${textMuted(isDark)}`}>
-          {t("list.composeLabel")}
-        </Text>
-        <TextInput
-          value={noteText}
-          onChangeText={setNoteText}
-          placeholder={t("list.composePlaceholder")}
-          placeholderTextColor={isDark ? "#8A8478" : "#B8A090"}
-          multiline
-          textAlignVertical="top"
-          className={`rounded-2xl border px-4 py-3 text-sm min-h-[88px] ${
-            isDark
-              ? "border-sand-600 bg-sand-800 text-sand-100"
-              : "border-sand-200 bg-white text-sand-800"
-          }`}
-        />
-        <View className="mt-3 gap-2">
-          <PrimaryButton
-            label={
-              notePhotos.length
-                ? t("list.composePhotoMore", { count: notePhotos.length })
-                : t("list.composePhoto")
-            }
-            onPress={() => void handlePickNotePhoto()}
-            variant="ghost"
-          />
-          {notePhotos.length > 0 ? (
-            <View className="flex-row flex-wrap gap-2">
-              {notePhotos.map((uri) => (
-                <Pressable
-                  key={uri}
-                  onPress={() =>
-                    setNotePhotos((prev) => prev.filter((x) => x !== uri))
-                  }
-                >
-                  <Image
-                    source={{ uri }}
-                    className="w-16 h-16 rounded-lg bg-sand-200"
-                  />
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-          <PrimaryButton
-            label={savingNote ? t("list.composeBusy") : t("list.composeSave")}
-            onPress={() => void handleSaveNote()}
-            disabled={savingNote || (!noteText.trim() && notePhotos.length === 0)}
-          />
-        </View>
-      </View>
 
       {loading ? (
         <Text className={textMuted(isDark)}>{t("list.loading")}</Text>

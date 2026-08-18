@@ -337,6 +337,25 @@ async function uploadJsonFile(
   }
 }
 
+let driveSyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Si Drive est connecté, envoie le Fil en arrière-plan (ne bloque pas le rituel). */
+export function syncFilToGoogleDriveIfConnected(): void {
+  if (driveSyncTimer) clearTimeout(driveSyncTimer);
+  driveSyncTimer = setTimeout(() => {
+    driveSyncTimer = null;
+    void (async () => {
+      try {
+        const status = await getGoogleDriveConnectionStatus();
+        if (!status.connected) return;
+        await backupLocalDataToGoogleDrive();
+      } catch (error) {
+        console.warn("[gdrive] auto backup skipped", error);
+      }
+    })();
+  }, 1200);
+}
+
 /** Exporte le Fil + préférences vers Drive (fichier JSON dans « Pastek Art »). */
 export async function backupLocalDataToGoogleDrive(): Promise<{
   exportedAt: string;

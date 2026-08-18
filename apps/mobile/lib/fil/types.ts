@@ -48,6 +48,13 @@ export interface FilMetadata {
   privatePhotoUris?: string[];
   /** Id d'une ancienne entrée journal migrée. */
   sessionLogId?: string;
+  /** Un 2e tour a déjà été réalisé sur cette trace. */
+  hasSecondRound?: boolean;
+  round2Reflection?: string;
+  round2Exercise?: string;
+  round2PhotoUri?: string;
+  round2WrittenText?: string;
+  round2OpenQuestions?: string[];
 }
 
 export interface FilEntry {
@@ -106,4 +113,11 @@ export function isRitualFilEntry(entry: FilEntry): boolean {
     entry.source === "ritual" &&
     Boolean(entry.metadata?.technique && entry.metadata?.exercise)
   );
+}
+
+/** True si un 2e tour est déjà rattaché à cette trace. */
+export function hasCompletedSecondRound(entry: FilEntry): boolean {
+  if (entry.metadata?.hasSecondRound) return true;
+  if (entry.metadata?.round2Reflection?.trim()) return true;
+  return / · 2e tour| · second round/i.test(entry.summary ?? "");
 }

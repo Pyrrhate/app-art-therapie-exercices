@@ -70,6 +70,7 @@ import {
   uriToDataUrl,
 } from "@/lib/image";
 import { recordFilEntry } from "@/lib/fil/record";
+import { syncFilToGoogleDriveIfConnected } from "@/lib/storage/googleDriveAdapter";
 import { useRitualStore } from "@/lib/store";
 import { getTechniqueLabel, isAiAnalysisSupported } from "@/constants";
 import { localizedTechniqueLabel } from "@/lib/techniques/labels";
@@ -180,12 +181,17 @@ export default function ReflectionScreen() {
     sessionExerciseId,
     colorContext,
     paletteColors,
+    filEntryId,
+    setFilEntryId,
   } = ritual;
 
   const isDeep = experienceMode === "deep";
-  const [workflowPhase, setWorkflowPhase] = useState<ReflectionWorkflowPhase>(() =>
-    initialReflectionPhase(experienceMode)
-  );
+  const [workflowPhase, setWorkflowPhase] = useState<ReflectionWorkflowPhase>(() => {
+    if (useRitualStore.getState().isSecondRoundPrep) {
+      return "second_round_transition";
+    }
+    return initialReflectionPhase(experienceMode);
+  });
 
   const isWriting = technique === "writing";
   const techniqueNeedsByokForAi = technique
@@ -219,7 +225,7 @@ export default function ReflectionScreen() {
   const abortRef = useRef<AbortController | null>(null);
   const workGenRef = useRef(0);
   const filRecordedRef = useRef(false);
-  const filEntryIdRef = useRef<string | null>(null);
+  const filEntryIdRef = useRef<string | null>(filEntryId);
   const deepenPersistRef = useRef<{
     reflection: string;
     questions: string[];
@@ -257,8 +263,9 @@ export default function ReflectionScreen() {
   } | null>(null);
   const [upgradedFromCapture, setUpgradedFromCapture] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
-  const [savedJournalId, setSavedJournalId] = useState<string | null>(null);
-  const [savingJournal, setSavingJournal] = useState(false);
+  const [savedJournalId, setSavedJournalId] = useState<string | null>(
+    filEntryId
+  );
   const draftRestoredRef = useRef(false);
 
   const busyRef = useRef(false);
@@ -300,6 +307,7 @@ export default function ReflectionScreen() {
       round1Snapshot,
       useFilMemory,
       sessionExerciseId,
+      filEntryId,
     };
   }, [
     reflection,
@@ -318,6 +326,7 @@ export default function ReflectionScreen() {
     round1Snapshot,
     useFilMemory,
     sessionExerciseId,
+    filEntryId,
   ]);
 
   useEffect(() => {
@@ -359,6 +368,10 @@ export default function ReflectionScreen() {
       }
       if (extras.useFilMemory !== undefined) {
         setUseFilMemory(extras.useFilMemory);
+      }
+      if (extras.filEntryId) {
+        filEntryIdRef.current = extras.filEntryId;
+        setFilEntryId(extras.filEntryId);
       }
     })();
   }, [exercise, impulse, technique]);
@@ -830,9 +843,14 @@ export default function ReflectionScreen() {
   }, [t]);
 
   useEffect(() => {
+    if (filEntryId && !filEntryIdRef.current) {
+      filEntryIdRef.current = filEntryId;
+    }
+  }, [filEntryId]);
+
+  useEffect(() => {
     if (!reflection) {
       filRecordedRef.current = false;
-      filEntryIdRef.current = null;
       return;
     }
     if (!technique || !exercise || filRecordedRef.current) return;
@@ -854,11 +872,61 @@ export default function ReflectionScreen() {
       const ritualTitle =
         impulse || t("reflection.defaults.defaultRitualTitle");
       const deepenSnapshot = deepenPersistRef.current;
+      const existingId = filEntryIdRef.current;
+      const round2Suffix = t("reflection.metaRound2");
+
+      if (existingId && currentRound === 2) {
+        const existing = await getFilEntryById(existingId);
+        if (existing) {
+          const summary = existing.summary.includes(round2Suffix)
+            ? existing.summary
+            : `${existing.summary}${round2Suffix}`;
+          await patchFilEntry(existing.id, {
+            summary,
+            detail: reflection.slice(0, 280),
+            metadata: {
+              ...existing.metadata,
+              hasSecondRound: true,
+              round2Reflection: reflection,
+              round2Exercise: exercise,
+              round2PhotoUri: storedPhotoUri,
+              round2WrittenText: writtenText.trim() || undefined,
+              round2OpenQuestions: openQuestions.length
+                ? openQuestions
+                : undefined,
+              followUpExercise: followUpExercise ?? undefined,
+              ...(deepenSnapshot.reflection
+                ? { deepenedReflection: deepenSnapshot.reflection }
+                : {}),
+              ...(deepenSnapshot.questions.length
+                ? { deepenedOpenQuestions: deepenSnapshot.questions }
+                : {}),
+            },
+          });
+          filEntryIdRef.current = existing.id;
+          setFilEntryId(existing.id);
+          setSavedJournalId(existing.id);
+          if (storedPhotoUri?.startsWith("data:")) {
+            const { tryUploadArtworkToCloud } = await import(
+              "@/lib/integrations/upload"
+            );
+            void tryUploadArtworkToCloud(storedPhotoUri, existing.id);
+          }
+          syncFilToGoogleDriveIfConnected();
+          await discardRitualDraft();
+          setNotice({
+            type: "success",
+            message: t("reflection.notice.filSaved"),
+          });
+          return;
+        }
+      }
+
       const entry = await recordFilEntry({
         source: "ritual",
         summary:
           currentRound === 2
-            ? `${ritualTitle}${t("reflection.metaRound2")}`
+            ? `${ritualTitle}${round2Suffix}`
             : ritualTitle,
         detail: reflection.slice(0, 280),
         metadata: {
@@ -874,6 +942,14 @@ export default function ReflectionScreen() {
           durationMinutes,
           photoUri: storedPhotoUri,
           reflection,
+          ...(currentRound === 2
+            ? {
+                hasSecondRound: true,
+                round2Reflection: reflection,
+                round2Exercise: exercise,
+                round2PhotoUri: storedPhotoUri,
+              }
+            : {}),
           ...(deepenSnapshot.reflection
             ? { deepenedReflection: deepenSnapshot.reflection }
             : {}),
@@ -888,6 +964,8 @@ export default function ReflectionScreen() {
         },
       });
       filEntryIdRef.current = entry.id;
+      setFilEntryId(entry.id);
+      setSavedJournalId(entry.id);
 
       // Si l'approfondissement a abouti pendant l'enregistrement, le rattacher.
       const lateDeepen = deepenPersistRef.current;
@@ -904,6 +982,7 @@ export default function ReflectionScreen() {
               : {}),
           },
         });
+        syncFilToGoogleDriveIfConnected();
       }
 
       if (storedPhotoUri?.startsWith("data:")) {
@@ -936,6 +1015,7 @@ export default function ReflectionScreen() {
     ritual.techniqueLabel,
     ritual.exerciseDevelopment,
     ritual.moduleStatement,
+    setFilEntryId,
   ]);
 
   function handleGoHome() {
@@ -1068,6 +1148,7 @@ Miroir initial (à conserver — ne pas recopier) :
                 : {}),
             },
           });
+          syncFilToGoogleDriveIfConnected();
         })();
       }
 
@@ -1218,8 +1299,10 @@ Miroir initial (à conserver — ne pas recopier) :
         postIntegration: postAnswers,
         writtenText: writtenText.trim() || undefined,
         hasPhoto: Boolean(photoUri || round1Snapshot?.photoUri),
+        linkedFilEntryIds: filEntryIdRef.current
+          ? [filEntryIdRef.current]
+          : undefined,
       });
-      setSavedJournalId(logId);
       setWorkflowPhase("complete");
       setNotice({
         type: "success",
@@ -1237,9 +1320,17 @@ Miroir initial (à conserver — ne pas recopier) :
               ...existing.metadata,
               impulse,
               technique,
-              exercise,
               durationMinutes,
-              reflection,
+              ...(currentRound === 2
+                ? {
+                    hasSecondRound: true,
+                    round2Reflection: reflection,
+                    round2Exercise: exercise,
+                  }
+                : {
+                    reflection,
+                    exercise,
+                  }),
               ...(deepenTrimmed ? { deepenedReflection: deepenTrimmed } : {}),
               openQuestions: openQuestions.length ? openQuestions : undefined,
               ...(deepenedOpenQuestions.length
@@ -1255,12 +1346,14 @@ Miroir initial (à conserver — ne pas recopier) :
                 existing.metadata?.seasonTitle ??
                 ritual.seasonTitle ??
                 undefined,
+              sessionLogId: logId,
             },
             tags: existing.tags,
           });
         }
+        setSavedJournalId(filId);
       } else {
-        await recordFilEntry({
+        const created = await recordFilEntry({
           source: "ritual",
           summary: impulse || t("reflection.defaults.defaultDeepSession"),
           detail: postAnswers.resonance.trim().slice(0, 280),
@@ -1283,91 +1376,17 @@ Miroir initial (à conserver — ne pas recopier) :
               : {}),
           },
         });
+        filEntryIdRef.current = created.id;
+        setFilEntryId(created.id);
+        setSavedJournalId(created.id);
       }
+      syncFilToGoogleDriveIfConnected();
       await discardRitualDraft();
     } catch {
       setNotice({
         type: "error",
         message: t("reflection.notice.journalFailed"),
       });
-    }
-  }
-
-  async function handleSaveExpressJournal() {
-    if (!technique || !reflection || !exercise || !round1Snapshot || savingJournal) {
-      return;
-    }
-
-    const logId = createSessionLogId();
-    const exerciseId = ensureSessionExerciseId();
-    const composedMirror = composeReflectionWithDeepen(
-      reflection,
-      deepenedReflection,
-      t("reflection.deepenedLabel")
-    );
-    const persistedQuestions = resolveOpenQuestionsForPersist(
-      openQuestions,
-      deepenedOpenQuestions
-    );
-
-    setSavingJournal(true);
-    try {
-      const sessionData = buildSessionDataPayload(
-        {
-          exerciseId,
-          round1: {
-            media: round1Snapshot.photoUri ?? "",
-            preAnswers: round1Snapshot.preAnswers,
-            aiAnalysis: round1Snapshot.reflection,
-            postAnswers: round1Snapshot.postAnswers,
-            writtenText: round1Snapshot.writtenText,
-            openQuestions: round1Snapshot.openQuestions,
-          },
-          round2: {
-            media: photoUri ?? "",
-            transitionAnswers,
-            aiAnalysis: composedMirror ?? reflection,
-            writtenText: writtenText.trim() || undefined,
-            openQuestions: persistedQuestions ?? openQuestions,
-          },
-        },
-        logId
-      );
-
-      await saveSessionLog({
-        id: logId,
-        createdAt: new Date().toISOString(),
-        mode: "express",
-        exercise: {
-          impulse,
-          technique,
-          techniqueLabel: getTechniqueLabel(technique),
-          exercise,
-          durationMinutes,
-        },
-        sessionData,
-        postIntegration: {
-          resonance: transitionAnswers.newIntention.trim(),
-          intention: transitionAnswers.gestureChange.trim(),
-          keeper: transitionAnswers.physicalState.trim(),
-        },
-        writtenText: writtenText.trim() || undefined,
-        hasPhoto: Boolean(photoUri || round1Snapshot.photoUri),
-      });
-
-      setSavedJournalId(logId);
-      setNotice({
-        type: "success",
-        message: t("reflection.notice.expressJournalSaved"),
-      });
-      await discardRitualDraft();
-    } catch {
-      setNotice({
-        type: "error",
-        message: t("reflection.notice.journalFailed"),
-      });
-    } finally {
-      setSavingJournal(false);
     }
   }
 
@@ -1411,7 +1430,6 @@ Miroir initial (à conserver — ne pas recopier) :
       setDeepenedOpenQuestions([]);
       deepenPersistRef.current = { reflection: "", questions: [] };
       filRecordedRef.current = false;
-      filEntryIdRef.current = null;
       setNotice({
         type: "info",
         message: t("reflection.notice.secondRoundStart"),
@@ -1490,12 +1508,6 @@ Miroir initial (à conserver — ne pas recopier) :
     Boolean(reflection) &&
     currentRound === 1 &&
     !isSecondRoundPrep &&
-    workflowPhase === "capture";
-  const showExpressJournalCta =
-    !isDeep &&
-    currentRound === 2 &&
-    Boolean(reflection) &&
-    Boolean(round1Snapshot) &&
     workflowPhase === "capture";
 
   const canAnalyze = supportsAiAnalysis
@@ -2075,29 +2087,6 @@ Miroir initial (à conserver — ne pas recopier) :
           </View>
         )}
 
-        {showExpressJournalCta && (
-          <View className="mb-6 gap-3">
-            {!savedJournalId ? (
-              <PrimaryButton
-                label={
-                  savingJournal
-                    ? t("reflection.saveJournalLoading")
-                    : t("reflection.saveJournalCta")
-                }
-                onPress={() => void handleSaveExpressJournal()}
-                disabled={savingJournal}
-                variant="secondary"
-              />
-            ) : (
-              <PrimaryButton
-                label={t("reflection.viewJournalCta")}
-                onPress={() => router.push(ROUTES.filEntry(savedJournalId))}
-                variant="secondary"
-              />
-            )}
-          </View>
-        )}
-
         {showDeepIntegrationCta && (
           <View className="mb-6">
             <PrimaryButton
@@ -2118,7 +2107,7 @@ Miroir initial (à conserver — ne pas recopier) :
             />
             <View className="mt-6 gap-3">
               <PrimaryButton
-                label={t("reflection.saveJournalCta")}
+                label={t("reflection.completeSessionCta")}
                 onPress={() => void handleSaveIntegration()}
                 disabled={!integrationAnswersComplete(postAnswers)}
               />

@@ -29,6 +29,7 @@ import { confirmDeleteFilEntry } from "@/lib/fil/deleteConfirm";
 import {
   FIL_SOURCE_META,
   getFilSourceLabel,
+  hasCompletedSecondRound,
   isNoteFilEntry,
   isRitualFilEntry,
   type FilEntry,
@@ -43,6 +44,7 @@ import { showAlert } from "@/lib/alert";
 import { useLanguageStore } from "@/lib/i18n/languageStore";
 import { sanitizeAiDisplayText } from "@/lib/sanitizeAiText";
 import { exportFilRitualPdf } from "@/lib/sessionExport";
+import { syncFilToGoogleDriveIfConnected } from "@/lib/storage/googleDriveAdapter";
 import { useRitualStore } from "@/lib/store";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
@@ -53,6 +55,9 @@ export default function FilDetailScreen() {
   const language = useLanguageStore((s) => s.language);
   const { id } = useLocalSearchParams<{ id: string }>();
   const restoreFromFilEntry = useRitualStore((s) => s.restoreFromFilEntry);
+  const startSecondRoundFromFil = useRitualStore(
+    (s) => s.startSecondRoundFromFil
+  );
   const [entry, setEntry] = useState<FilEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -82,6 +87,9 @@ export default function FilDetailScreen() {
     if (isRenderableImageUri(entry?.metadata?.photoUri)) {
       uris.push(entry.metadata.photoUri);
     }
+    if (isRenderableImageUri(entry?.metadata?.round2PhotoUri)) {
+      uris.push(entry.metadata.round2PhotoUri);
+    }
     for (const uri of displayPhotos) {
       if (isRenderableImageUri(uri) && !uris.includes(uri)) uris.push(uri);
     }
@@ -93,6 +101,14 @@ export default function FilDetailScreen() {
     if (!entry || !isRitualFilEntry(entry)) return;
     restoreFromFilEntry(entry);
     router.push(ROUTES.exercise);
+  }
+
+  function handleStartSecondRound() {
+    if (!entry || !isRitualFilEntry(entry) || hasCompletedSecondRound(entry)) {
+      return;
+    }
+    startSecondRoundFromFil(entry);
+    router.push(ROUTES.reflection);
   }
 
   async function handleRedoFromAmorce() {
@@ -192,6 +208,7 @@ export default function FilDetailScreen() {
       if (updated) setEntry(updated);
       setEditing(false);
       setNotice(t("detail.updatedNotice"));
+      syncFilToGoogleDriveIfConnected();
     } catch (error) {
       showAlert(
         t("detail.saveEdit"),
@@ -461,6 +478,36 @@ export default function FilDetailScreen() {
         </View>
       ) : null}
 
+      {m?.round2Exercise?.trim() ? (
+        <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
+          <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
+            {t("detail.round2Exercise")}
+          </Text>
+          <Text className={`text-base leading-7 ${textPrimary(isDark)}`}>
+            {sanitizeAiDisplayText(m.round2Exercise)}
+          </Text>
+        </View>
+      ) : null}
+
+      {m?.round2Reflection?.trim() ? (
+        <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
+          <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
+            {t("detail.round2")}
+          </Text>
+          {sanitizeAiDisplayText(m.round2Reflection)
+            .split(/\n\s*\n/)
+            .filter((p) => p.trim())
+            .map((p, i) => (
+              <Text
+                key={i}
+                className={`text-base leading-7 mb-4 italic ${textSecondary(isDark)}`}
+              >
+                {p}
+              </Text>
+            ))}
+        </View>
+      ) : null}
+
       {(m?.deepenedOpenQuestions?.length
         ? m.deepenedOpenQuestions
         : m?.openQuestions
@@ -515,6 +562,13 @@ export default function FilDetailScreen() {
           <PrimaryButton
             label={t("detail.redoExercise")}
             onPress={handleRedoExercise}
+          />
+        )}
+        {ritual && !hasCompletedSecondRound(entry) && (
+          <PrimaryButton
+            label={t("detail.secondRound")}
+            onPress={handleStartSecondRound}
+            variant="secondary"
           />
         )}
         {!ritual && nuancier && m?.impulse && (

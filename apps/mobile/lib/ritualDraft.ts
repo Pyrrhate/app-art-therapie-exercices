@@ -31,6 +31,7 @@ export interface ReflectionDraftExtras {
   round1Snapshot?: Round1Snapshot | null;
   useFilMemory?: boolean;
   sessionExerciseId?: string;
+  filEntryId?: string | null;
 }
 
 export interface RitualDraft {

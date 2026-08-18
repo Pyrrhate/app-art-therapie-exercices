@@ -83,6 +83,8 @@ export interface RitualState {
   evolutionTriggers: EvolutionTriggers | null;
   isExerciseAugmented: boolean;
   sessionExerciseId: string;
+  /** Trace Fil en cours — le 2e tour met à jour cette entrée au lieu d'en créer une autre. */
+  filEntryId: string | null;
   customSessionConfig: CustomSessionConfig;
   /** Contexte chromatique amont (palette, harmonie) pour la réflexion IA. */
   colorContext: string | null;

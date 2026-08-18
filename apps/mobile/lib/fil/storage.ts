@@ -25,6 +25,11 @@ export async function getFilEntryByAnyId(id: string): Promise<FilEntry | null> {
   );
 }
 
+export async function getFilEntryById(id: string): Promise<FilEntry | null> {
+  const entries = await getFilEntriesRaw();
+  return entries.find((entry) => entry.id === id) ?? null;
+}
+
 export async function addFilEntry(
   entry: Omit<FilEntry, "id" | "createdAt"> & {
     id?: string;

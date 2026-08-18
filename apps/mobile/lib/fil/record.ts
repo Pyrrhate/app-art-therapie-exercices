@@ -4,6 +4,7 @@ import type { FilEntry } from "./types";
 import i18n from "@/lib/i18n";
 import { getSeasonRunTitle } from "@/lib/seasons/catalog";
 import { noteSeasonPractice } from "@/lib/seasons/storage";
+import { syncFilToGoogleDriveIfConnected } from "@/lib/storage/googleDriveAdapter";
 
 /** Enregistre une trace dans le Fil sans action utilisateur. */
 export async function recordFilEntry(
@@ -28,5 +29,7 @@ export async function recordFilEntry(
     }
   }
 
-  return addFilEntry({ ...entry, tags, metadata });
+  const saved = await addFilEntry({ ...entry, tags, metadata });
+  syncFilToGoogleDriveIfConnected();
+  return saved;
 }

@@ -15,6 +15,7 @@ import type { CustomSessionConfig } from "@/lib/custom/types";
 import { EMPTY_CUSTOM_SESSION_CONFIG } from "@/lib/custom/types";
 import type { FilEntry } from "./fil/types";
 import { buildColorContextFromMetadata } from "./fil/nuancier";
+import { buildRound1Snapshot } from "@/lib/experience/extractEvolutionTriggers";
 
 interface RitualStore extends RitualState {
   setImpulse: (impulse: string) => void;
@@ -38,6 +39,8 @@ interface RitualStore extends RitualState {
   ) => void;
   startFollowUpExercise: () => void;
   restoreFromFilEntry: (entry: FilEntry) => void;
+  /** Relance un 2e tour depuis une trace Fil existante. */
+  startSecondRoundFromFil: (entry: FilEntry) => void;
   /** @deprecated Utiliser restoreFromFilEntry */
   restoreFromSession: (session: SavedSession) => void;
   setExperienceMode: (mode: ExperienceMode) => void;
@@ -57,6 +60,7 @@ interface RitualStore extends RitualState {
   ) => void;
   completeSecondRoundPrep: () => void;
   ensureSessionExerciseId: () => string;
+  setFilEntryId: (id: string | null) => void;
   setCustomSessionConfig: (patch: Partial<CustomSessionConfig>) => void;
   setColorContext: (colorContext: string | null, paletteColors?: string[]) => void;
   setSeason: (runId: string | null, title: string | null) => void;
@@ -89,6 +93,7 @@ const initialState: RitualState = {
   evolutionTriggers: null,
   isExerciseAugmented: false,
   sessionExerciseId: "",
+  filEntryId: null,
   customSessionConfig: { ...EMPTY_CUSTOM_SESSION_CONFIG },
   colorContext: null,
   paletteColors: [],
@@ -155,6 +160,7 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
     set({ sessionExerciseId: id });
     return id;
   },
+  setFilEntryId: (filEntryId) => set({ filEntryId }),
   beginSecondRound: (snapshot) => get().startSecondRound(snapshot),
   setRound1Snapshot: (round1Snapshot) =>
     set({
@@ -279,7 +285,30 @@ export const useRitualStore = create<RitualStore>((set, get) => ({
       paletteColors: m.colors ?? [],
       seasonRunId: m.seasonId ?? null,
       seasonTitle: m.seasonTitle ?? null,
+      experienceMode: "express",
+      currentRound: 1,
+      isSecondRoundPrep: false,
+      round1Snapshot: null,
+      transitionAnswers: { ...EMPTY_SECOND_ROUND_ANSWERS },
+      isExerciseAugmented: false,
+      filEntryId: null,
+      preAnswers: { ...EMPTY_USER_ANSWERS },
+      postAnswers: { ...EMPTY_INTEGRATION_ANSWERS },
     });
+  },
+  startSecondRoundFromFil: (entry) => {
+    const m = entry.metadata;
+    if (!m?.technique || !m.exercise) return;
+    get().restoreFromFilEntry(entry);
+    const snapshot = buildRound1Snapshot({
+      exercise: m.exercise,
+      reflection: m.reflection ?? "",
+      openQuestions: m.openQuestions ?? [],
+      writtenText: m.writtenText,
+      photoUri: m.photoUri,
+    });
+    get().startSecondRound(snapshot);
+    set({ filEntryId: entry.id });
   },
   restoreFromSession: (session) =>
     set({
