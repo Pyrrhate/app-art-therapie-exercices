@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
 import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflection";
 import { ImageLightbox, isRenderableImageUri } from "@/components/journal/ImageLightbox";
+import { EinkEditor } from "@/components/journal/EinkEditor";
 import { InlineNotice } from "@/components/InlineNotice";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
@@ -272,12 +273,6 @@ export default function JournalDetailScreen() {
   const round2Uri = isRenderableImageUri(round2?.media) ? round2.media : null;
   const displayPhotos = editing ? draftPhotos : log.privatePhotoUris ?? [];
   const displayLinks = editing ? draftLinks : log.linkedFilEntryIds ?? [];
-  const inputClass = `rounded-2xl border px-4 py-3 text-sm ${
-    isDark
-      ? "border-sand-600 bg-sand-800 text-sand-100"
-      : "border-sand-200 bg-white text-sand-800"
-  }`;
-
   return (
     <ScreenContainer>
       <ScreenNavBar
@@ -398,37 +393,13 @@ export default function JournalDetailScreen() {
         </Section>
       ) : null}
 
-      {log.postIntegration.resonance || log.postIntegration.intention ? (
-        <Section title={t("journal:integration")} isDark={isDark}>
-          {log.postIntegration.resonance ? (
-            <Text className={`text-sm leading-6 mb-3 ${textSecondary(isDark)}`}>
-              {log.postIntegration.resonance}
-            </Text>
-          ) : null}
-          {log.postIntegration.intention ? (
-            <Text className={`text-sm leading-6 mb-3 ${textSecondary(isDark)}`}>
-              {log.postIntegration.intention}
-            </Text>
-          ) : null}
-          {log.postIntegration.keeper ? (
-            <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
-              {log.postIntegration.keeper}
-            </Text>
-          ) : null}
-        </Section>
-      ) : null}
-
       {editing || log.privateNotes?.trim() ? (
         <Section title={t("journal:privateNotes")} isDark={isDark}>
           {editing ? (
-            <TextInput
+            <EinkEditor
               value={draftNotes}
               onChangeText={setDraftNotes}
               placeholder={t("journal:addPlaceholder")}
-              placeholderTextColor={isDark ? "#8A8478" : "#B8A090"}
-              multiline
-              textAlignVertical="top"
-              className={`${inputClass} min-h-[120px]`}
             />
           ) : (
             <Text className={`text-sm leading-6 ${textSecondary(isDark)}`}>
