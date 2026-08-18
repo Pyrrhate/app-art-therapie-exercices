@@ -283,20 +283,6 @@ export default function JournalDetailScreen() {
           }
           router.back();
         }}
-        rightAction={
-          !editing ? (
-            <Pressable
-              onPress={startEdit}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t("journal:edit")}
-            >
-              <Text className={`text-sm font-medium ${textMuted(isDark)}`}>
-                {t("journal:edit")}
-              </Text>
-            </Pressable>
-          ) : null
-        }
       />
       <PastekScreenHero
         label={log.mode === "deep" ? t("journal:modeDeep") : t("journal:modeExpress")}
@@ -313,20 +299,32 @@ export default function JournalDetailScreen() {
         />
       ) : null}
 
-      {(log.privateNotes?.trim() ||
-        (log.privatePhotoUris?.length ?? 0) > 0 ||
-        linkedFilEntries.length > 0 ||
-        editing) && (
-        <View
-          className={`rounded-2xl border px-4 py-3 mb-4 ${
-            isDark ? "border-sage-700 bg-sage-900/40" : "border-sage-200 bg-sage-50/80"
-          }`}
-        >
-          <Text className={`text-xs leading-5 text-center ${textSecondary(isDark)}`}>
-            {t("journal:localOnlyHint")}
-          </Text>
-        </View>
-      )}
+      <View
+        className={`rounded-2xl border px-4 py-3 mb-4 flex-row items-center justify-between ${
+          isDark ? "border-sage-700 bg-sage-900/40" : "border-sage-200 bg-sage-50/80"
+        }`}
+      >
+        <Text className={`text-xs leading-5 ${textSecondary(isDark)}`}>
+          {t("journal:localOnlyHint")}
+        </Text>
+        {!editing ? (
+          <Pressable
+            onPress={startEdit}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("journal:edit")}
+            className={`rounded-full px-4 py-2 border ml-3 ${
+              isDark
+                ? "border-sage-600 bg-sage-900"
+                : "border-sage-300 bg-white"
+            }`}
+          >
+            <Text className={`text-xs font-semibold ${isDark ? "text-sage-300" : "text-sage-700"}`}>
+              {t("journal:edit")}
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
 
       {editing ? (
         <Section title={t("journal:editTitle")} isDark={isDark}>
