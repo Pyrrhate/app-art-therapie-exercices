@@ -55,6 +55,8 @@
   "editTitle": "Title",
   "editTitlePlaceholder": "Entry title",
   "updatedNotice": "Entry updated.",
+  "saveFailed": "Could not save this entry. Try with fewer photos.",
+  "quotaExceeded": "Local storage is full. Compress or remove photos, then try again.",
   "viewPhoto": "View photo full size",
   "closePhoto": "Close",
   "photoCounter": "{{current}} / {{total}}",

@@ -5,6 +5,7 @@ import { replaceFilEntries } from "@/lib/fil/storage";
 import { clearRitualDraft, saveRitualDraft } from "@/lib/ritualDraft";
 import { setThemePreference, setTimerSound } from "@/lib/preferences";
 import { useThemeStore } from "@/lib/themeStore";
+import { compactHeavyUrisInLogs } from "@/lib/journalPhotos";
 import type { AppBackup } from "./types";
 
 const MAX_BACKUP_BYTES = 25 * 1024 * 1024;
@@ -18,9 +19,10 @@ const LEGACY_STORAGE_KEYS = {
 
 export async function restoreAppBackup(backup: AppBackup): Promise<void> {
   await replaceFilEntries(backup.data.creativeFil);
+  const compactedLogs = await compactHeavyUrisInLogs(backup.data.sessionLogs ?? []);
   await AsyncStorage.setItem(
     STORAGE_KEYS.sessionLogs,
-    JSON.stringify(backup.data.sessionLogs ?? [])
+    JSON.stringify(compactedLogs)
   );
 
   if (backup.data.ritualDraft) {

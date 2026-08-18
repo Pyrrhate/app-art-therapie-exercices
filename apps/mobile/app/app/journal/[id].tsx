@@ -1,6 +1,14 @@
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import * as ImagePicker from "expo-image-picker";
@@ -27,6 +35,7 @@ import { getFilEntries, getFilEntryById } from "@/lib/fil/storage";
 import { showAlert } from "@/lib/alert";
 import { exportSessionPdf } from "@/lib/sessionExport";
 import { ROUTES } from "@/lib/routes";
+import { persistJournalPhotos, useResolvedPhotos } from "@/lib/journalPhotos";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -63,6 +72,30 @@ function collectImageUris(log: DeepSessionLog): string[] {
   return uris;
 }
 
+async function normalizePickedPhotoUri(asset: ImagePicker.ImagePickerAsset): Promise<string | null> {
+  if (typeof asset.uri === "string" && asset.uri.length > 0) {
+    if (Platform.OS !== "web") return asset.uri;
+    // On web, data URLs can blow up AsyncStorage quota quickly.
+    if (!asset.uri.startsWith("data:image/")) return asset.uri;
+  }
+
+  const file = (asset as unknown as { file?: File }).file;
+  if (Platform.OS === "web" && file instanceof File) {
+    return URL.createObjectURL(file);
+  }
+
+  if (Platform.OS === "web" && typeof asset.uri === "string" && asset.uri.startsWith("data:image/")) {
+    try {
+      const blob = await (await fetch(asset.uri)).blob();
+      return URL.createObjectURL(blob);
+    } catch {
+      return asset.uri;
+    }
+  }
+
+  return typeof asset.uri === "string" && asset.uri.length > 0 ? asset.uri : null;
+}
+
 export default function JournalDetailScreen() {
   const isDark = useIsDark();
   const { t } = useTranslation(["journal", "ritual"]);
@@ -75,6 +108,7 @@ export default function JournalDetailScreen() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftNotes, setDraftNotes] = useState("");
   const [draftPhotos, setDraftPhotos] = useState<string[]>([]);
@@ -114,6 +148,7 @@ export default function JournalDetailScreen() {
     }
     return collectImageUris(log);
   }, [log, editing, draftPhotos]);
+  const resolvedImageUris = useResolvedPhotos(imageUris);
 
   const filPickerEntries = useMemo(() => {
     const byId = new Map<string, FilEntry>();
@@ -123,12 +158,16 @@ export default function JournalDetailScreen() {
   }, [filEntries, linkedFilEntries]);
 
   function openPhoto(uri: string) {
-    const index = imageUris.indexOf(uri);
+    const index = Math.max(
+      resolvedImageUris.indexOf(uri),
+      imageUris.indexOf(uri)
+    );
     setViewerIndex(index >= 0 ? index : 0);
   }
 
   function startEdit() {
     if (!log) return;
+    setSaveError(null);
     setDraftTitle(log.exercise.impulse);
     setDraftNotes(log.privateNotes ?? "");
     setDraftPhotos(log.privatePhotoUris ?? []);
@@ -148,21 +187,17 @@ export default function JournalDetailScreen() {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
+      mediaTypes: ["images"],
+      quality: 0.7,
       allowsMultipleSelection: true,
       selectionLimit: 3,
     });
     if (result.canceled) return;
-    const uris = result.assets
-      .map((asset) => {
-        if (typeof asset.uri === "string" && asset.uri.length > 0) return asset.uri;
-        /* Sur web, expo-image-picker peut exposer un File via asset.file */
-        const file = (asset as unknown as { file?: File }).file;
-        if (file instanceof File) return URL.createObjectURL(file);
-        return null;
-      })
-      .filter((uri): uri is string => uri !== null);
+    const normalized = await Promise.all(
+      result.assets.map((asset) => normalizePickedPhotoUri(asset))
+    );
+    const picked = normalized.filter((uri): uri is string => uri !== null);
+    const uris = await persistJournalPhotos(picked);
     setDraftPhotos((prev) => Array.from(new Set([...prev, ...uris])).slice(0, 6));
   }
 
@@ -176,8 +211,11 @@ export default function JournalDetailScreen() {
     if (!log || saving) return;
     setSaving(true);
     try {
+      setSaveError(null);
       const notes = draftNotes.trim();
-      const photos = draftPhotos.filter(isRenderableImageUri);
+      const photos = await persistJournalPhotos(
+        draftPhotos.filter(isRenderableImageUri)
+      );
       const round1Media = log.sessionData?.round1?.media;
       const round2Media = log.sessionData?.round2?.media;
       const updated = await patchSessionLog(log.id, {
@@ -211,6 +249,16 @@ export default function JournalDetailScreen() {
       }
       setEditing(false);
       setNotice(t("journal:updatedNotice"));
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : t("journal:saveFailed");
+      setSaveError(message);
+      showAlert(
+        t("journal:saveEdit"),
+        message
+      );
     } finally {
       setSaving(false);
     }
@@ -279,6 +327,14 @@ export default function JournalDetailScreen() {
   const round2 = log.sessionData?.round2;
   const round1Uri = isRenderableImageUri(round1?.media) ? round1.media : null;
   const round2Uri = isRenderableImageUri(round2?.media) ? round2.media : null;
+  const round1Display =
+    round1Uri != null
+      ? resolvedImageUris[imageUris.indexOf(round1Uri)] ?? round1Uri
+      : null;
+  const round2Display =
+    round2Uri != null
+      ? resolvedImageUris[imageUris.indexOf(round2Uri)] ?? round2Uri
+      : null;
   const displayPhotos = editing ? draftPhotos : log.privatePhotoUris ?? [];
   const displayLinks = editing ? draftLinks : log.linkedFilEntryIds ?? [];
   return (
@@ -304,6 +360,13 @@ export default function JournalDetailScreen() {
           type="success"
           message={notice}
           onDismiss={() => setNotice(null)}
+        />
+      ) : null}
+      {saveError ? (
+        <InlineNotice
+          type="error"
+          message={saveError}
+          onDismiss={() => setSaveError(null)}
         />
       ) : null}
 
@@ -389,15 +452,15 @@ export default function JournalDetailScreen() {
         </Section>
       ) : null}
 
-      {round1Uri ? (
+      {round1Display ? (
         <Pressable
-          onPress={() => openPhoto(round1Uri)}
+          onPress={() => openPhoto(round1Display)}
           accessibilityRole="imagebutton"
           accessibilityLabel={t("journal:viewPhoto")}
           className="mb-4"
         >
           <Image
-            source={{ uri: round1Uri }}
+            source={{ uri: round1Display }}
             className="w-full rounded-2xl bg-sand-200"
             style={{ aspectRatio: 4 / 3 }}
             resizeMode="contain"
@@ -418,15 +481,15 @@ export default function JournalDetailScreen() {
 
       {round2 ? (
         <Section title={t("journal:round2")} isDark={isDark}>
-          {round2Uri ? (
+          {round2Display ? (
             <Pressable
-              onPress={() => openPhoto(round2Uri)}
+              onPress={() => openPhoto(round2Display)}
               accessibilityRole="imagebutton"
               accessibilityLabel={t("journal:viewPhoto")}
               className="mb-4"
             >
               <Image
-                source={{ uri: round2Uri }}
+                source={{ uri: round2Display }}
                 className="w-full rounded-xl bg-sand-200"
                 style={{ aspectRatio: 4 / 3 }}
                 resizeMode="contain"
@@ -571,7 +634,7 @@ export default function JournalDetailScreen() {
       </View>
 
       <ImageLightbox
-        uris={imageUris}
+        uris={resolvedImageUris}
         index={viewerIndex ?? 0}
         visible={viewerIndex !== null}
         onClose={() => setViewerIndex(null)}

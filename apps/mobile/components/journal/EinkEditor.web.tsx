@@ -4,7 +4,6 @@
 import { useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useIsDark } from "@/lib/themeStore";
 
@@ -15,12 +14,11 @@ interface EinkEditorProps {
   minHeight?: number;
 }
 
-type MarkType = "bold" | "italic" | "underline";
+type MarkType = "bold" | "italic";
 
 const TOOLS: { mark: MarkType; label: string; title: string }[] = [
   { mark: "bold", label: "G", title: "Gras" },
   { mark: "italic", label: "I", title: "Italique" },
-  { mark: "underline", label: "S", title: "Souligné" },
 ];
 
 export function EinkEditor({
@@ -55,7 +53,6 @@ export function EinkEditor({
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Underline,
       Placeholder.configure({ placeholder }),
     ],
     content: toHtml(value),
@@ -94,7 +91,6 @@ export function EinkEditor({
     if (!editor) return;
     if (mark === "bold") editor.chain().focus().toggleBold().run();
     else if (mark === "italic") editor.chain().focus().toggleItalic().run();
-    else if (mark === "underline") editor.chain().focus().toggleUnderline().run();
   }
 
   function isActive(mark: MarkType): boolean {
@@ -144,7 +140,7 @@ export function EinkEditor({
               fontSize: 13,
               fontWeight: tool.mark === "bold" ? 700 : 400,
               fontStyle: tool.mark === "italic" ? "italic" : "normal",
-              textDecoration: tool.mark === "underline" ? "underline" : "none",
+              textDecoration: "none",
               cursor: "pointer",
               lineHeight: 1.4,
               fontFamily: "Georgia, serif",

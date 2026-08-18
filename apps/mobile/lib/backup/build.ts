@@ -5,6 +5,7 @@ import { getFilEntries } from "@/lib/fil/storage";
 import { getRitualDraft } from "@/lib/ritualDraft";
 import { getThemePreference, getTimerSound } from "@/lib/preferences";
 import { getSessionLogs } from "@/lib/sessionLog/storage";
+import { hydrateSessionLogsForBackup } from "@/lib/journalPhotos";
 import {
   BACKUP_APP_ID,
   BACKUP_FORMAT_VERSION,
@@ -25,7 +26,7 @@ export function formatBackupSize(bytes: number): string {
 export async function buildAppBackup(): Promise<AppBackup> {
   const [creativeFil, sessionLogs, ritualDraft, theme, timerSound] = await Promise.all([
     getFilEntries(),
-    getSessionLogs(),
+    getSessionLogs().then((logs) => hydrateSessionLogsForBackup(logs)),
     getRitualDraft(),
     getThemePreference(),
     getTimerSound(),

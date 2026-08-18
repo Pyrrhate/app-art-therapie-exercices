@@ -1,8 +1,38 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 import { STORAGE_KEYS } from "@/constants";
 import type { DeepSessionLog, SessionData } from "@/lib/experience/types";
+import {
+  compactHeavyUrisInLogs,
+  logsNeedPhotoCompaction,
+} from "@/lib/journalPhotos";
+import i18n from "@/lib/i18n";
 
 const MAX_LOGS = 80;
+
+function isQuotaError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const name = "name" in error ? String(error.name) : "";
+  const message = "message" in error ? String(error.message) : "";
+  return (
+    name === "QuotaExceededError" ||
+    message.toLowerCase().includes("quota") ||
+    message.includes("exceeded")
+  );
+}
+
+async function writeLogs(logs: DeepSessionLog[]): Promise<void> {
+  const toStore =
+    Platform.OS === "web" ? await compactHeavyUrisInLogs(logs) : logs;
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.sessionLogs, JSON.stringify(toStore));
+  } catch (error) {
+    if (isQuotaError(error)) {
+      throw new Error(i18n.t("journal:quotaExceeded"));
+    }
+    throw error;
+  }
+}
 
 function normalizeLog(log: DeepSessionLog): DeepSessionLog {
   const base: DeepSessionLog = {
@@ -38,7 +68,20 @@ export async function getSessionLogs(): Promise<DeepSessionLog[]> {
     const raw = await AsyncStorage.getItem(STORAGE_KEYS.sessionLogs);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as DeepSessionLog[];
-    return Array.isArray(parsed) ? parsed.map(normalizeLog) : [];
+    const logs = Array.isArray(parsed) ? parsed.map(normalizeLog) : [];
+    if (Platform.OS === "web" && logsNeedPhotoCompaction(logs)) {
+      const compacted = await compactHeavyUrisInLogs(logs);
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.sessionLogs,
+          JSON.stringify(compacted)
+        );
+      } catch {
+        /* Quota plein : on renvoie quand même la version compactée en mémoire. */
+      }
+      return compacted;
+    }
+    return logs;
   } catch {
     return [];
   }
@@ -52,7 +95,7 @@ export async function getSessionLogById(id: string): Promise<DeepSessionLog | nu
 export async function deleteSessionLog(id: string): Promise<void> {
   const existing = await getSessionLogs();
   const next = existing.filter((e) => e.id !== id);
-  await AsyncStorage.setItem(STORAGE_KEYS.sessionLogs, JSON.stringify(next));
+  await writeLogs(next);
 }
 
 /** Enregistre un rituel profond complet dans le journal local. */
@@ -62,7 +105,7 @@ export async function saveSessionLog(log: DeepSessionLog): Promise<void> {
     0,
     MAX_LOGS
   );
-  await AsyncStorage.setItem(STORAGE_KEYS.sessionLogs, JSON.stringify(next));
+  await writeLogs(next);
 }
 
 export async function patchSessionLog(
@@ -94,8 +137,9 @@ export async function patchSessionLog(
       ? { ...current.postIntegration, ...patch.postIntegration }
       : current.postIntegration,
   });
-  await AsyncStorage.setItem(STORAGE_KEYS.sessionLogs, JSON.stringify(next));
-  return next[index];
+  await writeLogs(next);
+  const stored = await getSessionLogById(id);
+  return stored ?? next[index];
 }
 
 export function buildSessionDataPayload(

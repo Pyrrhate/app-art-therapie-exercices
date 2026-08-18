@@ -24,6 +24,7 @@ import {
 import { showAlert } from "@/lib/alert";
 import { ROUTES } from "@/lib/routes";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
+import { persistJournalPhotos } from "@/lib/journalPhotos";
 import { useIsDark } from "@/lib/themeStore";
 
 function logPreview(log: DeepSessionLog): string {
@@ -95,17 +96,18 @@ export default function JournalScreen() {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
+      mediaTypes: ["images"],
+      quality: 0.7,
       allowsMultipleSelection: true,
       selectionLimit: 3,
     });
     if (result.canceled) return;
-    const uris = result.assets
+    const picked = result.assets
       .map((asset) => asset.uri)
       .filter((uri): uri is string => typeof uri === "string" && uri.length > 0);
+    const uris = await persistJournalPhotos(picked);
     setPrivatePhotoUris((prev) =>
-      Array.from(new Set([...prev, ...uris])).slice(0, 4)
+      Array.from(new Set([...prev, ...uris])).slice(0, 6)
     );
   }
 
@@ -151,6 +153,11 @@ export default function JournalScreen() {
       setLinkedFilEntryIds([]);
       setNotice(t("journal:savedNotice"));
       await load();
+    } catch (error) {
+      showAlert(
+        t("journal:saveLocal"),
+        error instanceof Error ? error.message : t("journal:saveFailed")
+      );
     } finally {
       setSavingNote(false);
     }

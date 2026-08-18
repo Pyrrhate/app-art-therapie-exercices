@@ -55,6 +55,8 @@
   "editTitle": "Titre",
   "editTitlePlaceholder": "Titre de l'entrée",
   "updatedNotice": "Entrée mise à jour.",
+  "saveFailed": "Impossible d'enregistrer cette entrée. Essayez avec moins de photos.",
+  "quotaExceeded": "Espace de stockage local saturé. Compressez ou retirez des photos, puis réessayez.",
   "viewPhoto": "Afficher la photo en grand",
   "closePhoto": "Fermer",
   "photoCounter": "{{current}} / {{total}}",
