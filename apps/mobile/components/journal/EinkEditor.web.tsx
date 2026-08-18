@@ -55,15 +55,15 @@ export function EinkEditor({
       attributes: {
         style: [
           `min-height:${minHeight}px`,
-          `padding:16px 18px`,
+          `padding:14px 18px 14px 18px`,
           `font-size:15px`,
-          `line-height:26px`,
           `color:${textColor}`,
           `background:${paperBg}`,
           `outline:none`,
           `font-family:Georgia,serif`,
           `letter-spacing:0.2px`,
           `word-break:break-word`,
+          `box-sizing:border-box`,
         ].join(";"),
         spellcheck: "true",
       },
@@ -95,6 +95,7 @@ export function EinkEditor({
 
   return (
     <div
+      className="pastek-eink-editor"
       style={{
         borderRadius: 16,
         border: `1px solid ${borderColor}`,
@@ -198,7 +199,40 @@ export function EinkEditor({
       <EditorContent editor={editor} />
 
       <style>{`
-        .tiptap p.is-editor-empty:first-child::before {
+        .pastek-eink-editor .ProseMirror {
+          outline: none !important;
+        }
+        .pastek-eink-editor .ProseMirror p {
+          margin: 0 0 6px 0 !important;
+          line-height: 26px !important;
+        }
+        .pastek-eink-editor .ProseMirror p:last-child {
+          margin-bottom: 0 !important;
+        }
+        .pastek-eink-editor .ProseMirror ul {
+          list-style: disc !important;
+          padding-left: 22px !important;
+          margin: 0 0 6px 0 !important;
+        }
+        .pastek-eink-editor .ProseMirror ol {
+          list-style: decimal !important;
+          padding-left: 22px !important;
+          margin: 0 0 6px 0 !important;
+        }
+        .pastek-eink-editor .ProseMirror li {
+          margin-bottom: 2px !important;
+          line-height: 24px !important;
+        }
+        .pastek-eink-editor .ProseMirror strong {
+          font-weight: 700 !important;
+        }
+        .pastek-eink-editor .ProseMirror em {
+          font-style: italic !important;
+        }
+        .pastek-eink-editor .ProseMirror u {
+          text-decoration: underline !important;
+        }
+        .pastek-eink-editor .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           color: ${placeholderColor};
           pointer-events: none;
@@ -206,11 +240,6 @@ export function EinkEditor({
           height: 0;
           font-style: italic;
         }
-        .tiptap ul { list-style: disc; padding-left: 20px; }
-        .tiptap ol { list-style: decimal; padding-left: 20px; }
-        .tiptap li { margin-bottom: 4px; }
-        .tiptap p { margin: 0 0 8px 0; }
-        .tiptap:focus { outline: none; }
       `}</style>
     </div>
   );
