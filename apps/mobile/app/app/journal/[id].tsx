@@ -8,6 +8,7 @@ import { ProgressiveReflection } from "@/components/reflection/ProgressiveReflec
 import { ImageLightbox, isRenderableImageUri } from "@/components/journal/ImageLightbox";
 import { EinkEditor } from "@/components/journal/EinkEditor";
 import { NoteRenderer } from "@/components/journal/NoteRenderer";
+import { PhotoGrid } from "@/components/journal/PhotoGrid";
 import { InlineNotice } from "@/components/InlineNotice";
 import { PastekScreenHero } from "@/components/ui/PastekScreenHero";
 import { PrimaryButton, ScreenContainer } from "@/components/ui/Button";
@@ -484,36 +485,14 @@ export default function JournalDetailScreen() {
               />
             </View>
           ) : null}
-          <View className="gap-3">
-            {displayPhotos.map((uri) => (
-              <View key={uri} className="relative">
-                <Pressable
-                  onPress={() => openPhoto(uri)}
-                  accessibilityRole="imagebutton"
-                  accessibilityLabel={t("journal:viewPhoto")}
-                >
-                  <Image
-                    source={{ uri }}
-                    className="w-full rounded-xl bg-sand-200"
-                    style={{ aspectRatio: 4 / 3 }}
-                    resizeMode="contain"
-                  />
-                </Pressable>
-                {editing ? (
-                  <Pressable
-                    onPress={() =>
-                      setDraftPhotos((prev) => prev.filter((x) => x !== uri))
-                    }
-                    accessibilityRole="button"
-                    accessibilityLabel={t("journal:removePhoto")}
-                    className="absolute top-2 right-2 rounded-full bg-black/55 px-3 py-1.5"
-                  >
-                    <Text className="text-white text-xs">{t("journal:removePhoto")}</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            ))}
-          </View>
+          <PhotoGrid
+            uris={displayPhotos}
+            onPress={openPhoto}
+            editing={editing}
+            onRemove={(uri) =>
+              setDraftPhotos((prev) => prev.filter((x) => x !== uri))
+            }
+          />
         </Section>
       ) : null}
 
