@@ -321,7 +321,11 @@ export default function JournalDetailScreen() {
             onChangeText={setDraftTitle}
             placeholder={t("journal:editTitlePlaceholder")}
             placeholderTextColor={isDark ? "#8A8478" : "#B8A090"}
-            className={inputClass}
+            className={`rounded-2xl border px-4 py-3 text-sm ${
+              isDark
+                ? "border-sand-600 bg-sand-800 text-sand-100"
+                : "border-sand-200 bg-white text-sand-800"
+            }`}
           />
         </Section>
       ) : null}
