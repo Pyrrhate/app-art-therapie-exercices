@@ -307,12 +307,14 @@ export default function WelcomeScreen() {
         )}
 
         {isWide ? (
-          <View className="gap-2">
-            <PrimaryButton
-              label={t("home.openFil")}
-              onPress={() => router.push(ROUTES.fil)}
-              align="stretch"
-            />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("home.openFil")}
+                onPress={() => router.push(ROUTES.fil)}
+                align="stretch"
+              />
+            </View>
           </View>
         ) : null}
 
@@ -364,12 +366,16 @@ export default function WelcomeScreen() {
         )}
 
         {!isWide ? (
-          <PrimaryButton
-            label={t("home.openFil")}
-            onPress={() => router.push(ROUTES.fil)}
-            variant="secondary"
-            align="stretch"
-          />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("home.openFil")}
+                onPress={() => router.push(ROUTES.fil)}
+                variant="secondary"
+                align="stretch"
+              />
+            </View>
+          </View>
         ) : null}
 
         <View className="flex-row justify-center gap-6 pt-2 pb-2 flex-wrap">
