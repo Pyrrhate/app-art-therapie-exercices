@@ -211,7 +211,7 @@ export default function WelcomeScreen() {
 
       <View className="gap-3">
         <View
-          className={`border-t border-b py-4 ${
+          className={`border-t pt-4 ${
             isDark ? "border-sand-700" : "border-sand-200"
           }`}
         >
@@ -235,22 +235,31 @@ export default function WelcomeScreen() {
           </View>
         </View>
         {!season ? (
-          <PrimaryButton
-            label={t("home.season")}
-            onPress={() => router.push(ROUTES.seasons)}
-            variant="ghost"
-            align="stretch"
-          />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("home.season")}
+                onPress={() => router.push(ROUTES.seasons)}
+                variant="ghost"
+                align="stretch"
+              />
+            </View>
+          </View>
         ) : null}
       </View>
 
-      <View className={isWide ? "mt-8 mb-2" : "mt-5 mb-1"}>
+      <View
+        className={`border-t ${isDark ? "border-sand-700" : "border-sand-200"} ${
+          isWide ? "mt-8 mb-2 pt-8" : "mt-5 mb-1 pt-5"
+        }`}
+      >
         {isWide ? (
           <SectionHeader
             label={t("home.amorcesLabel")}
             title={t("home.amorcesTitle")}
             accent={t("home.amorcesAccent")}
             titleEnd={t("home.amorcesEnd")}
+            className="mb-4"
           />
         ) : (
           <Text
