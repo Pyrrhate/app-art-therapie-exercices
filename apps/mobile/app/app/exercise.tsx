@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StatusBar,
@@ -9,6 +10,7 @@ import {
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ROUTES } from "@/lib/routes";
 import { DurationPicker } from "@/components/DurationPicker";
 import { ExerciseKeywordChips } from "@/components/exercise/ExerciseKeywordChips";
@@ -29,6 +31,7 @@ import { useRitualStore } from "@/lib/store";
 
 export default function ExerciseScreen() {
   const { t } = useTranslation("ritual");
+  const insets = useSafeAreaInsets();
   const exercise = useRitualStore((s) => s.exercise);
   const exerciseDevelopment = useRitualStore((s) => s.exerciseDevelopment);
   const moduleStatement = useRitualStore((s) => s.moduleStatement);
@@ -106,67 +109,76 @@ export default function ExerciseScreen() {
       ? exerciseKeywords.slice(0, 4).join(" · ")
       : impulse;
 
+  const silencePaddingTop = Math.max(insets.top, Platform.OS === "web" ? 56 : 56);
+  const silencePaddingBottom = Math.max(insets.bottom, Platform.OS === "web" ? 24 : 32);
+  const silenceShell = { maxWidth: 720, width: "100%" as const, alignSelf: "center" as const };
+
   if (silenceMode) {
     return (
-      <View className="flex-1 bg-[#1C1916] px-6 pt-14 pb-10 justify-between">
+      <View
+        className="flex-1 bg-[#1C1916] justify-between"
+        style={{ paddingTop: silencePaddingTop, paddingBottom: silencePaddingBottom, paddingHorizontal: 24 }}
+      >
         <StatusBar barStyle="light-content" />
-        <View className="items-center gap-3">
-          <Text className="text-sand-400 text-xs uppercase tracking-[0.2em]">
-            {t("exercise.silenceLabel")}
-          </Text>
-          <Text className="text-sand-200 text-sm text-center leading-6 px-4">
-            {keywordPreview}
-          </Text>
-          <Pressable
-            onPress={() => setPeekConsigne((v) => !v)}
-            className="rounded-full border border-sand-600/80 px-4 py-2"
-            accessibilityRole="button"
-            accessibilityLabel={
-              peekConsigne
-                ? t("exercise.peekHide")
-                : t("exercise.peekShowA11y")
-            }
-          >
-            <Text className="text-sand-300 text-xs">
-              {peekConsigne ? t("exercise.peekHide") : t("exercise.peekShow")}
+        <View style={silenceShell} className="flex-1 justify-between">
+          <View className="items-center gap-3">
+            <Text className="text-sand-400 text-xs uppercase tracking-[0.2em]">
+              {t("exercise.silenceLabel")}
             </Text>
-          </Pressable>
-          {peekConsigne ? (
-            <ScrollView
-              className="max-h-40 w-full rounded-2xl border border-sand-700 bg-sand-900/80 px-4 py-3"
-              showsVerticalScrollIndicator={false}
+            <Text className="text-sand-200 text-sm text-center leading-6 px-4">
+              {keywordPreview}
+            </Text>
+            <Pressable
+              onPress={() => setPeekConsigne((v) => !v)}
+              className="rounded-full border border-sand-600/80 px-4 py-2"
+              accessibilityRole="button"
+              accessibilityLabel={
+                peekConsigne
+                  ? t("exercise.peekHide")
+                  : t("exercise.peekShowA11y")
+              }
             >
-              <Text className="text-sand-300 text-sm leading-6">{exercise}</Text>
-            </ScrollView>
-          ) : null}
-        </View>
-
-        <GentleTimer
-          durationMinutes={durationMinutes}
-          completionSound={completionSound}
-          silence
-        />
-
-        <View className="gap-3 items-center">
-          <View className="w-1/2">
-            <PrimaryButton
-              label={t("exercise.doneCta")}
-              onPress={() => {
-                setPeekConsigne(false);
-                setSilenceMode(false);
-                router.push(ROUTES.reflection);
-              }}
-            />
+              <Text className="text-sand-300 text-xs">
+                {peekConsigne ? t("exercise.peekHide") : t("exercise.peekShow")}
+              </Text>
+            </Pressable>
+            {peekConsigne ? (
+              <ScrollView
+                className="max-h-40 w-full rounded-2xl border border-sand-700 bg-sand-900/80 px-4 py-3"
+                showsVerticalScrollIndicator={false}
+              >
+                <Text className="text-sand-300 text-sm leading-6">{exercise}</Text>
+              </ScrollView>
+            ) : null}
           </View>
-          <View className="w-1/2">
-            <PrimaryButton
-              label={t("exercise.silenceExit")}
-              onPress={() => {
-                setPeekConsigne(false);
-                setSilenceMode(false);
-              }}
-              variant="ghost"
-            />
+
+          <GentleTimer
+            durationMinutes={durationMinutes}
+            completionSound={completionSound}
+            silence
+          />
+
+          <View className="gap-3 items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("exercise.doneCta")}
+                onPress={() => {
+                  setPeekConsigne(false);
+                  setSilenceMode(false);
+                  router.push(ROUTES.reflection);
+                }}
+              />
+            </View>
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("exercise.silenceExit")}
+                onPress={() => {
+                  setPeekConsigne(false);
+                  setSilenceMode(false);
+                }}
+                variant="ghost"
+              />
+            </View>
           </View>
         </View>
       </View>
