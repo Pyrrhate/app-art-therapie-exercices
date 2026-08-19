@@ -273,17 +273,21 @@ export default function ColorJourneyScreen() {
                 onRequestMirror={handleRequestMirror}
                 mirrorLoading={mirrorLoading}
               />
-              <PrimaryButton
-                label={
-                  turn >= COLOR_JOURNEY_TURN_COUNT
-                    ? synthesisLoading
-                      ? t("colorJourney.mirrorPreparing")
-                      : t("colorJourney.seePalette")
-                    : t("colorJourney.nextColor")
-                }
-                onPress={handleContinueAfterReflection}
-                disabled={synthesisLoading}
-              />
+              <View className="items-center">
+                <View className="w-1/2">
+                  <PrimaryButton
+                    label={
+                      turn >= COLOR_JOURNEY_TURN_COUNT
+                        ? synthesisLoading
+                          ? t("colorJourney.mirrorPreparing")
+                          : t("colorJourney.seePalette")
+                        : t("colorJourney.nextColor")
+                    }
+                    onPress={handleContinueAfterReflection}
+                    disabled={synthesisLoading}
+                  />
+                </View>
+              </View>
               {canExitEarly && turn < COLOR_JOURNEY_TURN_COUNT && (
                 <View className="mt-4">
                   <AmorceOutcomePanel
@@ -350,12 +354,14 @@ export default function ColorJourneyScreen() {
             }}
           />
 
-          <View className="mt-4">
-            <PrimaryButton
-              label={t("colorJourney.restart")}
-              onPress={handleRestart}
-              variant="ghost"
-            />
+          <View className="mt-4 items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("colorJourney.restart")}
+                onPress={handleRestart}
+                variant="ghost"
+              />
+            </View>
           </View>
         </View>
       )}

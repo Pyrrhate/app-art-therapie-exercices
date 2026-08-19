@@ -376,46 +376,56 @@ export function StorageSettings({ className = "" }: { className?: string }) {
         {busy?.startsWith("g-") ? <ActivityIndicator color="#496349" /> : null}
 
         {!gConnected ? (
-          <PrimaryButton
-            label={
-              busy === "g-connect"
-                ? t("settings.storageConnecting")
-                : t("settings.driveConnect")
-            }
-            onPress={() => void handleGoogleConnect()}
-            disabled={!gConfigured || busy !== null}
-          />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "g-connect"
+                    ? t("settings.storageConnecting")
+                    : t("settings.driveConnect")
+                }
+                onPress={() => void handleGoogleConnect()}
+                disabled={!gConfigured || busy !== null}
+              />
+            </View>
+          </View>
         ) : (
-          <View className="gap-3">
-            <PrimaryButton
-              label={
-                busy === "g-backup"
-                  ? t("settings.storageBackingUp")
-                  : t("settings.driveBackup")
-              }
-              onPress={() => void handleGoogleBackup()}
-              disabled={busy !== null}
-            />
-            <PrimaryButton
-              label={
-                busy === "g-restore"
-                  ? t("settings.storageRestoring")
-                  : t("settings.driveRestore")
-              }
-              onPress={() => void handleGoogleRestore()}
-              disabled={busy !== null}
-              variant="secondary"
-            />
-            <PrimaryButton
-              label={
-                busy === "g-disconnect"
-                  ? t("settings.storageDisconnecting")
-                  : t("settings.storageDisconnectDrive")
-              }
-              onPress={() => void handleGoogleDisconnect()}
-              disabled={busy !== null}
-              variant="ghost"
-            />
+          <View className="gap-3 items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "g-backup"
+                    ? t("settings.storageBackingUp")
+                    : t("settings.driveBackup")
+                }
+                onPress={() => void handleGoogleBackup()}
+                disabled={busy !== null}
+              />
+            </View>
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "g-restore"
+                    ? t("settings.storageRestoring")
+                    : t("settings.driveRestore")
+                }
+                onPress={() => void handleGoogleRestore()}
+                disabled={busy !== null}
+                variant="secondary"
+              />
+            </View>
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "g-disconnect"
+                    ? t("settings.storageDisconnecting")
+                    : t("settings.storageDisconnectDrive")
+                }
+                onPress={() => void handleGoogleDisconnect()}
+                disabled={busy !== null}
+                variant="ghost"
+              />
+            </View>
           </View>
         )}
       </View>
@@ -488,49 +498,59 @@ export function StorageSettings({ className = "" }: { className?: string }) {
             <Text className={`text-xs leading-5 ${textMuted(isDark)}`}>
               {t("settings.kdriveHelp")}
             </Text>
-            <PrimaryButton
-              label={
-                busy === "k-connect"
-                  ? t("settings.storageConnecting")
-                  : t("settings.kdriveConnect")
-              }
-              onPress={() => void handleKDriveConnect()}
-              disabled={
-                busy !== null || !kDriveId.trim() || kToken.trim().length < 20
-              }
-            />
+            <View className="items-center">
+              <View className="w-1/2">
+                <PrimaryButton
+                  label={
+                    busy === "k-connect"
+                      ? t("settings.storageConnecting")
+                      : t("settings.kdriveConnect")
+                  }
+                  onPress={() => void handleKDriveConnect()}
+                  disabled={
+                    busy !== null || !kDriveId.trim() || kToken.trim().length < 20
+                  }
+                />
+              </View>
+            </View>
           </View>
         ) : (
-          <View className="gap-3">
-            <PrimaryButton
-              label={
-                busy === "k-backup"
-                  ? t("settings.storageBackingUp")
-                  : t("settings.kdriveBackup")
-              }
-              onPress={() => void handleKDriveBackup()}
-              disabled={busy !== null}
-            />
-            <PrimaryButton
-              label={
-                busy === "k-restore"
-                  ? t("settings.storageRestoring")
-                  : t("settings.kdriveRestore")
-              }
-              onPress={() => void handleKDriveRestore()}
-              disabled={busy !== null}
-              variant="secondary"
-            />
-            <PrimaryButton
-              label={
-                busy === "k-disconnect"
-                  ? t("settings.storageDisconnecting")
-                  : t("settings.kdriveDisconnect")
-              }
-              onPress={() => void handleKDriveDisconnect()}
-              disabled={busy !== null}
-              variant="ghost"
-            />
+          <View className="gap-3 items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "k-backup"
+                    ? t("settings.storageBackingUp")
+                    : t("settings.kdriveBackup")
+                }
+                onPress={() => void handleKDriveBackup()}
+                disabled={busy !== null}
+              />
+            </View>
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "k-restore"
+                    ? t("settings.storageRestoring")
+                    : t("settings.kdriveRestore")
+                }
+                onPress={() => void handleKDriveRestore()}
+                disabled={busy !== null}
+                variant="secondary"
+              />
+            </View>
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "k-disconnect"
+                    ? t("settings.storageDisconnecting")
+                    : t("settings.kdriveDisconnect")
+                }
+                onPress={() => void handleKDriveDisconnect()}
+                disabled={busy !== null}
+                variant="ghost"
+              />
+            </View>
           </View>
         )}
       </View>
@@ -587,47 +607,57 @@ export function StorageSettings({ className = "" }: { className?: string }) {
             <Text className={`text-xs leading-5 ${textMuted(isDark)}`}>
               {t("settings.onedriveHelp")}
             </Text>
-            <PrimaryButton
-              label={
-                busy === "o-connect"
-                  ? t("settings.storageConnecting")
-                  : t("settings.onedriveConnect")
-              }
-              onPress={() => void handleOneDriveConnect()}
-              disabled={busy !== null || oToken.trim().length < 40}
-            />
+            <View className="items-center">
+              <View className="w-1/2">
+                <PrimaryButton
+                  label={
+                    busy === "o-connect"
+                      ? t("settings.storageConnecting")
+                      : t("settings.onedriveConnect")
+                  }
+                  onPress={() => void handleOneDriveConnect()}
+                  disabled={busy !== null || oToken.trim().length < 40}
+                />
+              </View>
+            </View>
           </View>
         ) : (
-          <View className="gap-3">
-            <PrimaryButton
-              label={
-                busy === "o-backup"
-                  ? t("settings.storageBackingUp")
-                  : t("settings.onedriveBackup")
-              }
-              onPress={() => void handleOneDriveBackup()}
-              disabled={busy !== null}
-            />
-            <PrimaryButton
-              label={
-                busy === "o-restore"
-                  ? t("settings.storageRestoring")
-                  : t("settings.onedriveRestore")
-              }
-              onPress={() => void handleOneDriveRestore()}
-              disabled={busy !== null}
-              variant="secondary"
-            />
-            <PrimaryButton
-              label={
-                busy === "o-disconnect"
-                  ? t("settings.storageDisconnecting")
-                  : t("settings.onedriveDisconnect")
-              }
-              onPress={() => void handleOneDriveDisconnect()}
-              disabled={busy !== null}
-              variant="ghost"
-            />
+          <View className="gap-3 items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "o-backup"
+                    ? t("settings.storageBackingUp")
+                    : t("settings.onedriveBackup")
+                }
+                onPress={() => void handleOneDriveBackup()}
+                disabled={busy !== null}
+              />
+            </View>
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "o-restore"
+                    ? t("settings.storageRestoring")
+                    : t("settings.onedriveRestore")
+                }
+                onPress={() => void handleOneDriveRestore()}
+                disabled={busy !== null}
+                variant="secondary"
+              />
+            </View>
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  busy === "o-disconnect"
+                    ? t("settings.storageDisconnecting")
+                    : t("settings.onedriveDisconnect")
+                }
+                onPress={() => void handleOneDriveDisconnect()}
+                disabled={busy !== null}
+                variant="ghost"
+              />
+            </View>
           </View>
         )}
       </View>

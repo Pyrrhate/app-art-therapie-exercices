@@ -71,12 +71,14 @@ export function SecondRoundTransitionStep({
           </View>
         );
       })}
-      <View className="mt-2">
-        <PrimaryButton
-          label={loading ? t("secondRound.ctaLoading") : t("secondRound.cta")}
-          onPress={onContinue}
-          disabled={!secondRoundTransitionComplete(answers) || loading}
-        />
+      <View className="mt-2 items-center">
+        <View className="w-1/2">
+          <PrimaryButton
+            label={loading ? t("secondRound.ctaLoading") : t("secondRound.cta")}
+            onPress={onContinue}
+            disabled={!secondRoundTransitionComplete(answers) || loading}
+          />
+        </View>
       </View>
     </View>
   );

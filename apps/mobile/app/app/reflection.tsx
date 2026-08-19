@@ -1697,13 +1697,15 @@ Miroir initial (à conserver — ne pas recopier) :
               answers={preAnswers}
               onChange={setPreAnswers}
             />
-            <View className="mt-6">
-              <PrimaryButton
-                label={t("reflection.continueToCapture")}
-                onPress={() => setWorkflowPhase("capture")}
-                disabled={!preAnswersComplete(preAnswers)}
-                showArrow
-              />
+            <View className="mt-6 items-center">
+              <View className="w-1/2">
+                <PrimaryButton
+                  label={t("reflection.continueToCapture")}
+                  onPress={() => setWorkflowPhase("capture")}
+                  disabled={!preAnswersComplete(preAnswers)}
+                  showArrow
+                />
+              </View>
             </View>
           </View>
         </WorkflowStepTransition>
@@ -1884,16 +1886,20 @@ Miroir initial (à conserver — ne pas recopier) :
             </View>
           </View>
           {isWriting && photoUri && (
-            <PrimaryButton
-              label={
-                ocrLoading
-                  ? t("reflection.ocrCtaLoading")
-                  : t("reflection.ocrCta")
-              }
-              onPress={handleTranscribePhoto}
-              variant="secondary"
-              disabled={busy}
-            />
+            <View className="items-center">
+              <View className="w-1/2">
+                <PrimaryButton
+                  label={
+                    ocrLoading
+                      ? t("reflection.ocrCtaLoading")
+                      : t("reflection.ocrCta")
+                  }
+                  onPress={handleTranscribePhoto}
+                  variant="secondary"
+                  disabled={busy}
+                />
+              </View>
+            </View>
           )}
 
           {!isWriting && !techniqueNeedsByokForAi && (
@@ -1940,21 +1946,25 @@ Miroir initial (à conserver — ne pas recopier) :
             </View>
           ) : null}
 
-          <PrimaryButton
-            label={
-              loadingReflection
-                ? t("reflection.analyzeLoading")
-                : preparingPhoto
-                  ? t("reflection.analyzePreparing")
-                  : supportsAiAnalysis
-                    ? useFilMemory
-                      ? t("reflection.analyzeWithFil")
-                      : t("reflection.analyzeCta")
-                    : t("reflection.welcomeFeelingCta")
-            }
-            onPress={handleRequestReflection}
-            disabled={!canAnalyze || busy}
-          />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={
+                  loadingReflection
+                    ? t("reflection.analyzeLoading")
+                    : preparingPhoto
+                      ? t("reflection.analyzePreparing")
+                      : supportsAiAnalysis
+                        ? useFilMemory
+                          ? t("reflection.analyzeWithFil")
+                          : t("reflection.analyzeCta")
+                        : t("reflection.welcomeFeelingCta")
+                }
+                onPress={handleRequestReflection}
+                disabled={!canAnalyze || busy}
+              />
+            </View>
+          </View>
           {loadingReflection && (
             <ZenWaitIndicator active estimatedSeconds={90} />
           )}
@@ -2007,20 +2017,24 @@ Miroir initial (à conserver — ne pas recopier) :
             ) : null}
 
             {reflectionSource === "ai" && (
-              <PrimaryButton
-                label={
-                  loadingReflection && !deepenedReflection
-                    ? t("reflection.deepenLoading")
-                    : loadingReflection
-                      ? t("reflection.deepenAgainLoading")
-                      : deepenedReflection
-                        ? t("reflection.deepenAgainCta")
-                        : t("reflection.deepenCta")
-                }
-                onPress={() => void handleDeepenReflection()}
-                variant="secondary"
-                disabled={busy}
-              />
+              <View className="items-center">
+                <View className="w-1/2">
+                  <PrimaryButton
+                    label={
+                      loadingReflection && !deepenedReflection
+                        ? t("reflection.deepenLoading")
+                        : loadingReflection
+                          ? t("reflection.deepenAgainLoading")
+                          : deepenedReflection
+                            ? t("reflection.deepenAgainCta")
+                            : t("reflection.deepenCta")
+                    }
+                    onPress={() => void handleDeepenReflection()}
+                    variant="secondary"
+                    disabled={busy}
+                  />
+                </View>
+              </View>
             )}
 
             {deepenedReflection ? (
@@ -2045,16 +2059,20 @@ Miroir initial (à conserver — ne pas recopier) :
               </View>
             ) : null}
 
-            <PrimaryButton
-              label={
-                exportingPdf
-                  ? t("reflection.exportPdfBusy")
-                  : t("reflection.exportPdf")
-              }
-              onPress={() => void handleExportPdf()}
-              variant="ghost"
-              disabled={exportingPdf}
-            />
+            <View className="items-center">
+              <View className="w-1/2">
+                <PrimaryButton
+                  label={
+                    exportingPdf
+                      ? t("reflection.exportPdfBusy")
+                      : t("reflection.exportPdf")
+                  }
+                  onPress={() => void handleExportPdf()}
+                  variant="ghost"
+                  disabled={exportingPdf}
+                />
+              </View>
+            </View>
           </View>
         )}
 
@@ -2069,30 +2087,38 @@ Miroir initial (à conserver — ne pas recopier) :
             <Text className="text-sand-600 text-sm leading-6 mb-4">
               {displayFollowUpExercise}
             </Text>
-            <PrimaryButton
-              label={t("reflection.followUpCta")}
-              onPress={handleStartFollowUp}
-              variant="secondary"
-            />
+            <View className="items-center">
+              <View className="w-1/2">
+                <PrimaryButton
+                  label={t("reflection.followUpCta")}
+                  onPress={handleStartFollowUp}
+                  variant="secondary"
+                />
+              </View>
+            </View>
           </View>
         )}
 
         {showSecondRoundCta && (
-          <View className="mb-6">
-            <PrimaryButton
-              label={t("reflection.secondRoundCta")}
-              onPress={handleStartSecondRound}
-              variant="secondary"
-            />
+          <View className="mb-6 items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("reflection.secondRoundCta")}
+                onPress={handleStartSecondRound}
+                variant="secondary"
+              />
+            </View>
           </View>
         )}
 
         {showDeepIntegrationCta && (
-          <View className="mb-6">
-            <PrimaryButton
-              label={t("reflection.integrationCta")}
-              onPress={() => setWorkflowPhase("post_integration")}
-            />
+          <View className="mb-6 items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("reflection.integrationCta")}
+                onPress={() => setWorkflowPhase("post_integration")}
+              />
+            </View>
           </View>
         )}
         </WorkflowStepTransition>
@@ -2105,12 +2131,14 @@ Miroir initial (à conserver — ne pas recopier) :
               answers={postAnswers}
               onChange={setPostAnswers}
             />
-            <View className="mt-6 gap-3">
-              <PrimaryButton
-                label={t("reflection.completeSessionCta")}
-                onPress={() => void handleSaveIntegration()}
-                disabled={!integrationAnswersComplete(postAnswers)}
-              />
+            <View className="mt-6 gap-3 items-center">
+              <View className="w-1/2">
+                <PrimaryButton
+                  label={t("reflection.completeSessionCta")}
+                  onPress={() => void handleSaveIntegration()}
+                  disabled={!integrationAnswersComplete(postAnswers)}
+                />
+              </View>
             </View>
           </View>
         </WorkflowStepTransition>
@@ -2125,23 +2153,29 @@ Miroir initial (à conserver — ne pas recopier) :
             <Text className="text-sand-600 text-sm leading-6 mb-4">
               {t("reflection.completeBody")}
             </Text>
-            <PrimaryButton
-              label={
-                exportingPdf
-                  ? t("reflection.exportPdfBusy")
-                  : t("reflection.exportPdf")
-              }
-              onPress={() => void handleExportPdf()}
-              variant="secondary"
-              disabled={exportingPdf}
-            />
-            {savedJournalId ? (
-              <PrimaryButton
-                label={t("reflection.viewJournalCta")}
-                onPress={() => router.push(ROUTES.filEntry(savedJournalId))}
-                variant="ghost"
-              />
-            ) : null}
+            <View className="items-center gap-3">
+              <View className="w-1/2">
+                <PrimaryButton
+                  label={
+                    exportingPdf
+                      ? t("reflection.exportPdfBusy")
+                      : t("reflection.exportPdf")
+                  }
+                  onPress={() => void handleExportPdf()}
+                  variant="secondary"
+                  disabled={exportingPdf}
+                />
+              </View>
+              {savedJournalId ? (
+                <View className="w-1/2">
+                  <PrimaryButton
+                    label={t("reflection.viewJournalCta")}
+                    onPress={() => router.push(ROUTES.filEntry(savedJournalId))}
+                    variant="ghost"
+                  />
+                </View>
+              ) : null}
+            </View>
           </View>
         </WorkflowStepTransition>
       )}

@@ -147,23 +147,27 @@ export default function ExerciseScreen() {
           silence
         />
 
-        <View className="gap-3">
-          <PrimaryButton
-            label={t("exercise.doneCta")}
-            onPress={() => {
-              setPeekConsigne(false);
-              setSilenceMode(false);
-              router.push(ROUTES.reflection);
-            }}
-          />
-          <PrimaryButton
-            label={t("exercise.silenceExit")}
-            onPress={() => {
-              setPeekConsigne(false);
-              setSilenceMode(false);
-            }}
-            variant="ghost"
-          />
+        <View className="gap-3 items-center">
+          <View className="w-1/2">
+            <PrimaryButton
+              label={t("exercise.doneCta")}
+              onPress={() => {
+                setPeekConsigne(false);
+                setSilenceMode(false);
+                router.push(ROUTES.reflection);
+              }}
+            />
+          </View>
+          <View className="w-1/2">
+            <PrimaryButton
+              label={t("exercise.silenceExit")}
+              onPress={() => {
+                setPeekConsigne(false);
+                setSilenceMode(false);
+              }}
+              variant="ghost"
+            />
+          </View>
         </View>
       </View>
     );
@@ -176,19 +180,23 @@ export default function ExerciseScreen() {
       compactTop
       fixedHeader={<ScreenNavBar backLabel={t("nav.backRitual")} />}
       stickyFooter={
-        <View className="gap-3">
-          <PrimaryButton
-            label={t("exercise.silenceCta")}
-            onPress={() => {
-              setPeekConsigne(false);
-              setSilenceMode(true);
-            }}
-            variant="secondary"
-          />
-          <PrimaryButton
-            label={t("exercise.doneCta")}
-            onPress={() => router.push(ROUTES.reflection)}
-          />
+        <View className="gap-3 items-center">
+          <View className="w-1/2">
+            <PrimaryButton
+              label={t("exercise.silenceCta")}
+              onPress={() => {
+                setPeekConsigne(false);
+                setSilenceMode(true);
+              }}
+              variant="secondary"
+            />
+          </View>
+          <View className="w-1/2">
+            <PrimaryButton
+              label={t("exercise.doneCta")}
+              onPress={() => router.push(ROUTES.reflection)}
+            />
+          </View>
         </View>
       }
     >
@@ -253,7 +261,8 @@ export default function ExerciseScreen() {
       </ContentCard>
 
       {!creativeTips && !tipsLoading ? (
-        <View className="mb-3">
+        <View className="mb-3 items-center">
+          <View className="w-1/2">
           <PrimaryButton
             label={t("exercise.creativeTipsCta")}
             onPress={() => {
@@ -280,6 +289,7 @@ export default function ExerciseScreen() {
             }}
             variant="ghost"
           />
+          </View>
         </View>
       ) : null}
 

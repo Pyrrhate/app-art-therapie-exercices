@@ -169,11 +169,15 @@ export default function CustomWorkspaceScreen() {
               {error}
             </Text>
           )}
-          <PrimaryButton
-            label={t("custom.cta")}
-            onPress={() => void handleGenerate()}
-            disabled={!canGenerate}
-          />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("custom.cta")}
+                onPress={() => void handleGenerate()}
+                disabled={!canGenerate}
+              />
+            </View>
+          </View>
         </View>
       )}
     </ScreenContainer>

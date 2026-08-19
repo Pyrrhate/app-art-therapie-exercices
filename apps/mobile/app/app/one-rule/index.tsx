@@ -100,18 +100,22 @@ export default function OneRuleScreen() {
       </View>
 
       {!kept ? (
-        <View className="gap-3 mb-8">
-          <PrimaryButton label={t("oneRule.keep")} onPress={handleKeep} />
-          <PrimaryButton
-            label={
-              remainingRedraws > 0
-                ? t("oneRule.redraw")
-                : t("oneRule.redrawExhausted")
-            }
-            onPress={handleRedraw}
-            variant="secondary"
-            disabled={remainingRedraws <= 0}
-          />
+        <View className="gap-3 mb-8 items-center">
+          <View className="w-1/2">
+            <PrimaryButton label={t("oneRule.keep")} onPress={handleKeep} />
+          </View>
+          <View className="w-1/2">
+            <PrimaryButton
+              label={
+                remainingRedraws > 0
+                  ? t("oneRule.redraw")
+                  : t("oneRule.redrawExhausted")
+              }
+              onPress={handleRedraw}
+              variant="secondary"
+              disabled={remainingRedraws <= 0}
+            />
+          </View>
         </View>
       ) : (
         <View className="mb-8">
@@ -146,12 +150,14 @@ export default function OneRuleScreen() {
             moduleStatement={moduleStatement}
           />
 
-          <View className="mt-4">
-            <PrimaryButton
-              label={t("oneRule.restart")}
-              onPress={handleRestart}
-              variant="ghost"
-            />
+          <View className="mt-4 items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("oneRule.restart")}
+                onPress={handleRestart}
+                variant="ghost"
+              />
+            </View>
           </View>
         </View>
       )}

@@ -105,12 +105,14 @@ export default function ThreeGesturesScreen() {
         })}
       </View>
 
-      <View className="mb-4">
-        <PrimaryButton
-          label={t("threeGestures.refresh")}
-          onPress={handleRefresh}
-          variant="ghost"
-        />
+      <View className="mb-4 items-center">
+        <View className="w-1/2">
+          <PrimaryButton
+            label={t("threeGestures.refresh")}
+            onPress={handleRefresh}
+            variant="ghost"
+          />
+        </View>
       </View>
 
       {selected ? (

@@ -450,20 +450,22 @@ export default function SettingsScreen() {
           <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
             {t("settings.backupHint")}
           </Text>
-          <View className="gap-3">
-            <PrimaryButton
-              label={backupBusy ? "…" : t("settings.backupExport")}
-              onPress={() => void handleExportBackup()}
-              disabled={backupBusy}
-              align="stretch"
-            />
-            <PrimaryButton
-              label={t("settings.backupRestore")}
-              onPress={() => void handleRestoreBackup()}
-              variant="ghost"
-              disabled={backupBusy}
-              align="stretch"
-            />
+          <View className="gap-3 items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={backupBusy ? "…" : t("settings.backupExport")}
+                onPress={() => void handleExportBackup()}
+                disabled={backupBusy}
+              />
+            </View>
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("settings.backupRestore")}
+                onPress={() => void handleRestoreBackup()}
+                variant="ghost"
+                disabled={backupBusy}
+              />
+            </View>
           </View>
         </View>
 
@@ -483,13 +485,16 @@ export default function SettingsScreen() {
           <Text className={`text-sm mb-4 leading-5 ${textSecondary(isDark)}`}>
             {t("settings.eraseHint")}
           </Text>
-          <PrimaryButton
-            label={t("settings.eraseButton")}
-            onPress={() => void handleClearAllData()}
-            variant="ghost"
-            disabled={backupBusy}
-            align="stretch"
-          />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("settings.eraseButton")}
+                onPress={() => void handleClearAllData()}
+                variant="ghost"
+                disabled={backupBusy}
+              />
+            </View>
+          </View>
         </View>
 
         <SupportButton />

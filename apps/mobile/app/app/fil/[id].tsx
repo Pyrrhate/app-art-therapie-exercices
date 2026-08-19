@@ -580,16 +580,24 @@ export default function FilDetailScreen() {
           </View>
         ) : null}
         {!ritual && nuancier && m?.impulse && (
-          <PrimaryButton
-            label={t("detail.reuseNuancier")}
-            onPress={() => void handleReuseNuancier()}
-          />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("detail.reuseNuancier")}
+                onPress={() => void handleReuseNuancier()}
+              />
+            </View>
+          </View>
         )}
         {!ritual && !nuancier && m?.impulse && m.technique && (
-          <PrimaryButton
-            label={t("detail.goToExercise")}
-            onPress={() => void handleRedoFromAmorce()}
-          />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("detail.goToExercise")}
+                onPress={() => void handleRedoFromAmorce()}
+              />
+            </View>
+          </View>
         )}
         <View className="flex-row gap-3">
           <View className="flex-1">

@@ -198,29 +198,34 @@ export function MultimodalExerciseWorkspace({
       {step === "analyzing" ? <AnalysisLoadingState /> : null}
 
       {step !== "analyzing" ? (
-        <View className="mt-10 gap-3">
+        <View className="mt-10 gap-3 items-center">
           {step === "upload" ? (
-            <PrimaryButton
-              label={t("multimodal.analyzeCta")}
-              onPress={() => void handleSubmit()}
-              disabled={!file}
-            />
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("multimodal.analyzeCta")}
+                onPress={() => void handleSubmit()}
+                disabled={!file}
+              />
+            </View>
           ) : (
-            <PrimaryButton
-              label={t("multimodal.continue")}
-              onPress={goNext}
-              disabled={!canContinue}
-              showArrow
-            />
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("multimodal.continue")}
+                onPress={goNext}
+                disabled={!canContinue}
+                showArrow
+              />
+            </View>
           )}
 
           {step !== "media" ? (
-            <PrimaryButton
-              label={t("multimodal.back")}
-              onPress={goBack}
-              variant="ghost"
-              align="stretch"
-            />
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("multimodal.back")}
+                onPress={goBack}
+                variant="ghost"
+              />
+            </View>
           ) : null}
 
           {exerciseData.exercise ? (

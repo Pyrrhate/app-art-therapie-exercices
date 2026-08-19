@@ -188,11 +188,15 @@ export default function RitualScreen() {
             {error}
           </Text>
         )}
-        <PrimaryButton
-          label={loading ? t("impulse.ctaLoading") : t("impulse.cta")}
-          onPress={handleContinue}
-          disabled={!canContinue || loading}
-        />
+        <View className="items-center">
+          <View className="w-1/2">
+            <PrimaryButton
+              label={loading ? t("impulse.ctaLoading") : t("impulse.cta")}
+              onPress={handleContinue}
+              disabled={!canContinue || loading}
+            />
+          </View>
+        </View>
         {loading && (
           <View className="mt-2 items-center">
             <ActivityIndicator color="#6B8F71" />
