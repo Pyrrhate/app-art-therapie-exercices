@@ -211,7 +211,7 @@ export default function WelcomeScreen() {
 
       <View className="gap-3">
         <View
-          className={`border-t pt-4 ${
+          className={`border-t pt-8 ${
             isDark ? "border-sand-700" : "border-sand-200"
           }`}
         >
