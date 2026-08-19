@@ -252,7 +252,11 @@ export default function FilScreen() {
             </View>
           </View>
 
-          <View className="flex-row flex-wrap gap-2">
+          <View
+            className={`flex-row flex-wrap gap-2 pt-4 mt-1 border-t ${
+              isDark ? "border-sand-700" : "border-sand-200"
+            }`}
+          >
             <FilTagChip
               label={t("list.filterAll")}
               active={tagFilter === "all"}
