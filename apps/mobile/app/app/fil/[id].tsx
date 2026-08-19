@@ -162,7 +162,10 @@ export default function FilDetailScreen() {
 
   function startEdit() {
     if (!entry) return;
-    setDraftNotes(entry.metadata?.privateNotes || entry.detail || "");
+    const personal = entry.metadata?.privateNotes?.trim() ?? "";
+    setDraftNotes(
+      personal || (isNoteFilEntry(entry) ? entry.detail?.trim() ?? "" : "")
+    );
     setDraftPhotos(entry.metadata?.privatePhotoUris ?? []);
     setEditing(true);
   }
@@ -193,11 +196,10 @@ export default function FilDetailScreen() {
     try {
       const notes = draftNotes.trim();
       const photos = await persistJournalPhotos(draftPhotos.filter(isRenderableImageUri));
+      const isNote = isNoteFilEntry(entry);
       const updated = await patchFilEntry(entry.id, {
-        summary: isNoteFilEntry(entry)
-          ? notes.slice(0, 48) || entry.summary
-          : entry.summary,
-        detail: notes || entry.detail,
+        summary: isNote ? notes.slice(0, 48) || entry.summary : entry.summary,
+        detail: isNote ? notes || entry.detail : entry.detail,
         metadata: {
           ...entry.metadata,
           privateNotes: notes,
@@ -273,7 +275,9 @@ export default function FilDetailScreen() {
     ? sanitizeAiDisplayText(m.reflection)
     : "";
   const paragraphs = reflection.split(/\n\s*\n/).filter((p) => p.trim());
-  const privateNotes = m?.privateNotes?.trim() || (note ? entry.detail : "");
+  const privateNotes =
+    m?.privateNotes?.trim() || (note ? entry.detail?.trim() ?? "" : "");
+  const secondRoundDone = hasCompletedSecondRound(entry);
   const ritualPhoto =
     resolvedLightbox[lightboxUris.indexOf(m?.photoUri ?? "")] ?? m?.photoUri;
 
@@ -299,34 +303,6 @@ export default function FilDetailScreen() {
           onDismiss={() => setNotice(null)}
         />
       ) : null}
-
-      <View className="flex-row gap-2 mb-6">
-        {editing ? (
-          <>
-            <View className="flex-1">
-              <PrimaryButton
-                label={saving ? t("detail.saveEditBusy") : t("detail.saveEdit")}
-                onPress={() => void handleSaveEdit()}
-                disabled={saving}
-              />
-            </View>
-            <View className="flex-1">
-              <PrimaryButton
-                label={t("detail.cancelEdit")}
-                onPress={() => setEditing(false)}
-                variant="ghost"
-                disabled={saving}
-              />
-            </View>
-          </>
-        ) : (
-          <PrimaryButton
-            label={t("detail.edit")}
-            onPress={startEdit}
-            variant="secondary"
-          />
-        )}
-      </View>
 
       {ritualPhoto ? (
         <Pressable
@@ -384,62 +360,11 @@ export default function FilDetailScreen() {
             {exercise}
           </Text>
         </View>
-      ) : entry.detail && !ritual && !note && !privateNotes ? (
+      ) : entry.detail && !ritual && !note ? (
         <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
           <Text className={`text-base leading-7 ${textSecondary(isDark)}`}>
             {entry.detail}
           </Text>
-        </View>
-      ) : null}
-
-      {editing || privateNotes || displayPhotos.length > 0 ? (
-        <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
-          <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-            {t("detail.privateNotes")}
-          </Text>
-          {editing ? (
-            <EinkEditor
-              value={draftNotes}
-              onChangeText={setDraftNotes}
-              placeholder={t("list.composePlaceholder")}
-            />
-          ) : privateNotes ? (
-            <NoteRenderer content={privateNotes} />
-          ) : null}
-          {editing || displayPhotos.length > 0 ? (
-            <View className="mt-4">
-              <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
-                {t("detail.privatePhotos")}
-              </Text>
-              {editing ? (
-                <View className="mb-3">
-                  <PrimaryButton
-                    label={
-                      displayPhotos.length
-                        ? t("list.composePhotoMore", { count: displayPhotos.length })
-                        : t("list.composePhoto")
-                    }
-                    onPress={() => void handlePickPhoto()}
-                    variant="ghost"
-                  />
-                </View>
-              ) : null}
-              <PhotoGrid
-                uris={displayPhotos}
-                onPress={(uri) => {
-                  const index = Math.max(
-                    resolvedLightbox.indexOf(uri),
-                    lightboxUris.indexOf(uri)
-                  );
-                  setViewerIndex(index >= 0 ? index : 0);
-                }}
-                editing={editing}
-                onRemove={(uri) =>
-                  setDraftPhotos((prev) => prev.filter((x) => x !== uri))
-                }
-              />
-            </View>
-          ) : null}
         </View>
       ) : null}
 
@@ -553,24 +478,107 @@ export default function FilDetailScreen() {
         </View>
       ) : null}
 
+      <View className={`rounded-3xl border px-5 py-5 mb-4 ${panelBg(isDark)}`}>
+        <View className="flex-row items-center justify-between gap-3 mb-3">
+          <Text className="text-sage-600 text-xs uppercase tracking-wider flex-1">
+            {t("detail.privateNotes")}
+          </Text>
+          {!editing ? (
+            <PrimaryButton
+              label={t("detail.edit")}
+              onPress={startEdit}
+              variant="ghost"
+              align="start"
+            />
+          ) : null}
+        </View>
+        {editing ? (
+          <>
+            <EinkEditor
+              value={draftNotes}
+              onChangeText={setDraftNotes}
+              placeholder={t("list.composePlaceholder")}
+            />
+            <View className="flex-row gap-2 mt-4">
+              <View className="flex-1">
+                <PrimaryButton
+                  label={saving ? t("detail.saveEditBusy") : t("detail.saveEdit")}
+                  onPress={() => void handleSaveEdit()}
+                  disabled={saving}
+                />
+              </View>
+              <View className="flex-1">
+                <PrimaryButton
+                  label={t("detail.cancelEdit")}
+                  onPress={() => setEditing(false)}
+                  variant="ghost"
+                  disabled={saving}
+                />
+              </View>
+            </View>
+          </>
+        ) : privateNotes ? (
+          <NoteRenderer content={privateNotes} />
+        ) : null}
+        {editing || displayPhotos.length > 0 ? (
+          <View className="mt-4">
+            <Text className="text-sage-600 text-xs uppercase tracking-wider mb-3">
+              {t("detail.privatePhotos")}
+            </Text>
+            {editing ? (
+              <View className="mb-3">
+                <PrimaryButton
+                  label={
+                    displayPhotos.length
+                      ? t("list.composePhotoMore", { count: displayPhotos.length })
+                      : t("list.composePhoto")
+                  }
+                  onPress={() => void handlePickPhoto()}
+                  variant="ghost"
+                />
+              </View>
+            ) : null}
+            <PhotoGrid
+              uris={displayPhotos}
+              onPress={(uri) => {
+                const index = Math.max(
+                  resolvedLightbox.indexOf(uri),
+                  lightboxUris.indexOf(uri)
+                );
+                setViewerIndex(index >= 0 ? index : 0);
+              }}
+              editing={editing}
+              onRemove={(uri) =>
+                setDraftPhotos((prev) => prev.filter((x) => x !== uri))
+              }
+            />
+          </View>
+        ) : null}
+      </View>
+
       <View className="mb-6">
         <FilTagEditor tags={entry.tags ?? []} onChange={(tags) => void handleTagsChange(tags)} />
       </View>
 
       <View className="gap-3 pb-4">
-        {ritual && (
-          <PrimaryButton
-            label={t("detail.redoExercise")}
-            onPress={handleRedoExercise}
-          />
-        )}
-        {ritual && !hasCompletedSecondRound(entry) && (
-          <PrimaryButton
-            label={t("detail.secondRound")}
-            onPress={handleStartSecondRound}
-            variant="secondary"
-          />
-        )}
+        {ritual ? (
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <PrimaryButton
+                label={t("detail.redoExercise")}
+                onPress={handleRedoExercise}
+              />
+            </View>
+            <View className="flex-1">
+              <PrimaryButton
+                label={t("detail.secondRound")}
+                onPress={handleStartSecondRound}
+                variant="secondary"
+                disabled={secondRoundDone}
+              />
+            </View>
+          </View>
+        ) : null}
         {!ritual && nuancier && m?.impulse && (
           <PrimaryButton
             label={t("detail.reuseNuancier")}
@@ -583,19 +591,25 @@ export default function FilDetailScreen() {
             onPress={() => void handleRedoFromAmorce()}
           />
         )}
-        {ritual && (
-          <PrimaryButton
-            label={exporting ? t("detail.exportBusy") : t("detail.exportPdf")}
-            onPress={handleExportPdf}
-            variant="secondary"
-            disabled={exporting}
-          />
-        )}
-        <PrimaryButton
-          label={t("detail.remove")}
-          onPress={() => void handleDelete()}
-          variant="ghost"
-        />
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <PrimaryButton
+              label={t("detail.remove")}
+              onPress={() => void handleDelete()}
+              variant="ghost"
+            />
+          </View>
+          {ritual ? (
+            <View className="flex-1">
+              <PrimaryButton
+                label={exporting ? t("detail.exportBusy") : t("detail.exportPdf")}
+                onPress={handleExportPdf}
+                variant="secondary"
+                disabled={exporting}
+              />
+            </View>
+          ) : null}
+        </View>
       </View>
 
       <ImageLightbox
