@@ -223,12 +223,16 @@ export default function SeasonsScreen() {
                 ),
               })}
             </Text>
-            <PrimaryButton
-              label={active ? t("list.replaceAndStart") : t("list.start")}
-              onPress={() => void beginCatalog(def.id)}
-              disabled={busy}
-              variant={active ? "ghost" : "primary"}
-            />
+            <View className="items-center">
+              <View className="w-1/2">
+                <PrimaryButton
+                  label={active ? t("list.replaceAndStart") : t("list.start")}
+                  onPress={() => void beginCatalog(def.id)}
+                  disabled={busy}
+                  variant={active ? "ghost" : "primary"}
+                />
+              </View>
+            </View>
           </View>
         ))}
       </View>
