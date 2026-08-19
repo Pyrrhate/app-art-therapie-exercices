@@ -297,11 +297,15 @@ export default function SeasonsScreen() {
             }
             techniques={techniques}
           />
-          <PrimaryButton
-            label={t("custom.start")}
-            onPress={() => void beginCustom()}
-            disabled={busy}
-          />
+          <View className="items-center">
+            <View className="w-1/2">
+              <PrimaryButton
+                label={t("custom.start")}
+                onPress={() => void beginCustom()}
+                disabled={busy}
+              />
+            </View>
+          </View>
         </View>
       ) : null}
 
