@@ -211,20 +211,6 @@ export default function FilScreen() {
             </View>
           ) : null}
 
-          <PrimaryButton
-            label={
-              selectMode
-                ? t("list.selectCancel")
-                : t("list.selectStart", { max: MAX_FIL_ANALYSIS })
-            }
-            onPress={() => {
-              setSelectMode((v) => !v);
-              setSelectedIds([]);
-              setAnalysisResult(null);
-            }}
-            variant={selectMode ? "ghost" : "secondary"}
-          />
-
           {selectMode ? (
             <Text className={`text-xs mb-1 ${textMuted(isDark)}`}>
               {t("list.selectHint", {
@@ -234,17 +220,37 @@ export default function FilScreen() {
             </Text>
           ) : null}
 
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t("list.searchPlaceholder")}
-            placeholderTextColor={isDark ? "#8A8078" : "#B8A090"}
-            className={`rounded-2xl border px-4 py-3 text-base ${
-              isDark
-                ? "border-sand-600 bg-sand-800 text-sand-100"
-                : "border-sand-200 bg-white text-sand-800"
-            }`}
-          />
+          <View className="flex-row gap-2 items-stretch">
+            <View className="flex-1">
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder={t("list.searchPlaceholder")}
+                placeholderTextColor={isDark ? "#8A8078" : "#B8A090"}
+                className={`rounded-2xl border px-4 py-3 text-base flex-1 ${
+                  isDark
+                    ? "border-sand-600 bg-sand-800 text-sand-100"
+                    : "border-sand-200 bg-white text-sand-800"
+                }`}
+              />
+            </View>
+            <View className="flex-1 justify-center">
+              <PrimaryButton
+                label={
+                  selectMode
+                    ? t("list.selectCancel")
+                    : t("list.selectStart", { max: MAX_FIL_ANALYSIS })
+                }
+                onPress={() => {
+                  setSelectMode((v) => !v);
+                  setSelectedIds([]);
+                  setAnalysisResult(null);
+                }}
+                variant={selectMode ? "ghost" : "secondary"}
+                align="stretch"
+              />
+            </View>
+          </View>
 
           <View className="flex-row flex-wrap gap-2">
             <FilTagChip
@@ -309,19 +315,25 @@ export default function FilScreen() {
           ) : null}
 
           <View
-            className={`gap-3 pt-6 mt-2 border-t ${
+            className={`flex-row gap-3 pt-6 mt-2 border-t ${
               isDark ? "border-sand-700" : "border-sand-200"
             }`}
           >
-            <PrimaryButton
-              label={t("list.prepareExercise")}
-              onPress={() => router.push(ROUTES.ritual)}
-            />
-            <PrimaryButton
-              label={t("list.clearAll")}
-              onPress={() => void handleClear()}
-              variant="ghost"
-            />
+            <View className="flex-1">
+              <PrimaryButton
+                label={t("list.clearAll")}
+                onPress={() => void handleClear()}
+                variant="ghost"
+                align="stretch"
+              />
+            </View>
+            <View className="flex-1">
+              <PrimaryButton
+                label={t("list.prepareExercise")}
+                onPress={() => router.push(ROUTES.ritual)}
+                align="stretch"
+              />
+            </View>
           </View>
         </View>
       )}
