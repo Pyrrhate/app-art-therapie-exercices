@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { PastekLogoIcon } from "@/components/brand/PastekBrandImage";
@@ -14,6 +14,9 @@ interface AppHeaderProps {
   onNavigateTraces?: () => void;
 }
 
+/** Sous cette largeur, le libellé « Pastek Art » cède la place au menu. */
+const BRAND_TEXT_MIN_WIDTH = 720;
+
 function MenuDot({ isDark }: { isDark: boolean }) {
   return (
     <Text className={`text-xs px-0.5 ${textMuted(isDark)}`} accessibilityElementsHidden>
@@ -25,6 +28,8 @@ function MenuDot({ isDark }: { isDark: boolean }) {
 export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps) {
   const isDark = useIsDark();
   const { t } = useTranslation(["app", "common"]);
+  const { width } = useWindowDimensions();
+  const showBrandName = width >= BRAND_TEXT_MIN_WIDTH;
 
   return (
     <View className={compact ? "mb-4" : "mb-10"}>
@@ -34,13 +39,17 @@ export function AppHeader({ compact = false, onNavigateTraces }: AppHeaderProps)
           onPress={navigateSiteHome}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={t("app:header.backHome")}
-          className="flex-row items-center gap-2.5 shrink min-w-0"
+          accessibilityLabel={
+            showBrandName ? t("app:header.backHome") : t("common:brand.name")
+          }
+          className={`flex-row items-center shrink min-w-0 ${showBrandName ? "gap-2.5" : ""}`}
         >
           <PastekLogoIcon size={36} />
-          <Text className={`font-display text-lg ${textPrimary(isDark)}`} numberOfLines={1}>
-            {t("common:brand.name")}
-          </Text>
+          {showBrandName ? (
+            <Text className={`font-display text-lg ${textPrimary(isDark)}`} numberOfLines={1}>
+              {t("common:brand.name")}
+            </Text>
+          ) : null}
         </Pressable>
 
         <View className="flex-row items-center shrink-0">

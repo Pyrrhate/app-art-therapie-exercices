@@ -210,22 +210,28 @@ export default function WelcomeScreen() {
       ) : null}
 
       <View className="gap-3">
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <PrimaryButton
-              label={t("home.customMode")}
-              onPress={() => router.push(ROUTES.custom)}
-              variant="secondary"
-              align="stretch"
-            />
-          </View>
-          <View className="flex-1">
-            <PrimaryButton
-              label={t("home.startExercise")}
-              onPress={() => router.push(ROUTES.ritual)}
-              showArrow
-              align="stretch"
-            />
+        <View
+          className={`border-t border-b py-4 ${
+            isDark ? "border-sand-700" : "border-sand-200"
+          }`}
+        >
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <PrimaryButton
+                label={t("home.customMode")}
+                onPress={() => router.push(ROUTES.custom)}
+                variant="secondary"
+                align="stretch"
+              />
+            </View>
+            <View className="flex-1">
+              <PrimaryButton
+                label={t("home.startExercise")}
+                onPress={() => router.push(ROUTES.ritual)}
+                showArrow
+                align="stretch"
+              />
+            </View>
           </View>
         </View>
         {!season ? (
