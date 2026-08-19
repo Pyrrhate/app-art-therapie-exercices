@@ -149,19 +149,19 @@ export default function WelcomeScreen() {
                 : t("home.draftStepExercise")}
             </Text>
           )}
-          <View className={isWide ? "gap-3" : "flex-row gap-2 mt-1"}>
-            <View className={isWide ? undefined : "flex-1"}>
-              <PrimaryButton
-                label={t("common:actions.continue")}
-                onPress={handleContinueDraft}
-                align="stretch"
-              />
-            </View>
-            <View className={isWide ? undefined : "flex-1"}>
+          <View className="flex-row gap-2 mt-1">
+            <View className="flex-1">
               <PrimaryButton
                 label={t("home.draftAbandon")}
                 onPress={handleDismissDraft}
                 variant="ghost"
+                align="stretch"
+              />
+            </View>
+            <View className="flex-1">
+              <PrimaryButton
+                label={t("common:actions.continue")}
+                onPress={handleContinueDraft}
                 align="stretch"
               />
             </View>
@@ -185,8 +185,16 @@ export default function WelcomeScreen() {
             {getSeasonRunConstraint(season, tSeasons)}
             {practicedToday(season) ? t("home.seasonPracticedToday") : ""}
           </Text>
-          <View className={isWide ? "gap-3" : "flex-row gap-2 mt-1"}>
-            <View className={isWide ? undefined : "flex-1"}>
+          <View className="flex-row gap-2 mt-1">
+            <View className="flex-1">
+              <PrimaryButton
+                label={t("home.seasonSee")}
+                onPress={() => router.push(ROUTES.seasons)}
+                variant="ghost"
+                align="stretch"
+              />
+            </View>
+            <View className="flex-1">
               <PrimaryButton
                 label={t("common:actions.continue")}
                 onPress={() => {
@@ -197,31 +205,29 @@ export default function WelcomeScreen() {
                 align="stretch"
               />
             </View>
-            <View className={isWide ? undefined : "flex-1"}>
-              <PrimaryButton
-                label={t("home.seasonSee")}
-                onPress={() => router.push(ROUTES.seasons)}
-                variant="ghost"
-                align="stretch"
-              />
-            </View>
           </View>
         </AccentCard>
       ) : null}
 
       <View className="gap-3">
-        <PrimaryButton
-          label={t("home.startExercise")}
-          onPress={() => router.push(ROUTES.ritual)}
-          showArrow
-          align="stretch"
-        />
-        <PrimaryButton
-          label={t("home.customMode")}
-          onPress={() => router.push(ROUTES.custom)}
-          variant="secondary"
-          align="stretch"
-        />
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <PrimaryButton
+              label={t("home.customMode")}
+              onPress={() => router.push(ROUTES.custom)}
+              variant="secondary"
+              align="stretch"
+            />
+          </View>
+          <View className="flex-1">
+            <PrimaryButton
+              label={t("home.startExercise")}
+              onPress={() => router.push(ROUTES.ritual)}
+              showArrow
+              align="stretch"
+            />
+          </View>
+        </View>
         {!season ? (
           <PrimaryButton
             label={t("home.season")}
