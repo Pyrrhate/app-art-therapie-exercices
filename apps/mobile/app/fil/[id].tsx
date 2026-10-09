@@ -1,6 +1,11 @@
 import { Redirect, useLocalSearchParams } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 
+/** Aucune page statique : les IDs sont locaux à l'appareil. */
+export function generateStaticParams() {
+  return [];
+}
+
 /** Redirection des anciennes URLs /fil/:id → /app/fil/:id */
 export default function LegacyFilEntryRedirect() {
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();

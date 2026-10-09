@@ -3,6 +3,11 @@ import Head from "expo-router/head";
 import { Stack } from "expo-router";
 import { NotFoundPage } from "@/components/marketing/NotFoundPage";
 
+/** Pas de pages pré-générées pour le catch-all. */
+export function generateStaticParams() {
+  return [];
+}
+
 /** Filet de sécurité si +not-found n'est pas déclenché (SPA / routes inconnues). */
 export default function UnmatchedCatchAllScreen() {
   return (

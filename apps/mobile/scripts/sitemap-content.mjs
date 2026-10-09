@@ -31,6 +31,15 @@ export function buildSitemapXml(baseUrl = SITEMAP_BASE) {
 
 export const ROBOTS_TXT = `User-agent: *
 Allow: /
+Allow: /app/privacy
+Disallow: /app/fil/
+Disallow: /app/settings
+Disallow: /app/ritual
+Disallow: /app/exercise
+Disallow: /app/reflection
+Disallow: /app/custom
+Disallow: /app/journal
+Disallow: /auth/
 
 Sitemap: ${SITEMAP_BASE}/sitemap.xml
 `;

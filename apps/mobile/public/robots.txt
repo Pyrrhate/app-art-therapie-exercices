@@ -1,4 +1,13 @@
 User-agent: *
 Allow: /
+Allow: /app/privacy
+Disallow: /app/fil/
+Disallow: /app/settings
+Disallow: /app/ritual
+Disallow: /app/exercise
+Disallow: /app/reflection
+Disallow: /app/custom
+Disallow: /app/journal
+Disallow: /auth/
 
 Sitemap: https://pastek-art.eu/sitemap.xml

@@ -49,6 +49,11 @@ import { useRitualStore } from "@/lib/store";
 import { panelBg, textMuted, textPrimary, textSecondary } from "@/lib/themeClasses";
 import { useIsDark } from "@/lib/themeStore";
 
+/** Aucune page statique : les traces Fil sont locales à l'appareil. */
+export function generateStaticParams() {
+  return [];
+}
+
 export default function FilDetailScreen() {
   const isDark = useIsDark();
   const { t } = useTranslation("fil");
