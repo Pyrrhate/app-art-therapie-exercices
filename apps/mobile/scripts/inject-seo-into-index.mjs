@@ -1,6 +1,7 @@
 /**
- * Injecte les balises SEO dans dist/index.html (mode web.output=single).
- * Les crawlers qui ne font pas tourner le JS voient ainsi title/description/OG/JSON-LD.
+ * Filet de sécurité SEO pour dist/index.html.
+ * - Mode static : le HTML est déjà complet → on ne touche qu'aux manques (og:image, etc.).
+ * - Mode single (SPA) : on injecte title/description/OG/JSON-LD + noscript.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -38,6 +39,50 @@ const jsonLd = {
   },
 };
 
+if (!fs.existsSync(indexPath)) {
+  console.error("[inject-seo] dist/index.html introuvable.");
+  process.exit(1);
+}
+
+let html = fs.readFileSync(indexPath, "utf8");
+const isStatic =
+  html.includes("__EXPO_ROUTER_HYDRATE__") || /<h1[\s>]/.test(html);
+
+if (isStatic) {
+  // Compléter uniquement ce qui manque, sans dupliquer.
+  const extras = [];
+  if (!html.includes('property="og:image"')) {
+    extras.push(`<meta property="og:image" content="${OG_IMAGE}" />`);
+    extras.push(`<meta property="og:image:alt" content="${SITE_NAME}" />`);
+  }
+  if (!html.includes('name="twitter:card"')) {
+    extras.push(`<meta name="twitter:card" content="summary_large_image" />`);
+    extras.push(`<meta name="twitter:image" content="${OG_IMAGE}" />`);
+  }
+  if (!html.includes("application/ld+json")) {
+    extras.push(
+      `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`
+    );
+  }
+  if (!html.includes('rel="canonical"')) {
+    extras.push(`<link rel="canonical" href="${SITE_URL}/" />`);
+  }
+  if (!/lang=["']fr["']/.test(html)) {
+    html = html.replace(/<html\b[^>]*>/i, '<html lang="fr">');
+  }
+  if (extras.length) {
+    html = html.replace(/<\/head>/i, `${extras.join("\n")}\n</head>`);
+    fs.writeFileSync(indexPath, html, "utf8");
+    console.log(
+      `[inject-seo] static HTML OK — ${extras.length} balise(s) manquante(s) ajoutée(s).`
+    );
+  } else {
+    console.log("[inject-seo] static HTML déjà complet — rien à injecter.");
+  }
+  process.exit(0);
+}
+
+// --- Mode SPA (single) : injection complète ---
 const headInjection = `
     <title>${TITLE}</title>
     <meta name="description" content="${DESCRIPTION}" />
@@ -72,19 +117,9 @@ const noscriptBlock = `
     </noscript>
 `.trim();
 
-if (!fs.existsSync(indexPath)) {
-  console.error("[inject-seo] dist/index.html introuvable.");
-  process.exit(1);
-}
-
-let html = fs.readFileSync(indexPath, "utf8");
-
 html = html.replace(/<html\b[^>]*>/i, '<html lang="fr">');
 html = html.replace(/<title>[\s\S]*?<\/title>/gi, "");
-html = html.replace(
-  /<meta\s+name=["']description["'][^>]*>/gi,
-  ""
-);
+html = html.replace(/<meta\s+name=["']description["'][^>]*>/gi, "");
 html = html.replace(
   /<script type=["']application\/ld\+json["']>[\s\S]*?<\/script>/gi,
   ""
@@ -96,4 +131,4 @@ html = html.replace(
 );
 
 fs.writeFileSync(indexPath, html, "utf8");
-console.log("[inject-seo] Métas SEO injectées dans dist/index.html");
+console.log("[inject-seo] Métas SEO injectées (mode SPA).");

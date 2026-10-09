@@ -9,7 +9,7 @@
     "packages/shared"
   ],
   "scripts": {
-    "postinstall": "node scripts/patch-nativewind-babel.cjs && node scripts/generate-gong.cjs",
+    "postinstall": "node scripts/patch-nativewind-babel.cjs && node scripts/generate-gong.cjs && node scripts/ensure-expo-router-hoist.cjs",
     "mobile": "npm run start --workspace=apps/mobile",
     "mobile:android": "npm run android --workspace=apps/mobile",
     "mobile:ios": "npm run ios --workspace=apps/mobile",

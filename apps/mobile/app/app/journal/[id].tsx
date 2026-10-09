@@ -5,6 +5,11 @@ import { ScreenContainer } from "@/components/ui/Button";
 import { getFilEntryByAnyId } from "@/lib/fil/storage";
 import { ROUTES } from "@/lib/routes";
 
+/** Redirects legacy — pas de pages pré-générées. */
+export function generateStaticParams() {
+  return [];
+}
+
 export default function JournalEntryRedirect() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [target, setTarget] = useState<string | null>(null);
